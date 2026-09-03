@@ -1,0 +1,8 @@
+{
+  "src": [
+    "pages/Index",
+    "pages/Editor",
+    "pages/Templates",
+    "pages/Knowledge"
+  ]
+}

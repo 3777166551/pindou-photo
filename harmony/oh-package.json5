@@ -1,0 +1,13 @@
+{
+  "modelVersion": "5.0.0",
+  "name": "pindouphoto",
+  "version": "1.0.0",
+  "description": "照片变拼豆 - HarmonyOS NEXT",
+  "main": "",
+  "author": "pindou",
+  "license": "Proprietary",
+  "dependencies": {},
+  "devDependencies": {
+    "@ohos/hypium": "1.0.19"
+  }
+}

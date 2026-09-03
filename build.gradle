@@ -1,0 +1,4 @@
+// 顶层构建文件。用 Android Studio 打开本工程时会自动下载 Gradle 与 AGP。
+plugins {
+    id 'com.android.application' version '7.4.2' apply false
+}

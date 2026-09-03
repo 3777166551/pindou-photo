@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="10dp"
+    android:layout_marginTop="10dp"
+    android:layout_marginEnd="10dp"
+    android:layout_marginBottom="4dp"
+    android:background="@drawable/bg_card"
+    android:elevation="3dp"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="用量统计"
+        android:textColor="@color/textMain"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvSummary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:lineSpacingExtra="4dp"
+        android:text=""
+        android:textColor="@color/textSub"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/btnInventory"
+        android:layout_width="match_parent"
+        android:layout_height="38dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_chip"
+        android:clickable="true"
+        android:elevation="2dp"
+        android:focusable="true"
+        android:gravity="center"
+        android:text="🎒 豆仓库存(登记手头豆子,自动算缺口)"
+        android:textColor="@color/text_chip"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="💡 建议每种颜色多备 10% 左右的用量\n🏷️ 品牌色号为近似对照,下单前请核对官方色卡"
+        android:textColor="#B26A00"
+        android:textSize="12sp" />
+</LinearLayout>

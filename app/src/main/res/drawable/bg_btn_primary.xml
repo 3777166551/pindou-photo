@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 主操作按钮:薄荷渐变药丸,柔和现代 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#40FFFFFF">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="@color/gradStart"
+                android:endColor="@color/gradEnd" />
+            <corners android:radius="30dp" />
+        </shape>
+    </item>
+</ripple>

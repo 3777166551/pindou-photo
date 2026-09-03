@@ -1,0 +1,7 @@
+{
+  "string": [
+    { "name": "app_name", "value": "照片变拼豆" },
+    { "name": "module_desc", "value": "entry module" },
+    { "name": "ability_desc", "value": "main ability" }
+  ]
+}

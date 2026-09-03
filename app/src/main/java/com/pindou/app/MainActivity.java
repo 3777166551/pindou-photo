@@ -1,0 +1,769 @@
+package com.pindou.app;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
+import android.os.Bundle;
+import android.text.InputFilter;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.EditText;
+import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.pindou.app.bead.Templates;
+import com.pindou.app.provider.AppFileProvider;
+import com.pindou.app.util.Jsons;
+import com.pindou.app.util.ProjectStore;
+
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+import com.pindou.app.bead.TemplateAssets;
+
+public class MainActivity extends Activity {
+
+    private static final int REQ_PICK_GALLERY = 1;
+    private static final int REQ_TAKE_PHOTO = 2;
+    private static final int REQ_SCAN_PATTERN = 3;
+    private static final int REQ_ACTION_PICK = 4;
+    /** 工具卡片(二次元/去水印)选图后要自动执行的动作 */
+    private int nextAction = com.pindou.app.EditorActivity.PENDING_NONE;
+
+    private File cameraFile;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        com.pindou.app.util.Skin.apply(getWindow().getDecorView());
+
+        // 按压缩放反馈:主页大按钮都是贴纸,按下去陷一下再弹回
+        int[] pressIds = {R.id.btnGallery, R.id.btnCamera, R.id.btnText,
+                R.id.btnBlank, R.id.btnTemplates, R.id.btnProjects,
+                R.id.btnScanPattern, R.id.cardWatermark, R.id.btnKnowledge};
+        for (int id : pressIds) {
+            com.pindou.app.util.Anim.pressScale(findViewById(id));
+        }
+        findViewById(R.id.btnScanPattern).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pickForScan();
+            }
+        });
+        findViewById(R.id.cardWatermark).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pickForAction(com.pindou.app.EditorActivity.PENDING_WATERMARK,
+                        "选一张带水印的图");
+            }
+        });
+
+        findViewById(R.id.btnGallery).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pickFromGallery();
+            }
+        });
+        findViewById(R.id.btnCamera).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                takePhoto();
+            }
+        });
+        findViewById(R.id.btnText).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showTextDialog();
+            }
+        });
+        findViewById(R.id.btnBlank).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(MainActivity.this, EditorActivity.class);
+                i.putExtra(EditorActivity.EXTRA_BLANK, true);
+                startActivity(i);
+            }
+        });
+        findViewById(R.id.btnTemplates).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showTemplateGallery();
+            }
+        });
+        findViewById(R.id.btnProjects).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showMyProjects();
+            }
+        });
+        findViewById(R.id.btnKnowledge).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, KnowledgeActivity.class));
+                overridePendingTransition(R.anim.enter_up, R.anim.exit_dim);
+            }
+        });
+    }
+
+    /** 文字生成:把名字/词语渲染成黑字透明底位图,交给编辑器变成拼豆图纸 */
+    private void showTextDialog() {
+        final EditText input = new EditText(this);
+        input.setHint("输入名字或词语,最多 12 个字");
+        input.setFilters(new InputFilter[]{new InputFilter.LengthFilter(12)});
+        new AlertDialog.Builder(this)
+                .setTitle("文字生成拼豆")
+                .setMessage("文字会变成拼豆图纸(黑字,背景留空格)")
+                .setView(input)
+                .setPositiveButton("生成", new android.content.DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(android.content.DialogInterface dialog, int which) {
+                        String text = input.getText().toString().trim();
+                        if (text.isEmpty()) {
+                            Toast.makeText(MainActivity.this, "先输入文字哦",
+                                    Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        EditorActivity.pendingSource = renderText(text);
+                        startActivity(new Intent(MainActivity.this, EditorActivity.class));
+                        overridePendingTransition(R.anim.enter_up, R.anim.exit_dim);
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    /** 渲染文字:自适应字号 + 自动换行(最多 4 行),居中画在透明画布上 */
+    static Bitmap renderText(String text) {
+        int size = 640;
+        Bitmap bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(bmp);
+        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+        p.setColor(0xFF000000);
+        p.setTypeface(Typeface.DEFAULT_BOLD);
+        p.setTextAlign(Paint.Align.CENTER);
+
+        float fs = 240f;
+        List<String> lines = new ArrayList<>();
+        while (true) {
+            p.setTextSize(fs);
+            lines.clear();
+            StringBuilder cur = new StringBuilder();
+            for (int i = 0; i < text.length(); i++) {
+                String ch = text.substring(i, i + 1);
+                if (cur.length() > 0 && p.measureText(cur.toString() + ch) > 560f) {
+                    lines.add(cur.toString());
+                    cur = new StringBuilder();
+                }
+                cur.append(ch);
+            }
+            if (cur.length() > 0) lines.add(cur.toString());
+
+            boolean widthOk = true;
+            for (String ln : lines) {
+                if (p.measureText(ln) > 560f) {
+                    widthOk = false;
+                    break;
+                }
+            }
+            float totalH = lines.size() * fs * 1.25f;
+            if (fs <= 24f || (widthOk && totalH <= 560f && lines.size() <= 4)) break;
+            fs -= 8f;
+        }
+
+        float lineH = fs * 1.25f;
+        float y = size / 2f - (lines.size() - 1) * lineH / 2f;
+        Paint.FontMetrics fm = p.getFontMetrics();
+        float baselineFix = -(fm.ascent + fm.descent) / 2f;
+        for (String ln : lines) {
+            c.drawText(ln, size / 2f, y + baselineFix, p);
+            y += lineH;
+        }
+        return bmp;
+    }
+
+    // ---------------- 图案模板库 ----------------
+
+    /** 模板库两级导航:先选分类,再进该分类的缩略图网格 */
+    private void showTemplateGallery() {
+        List<Templates.Cat> cats = TemplateAssets.allCategories();
+
+        GridView gv = new GridView(this);
+        gv.setNumColumns(2);
+        gv.setVerticalSpacing(dp(8));
+        gv.setHorizontalSpacing(dp(8));
+        gv.setPadding(dp(6), dp(10), dp(6), dp(10));
+        gv.setAdapter(new CategoryAdapter(cats));
+        gv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                showCategoryGrid(cats.get(position));
+            }
+        });
+
+        new AlertDialog.Builder(this)
+                .setTitle("图案模板库 🧩")
+                .setView(wrapScroll(gv))
+                .setPositiveButton("关闭", null)
+                .show();
+    }
+
+    /** 某个分类的缩略图网格 */
+    private void showCategoryGrid(final Templates.Cat cat) {
+        GridView gv = new GridView(this);
+        gv.setNumColumns(4);
+        gv.setVerticalSpacing(dp(10));
+        gv.setPadding(dp(8), dp(12), dp(8), dp(12));
+        gv.setAdapter(new ThumbAdapter(cat));
+        gv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                openTemplate(cat.items[position]);
+            }
+        });
+
+        new AlertDialog.Builder(this)
+                .setTitle(cat.name)
+                .setView(wrapScroll(gv))
+                .setPositiveButton("分类 ⬅", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int w) {
+                        showTemplateGallery();
+                    }
+                })
+                .show();
+    }
+
+    private ScrollView wrapScroll(View v) {
+        ScrollView sc = new ScrollView(this);
+        sc.addView(v);
+        com.pindou.app.util.Skin.apply(sc);
+        return sc;
+    }
+
+    /** 分类选择适配器:emoji 名 + 数量 */
+    private class CategoryAdapter extends BaseAdapter {
+        final List<Templates.Cat> cats;
+
+        CategoryAdapter(List<Templates.Cat> cats) {
+            this.cats = cats;
+        }
+
+        @Override
+        public int getCount() {
+            return cats.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return cats.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            LinearLayout cell = new LinearLayout(MainActivity.this);
+            cell.setOrientation(LinearLayout.VERTICAL);
+            cell.setGravity(Gravity.CENTER);
+            int pad = dp(10);
+            cell.setPadding(pad, pad, pad, pad);
+            cell.setBackgroundResource(R.drawable.bg_card_sketch);
+
+            Templates.Cat cat = cats.get(position);
+            int sp = cat.name.indexOf(' ');
+            TextView icon = new TextView(MainActivity.this);
+            icon.setText(sp > 0 ? cat.name.substring(0, sp) : "🧩");
+            icon.setTextSize(26);
+            cell.addView(icon);
+
+            TextView name = new TextView(MainActivity.this);
+            name.setText(sp > 0 ? cat.name.substring(sp + 1) : cat.name);
+            name.setTextColor(0xFF1F2430);
+            name.setTextSize(14);
+            cell.addView(name);
+
+            TextView count = new TextView(MainActivity.this);
+            count.setText(cat.items.length + " 个图案");
+            count.setTextColor(0xFF8A8F98);
+            count.setTextSize(11);
+            cell.addView(count);
+            return cell;
+        }
+    }
+
+    /** 缩略图网格适配器 */
+    private class ThumbAdapter extends BaseAdapter {
+        final Templates.Cat cat;
+
+        ThumbAdapter(Templates.Cat cat) {
+            this.cat = cat;
+        }
+
+        @Override
+        public int getCount() {
+            return cat.items.length;
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return cat.items[position];
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            LinearLayout cell = new LinearLayout(MainActivity.this);
+            cell.setOrientation(LinearLayout.VERTICAL);
+            cell.setGravity(Gravity.CENTER_HORIZONTAL);
+
+            ImageView iv = new ImageView(MainActivity.this);
+            iv.setImageBitmap(Templates.buildThumb(cat.items[position]));
+            int side = dp(56);
+            cell.addView(iv, new LinearLayout.LayoutParams(side, side));
+
+            TextView t = new TextView(MainActivity.this);
+            t.setText(cat.items[position].name);
+            t.setTextColor(0xFF444444);
+            t.setTextSize(10);
+            t.setMaxLines(1);
+            cell.addView(t);
+            return cell;
+        }
+    }
+
+    private int dp(float v) {
+        return Math.round(v * getResources().getDisplayMetrics().density);
+    }
+
+    private void openTemplate(Templates.Tpl tpl) {
+        EditorActivity.pendingSource = Templates.build(tpl, 24);
+        EditorActivity.pendingSuggestedSize = tpl.suggestedSize;
+        startActivity(new Intent(MainActivity.this, EditorActivity.class));
+        overridePendingTransition(R.anim.enter_up, R.anim.exit_dim);
+    }
+
+    // ---------------- 我的项目 ----------------
+
+    private void showMyProjects() {
+        List<ProjectStore.Entry> items;
+        try {
+            items = ProjectStore.list(this);
+        } catch (Exception e) {
+            items = new ArrayList<>();
+        }
+        if (items.isEmpty()) {
+            Toast.makeText(this, "还没有项目存档。在编辑页右上方 ⋮ 菜单里「保存项目存档」即可。",
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+        buildProjectsDialog(items);
+    }
+
+    private void buildProjectsDialog(final List<ProjectStore.Entry> items) {
+        int pad = Math.round(10 * getResources().getDisplayMetrics().density);
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+
+        SimpleDateFormat fmt = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.CHINA);
+        for (final ProjectStore.Entry e : items) {
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(pad, pad / 2, pad, pad / 2);
+            row.setBackgroundResource(android.R.drawable.list_selector_background);
+
+            ImageView iv = new ImageView(this);
+            GradientDrawable bg = new GradientDrawable();
+            bg.setColor(0xFFEFEAE3);
+            bg.setCornerRadius(8 * getResources().getDisplayMetrics().density);
+            iv.setBackground(bg);
+            iv.setImageBitmap(e.thumb);
+            iv.setClipToOutline(true);
+            int side = Math.round(46 * getResources().getDisplayMetrics().density);
+            LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(side, side);
+            ip.rightMargin = pad * 3 / 2;
+            row.addView(iv, ip);
+
+            LinearLayout mid = new LinearLayout(this);
+            mid.setOrientation(LinearLayout.VERTICAL);
+            TextView name = new TextView(this);
+            name.setText(e.name);
+            name.setTextColor(0xFF333333);
+            name.setTextSize(15);
+            mid.addView(name);
+            TextView meta = new TextView(this);
+            meta.setText(fmt.format(new Date(e.savedAt)));
+            meta.setTextColor(0xFF9A9086);
+            meta.setTextSize(11);
+            mid.addView(meta);
+            row.addView(mid, new LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+            TextView del = new TextView(this);
+            del.setText("删除");
+            del.setTextColor(0xFFD32F2F);
+            del.setTextSize(13);
+            del.setPadding(pad, pad, pad, pad);
+            del.setClickable(true);
+            del.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    confirmDeleteProject(e, items);
+                }
+            });
+            row.addView(del, new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT));
+
+            row.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openProject(e);
+                }
+            });
+            box.addView(row, new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT));
+        }
+
+        android.widget.ScrollView sc = new android.widget.ScrollView(this);
+        sc.addView(box);
+        com.pindou.app.util.Skin.apply(sc);
+        new AlertDialog.Builder(this)
+                .setTitle("我的项目 🗂(" + items.size() + ")")
+                .setView(sc)
+                .setPositiveButton("关闭", null)
+                .show();
+    }
+
+    private void confirmDeleteProject(final ProjectStore.Entry e,
+                                      final List<ProjectStore.Entry> all) {
+        new AlertDialog.Builder(this)
+                .setMessage("确定删除「" + e.name + "」吗?\n删除后不可恢复。")
+                .setPositiveButton("删除", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int w) {
+                        ProjectStore.delete(e.file);
+                        Toast.makeText(MainActivity.this, "已删除",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    private void openProject(ProjectStore.Entry e) {
+        try {
+            byte[] raw = Jsons.readBytes(e.file);
+            EditorActivity.pendingProjectJson = new String(raw, "UTF-8");
+            startActivity(new Intent(MainActivity.this, EditorActivity.class));
+            overridePendingTransition(R.anim.enter_up, R.anim.exit_dim);
+        } catch (Exception ex) {
+            Toast.makeText(this, "这个存档读不出来了,可以删掉它", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void pickFromGallery() {
+        Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("image/*");
+        try {
+            startActivityForResult(Intent.createChooser(i, "选择一张照片"), REQ_PICK_GALLERY);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, "没有可用的相册应用", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /** 识别现成图纸:先选一张图纸照片 */
+    private void pickForScan() {
+        Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("image/*");
+        try {
+            startActivityForResult(Intent.createChooser(i, "选择一张图纸照片"), REQ_SCAN_PATTERN);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, "没有可用的相册应用", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /** 工具卡片:选图 → 带着动作进编辑器(图纸就绪后自动执行) */
+    private void pickForAction(int action, String title) {
+        nextAction = action;
+        Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("image/*");
+        try {
+            startActivityForResult(Intent.createChooser(i, title), REQ_ACTION_PICK);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, "没有可用的相册应用", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void takePhoto() {
+        cameraFile = new File(getCacheDir(), "camera_" + System.currentTimeMillis() + ".jpg");
+        Uri uri = AppFileProvider.forCameraFile(cameraFile);
+        Intent i = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+        i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, uri);
+        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        try {
+            startActivityForResult(i, REQ_TAKE_PHOTO);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, "没有可用的相机应用", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode != RESULT_OK) return;
+        if (requestCode == REQ_PICK_GALLERY) {
+            if (data != null && data.getData() != null) {
+                openEditor(data.getData());
+            }
+        } else if (requestCode == REQ_TAKE_PHOTO) {
+            if (cameraFile != null && cameraFile.exists() && cameraFile.length() > 0) {
+                openEditor(Uri.fromFile(cameraFile));
+            } else {
+                Toast.makeText(this, "拍照失败,请重试", Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == REQ_SCAN_PATTERN) {
+            if (data != null && data.getData() != null) {
+                showScanDialog(data.getData());
+            }
+        } else if (requestCode == REQ_ACTION_PICK) {
+            if (data != null && data.getData() != null) {
+                com.pindou.app.EditorActivity.pendingAction = nextAction;
+                nextAction = com.pindou.app.EditorActivity.PENDING_NONE;
+                openEditor(data.getData());
+            }
+        }
+    }
+
+    private void openEditor(Uri photoUri) {
+        Intent i = new Intent(this, EditorActivity.class);
+        i.putExtra(EditorActivity.EXTRA_PHOTO_URI, photoUri.toString());
+        startActivity(i);
+        overridePendingTransition(R.anim.enter_up, R.anim.exit_dim);
+    }
+
+    // ---------------- 识别现成图纸 ----------------
+
+    /**
+     * 框选图纸区域 → 自动检测网格 → 按格采样 → 生成低分辨率位图交给编辑器。
+     * 适用:其他 APP 的图纸截图、网格清晰的印刷图纸/板照。
+     */
+    private void showScanDialog(final Uri uri) {
+        // 解码并限制到工作分辨率(检测/采样在缩图上做,足够精确且快)
+        android.graphics.Bitmap bmp;
+        try {
+            android.graphics.BitmapFactory.Options o = new android.graphics.BitmapFactory.Options();
+            o.inJustDecodeBounds = true;
+            java.io.InputStream in = getContentResolver().openInputStream(uri);
+            android.graphics.BitmapFactory.decodeStream(in, null, o);
+            if (in != null) in.close();
+            int sample = 1;
+            while (Math.max(o.outWidth, o.outHeight) / sample > 900) sample *= 2;
+            android.graphics.BitmapFactory.Options o2 = new android.graphics.BitmapFactory.Options();
+            o2.inSampleSize = sample;
+            java.io.InputStream in2 = getContentResolver().openInputStream(uri);
+            bmp = android.graphics.BitmapFactory.decodeStream(in2, null, o2);
+            if (in2 != null) in2.close();
+        } catch (Exception e) {
+            Toast.makeText(this, "图片读不出来", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (bmp == null) {
+            Toast.makeText(this, "图片读不出来", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final android.graphics.Bitmap src = bmp;
+        float dm = getResources().getDisplayMetrics().density;
+        int maxW = Math.round(330 * dm);
+        int maxH = Math.round(400 * dm);
+        float scale = Math.min(maxW / (float) src.getWidth(),
+                maxH / (float) src.getHeight());
+        final int dw = Math.max(1, Math.round(src.getWidth() * scale));
+        final int dh = Math.max(1, Math.round(src.getHeight() * scale));
+
+        android.widget.ImageView iv = new android.widget.ImageView(this);
+        iv.setImageBitmap(src);
+        iv.setScaleType(android.widget.ImageView.ScaleType.FIT_XY);
+        final ScanRectView overlay = new ScanRectView(this);
+        // 默认框:居中 80% 区域
+        overlay.rect.set(Math.round(dw * 0.1f), Math.round(dh * 0.1f),
+                Math.round(dw * 0.9f), Math.round(dh * 0.9f));
+
+        android.widget.FrameLayout wrap = new android.widget.FrameLayout(this);
+        wrap.addView(iv, new android.widget.FrameLayout.LayoutParams(dw, dh));
+        wrap.addView(overlay, new android.widget.FrameLayout.LayoutParams(dw, dh));
+        int pad = Math.round(12 * dm);
+        wrap.setPadding(pad, 0, pad, 0);
+        com.pindou.app.util.Skin.apply(wrap);
+
+        new AlertDialog.Builder(this)
+                .setTitle("📷 识别图纸")
+                .setMessage("拖框贴住图纸的网格区域(别框进旁边的空白),"
+                        + "然后点「识别」。识别完直接进编辑器,可换色板重新生成。")
+                .setView(wrap)
+                .setPositiveButton("识别", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int which) {
+                        android.graphics.Rect r = overlay.rect;
+                        if (r.width() < 40 || r.height() < 40) {
+                            Toast.makeText(MainActivity.this,
+                                    "先把框拖到图纸网格上", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        runScan(src, r, dw, dh);
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    /** 后台检测网格 + 采样,产物走 pendingSource 进编辑器 */
+    private void runScan(final android.graphics.Bitmap src, final android.graphics.Rect sel,
+                         final int dw, final int dh) {
+        final android.app.ProgressDialog pd = new android.app.ProgressDialog(this);
+        pd.setMessage("识别网格中…");
+        pd.setCanceledOnTouchOutside(false);
+        pd.show();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    final int w = src.getWidth(), h = src.getHeight();
+                    int[] px = new int[w * h];
+                    src.getPixels(px, 0, w, 0, 0, w, h);
+                    // 视口坐标 → 像素坐标
+                    int x0 = Math.max(0, Math.round(sel.left * w / (float) dw));
+                    int y0 = Math.max(0, Math.round(sel.top * h / (float) dh));
+                    int x1 = Math.min(w - 1, Math.round(sel.right * w / (float) dw));
+                    int y1 = Math.min(h - 1, Math.round(sel.bottom * h / (float) dh));
+
+                    com.pindou.app.util.GridScanner.Grid g =
+                            com.pindou.app.util.GridScanner.detect(px, w, h, x0, y0, x1, y1);
+                    if (g == null) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                pd.dismiss();
+                                Toast.makeText(MainActivity.this,
+                                        "没认出规则网格:请贴着网格框,光线充足再拍一张试试",
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        });
+                        return;
+                    }
+                    final int[] dims = new int[2];
+                    final int[] cells =
+                            com.pindou.app.util.GridScanner.sample(px, w, h, g, dims);
+                    final int cols = dims[0], rows = dims[1];
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            pd.dismiss();
+                            android.graphics.Bitmap out =
+                                    android.graphics.Bitmap.createBitmap(cols, rows,
+                                            android.graphics.Bitmap.Config.ARGB_8888);
+                            out.setPixels(cells, 0, cols, 0, 0, cols, rows);
+                            EditorActivity.pendingSource = out;
+                            EditorActivity.pendingSuggestedSize = Math.max(cols, rows);
+                            startActivity(new Intent(MainActivity.this, EditorActivity.class));
+                            overridePendingTransition(R.anim.enter_up, R.anim.exit_dim);
+                        }
+                    });
+                } catch (final Throwable t) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            pd.dismiss();
+                            Toast.makeText(MainActivity.this,
+                                    "识别失败:" + t.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            }
+        }).start();
+    }
+
+    /** 框选覆盖层(与编辑页去水印的框选交互一致) */
+    private class ScanRectView extends android.view.View {
+        final android.graphics.Rect rect = new android.graphics.Rect();
+        boolean dragging = false;
+        final android.graphics.Paint fill = new android.graphics.Paint();
+        final android.graphics.Paint stroke = new android.graphics.Paint();
+
+        ScanRectView(android.content.Context c) {
+            super(c);
+            fill.setStyle(android.graphics.Paint.Style.FILL);
+            fill.setColor(0x3322B57F);
+            stroke.setStyle(android.graphics.Paint.Style.STROKE);
+            stroke.setStrokeWidth(3);
+            stroke.setColor(0xFF22B57F);
+        }
+
+        @Override
+        protected void onDraw(android.graphics.Canvas canvas) {
+            super.onDraw(canvas);
+            if (!rect.isEmpty()) {
+                canvas.drawRect(rect, fill);
+                canvas.drawRect(rect, stroke);
+            }
+        }
+
+        @Override
+        public boolean onTouchEvent(android.view.MotionEvent event) {
+            int x = Math.round(event.getX());
+            int y = Math.round(event.getY());
+            switch (event.getActionMasked()) {
+                case android.view.MotionEvent.ACTION_DOWN:
+                    rect.set(x, y, x, y);
+                    dragging = true;
+                    invalidate();
+                    return true;
+                case android.view.MotionEvent.ACTION_MOVE:
+                    if (dragging) {
+                        rect.right = x;
+                        rect.bottom = y;
+                        invalidate();
+                        return true;
+                    }
+                    break;
+                case android.view.MotionEvent.ACTION_UP:
+                case android.view.MotionEvent.ACTION_CANCEL:
+                    dragging = false;
+                    return true;
+            }
+            return super.onTouchEvent(event);
+        }
+    }
+}
