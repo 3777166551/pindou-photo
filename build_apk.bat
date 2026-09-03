@@ -86,7 +86,7 @@ if not exist pindou.keystore (
 )
 call "%BT%\apksigner.bat" sign --ks pindou.keystore --ks-key-alias pindou --ks-pass pass:%PINDOU_KS_PASS% --key-pass pass:%PINDOU_KS_PASS% --out %OUT%\PindouPhoto-v2.27.apk %OUT%\aligned.apk
 if errorlevel 1 goto :err
-call "%BT%\apksigner.bat" verify %OUT%\PindouPhoto-v2.26.apk
+call "%BT%\apksigner.bat" verify %OUT%\PindouPhoto-v2.27.apk
 if errorlevel 1 goto :err
 
 echo.
