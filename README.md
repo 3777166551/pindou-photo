@@ -46,6 +46,11 @@ HarmonyOS 移植工程见 [harmony/](harmony/PORTING.md)。
 
 本项目以 **GNU AGPL-3.0** 协议开源（完整文本见 [LICENSE](LICENSE)）。欢迎 Issue、PR 与模板投稿。
 
+## ⚠️ 免责声明
+
+本软件按"现状"提供，不含任何担保；图纸色号与用量为算法估算，实物请以官方色卡为准。
+使用即表示你已阅读并同意 [DISCLAIMER.md](DISCLAIMER.md) 与 [LICENSE](LICENSE) 的全部条款。
+
 ---
 
 v2.26 · 完全免费 · 无广告
