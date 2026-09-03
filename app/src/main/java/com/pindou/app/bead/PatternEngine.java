@@ -54,6 +54,12 @@ public final class PatternEngine {
         public boolean roundBoard = false;
         /** 降色数:限制最终使用的颜色种数,0 = 不限制(贪心合并最相近的色) */
         public int maxColors = 0;
+        /** 清晰轮廓:每格取主色(众数)而不是平均色,消颜色边界的灰色毛边 */
+        public boolean dominant = false;
+        /** 杂色清理:0 = 关,1/2/3 = 轻/中/强(相近色连通区域合并阈值递增) */
+        public int denoise = 0;
+        /** 精准配色:用 CIEDE2000 色差选豆色,更贴人眼但大图稍慢 */
+        public boolean preciseColor = false;
     }
 
     public static BeadPattern generate(Bitmap source, List<BeadColor> beadPalette, Options o) {
@@ -115,6 +121,8 @@ public final class PatternEngine {
         int[] px;
         if (o.bgRemove) {
             px = gridWithBackground(srcPx, pw, ph, gw, gh, o.bgTolerance);
+        } else if (o.dominant) {
+            px = dominantResample(srcPx, pw, ph, gw, gh);
         } else {
             px = boxResample(srcPx, pw, ph, gw, gh);
         }
@@ -159,7 +167,8 @@ public final class PatternEngine {
                         double l = clampL(lab[0] + curRow[x * 3]);
                         double a = lab[1] + curRow[x * 3 + 1];
                         double bl = lab[2] + curRow[x * 3 + 2];
-                        int idx = nearest(labs, l, a, bl);
+                        int idx = o.preciseColor
+                                ? nearestPrecise(labs, l, a, bl) : nearest(labs, l, a, bl);
                         workCells[y * gw + x] = idx;
 
                         double el = l - labs[idx][0];
@@ -184,7 +193,9 @@ public final class PatternEngine {
                         workCells[i] = -1;
                     } else {
                         double[] lab = ColorMath.rgbToLab(p);
-                        workCells[i] = nearest(labs, lab[0], lab[1], lab[2]);
+                        workCells[i] = o.preciseColor
+                                ? nearestPrecise(labs, lab[0], lab[1], lab[2])
+                                : nearest(labs, lab[0], lab[1], lab[2]);
                     }
                 }
             }
@@ -206,6 +217,11 @@ public final class PatternEngine {
                     }
                 }
             }
+        }
+
+        // 6.6 杂色清理:相近色连通区域合并到区域主色,消除孤立杂色颗粒
+        if (o.denoise > 0) {
+            mergeNoiseRegions(cells, cols, rows, palette, o.denoise);
         }
 
         int empty = 0;
@@ -743,6 +759,131 @@ public final class PatternEngine {
      * 所有源像素都参与,不像双线性只零星采样,边缘颜色不会被漏掉。
      * 目标比源大时退化为双线性。
      */
+    /**
+     * 众数色降采样(清晰轮廓):每个目标格取区域内出现频率最高的颜色量化桶
+     * (每通道 4bit)的均值作为格子颜色,替代面积平均——平均会把颜色边界
+     * 两侧的色混在一起形成灰色毛边,众数只认占多数的那个色。
+     * 透明像素(抠图结果)不参与统计;整格透明时输出透明。
+     */
+    public static int[] dominantResample(int[] src, int sw, int sh, int dw, int dh) {
+        if (dw > sw || dh > sh) return boxResample(src, sw, sh, dw, dh);
+        int[] out = new int[dw * dh];
+        final int B = 4096;   // 每通道 4bit 量化桶总数
+        int[] cnt = new int[B];
+        long[] ar = new long[B], ag = new long[B], ab = new long[B];
+        int[] stamp = new int[B];
+        int[] touched = new int[B];
+        int gen = 0;
+        for (int y = 0; y < dh; y++) {
+            int sy0 = y * sh / dh;
+            int sy1 = Math.max(sy0 + 1, ceilDiv((y + 1) * sh, dh));
+            sy1 = Math.min(sy1, sh);
+            for (int x = 0; x < dw; x++) {
+                int sx0 = x * sw / dw;
+                int sx1 = Math.max(sx0 + 1, ceilDiv((x + 1) * sw, dw));
+                sx1 = Math.min(sx1, sw);
+                gen++;
+                int tc = 0;
+                for (int yy = sy0; yy < sy1; yy++) {
+                    int row = yy * sw;
+                    for (int xx = sx0; xx < sx1; xx++) {
+                        int c = src[row + xx];
+                        if (((c >>> 24) & 0xFF) < 128) continue;
+                        int r = (c >> 16) & 0xFF, g = (c >> 8) & 0xFF, b = c & 0xFF;
+                        int bucket = ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
+                        if (stamp[bucket] != gen) {
+                            stamp[bucket] = gen;
+                            cnt[bucket] = 0;
+                            ar[bucket] = 0;
+                            ag[bucket] = 0;
+                            ab[bucket] = 0;
+                            touched[tc++] = bucket;
+                        }
+                        cnt[bucket]++;
+                        ar[bucket] += r;
+                        ag[bucket] += g;
+                        ab[bucket] += b;
+                    }
+                }
+                int best = -1, bestCnt = 0;
+                for (int i = 0; i < tc; i++) {
+                    int bk = touched[i];
+                    if (cnt[bk] > bestCnt) {
+                        bestCnt = cnt[bk];
+                        best = bk;
+                    }
+                }
+                if (best < 0) {
+                    out[y * dw + x] = 0x00000000;
+                } else {
+                    out[y * dw + x] = 0xFF000000
+                            | ((int) Math.round(ar[best] / (double) bestCnt) << 16)
+                            | ((int) Math.round(ag[best] / (double) bestCnt) << 8)
+                            | (int) Math.round(ab[best] / (double) bestCnt);
+                }
+            }
+        }
+        return out;
+    }
+
+    /** BFS 杂色清理:相近色连通区域合并到区域主色,level 1/2/3 = ΔE 10/14/18 */
+    private static void mergeNoiseRegions(int[] cells, int cols, int rows,
+                                          List<BeadColor> palette, int level) {
+        double limit = level <= 1 ? 10 : level == 2 ? 14 : 18;
+        int n = palette.size();
+        double[][] lab = new double[n][];
+        for (int i = 0; i < n; i++) {
+            lab[i] = ColorMath.rgbToLab(0xFF000000 | palette.get(i).rgb);
+        }
+        boolean[] visited = new boolean[cells.length];
+        int[] region = new int[cells.length];
+        int[] cnt = new int[Math.max(1, n)];
+        int[] touched = new int[Math.max(1, n)];
+        java.util.ArrayDeque<Integer> queue = new java.util.ArrayDeque<>();
+        double limit2 = limit * limit;
+        for (int s = 0; s < cells.length; s++) {
+            int seed = cells[s];
+            if (seed < 0 || visited[s]) continue;
+            visited[s] = true;
+            int rc = 0;
+            region[rc++] = s;
+            queue.add(s);
+            while (!queue.isEmpty()) {
+                int key = queue.removeFirst();
+                int cx = key % cols;
+                int cy = key / cols;
+                for (int d = 0; d < 4; d++) {
+                    int nx = cx + (d == 0 ? 1 : d == 1 ? -1 : 0);
+                    int ny = cy + (d == 2 ? 1 : d == 3 ? -1 : 0);
+                    if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) continue;
+                    int nk = ny * cols + nx;
+                    int c2 = cells[nk];
+                    if (c2 < 0 || visited[nk]) continue;
+                    if (ColorMath.dist2(lab[seed], lab[c2]) <= limit2) {
+                        visited[nk] = true;
+                        region[rc++] = nk;
+                        queue.add(nk);
+                    }
+                }
+            }
+            int touchedN = 0;
+            for (int i = 0; i < rc; i++) {
+                int c = cells[region[i]];
+                if (cnt[c] == 0) touched[touchedN++] = c;
+                cnt[c]++;
+            }
+            int majority = seed, bestCnt = 0;
+            for (int i = 0; i < touchedN; i++) {
+                if (cnt[touched[i]] > bestCnt) {
+                    bestCnt = cnt[touched[i]];
+                    majority = touched[i];
+                }
+            }
+            for (int i = 0; i < touchedN; i++) cnt[touched[i]] = 0;
+            for (int i = 0; i < rc; i++) cells[region[i]] = majority;
+        }
+    }
+
     public static int[] boxResample(int[] src, int sw, int sh, int dw, int dh) {
         if (dw == sw && dh == sh) return src.clone();
         if (dw > sw || dh > sh) return resampleBilinear(src, sw, sh, dw, dh);
@@ -1258,6 +1399,20 @@ public final class PatternEngine {
             double da = a - labs[i][1];
             double db = b - labs[i][2];
             double d = dl * dl + da * da + db * db;
+            if (d < bestD) {
+                bestD = d;
+                best = i;
+            }
+        }
+        return best;
+    }
+
+    /** CIEDE2000 最近色(精准配色档),计算量约为欧氏距离的几倍 */
+    private static int nearestPrecise(double[][] labs, double l, double a, double b) {
+        int best = 0;
+        double bestD = ColorMath.deltaE2000(labs[0][0], labs[0][1], labs[0][2], l, a, b);
+        for (int i = 1; i < labs.length; i++) {
+            double d = ColorMath.deltaE2000(labs[i][0], labs[i][1], labs[i][2], l, a, b);
             if (d < bestD) {
                 bestD = d;
                 best = i;

@@ -205,6 +205,10 @@ public class EditorActivity extends Activity {
     private final View[] chipLimits = new View[5];
     /** 色数上限档位(对应 COLOR_LIMITS),0 = 不限 */
     private int maxColorsIdx = 0;
+    // 生成质量包:众数取色 / 杂色清理 / CIEDE2000 精准配色
+    private boolean dominant = false;
+    private int denoise = 0;
+    private boolean preciseColor = false;
     private static final int[] COLOR_LIMITS = {0, 12, 18, 26, 40};
     // 拼豆模式(逐色辅助 + 完成度标记)
     private boolean beadAssist = false;
@@ -234,6 +238,9 @@ public class EditorActivity extends Activity {
     private TextView tvLoading;
     private Spinner paletteSpinner, abstractColorSpinner;
     private Switch swDither, swSymbols, swGrid, swSnap, swKmeans;
+    private Switch swDominant, swPrecise;
+    private SeekBar sbDenoise;
+    private TextView tvDenoise;
     private ListView beadList;
     private BeadAdapter adapter;
 
@@ -393,6 +400,10 @@ public class EditorActivity extends Activity {
         swKmeans = findViewById(R.id.swKmeans);
         beadList = findViewById(R.id.beadList);
         swDither = findViewById(R.id.swDither);
+        swDominant = findViewById(R.id.swDominant);
+        swPrecise = findViewById(R.id.swPrecise);
+        sbDenoise = findViewById(R.id.sbDenoise);
+        tvDenoise = findViewById(R.id.tvDenoise);
         swSymbols = findViewById(R.id.swSymbols);
         swGrid = findViewById(R.id.swGrid);
         swSnap = findViewById(R.id.swSnap);
@@ -817,6 +828,39 @@ public class EditorActivity extends Activity {
                 scheduleRegen();
             }
         });
+        swDominant.setOnCheckedChangeListener(new Switch.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                dominant = isChecked;
+                scheduleRegen();
+            }
+        });
+        swPrecise.setOnCheckedChangeListener(new Switch.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                preciseColor = isChecked;
+                scheduleRegen();
+            }
+        });
+        String[] denoiseLabels = {"关", "轻", "中", "强"};
+        sbDenoise.setMax(3);
+        sbDenoise.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (!fromUser) return;
+                denoise = progress;
+                tvDenoise.setText(denoiseLabels[progress]);
+                scheduleRegen();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
         swSymbols.setOnCheckedChangeListener(new Switch.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -1017,6 +1061,9 @@ public class EditorActivity extends Activity {
         cols = rows = 58;
         tierIdx = 2;
         dither = false;
+        dominant = false;
+        denoise = 0;
+        preciseColor = false;
         brightness = contrast = saturation = 0;
         brickIdx = 1;
         syncBrickUi();
@@ -1051,6 +1098,10 @@ public class EditorActivity extends Activity {
         suppressAbsSpinner = false;
         swSnap.setChecked(true);
         swDither.setChecked(false);
+        swDominant.setChecked(false);
+        swPrecise.setChecked(false);
+        sbDenoise.setProgress(0);
+        tvDenoise.setText("关");
         swSymbols.setChecked(true);
         swGrid.setChecked(true);
         style = PatternEngine.STYLE_REALISTIC;
@@ -1283,6 +1334,9 @@ public class EditorActivity extends Activity {
         opt.bgTolerance = bgTolerance;
         opt.roundBoard = roundBoard;
         opt.maxColors = COLOR_LIMITS[maxColorsIdx];
+        opt.dominant = dominant;
+        opt.denoise = denoise;
+        opt.preciseColor = preciseColor;
         final List<BeadColor> beadPalette = BeadPalettes.getPalette(tierIdx);
         exec.execute(new Runnable() {
             @Override
@@ -2611,6 +2665,9 @@ public class EditorActivity extends Activity {
                     s.put("bgTol", bgTolerance);
                     s.put("round", roundBoard);
                     s.put("limitIdx", maxColorsIdx);
+                    s.put("dominant", dominant);
+                    s.put("denoise", denoise);
+                    s.put("precise", preciseColor);
                     o.put("settings", s);
 
                     JSONArray ed = new JSONArray();
@@ -2704,6 +2761,9 @@ public class EditorActivity extends Activity {
 
             maxColorsIdx = Math.max(0, Math.min(COLOR_LIMITS.length - 1,
                     s.optInt("limitIdx", 0)));
+            dominant = s.optBoolean("dominant", false);
+            denoise = Math.max(0, Math.min(3, s.optInt("denoise", 0)));
+            preciseColor = s.optBoolean("precise", false);
             beadDone.clear();
             JSONArray bd = o.optJSONArray("beadDone");
             if (bd != null) {
@@ -2772,6 +2832,10 @@ public class EditorActivity extends Activity {
         snapRow.setVisibility(vis);
         swSnap.setChecked(abstractSnap);
         swDither.setChecked(dither);
+        swDominant.setChecked(dominant);
+        swPrecise.setChecked(preciseColor);
+        sbDenoise.setProgress(denoise);
+        tvDenoise.setText(new String[]{"关", "轻", "中", "强"}[denoise]);
         swSymbols.setChecked(true);
         swGrid.setChecked(true);
 
