@@ -11,6 +11,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.view.ViewConfiguration;
 
 import com.pindou.app.bead.BeadPattern;
 import com.pindou.app.bead.ColorMath;
@@ -172,12 +173,27 @@ public class PatternView extends View {
         this.tapListener = l;
     }
 
+    /** 油漆桶回调:画笔模式下长按一格,把同色连通区域整体填充 */
+    public interface OnCellLongPressListener {
+        void onCellLongPress(int cellX, int cellY);
+    }
+
     private OnPaintListener paintListener;
+    private OnCellLongPressListener longPressListener;
     /** 画笔模式:单指在图纸上滑动 = 连续涂色,双指仍可缩放 */
     private boolean paintEnabled;
     private boolean paintStroke;
     private int lastPaintedX = -1;
     private int lastPaintedY = -1;
+    // 长按(油漆桶)判定:按下先不落笔,超时仍按着且未滑动才触发
+    private float downX, downY;
+    private int[] downCell;
+    private boolean strokeMoved, longPressFired;
+    private Runnable longPressCheck;
+
+    public void setOnCellLongPressListener(OnCellLongPressListener l) {
+        this.longPressListener = l;
+    }
 
     // ---- 拼豆模式(逐色辅助)----
     /** true = 只突出 assistFocus 颜色,已完成的格子画描边 */
@@ -252,26 +268,76 @@ public class PatternView extends View {
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
                 paintStroke = true;
+                strokeMoved = false;
+                longPressFired = false;
                 lastPaintedX = -1;
                 lastPaintedY = -1;
                 paintListener.onStrokeStart();
-                paintAt(event.getX(), event.getY());
+                // 落笔延迟到长按判定之后:长按 = 油漆桶,移动/抬起 = 普通涂色
+                downX = event.getX();
+                downY = event.getY();
+                downCell = cellAt(downX, downY);
+                armLongPress();
                 return true;
             case MotionEvent.ACTION_MOVE:
                 if (paintStroke && event.getPointerCount() == 1) {
+                    if (longPressFired) return true;   // 填充后吞掉剩余滑动
+                    if (!strokeMoved) {
+                        if (!isBeyondSlop(event)) return true;   // 未出阈值,继续等长按
+                        cancelLongPressCheck();
+                        strokeMoved = true;
+                        paintAt(downX, downY);   // 补上起笔那一格
+                    }
                     paintLine(event.getX(), event.getY());
                     return true;
                 }
                 if (event.getPointerCount() > 1) paintStroke = false;
+                cancelLongPressCheck();
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
+                cancelLongPressCheck();
+                if (!longPressFired && !strokeMoved && downCell != null) {
+                    paintAt(downX, downY);   // 单点即涂一格
+                }
+                longPressFired = false;
+                strokeMoved = false;
+                downCell = null;
                 paintStroke = false;
                 lastPaintedX = -1;
                 lastPaintedY = -1;
                 return true;
         }
         return false;
+    }
+
+    /** 启动长按计时:超时仍按着且未滑动就触发油漆桶 */
+    private void armLongPress() {
+        cancelLongPressCheck();
+        longPressCheck = new Runnable() {
+            @Override
+            public void run() {
+                if (!paintStroke || strokeMoved || longPressFired) return;
+                longPressFired = true;
+                if (downCell != null && longPressListener != null) {
+                    longPressListener.onCellLongPress(downCell[0], downCell[1]);
+                }
+            }
+        };
+        postDelayed(longPressCheck, ViewConfiguration.getLongPressTimeout());
+    }
+
+    private void cancelLongPressCheck() {
+        if (longPressCheck != null) {
+            removeCallbacks(longPressCheck);
+            longPressCheck = null;
+        }
+    }
+
+    private boolean isBeyondSlop(MotionEvent event) {
+        int slop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
+        return Math.abs(event.getX() - downX) > slop
+                || Math.abs(event.getY() - downY) > slop;
     }
 
     /** 从上一触点到当前点按半格步长插值,逐格触发涂色;滑出画布即截断笔画 */

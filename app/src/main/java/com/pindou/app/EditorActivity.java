@@ -660,6 +660,13 @@ public class EditorActivity extends Activity {
                 showColorPicker(cellY * pattern.cols + cellX);
             }
         });
+        // 画笔模式下长按一格 = 油漆桶填充
+        patternView.setOnCellLongPressListener(new PatternView.OnCellLongPressListener() {
+            @Override
+            public void onCellLongPress(int cellX, int cellY) {
+                floodFill(cellX, cellY);
+            }
+        });
 
         // 画笔模式:在图纸上滑动连续涂色
         swPaint.setOnCheckedChangeListener(new Switch.OnCheckedChangeListener() {
@@ -1462,6 +1469,18 @@ public class EditorActivity extends Activity {
         Skin.apply(header);
         beadList.addHeaderView(header, null, false);
         beadList.setAdapter(adapter);
+        // 长按豆单某一行 = 全局替换该色
+        beadList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view,
+                                           int position, long id) {
+                int pos = position - beadList.getHeaderViewsCount();
+                if (pos < 0 || pattern == null
+                        || pos >= pattern.usedColors.size()) return false;
+                showReplaceDialog(pattern.usedColors.get(pos));
+                return true;
+            }
+        });
     }
 
     /**
@@ -1541,6 +1560,57 @@ public class EditorActivity extends Activity {
                     beadDone.size(), pattern.totalBeads, todayCount()));
         }
         tvSummary.setText(sb.toString());
+    }
+
+    /** 全局替换:长按豆单某一行,把该色所有格子一键换成另一个已用色 */
+    private void showReplaceDialog(final BeadPattern.UsedColor from) {
+        if (pattern == null || pattern.usedColors.size() < 2) {
+            Toast.makeText(this, "图纸里只有一种颜色,没得换", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final List<BeadPattern.UsedColor> choices = new ArrayList<>();
+        for (BeadPattern.UsedColor uc : pattern.usedColors) {
+            if (uc.index != from.index) choices.add(uc);
+        }
+        String[] labels = new String[choices.size()];
+        for (int i = 0; i < choices.size(); i++) {
+            labels[i] = choices.get(i).color.fullLabel()
+                    + String.format(Locale.CHINA, "(已有 %,d 颗)", choices.get(i).count);
+        }
+        new AlertDialog.Builder(this)
+                .setTitle(String.format(Locale.CHINA, "把「%s」的 %,d 颗全部换成:",
+                        from.color.fullLabel(), from.count))
+                .setItems(labels, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        replaceColorEverywhere(from.index, choices.get(which).index);
+                    }
+                })
+                .show();
+    }
+
+    private void replaceColorEverywhere(int fromIdx, int toIdx) {
+        if (pattern == null || rawPattern == null) return;
+        pushUndoState();
+        int changed = 0;
+        for (int y = 0; y < rows; y++) {
+            for (int x = 0; x < cols; x++) {
+                if (pattern.cellAt(x, y) != fromIdx) continue;
+                int key = y * cols + x;
+                Integer base = rawPattern.cellAt(x, y);
+                if (base != null && base.intValue() == toIdx) {
+                    editMap.remove(key);   // 与自动结果一致就无需覆盖记录
+                } else {
+                    editMap.put(key, toIdx);
+                }
+                changed++;
+            }
+        }
+        applyEditsToUi();
+        updateEditsButton();
+        Toast.makeText(this,
+                String.format(Locale.CHINA, "已替换 %d 格,点 ↺ 可回退", changed),
+                Toast.LENGTH_SHORT).show();
     }
 
     /** 豆仓管理行:一种颜色 + 手头数量草稿 */
@@ -2177,7 +2247,8 @@ public class EditorActivity extends Activity {
                         Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this,
-                        eraseOn ? "橡皮已选好,滑过即可擦除" : "在图纸上滑动涂色,点「换一支」可选颜色",
+                        eraseOn ? "橡皮已选好,滑过即可擦除,长按可整片擦除"
+                                : "在图纸上滑动涂色,长按一格可整片填充;点「换一支」可选颜色",
                         Toast.LENGTH_SHORT).show();
             }
         }
@@ -2225,6 +2296,56 @@ public class EditorActivity extends Activity {
         }
         editMap.put(idx, target);
         queuePaintFlush();
+    }
+
+    /** 油漆桶:把与落点同色的四连通区域整体换成画笔色(橡皮 = 整片挖空) */
+    private void floodFill(int sx, int sy) {
+        if (!paintMode || pattern == null || rawPattern == null) return;
+        if (pattern.outsideShape(sx, sy)) return;
+        int from = pattern.cellAt(sx, sy);
+        if (from < 0) return;                    // 空格不做填充起点
+        int target = eraseOn ? -1 : brushPalIdx;
+        if (target < -1 || target == from) return;
+        boolean[] seen = new boolean[cols * rows];
+        ArrayDeque<Integer> queue = new ArrayDeque<>();
+        int start = sy * cols + sx;
+        queue.add(start);
+        seen[start] = true;
+        boolean snapPushed = false;              // 一次填充 = 一条撤销记录
+        int filled = 0;
+        while (!queue.isEmpty()) {
+            int key = queue.removeFirst();
+            int cx = key % cols;
+            int cy = key / cols;
+            Integer base = rawPattern.cellAt(cx, cy);
+            if (base != null && base.intValue() == target) {
+                if (editMap.remove(key) != null) {
+                    if (!snapPushed) { pushUndoState(); snapPushed = true; }
+                    filled++;
+                }
+            } else {
+                if (!snapPushed) { pushUndoState(); snapPushed = true; }
+                editMap.put(key, target);
+                filled++;
+            }
+            for (int d = 0; d < 4; d++) {
+                int nx = cx + (d == 0 ? 1 : d == 1 ? -1 : 0);
+                int ny = cy + (d == 2 ? 1 : d == 3 ? -1 : 0);
+                if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) continue;
+                int nk = ny * cols + nx;
+                if (seen[nk] || pattern.outsideShape(nx, ny)) continue;
+                if (pattern.cellAt(nx, ny) == from) {
+                    seen[nk] = true;
+                    queue.add(nk);
+                }
+            }
+        }
+        if (filled > 0) {
+            applyEditsToUi();
+            updateEditsButton();
+            Toast.makeText(this, String.format(Locale.CHINA, "油漆桶:已填充 %d 格", filled),
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void queuePaintFlush() {
