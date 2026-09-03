@@ -43,9 +43,13 @@
 
 HarmonyOS 移植工程见 [harmony/](harmony/PORTING.md)。
 
-## 📄 开源协议
+## 📄 开源协议与合规
 
 本项目以 **GNU AGPL-3.0** 协议开源（完整文本见 [LICENSE](LICENSE)）。欢迎 Issue、PR 与模板投稿。
+
+- **第三方合规**：随 APP 分发的模型、素材及构建工具均按其原许可证使用，出处与许可证逐项列于 [THIRD_PARTY.md](THIRD_PARTY.md)（u2netp 模型 Apache-2.0、ONNX Runtime MIT、Kenney 素材 CC0）
+- **独立实现声明**：本仓库全部源码为独立实现，未复制任何第三方项目的源码；算法灵感来源（如 Zippland/perler-beads 的公开算法文档）已在 THIRD_PARTY.md 致谢
+- **用户数据**：零网络权限，不收集、不上传任何数据
 
 ## ⚠️ 免责声明
 
@@ -54,4 +58,4 @@ HarmonyOS 移植工程见 [harmony/](harmony/PORTING.md)。
 
 ---
 
-v2.26 · 完全免费 · 无广告
+v2.29 · 完全免费 · 无广告

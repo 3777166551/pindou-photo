@@ -11,6 +11,9 @@
 | u2netp 模型 (4.7MB) | 轻量主体分割(一键去背景) | Apache-2.0 | https://github.com/xuebinqin/U-2-Net |
 
 - ONNX Runtime 以 AAR 形式在本地构建时解包使用(仓库不含二进制,见 build_apk.bat 说明)。
+- 随 APP 分发的 `app/src/main/assets/u2netp.onnx` 为 U²-Net 官方预训练小模型
+  u2netp 的 ONNX 格式版本(格式转换,算法权重未修改);原始权重、论文与许可证
+  见上方原仓库。按 Apache-2.0 要求,本页即其来源与许可证声明。
 - u2netp 模型文件随 APP 内置于 `app/src/main/assets/u2netp.onnx`,版权归 U²-Net 作者所有,按 Apache-2.0 分发。
 
 ## 模板素材
@@ -31,6 +34,24 @@
 |---|---|
 | Android SDK build-tools / platform (aapt2, d8, apksigner) | Android Open Source Project (Apache-2.0) |
 | Eclipse Temurin JDK 17 | GPLv2 with Classpath Exception |
+
+## 灵感与算法参考(未复制源码)
+
+- **[Zippland/perler-beads](https://github.com/Zippland/perler-beads)**(AGPL-3.0)
+  —— "众数取色像素化"与"连通区域杂色合并"的算法思路来源。本仓库参考其公开的
+  算法文档后以 Java **独立实现**(`dominantResample` / `mergeNoiseRegions`),
+  未复制其源码;按 AGPL-3.0 的开源精神在此明确致谢。
+- **Sharma, Wu, Dalal (2005)**,*The CIEDE2000 Color-Difference Formula*
+  —— `ColorMath.deltaE2000` 实现所依据的论文;论文附带的 34 对官方参考色对
+  已用于本实现的数值验证(34/34 通过)。
+- **Pattern Keeper / MakeBead 等同类工具** —— 逐色进度标记、油漆桶填充、
+  全局替换色等功能的交互设计参考,均未使用其任何代码或素材。
+
+## 关于本仓库代码
+
+截至当前版本,本仓库全部 `.java` 源码均为独立实现,未复制任何第三方项目的源代码;
+随 APP 分发的第三方内容仅限本页所列。若未来引入第三方代码,会在本页声明
+其来源、许可证及修改说明,并保证与 AGPL-3.0 兼容。
 
 ## 本项目协议
 
