@@ -2116,7 +2116,8 @@ public class EditorActivity extends Activity {
                             .format(new Date());
                     String name = "拼豆图纸_" + pattern.cols + "x" + pattern.rows
                             + "_" + stamp + ".pdf";
-                    final Uri uri = PdfExporter.export(EditorActivity.this, sheet, name);
+                    final Uri uri = PdfExporter.export(EditorActivity.this, sheet,
+                            pattern, currentPaletteName(), name);
                     sheet.recycle();
                     runOnUiThread(new Runnable() {
                         @Override

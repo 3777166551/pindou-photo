@@ -896,22 +896,30 @@ public final class PatternEngine {
                 int sx0 = x * sw / dw;
                 int sx1 = Math.max(sx0 + 1, ceilDiv((x + 1) * sw, dw));
                 sx1 = Math.min(sx1, sw);
-                long r = 0, g = 0, b = 0;
+                long r = 0, g = 0, b = 0, aSum = 0;
                 int cnt = 0;
                 for (int yy = sy0; yy < sy1; yy++) {
                     int row = yy * sw;
                     for (int xx = sx0; xx < sx1; xx++) {
                         int c = src[row + xx];
-                        r += (c >> 16) & 0xFF;
-                        g += (c >> 8) & 0xFF;
-                        b += c & 0xFF;
+                        int a = (c >>> 24) & 0xFF;
+                        r += ((c >> 16) & 0xFF) * (long) a;
+                        g += ((c >> 8) & 0xFF) * (long) a;
+                        b += (c & 0xFF) * (long) a;
+                        aSum += a;
                         cnt++;
                     }
                 }
-                out[y * dw + x] = 0xFF000000
-                        | ((int) Math.round(r / (double) cnt) << 16)
-                        | ((int) Math.round(g / (double) cnt) << 8)
-                        | (int) Math.round(b / (double) cnt);
+                if (aSum < 128L * cnt) {
+                    // 透明占多数:整格留空(后续按 -1 处理,不摆豆不计用量)
+                    out[y * dw + x] = 0x00000000;
+                } else {
+                    // alpha 加权平均:透明像素不再把边界的颜色拉向黑/白
+                    out[y * dw + x] = 0xFF000000
+                            | ((int) Math.round(r / (double) aSum) << 16)
+                            | ((int) Math.round(g / (double) aSum) << 8)
+                            | (int) Math.round(b / (double) aSum);
+                }
             }
         }
         return out;
