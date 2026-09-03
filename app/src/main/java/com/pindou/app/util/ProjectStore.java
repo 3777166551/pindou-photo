@@ -20,7 +20,9 @@ import java.util.List;
  *   photo  : Base64(JPEG 压缩后的原图),
  *   thumb  : Base64(JPEG 小缩略图,列表展示用),
  *   settings : {...全部生成参数...},
- *   edits  : [[格下标, 色板下标], ...] }
+ *   edits  : [[格下标, 色板下标], ...],
+ *   beadDone : [格下标, ...](拼豆模式完成标记),
+ *   beadDoneDay / beadDoneToday : 今日打卡归属日期与颗数 }
  */
 public final class ProjectStore {
 

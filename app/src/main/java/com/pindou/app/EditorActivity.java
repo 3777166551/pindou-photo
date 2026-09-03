@@ -212,6 +212,10 @@ public class EditorActivity extends Activity {
     private int assistFocus = -1;
     /** 已拼好的格子(y*cols + x) */
     private final Set<Integer> beadDone = new HashSet<>();
+    /** "今日完成"归属日期(yyyy-MM-dd),跨天自动归零 */
+    private String beadDoneDay = "";
+    /** 当天打卡完成的颗数 */
+    private int beadDoneToday = 0;
     /** 缺豆替代建议:用到的色板下标 -> 建议替代色下标(库存够且色最近) */
     private final Map<Integer, Integer> beadSubstitutes = new HashMap<>();
     private View bgStrengthRow;
@@ -642,8 +646,13 @@ public class EditorActivity extends Activity {
                     int idx = pattern.cellAt(cellX, cellY);
                     if (idx < 0) return;
                     int key = cellY * pattern.cols + cellX;
-                    if (!beadDone.remove(key)) beadDone.add(key);
+                    boolean added = beadDone.add(key);
+                    if (!added) beadDone.remove(key);
+                    rollBeadDay();
+                    beadDoneToday = Math.max(0, beadDoneToday + (added ? 1 : -1));
                     updateAssistUi();
+                    updateSummary();
+                    adapter.notifyDataSetChanged();
                     patternView.invalidate();
                     return;
                 }
@@ -1285,6 +1294,8 @@ public class EditorActivity extends Activity {
                         showLoading(false);
                         // 重新生成后格子变了,完成度标记失效,清空重来
                         beadDone.clear();
+                        rollBeadDay();
+                        beadDoneToday = 0;
                         if (beadAssist) {
                             assistFocus = pattern.usedColors.isEmpty()
                                     ? -1 : pattern.usedColors.get(0).index;
@@ -1338,6 +1349,33 @@ public class EditorActivity extends Activity {
     }
 
     /** 切到下一种颜色(按用量从多到少循环) */
+    /** 跨天滚动:"今日完成"计数只属于当天,隔天自动归零 */
+    private void rollBeadDay() {
+        String today = new java.text.SimpleDateFormat(
+                "yyyy-MM-dd", Locale.CHINA).format(new java.util.Date());
+        if (!today.equals(beadDoneDay)) {
+            beadDoneDay = today;
+            beadDoneToday = 0;
+        }
+    }
+
+    /** 当前"今日完成"颗数(隔天未操作时显示 0) */
+    private int todayCount() {
+        String today = new java.text.SimpleDateFormat(
+                "yyyy-MM-dd", Locale.CHINA).format(new java.util.Date());
+        return today.equals(beadDoneDay) ? beadDoneToday : 0;
+    }
+
+    /** 逐色已拼数量(下标 = palette 下标) */
+    private int[] countDonePerColor() {
+        int[] out = new int[pattern.palette.size()];
+        for (int k : beadDone) {
+            int idx = pattern.cellAt(k % pattern.cols, k / pattern.cols);
+            if (idx >= 0 && idx < out.length) out[idx]++;
+        }
+        return out;
+    }
+
     private void cycleAssistColor() {
         if (pattern == null || pattern.usedColors.isEmpty()) return;
         int pos = -1;
@@ -1347,7 +1385,18 @@ public class EditorActivity extends Activity {
                 break;
             }
         }
-        assistFocus = pattern.usedColors.get((pos + 1) % pattern.usedColors.size()).index;
+        int next = (pos + 1) % pattern.usedColors.size();
+        int[] donePer = countDonePerColor();
+        // 优先跳到还有剩豆的颜色,全部拼完时才纯轮转
+        for (int i = 1; i < pattern.usedColors.size(); i++) {
+            int cand = (pos + i) % pattern.usedColors.size();
+            BeadPattern.UsedColor uc = pattern.usedColors.get(cand);
+            if (pattern.counts[uc.index] - donePer[uc.index] > 0) {
+                next = cand;
+                break;
+            }
+        }
+        assistFocus = pattern.usedColors.get(next).index;
         updateAssistUi();
         patternView.setAssist(true, assistFocus, beadDone);
     }
@@ -1380,13 +1429,16 @@ public class EditorActivity extends Activity {
                 }
             }
         }
-        tvAssistColor.setText(String.format(Locale.CHINA, "颜色 %d/%d · 本色 %d 颗",
-                order, pattern.usedColors.size(), total));
+        int remain = total - done;
+        tvAssistColor.setText(String.format(Locale.CHINA,
+                remain > 0 ? "颜色 %d/%d · 本色 %d 颗 · 剩 %d 颗"
+                        : "颜色 %d/%d · 本色 %d 颗 · 🎉拼完",
+                order, pattern.usedColors.size(), total, remain));
         float pct = pattern.totalBeads > 0
                 ? beadDone.size() * 100f / pattern.totalBeads : 0f;
         tvAssistProgress.setText(String.format(Locale.CHINA,
-                "本色已完成 %d / %d 颗 · 总进度 %.0f%%(%d/%d 颗)",
-                done, total, pct, beadDone.size(), pattern.totalBeads));
+                "✅ 已拼 %d/%d 颗 · 总进度 %.0f%%(%d/%d 颗) · 🔥今日 %d 颗",
+                done, total, pct, beadDone.size(), pattern.totalBeads, todayCount()));
     }
 
     // ---------------- 豆豆清单 ----------------
@@ -1482,6 +1534,11 @@ public class EditorActivity extends Activity {
             sb.append(String.format(Locale.CHINA,
                     "\n🎒 豆仓:%d/%d 色够用 · 还需补 %,d 颗",
                     enough, pattern.usedColors.size(), shortage));
+        }
+        if (!beadDone.isEmpty()) {
+            sb.append(String.format(Locale.CHINA,
+                    "\n🧩 已拼 %,d/%,d 颗 · 今日完成 %d 颗",
+                    beadDone.size(), pattern.totalBeads, todayCount()));
         }
         tvSummary.setText(sb.toString());
     }
@@ -1644,9 +1701,17 @@ public class EditorActivity extends Activity {
     private class BeadAdapter extends BaseAdapter {
 
         private final LayoutInflater inflater;
+        /** 逐色已拼缓存(null = 没有任何完成标记),随 notifyDataSetChanged 重算 */
+        private int[] donePerColor;
 
         BeadAdapter() {
             inflater = LayoutInflater.from(EditorActivity.this);
+        }
+
+        @Override
+        public void notifyDataSetChanged() {
+            donePerColor = beadDone.isEmpty() ? null : countDonePerColor();
+            super.notifyDataSetChanged();
         }
 
         @Override
@@ -1695,7 +1760,13 @@ public class EditorActivity extends Activity {
             }
 
             TextView count = v.findViewById(R.id.tvCount);
-            count.setText(String.format(Locale.CHINA, "%,d 颗", uc.count));
+            if (donePerColor != null && donePerColor[uc.index] > 0) {
+                int left = uc.count - donePerColor[uc.index];
+                count.setText(String.format(Locale.CHINA, left > 0
+                        ? "%,d 颗 · 剩 %d" : "%,d 颗 · ✅拼完", uc.count, left));
+            } else {
+                count.setText(String.format(Locale.CHINA, "%,d 颗", uc.count));
+            }
 
             TextView percent = v.findViewById(R.id.tvPercent);
             float pct = pattern.totalBeads > 0
@@ -2433,6 +2504,8 @@ public class EditorActivity extends Activity {
                     JSONArray bd = new JSONArray();
                     for (int k : beadDone) bd.put(k);
                     o.put("beadDone", bd);
+                    o.put("beadDoneDay", beadDoneDay);
+                    o.put("beadDoneToday", beadDoneToday);
 
                     if (!blankCanvas && source != null && !source.isRecycled()) {
                         o.put("photo", Jsons.encodeBitmap(source, 1024, 85));
@@ -2518,6 +2591,9 @@ public class EditorActivity extends Activity {
                     if (k >= 0 && k < cols * rows) beadDone.add(k);
                 }
             }
+            beadDoneDay = o.optString("beadDoneDay", "");
+            beadDoneToday = Math.max(0, o.optInt("beadDoneToday", 0));
+            rollBeadDay();
 
             String photo = o.optString("photo", "");
             if (!photo.isEmpty()) {
