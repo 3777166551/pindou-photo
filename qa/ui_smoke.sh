@@ -115,6 +115,19 @@ check_text() {
 
 back() { adb shell input keyevent 4; sleep 1.5; }
 
+# 确保回到首页:不在首页就 am start 拉回前台(不会重建任务)
+ensure_home() {
+  local n
+  for n in 1 2 3; do
+    dump_ui && grep -q "text=\"[^\"]*Start a new pattern[^\"]*\"" ui.xml && {
+      log "home visible"; return 0
+    }
+    adb shell am start -n $PKG/.MainActivity > /dev/null 2>&1
+    sleep 2
+  done
+  log "soft-miss: home not confirmed"
+}
+
 wait_boot() {
   for _ in $(seq 1 60); do
     [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] && return 0
@@ -153,13 +166,16 @@ sleep 1.5
 check_text "What are fuse beads?"
 snap knowledge
 back
+ensure_home
 
 # ---------- 模板库 ----------
 tap_id btnTemplates
-sleep 2
+sleep 2.5
+check_text "Design templates" 0
 snap templates
 tap_text "Close" 0
 back
+ensure_home
 
 # ---------- 空白画布进入编辑器 ----------
 tap_id btnBlank
@@ -215,7 +231,8 @@ sleep 1
 # ---------- 恢复默认 + 返回首页 ----------
 tap_id btnReset 0
 back
-sleep 2
+ensure_home
+sleep 1
 
 # ---------- 文字生成 ----------
 tap_id btnText 0
@@ -229,14 +246,14 @@ tap_text "Generate" 0
 sleep 8
 snap textgen
 back
-sleep 1.5
+ensure_home
 
 # ---------- 我的项目(空) ----------
 tap_id btnProjects 0
 sleep 1.5
 snap projects
 back
-sleep 1
+ensure_home
 
 # ---------- 崩溃检查 ----------
 snap final
