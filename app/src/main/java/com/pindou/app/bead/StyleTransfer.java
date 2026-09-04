@@ -45,12 +45,26 @@ public final class StyleTransfer {
     }
 
     /**
-     * 对整幅像素做风格化。
+     * 对整幅像素做风格化(全强度;等同 strength=100)。
      *
      * @return Object[]{int[] 像素, int 宽, int 高}(输出为 16 倍数尺寸,
      *         长边最多 1024);任何一步失败返回 null,调用方保留原图。
      */
     public static Object[] stylize(int[] rgb, int w, int h) {
+        return stylize(rgb, w, h, 100);
+    }
+
+    /**
+     * 对整幅像素做风格化,带两步画质修复(实测明显更耐看):
+     * 1. 色系统一(deblue):模型输出常带黄绿偏色,把每通道均值/方差
+     *    对齐回原图,保住服装/背景的真实颜色,只留下明暗与笔触;
+     * 2. 强度混合:out = 原图*(1-a) + 风格*a。人像在 60~70% 时保五官,
+     *    100% 才是完全动漫化(旧行为)。
+     *
+     * @param strengthPercent 0~100,风格强度
+     * @return Object[]{int[] 像素, int 宽, int 高};失败返回 null。
+     */
+    public static Object[] stylize(int[] rgb, int w, int h, int strengthPercent) {
         if (!initialised || !available || rgb == null || rgb.length != w * h) return null;
         try {
             int lw = w, lh = h;
@@ -90,10 +104,54 @@ public final class StyleTransfer {
                     outPx[y * lw + x] = 0xFF000000 | (r << 16) | (g << 8) | b;
                 }
             }
+
+            // -- 1) 色系统一:每通道 mean/std 对齐回原图 --
+            float[] om = new float[3], osd = new float[3];
+            float[] gm = new float[3], gsd = new float[3];
+            stats(net, om, osd);
+            stats(outPx, gm, gsd);
+            float alpha = Math.max(0f, Math.min(100f, strengthPercent)) / 100f;
+            for (int i = 0; i < outPx.length; i++) {
+                int o = net[i];
+                int g = outPx[i];
+                int r = match((g >> 16) & 0xFF, gm[0], gsd[0], om[0], osd[0]);
+                int gg = match((g >> 8) & 0xFF, gm[1], gsd[1], om[1], osd[1]);
+                int b = match(g & 0xFF, gm[2], gsd[2], om[2], osd[2]);
+                // -- 2) 与原图按强度混合(保留五官与结构) --
+                r = Math.round(((o >> 16) & 0xFF) * (1 - alpha) + r * alpha);
+                gg = Math.round(((o >> 8) & 0xFF) * (1 - alpha) + gg * alpha);
+                b = Math.round((o & 0xFF) * (1 - alpha) + b * alpha);
+                outPx[i] = 0xFF000000 | (clamp8(r) << 16) | (clamp8(gg) << 8) | clamp8(b);
+            }
             return new Object[]{outPx, lw, lh};
         } catch (Throwable t) {
             return null;
         }
+    }
+
+    /** 通道均值/方差(0~255 RGB) */
+    private static void stats(int[] px, float[] mean, float[] sd) {
+        long n = px.length;
+        double[] s = new double[3], s2 = new double[3];
+        for (int i = 0; i < px.length; i++) {
+            int c = px[i];
+            double r = (c >> 16) & 0xFF, g = (c >> 8) & 0xFF, b = c & 0xFF;
+            s[0] += r; s[1] += g; s[2] += b;
+            s2[0] += r * r; s2[1] += g * g; s2[2] += b * b;
+        }
+        for (int c = 0; c < 3; c++) {
+            mean[c] = (float) (s[c] / n);
+            sd[c] = (float) Math.sqrt(Math.max(0, s2[c] / n - mean[c] * mean[c]) + 1e-6);
+        }
+    }
+
+    /** 按目标均值/方差重映射单通道 */
+    private static int match(int v, float gm, float gsd, float om, float osd) {
+        return Math.round((v - gm) / gsd * osd + om);
+    }
+
+    private static int clamp8(int v) {
+        return v < 0 ? 0 : (v > 255 ? 255 : v);
     }
 
     private static int denorm(float v) {

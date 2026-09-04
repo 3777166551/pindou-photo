@@ -171,6 +171,8 @@
     <string name="fmt_board_rect">Uses %1$d 29×29 boards · about %2$.0f × %3$.0f cm (5mm beads)</string>
     <string name="err_ghibli_blank">Blank canvas needs no stylizing, import a photo first</string>
     <string name="ghibli_title">🎨 Ghibli style (AI)</string>
+    <string name="style_strength">Style strength</string>
+    <string name="style_working">Styling…</string>
     <string name="ghibli_msg">The on-device AnimeGANv3 model turns your photo into a Ghibli-like illustration — cleaner color blocks, crisper bead outlines.\n\nRuns fully offline in about 2–10 s;\nit replaces the current photo, and "🎨 Restore original photo" brings it back anytime.</string>
     <string name="err_style_model">Style model unavailable</string>
     <string name="err_infer">Inference failed, please retry</string>

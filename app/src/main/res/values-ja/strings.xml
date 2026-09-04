@@ -171,6 +171,8 @@
     <string name="fmt_board_rect">29×29 ボード %1$d 枚 · 約 %2$.0f × %3$.0f cm(5mm ビーズ)</string>
     <string name="err_ghibli_blank">白紙キャンバスはスタイル化不要です。先に写真を読み込んでください</string>
     <string name="ghibli_title">🎨 ジブリ風(オフラインAI)</string>
+    <string name="style_strength">スタイル強度</string>
+    <string name="style_working">AIスタイル変換中…</string>
     <string name="ghibli_msg">内蔵の AnimeGANv3 モデルが写真をジブリ風イラストに変換。色のまとまりがきれいになり、図案の輪郭もくっきり。\n\n完全オフラインで約 2〜10 秒。\n現在の写真を置き換えます。「🎨 元の写真に戻す」でいつでも復元できます。</string>
     <string name="err_style_model">スタイルモデルを利用できません</string>
     <string name="err_infer">推論に失敗しました、再試行してください</string>

@@ -1241,22 +1241,57 @@ public class EditorActivity extends Activity {
             Toast.makeText(this, getString(R.string.err_ghibli_blank), Toast.LENGTH_SHORT).show();
             return;
         }
+        final int[] strength = {65};
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        int pad = Math.round(20 * getResources().getDisplayMetrics().density);
+        box.setPadding(pad, dp4(8), pad, 0);
+        final TextView lab = new TextView(this);
+        lab.setText(getString(R.string.style_strength) + ": " + strength[0] + "%");
+        lab.setTextColor(0xFF4E4A46);
+        lab.setTextSize(14);
+        box.addView(lab);
+        SeekBar sb = new SeekBar(this);
+        sb.setMax(100);
+        sb.setProgress(strength[0]);
+        sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar s, int progress, boolean fromUser) {
+                strength[0] = progress;
+                lab.setText(getString(R.string.style_strength) + ": " + progress + "%");
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar s) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar s) {
+            }
+        });
+        box.addView(sb);
+
         new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.ghibli_title))
                 .setMessage(getString(R.string.ghibli_msg))
+                .setView(box)
                 .setPositiveButton(getString(R.string.btn_start), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int which) {
-                        runStyle();
+                        runStyle(strength[0]);
                     }
                 })
                 .setNegativeButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 
-    private void runStyle() {
+    private int dp4(float v) {
+        return Math.round(v * getResources().getDisplayMetrics().density);
+    }
+
+    private void runStyle(int strength) {
         aiRunning = true;
-        showLoading(true, "AI 风格化中…");
+        showLoading(true, getString(R.string.style_working));
         final Bitmap bmp = source;
         new Thread(new Runnable() {
             @Override
@@ -1269,7 +1304,7 @@ public class EditorActivity extends Activity {
                     bmp.getPixels(px, 0, bmp.getWidth(), 0, 0,
                             bmp.getWidth(), bmp.getHeight());
                     Object[] r = StyleTransfer.stylize(px,
-                            bmp.getWidth(), bmp.getHeight());
+                            bmp.getWidth(), bmp.getHeight(), strength);
                     if (r == null) throw new Exception(getString(R.string.err_infer));
                     final int[] outPx = (int[]) r[0];
                     final int ow = (Integer) r[1];

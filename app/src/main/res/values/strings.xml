@@ -171,6 +171,8 @@
     <string name="fmt_board_rect">需要 29×29 拼板 %1$d 块 · 成品约 %2$.0f × %3$.0f cm(标准 5mm 豆)</string>
     <string name="err_ghibli_blank">空白画布不需要风格化,先导入照片</string>
     <string name="ghibli_title">🎨 吉卜力风(AI 风格化)</string>
+    <string name="style_strength">风格强度</string>
+    <string name="style_working">AI 风格化中…</string>
     <string name="ghibli_msg">用内置的 AnimeGANv3 模型把照片变成吉卜力动画风,颜色块面更干净,转出来的拼豆图纸轮廓更好看。\n\n纯本地离线推理,约 2~10 秒;\n结果会替换当前照片,之后点「🎨 恢复原始照片」可随时还原。</string>
     <string name="err_style_model">风格化模型不可用</string>
     <string name="err_infer">推理失败,请重试</string>
