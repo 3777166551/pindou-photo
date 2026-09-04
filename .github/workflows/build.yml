@@ -16,11 +16,12 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: CIEDE2000 reference test (Sharma 2005, 34 pairs)
+      - name: Run qa test suite (ColorMath / PatternEngine / PatternPatch)
         run: |
-          mkdir -p qa/out
-          javac -sourcepath app/src/main/java -d qa/out qa/TestColorMath.java
-          java -cp qa/out TestColorMath
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+          sdkmanager --install "platforms;android-34" > /dev/null
+          bash qa/run_tests.sh
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
