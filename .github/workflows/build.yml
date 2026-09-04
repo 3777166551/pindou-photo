@@ -93,6 +93,8 @@ jobs:
 
       - name: Smoke test
         run: |
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export PATH="$ANDROID_HOME/platform-tools:$PATH"
           adb wait-for-device
           adb install -r apk/*.apk
           # 关动画,避免时序抖动
