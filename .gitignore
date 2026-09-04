@@ -11,19 +11,19 @@ tools/
 # ---- 本地私有文件(不随仓库分发) ----
 .mimosa/
 backup_*/
-Debug/
-发布/
-HANDOFF.md
-三转二方案调研.md
-build_log.txt
+/Debug/
+/发布/
+/HANDOFF.md
+/三转二方案调研.md
+/build_log.txt
 .firecrawl/
 
-# ---- 构建产物 / 历史残留 ----
-classes.dex
-META-INF/
--p
-activity_editor.xml
-kenney_tree.txt
+# ---- 构建产物 / 历史残留(仅根目录,模式已锚定避免误伤资源文件) ----
+/classes.dex
+/META-INF/
+/-p
+/activity_editor.xml
+/kenney_tree.txt
 app/src/main/java/com/pindou/app/ai_refs.txt
 
 # ---- HarmonyOS 工程 ----
