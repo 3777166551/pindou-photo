@@ -726,6 +726,27 @@ public final class BeadBrandCharts {
             new Chart("Hama Midi·5mm", build(DATA_HAMA)),
     };
 
+    /** 可选的"我的豆板"(从豆仓库存生成),启动/重建时设置;null = 无 */
+    private static volatile Chart custom;
+
+    public static void setCustom(Chart c) {
+        custom = c;
+    }
+
+    public static Chart getCustom() {
+        return custom;
+    }
+
+    /** 自定义色板槽位数(0 或 1),BeadPalettes 的选择列表会追加 */
+    public static int extraCount() {
+        return custom != null ? 1 : 0;
+    }
+
+    /** 公开工厂:包外生成 Chart(自定义色板用) */
+    public static Chart make(String name, List<BeadColor> colors) {
+        return new Chart(name, colors);
+    }
+
     private static List<BeadColor> build(String[] data) {
         List<BeadColor> out = new ArrayList<>(data.length);
         for (int i = 0; i < data.length; i++) {

@@ -73,6 +73,11 @@ public final class BeadPalettes {
 
     private static String[] selNamesCache;
 
+    /** 色板列表变化(生成/重建我的豆板)后调用,让下拉框重新取名字 */
+    public static void resetCache() {
+        selNamesCache = null;
+    }
+
     private static List<BeadColor> buildMaster() {
         List<BeadColor> list = new ArrayList<>(120);
         append(list, HEX_T1, NAME_T1);
@@ -88,9 +93,9 @@ public final class BeadPalettes {
         }
     }
 
-    /** 色板选择器总数:通用 4 档 + 品牌色号表 */
+    /** 色板选择器总数:通用 4 档 + 品牌色号表 + 我的豆板(若有) */
     public static int selCount() {
-        return GENERIC_COUNT + BeadBrandCharts.ALL.length;
+        return GENERIC_COUNT + BeadBrandCharts.ALL.length + BeadBrandCharts.extraCount();
     }
 
     /** 色板选择器的全部名称(下拉框直接用) */
@@ -102,27 +107,71 @@ public final class BeadPalettes {
             BeadBrandCharts.Chart c = BeadBrandCharts.ALL[i];
             n[GENERIC_COUNT + i] = c.name + "(" + c.colors.size() + "色)";
         }
+        if (BeadBrandCharts.getCustom() != null) {
+            BeadBrandCharts.Chart c = BeadBrandCharts.getCustom();
+            n[GENERIC_COUNT + BeadBrandCharts.ALL.length] = c.name;
+        }
         selNamesCache = n;
         return n;
     }
 
     /**
-     * 按选择序号取色板。0~3 = 通用 4 档;>=4 = 品牌官方色号表
-     * (里面的 BeadColor 带官方 tag,清单和图纸直接显示真实色号)。
+     * 按选择序号取色板。0~3 = 通用 4 档;之后 = 品牌官方色号表
+     * (里面的 BeadColor 带官方 tag,清单和图纸直接显示真实色号);
+     * 最后 = 我的豆板(从豆仓库存生成,若已注册)。
      */
     public static List<BeadColor> getPalette(int sel) {
+        int brandCount = BeadBrandCharts.ALL.length;
+        if (sel >= GENERIC_COUNT + brandCount) {
+            if (BeadBrandCharts.extraCount() > 0) {
+                return new ArrayList<>(BeadBrandCharts.getCustom().colors);
+            }
+            sel = GENERIC_COUNT + brandCount - 1;
+        }
         if (sel >= GENERIC_COUNT) {
             int j = sel - GENERIC_COUNT;
-            if (j < BeadBrandCharts.ALL.length) {
+            if (j < brandCount) {
                 return new ArrayList<>(BeadBrandCharts.ALL[j].colors);
             }
-            j = BeadBrandCharts.ALL.length - 1;
+            j = brandCount - 1;
             return new ArrayList<>(BeadBrandCharts.ALL[Math.max(0, j)].colors);
         }
         int[] sizes = {24, 48, 90, 120};
         int n = sizes[Math.max(0, Math.min(3, sel))];
         if (n > MASTER.size()) n = MASTER.size();
         return new ArrayList<>(MASTER.subList(0, n));
+    }
+
+    /**
+     * "我的豆板":把豆仓里登记过、手头有货(数量>0)的颜色按色相排序
+     * 生成自定义色板——用真实拥有的豆子画图,豆单就是购买/取用清单。
+     * 颜色不足 1 种返回 null。
+     */
+    public static List<BeadColor> buildInventoryPalette(android.content.Context c) {
+        List<Integer> rgbs = BeadInventory.ownedColors(c);
+        if (rgbs.isEmpty()) return null;
+        final double[][] labs = new double[rgbs.size()][];
+        for (int i = 0; i < rgbs.size(); i++) {
+            labs[i] = ColorMath.rgbToLab(rgbs.get(i));
+        }
+        List<Integer> order = new ArrayList<>();
+        for (int i = 0; i < rgbs.size(); i++) order.add(i);
+        java.util.Collections.sort(order, new java.util.Comparator<Integer>() {
+            @Override
+            public int compare(Integer a, Integer b) {
+                double ha = Math.toDegrees(Math.atan2(labs[a][2], labs[a][1]));
+                double hb = Math.toDegrees(Math.atan2(labs[b][2], labs[b][1]));
+                if (ha < 0) ha += 360;
+                if (hb < 0) hb += 360;
+                return Double.compare(ha, hb);
+            }
+        });
+        List<BeadColor> out = new ArrayList<>(rgbs.size());
+        for (int i = 0; i < order.size(); i++) {
+            int rgb = rgbs.get(order.get(i));
+            out.add(new BeadColor(i + 1, "我的色" + (i + 1), rgb));
+        }
+        return out;
     }
 
     public static String tierName(int sel) {

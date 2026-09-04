@@ -38,6 +38,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.pindou.app.bead.BeadBrand;
+import com.pindou.app.bead.BeadBrandCharts;
 import com.pindou.app.bead.BeadColor;
 import com.pindou.app.bead.BeadInventory;
 import com.pindou.app.bead.BeadPalettes;
@@ -251,6 +252,7 @@ public class EditorActivity extends Activity {
     private AlertDialog calendarDialog;
     private TextView tvLoading;
     private Spinner paletteSpinner, abstractColorSpinner;
+    private ArrayAdapter<String> paletteAdapter;
     private Switch swDither, swSymbols, swGrid, swSnap, swKmeans;
     private Switch swDominant, swPrecise;
     private SeekBar sbDenoise;
@@ -273,6 +275,12 @@ public class EditorActivity extends Activity {
 
         // 去背景小模型(U2NetP)预加载;失败自动回退颜色统计算法
         MlSegmenter.init(getApplicationContext());
+        // 我的豆板:启动时从豆仓库存生成(有登记才出现,排在色板列表最后)
+        List<BeadColor> mine = BeadPalettes.buildInventoryPalette(this);
+        if (mine != null) {
+            BeadBrandCharts.setCustom(BeadBrandCharts.make(
+                    "🎨 我的豆板(" + mine.size() + "色)", mine));
+        }
         PatternEngine.setMlProvider(new PatternEngine.MlProvider() {
             @Override
             public float[] findSubjectProbs(int[] rgb, int w, int h) {
@@ -569,12 +577,12 @@ public class EditorActivity extends Activity {
         findViewById(R.id.btnHMinus).setOnClickListener(stepper(false, false));
         findViewById(R.id.btnHPlus).setOnClickListener(stepper(true, false));
 
-        // 色板(通用 4 档 + 品牌官方色号表)
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this,
+        // 色板(通用 4 档 + 品牌官方色号表 + 我的豆板)
+        paletteAdapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_item, BeadPalettes.selNames());
-        spinnerAdapter.setDropDownViewResource(
+        paletteAdapter.setDropDownViewResource(
                 android.R.layout.simple_spinner_dropdown_item);
-        paletteSpinner.setAdapter(spinnerAdapter);
+        paletteSpinner.setAdapter(paletteAdapter);
         suppressSpinner = true;
         paletteSpinner.setSelection(tierIdx);
         suppressSpinner = false;
@@ -1954,6 +1962,47 @@ public class EditorActivity extends Activity {
                         updateSummary();
                         Toast.makeText(EditorActivity.this,
                                 "豆仓已更新,豆单已标注缺口", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNeutralButton("🎨 生成我的豆板", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int w) {
+                        // 先把当前对话框里的草稿登记进豆仓,再从豆仓重建色板
+                        for (InvRow r : rows) {
+                            try {
+                                String t = r.draft.trim();
+                                if (t.isEmpty()) continue;
+                                BeadInventory.set(EditorActivity.this,
+                                        r.color.rgb, Integer.parseInt(t));
+                            } catch (NumberFormatException ignored) {
+                            }
+                        }
+                        List<BeadColor> mine = BeadPalettes.buildInventoryPalette(
+                                EditorActivity.this);
+                        if (mine == null) {
+                            Toast.makeText(EditorActivity.this,
+                                    "豆仓还没有有货的颜色,先给颜色填上数量",
+                                    Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        BeadBrandCharts.setCustom(BeadBrandCharts.make(
+                                "🎨 我的豆板(" + mine.size() + "色)", mine));
+                        BeadPalettes.resetCache();
+                        paletteAdapter = new ArrayAdapter<>(EditorActivity.this,
+                                android.R.layout.simple_spinner_item,
+                                BeadPalettes.selNames());
+                        paletteAdapter.setDropDownViewResource(
+                                android.R.layout.simple_spinner_dropdown_item);
+                        paletteSpinner.setAdapter(paletteAdapter);
+                        suppressSpinner = true;
+                        paletteSpinner.setSelection(BeadPalettes.selCount() - 1, true);
+                        suppressSpinner = false;
+                        tierIdx = BeadPalettes.selCount() - 1;
+                        editMap.clear();
+                        structureChanged();
+                        Toast.makeText(EditorActivity.this,
+                                "🎨 我的豆板已生成并选用:" + mine.size() + " 种手头颜色",
+                                Toast.LENGTH_LONG).show();
                     }
                 })
                 .setNegativeButton("取消", null)

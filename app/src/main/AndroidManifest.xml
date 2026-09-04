@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 包名由 app/build.gradle 的 namespace 提供(AGP 8 起 Manifest 不再写 package) -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.pindou.app">
+    <!-- 本地原生构建(build_apk.bat)的 aapt2 需要 package 属性;
+         Gradle/AGP 8 侧以 namespace 为准,保留此属性仅产生告警 -->
 
     <!-- 仅 Android 9 及以下保存到相册需要;Android 10+ 用 MediaStore 无需权限 -->
     <uses-permission

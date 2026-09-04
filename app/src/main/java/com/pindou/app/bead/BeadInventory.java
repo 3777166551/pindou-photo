@@ -8,8 +8,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -63,6 +65,18 @@ public final class BeadInventory {
         load(c);
         COUNTS.put(rgb & 0xFFFFFF, Math.max(0, count));
         save(c);
+    }
+
+    /** 手头有货(数量>0)的全部颜色 RGB(0xFFRRGGBB);HashMap 无序,调用方自行排序 */
+    public static synchronized List<Integer> ownedColors(Context c) {
+        load(c);
+        List<Integer> out = new ArrayList<>();
+        for (Map.Entry<Integer, Integer> e : COUNTS.entrySet()) {
+            if (e.getValue() != null && e.getValue() > 0) {
+                out.add(0xFF000000 | e.getKey());
+            }
+        }
+        return out;
     }
 
     private static synchronized void save(Context c) {
