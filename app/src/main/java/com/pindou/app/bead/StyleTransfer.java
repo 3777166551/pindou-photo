@@ -1,0 +1,121 @@
+package com.pindou.app.bead;
+
+import android.content.Context;
+
+import java.util.Collections;
+
+import ai.onnxruntime.OnnxTensor;
+import ai.onnxruntime.OrtEnvironment;
+import ai.onnxruntime.OrtSession;
+
+/**
+ * AnimeGANv3 吉卜力风风格化(ONNX Runtime,全离线推理)。
+ * 模型:AnimeGANv3_large_Ghibli_c1_e299.onnx(assets 内,约 7MB),
+ * 作者 Asher Chan,自定义许可证:非商业用途免费使用,商用需联系作者授权;
+ * 本 APP 为免费、无广告的非商业开源项目(声明见 THIRD_PARTY.md)。
+ *
+ * 预处理/后处理与官方 onnx_infer.py 的 v3_preprocess/v3_post_processing 一致:
+ * RGB 输入,float32,/127.5 - 1,布局 NHWC,宽高为 16 的倍数;
+ * 输出同布局,值域约 [-1,1],反归一化回 0~255。
+ */
+public final class StyleTransfer {
+
+    private static volatile boolean initialised;
+    private static volatile boolean available;
+    private static OrtEnvironment env;
+    private static OrtSession session;
+
+    /** 懒加载:第一次真正用到才读模型(约 7MB,会常驻内存);返回是否可用 */
+    public static synchronized boolean ensureInit(Context ctx) {
+        if (initialised) return available;
+        try {
+            env = OrtEnvironment.getEnvironment();
+            byte[] model = readAsset(ctx, "animeganv3_ghibli.onnx");
+            session = env.createSession(model, new OrtSession.SessionOptions());
+            available = session != null;
+        } catch (Throwable t) {
+            available = false;
+        }
+        initialised = true;
+        return available;
+    }
+
+    public static boolean isAvailable() {
+        return initialised && available;
+    }
+
+    /**
+     * 对整幅像素做风格化。
+     *
+     * @return Object[]{int[] 像素, int 宽, int 高}(输出为 16 倍数尺寸,
+     *         长边最多 1024);任何一步失败返回 null,调用方保留原图。
+     */
+    public static Object[] stylize(int[] rgb, int w, int h) {
+        if (!initialised || !available || rgb == null || rgb.length != w * h) return null;
+        try {
+            int lw = w, lh = h;
+            if (Math.max(lw, lh) > 1024) {
+                float s = 1024f / Math.max(lw, lh);
+                lw = Math.max(16, Math.round(lw * s));
+                lh = Math.max(16, Math.round(lh * s));
+            }
+            lw = to16(lw);
+            lh = to16(lh);
+            int[] net = (lw == w && lh == h)
+                    ? rgb : PatternEngine.resampleBilinear(rgb, w, h, lw, lh);
+
+            float[][][][] in = new float[1][lh][lw][3];
+            for (int y = 0; y < lh; y++) {
+                for (int x = 0; x < lw; x++) {
+                    int c = net[y * lw + x];
+                    in[0][y][x][0] = ((c >> 16) & 0xFF) / 127.5f - 1f;
+                    in[0][y][x][1] = ((c >> 8) & 0xFF) / 127.5f - 1f;
+                    in[0][y][x][2] = (c & 0xFF) / 127.5f - 1f;
+                }
+            }
+            OnnxTensor tensor = OnnxTensor.createTensor(env, in);
+            ai.onnxruntime.OrtSession.Result res = session.run(
+                    Collections.singletonMap(
+                            session.getInputNames().iterator().next(), tensor));
+            float[][][][] out = (float[][][][]) res.get(0).getValue();
+            res.close();
+            tensor.close();
+
+            int[] outPx = new int[lw * lh];
+            for (int y = 0; y < lh; y++) {
+                for (int x = 0; x < lw; x++) {
+                    int r = denorm(out[0][y][x][0]);
+                    int g = denorm(out[0][y][x][1]);
+                    int b = denorm(out[0][y][x][2]);
+                    outPx[y * lw + x] = 0xFF000000 | (r << 16) | (g << 8) | b;
+                }
+            }
+            return new Object[]{outPx, lw, lh};
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    private static int denorm(float v) {
+        int i = Math.round((Math.max(-1f, Math.min(1f, v)) + 1f) * 127.5f);
+        return i < 0 ? 0 : (i > 255 ? 255 : i);
+    }
+
+    private static int to16(int v) {
+        return Math.max(16, v - v % 16);
+    }
+
+    private static byte[] readAsset(Context ctx, String name) throws Exception {
+        android.content.res.AssetManager am = ctx.getAssets();
+        java.io.InputStream is = am.open(name);
+        java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+        byte[] buf = new byte[8192];
+        int n;
+        while ((n = is.read(buf)) > 0) bos.write(buf, 0, n);
+        is.close();
+        return bos.toByteArray();
+    }
+
+    private StyleTransfer() {
+    }
+}

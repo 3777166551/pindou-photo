@@ -46,9 +46,12 @@ import com.pindou.app.bead.ColorMath;
 import com.pindou.app.bead.MlSegmenter;
 import com.pindou.app.bead.PatternEngine;
 import com.pindou.app.bead.PatternPatch;
+import com.pindou.app.bead.StyleTransfer;
 import com.pindou.app.export.EffectRenderer;
 import com.pindou.app.export.PatternSheetRenderer;
 import com.pindou.app.export.PdfExporter;
+import com.pindou.app.provider.AppFileProvider;
+import com.pindou.app.util.PatternShare;
 import com.pindou.app.util.Anim;
 import com.pindou.app.util.GallerySaver;
 import com.pindou.app.util.ImageLoader;
@@ -101,6 +104,7 @@ public class EditorActivity extends Activity {
     public static int pendingSuggestedSize;
 
     private static final int REQ_STORAGE = 100;
+    private static final int REQ_IMPORT = 101;
     private static final int MIN_SIZE = 8;
     private static final int MAX_SIZE = 160;
     private static final int[] ABSTRACT_CHOICES = {4, 6, 8, 10, 12, 16};
@@ -111,6 +115,7 @@ public class EditorActivity extends Activity {
     private static final int EXP_EFFECT = 2;
     private static final int EXP_SHARE = 3;
     private static final int EXP_PDF = 4;
+    private static final int EXP_FILE = 6;
 
     // 状态
     private Bitmap source;
@@ -205,6 +210,8 @@ public class EditorActivity extends Activity {
     private final View[] chipLimits = new View[5];
     /** 色数上限档位(对应 COLOR_LIMITS),0 = 不限 */
     private int maxColorsIdx = 0;
+    /** 从分享文件导入的图纸:可编辑/导出,但不支持改参数重新生成 */
+    private boolean imported = false;
     // 生成质量包:众数取色 / 杂色清理 / CIEDE2000 精准配色
     private boolean dominant = false;
     private int denoise = 0;
@@ -235,6 +242,7 @@ public class EditorActivity extends Activity {
     private View btnMirrorH, btnMirrorV, btnRotate90;
     private View btnAiRestore;
     private View btnRemoveWatermark;
+    private View btnStyleGhibli;
     private TextView tvLoading;
     private Spinner paletteSpinner, abstractColorSpinner;
     private Switch swDither, swSymbols, swGrid, swSnap, swKmeans;
@@ -318,6 +326,7 @@ public class EditorActivity extends Activity {
             source = pendingSource;
             originalSource = source;
             pendingSource = null;
+            imported = false;
             int sug = pendingSuggestedSize;
             pendingSuggestedSize = 0;
             if (sug >= MIN_SIZE && sug <= MAX_SIZE) {
@@ -390,6 +399,7 @@ public class EditorActivity extends Activity {
         btnRedo = findViewById(R.id.btnRedo);
         btnAiRestore = findViewById(R.id.btnAiRestore);
         btnRemoveWatermark = findViewById(R.id.btnRemoveWatermark);
+        btnStyleGhibli = findViewById(R.id.btnStyleGhibli);
         tvLoading = findViewById(R.id.tvLoading);
         chipBrickLight = findViewById(R.id.chipBrickLight);
         chipBrickMid = findViewById(R.id.chipBrickMid);
@@ -1061,6 +1071,7 @@ public class EditorActivity extends Activity {
         cols = rows = 58;
         tierIdx = 2;
         dither = false;
+        imported = false;
         dominant = false;
         denoise = 0;
         preciseColor = false;
@@ -1133,6 +1144,91 @@ public class EditorActivity extends Activity {
                 showWatermarkDialog();
             }
         });
+        btnStyleGhibli.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showStyleDialog();
+            }
+        });
+    }
+
+    // ---------------- AI 风格化(AnimeGANv3,离线) ----------------
+
+    private void showStyleDialog() {
+        if (aiRunning) return;
+        if (source == null) {
+            Toast.makeText(this, "空白画布不需要风格化,先导入照片", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("🎨 吉卜力风(AI 风格化)")
+                .setMessage("用内置的 AnimeGANv3 模型把照片变成吉卜力动画风,"
+                        + "颜色块面更干净,转出来的拼豆图纸轮廓更好看。\n\n"
+                        + "纯本地离线推理,约 2~10 秒;\n"
+                        + "结果会替换当前照片,之后点「↺ 恢复原始照片」可随时还原。")
+                .setPositiveButton("开始", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int which) {
+                        runStyle();
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    private void runStyle() {
+        aiRunning = true;
+        showLoading(true, "AI 风格化中…");
+        final Bitmap bmp = source;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (!StyleTransfer.ensureInit(EditorActivity.this)) {
+                        throw new Exception("风格化模型不可用");
+                    }
+                    int[] px = new int[bmp.getWidth() * bmp.getHeight()];
+                    bmp.getPixels(px, 0, bmp.getWidth(), 0, 0,
+                            bmp.getWidth(), bmp.getHeight());
+                    Object[] r = StyleTransfer.stylize(px,
+                            bmp.getWidth(), bmp.getHeight());
+                    if (r == null) throw new Exception("推理失败,请重试");
+                    final int[] outPx = (int[]) r[0];
+                    final int ow = (Integer) r[1];
+                    final int oh = (Integer) r[2];
+                    final Bitmap out = Bitmap.createBitmap(ow, oh,
+                            Bitmap.Config.ARGB_8888);
+                    out.setPixels(outPx, 0, ow, 0, 0, ow, oh);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            aiRunning = false;
+                            showLoading(false);
+                            if (source != null && source != originalSource) {
+                                source.recycle();
+                            }
+                            source = out;
+                            btnAiRestore.setVisibility(View.VISIBLE);
+                            Anim.expand(btnAiRestore);
+                            imported = false;
+                            regenerate();
+                            Toast.makeText(EditorActivity.this,
+                                    "风格化完成,照片已替换", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                } catch (final Throwable t) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            aiRunning = false;
+                            showLoading(false);
+                            Toast.makeText(EditorActivity.this,
+                                    "风格化失败:" + t.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            }
+        }).start();
     }
 
     // ---------------- 去水印 ----------------
@@ -1315,6 +1411,11 @@ public class EditorActivity extends Activity {
     }
 
     private void regenerate() {
+        if (imported) {
+            Toast.makeText(this, "导入的图纸不支持改参数重新生成,可继续编辑、导出",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
         if (source == null) return;
         showLoading(true);
         final int seq = ++genSeq;
@@ -2061,18 +2162,146 @@ public class EditorActivity extends Activity {
         return rawPattern.palette.get(idx).fullLabel();
     }
 
+    /** 导出可分享的图纸文件(.json,自含色板,规范见 docs/SHARE-FORMAT.md) */
+    private void exportFile() {
+        showLoading(true, "正在打包图纸文件…");
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String stamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA)
+                            .format(new Date());
+                    final String fileName = "拼豆图纸_" + pattern.cols + "x" + pattern.rows
+                            + "_" + stamp + ".json";
+                    JSONObject o = PatternShare.build(pattern, fileName.substring(0,
+                            fileName.lastIndexOf('_')));
+                    File out = new File(getCacheDir(), fileName);
+                    java.io.FileOutputStream fos = new java.io.FileOutputStream(out);
+                    fos.write(o.toString().getBytes("UTF-8"));
+                    fos.close();
+                    final Uri uri = AppFileProvider.forCacheShare(out);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showLoading(false);
+                            share(uri, "application/json");
+                        }
+                    });
+                } catch (final Exception e) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showLoading(false);
+                            Toast.makeText(EditorActivity.this,
+                                    "导出失败:" + e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    /** 从文件选择器导入分享图纸 */
+    private void importFile() {
+        try {
+            android.content.Intent it =
+                    new android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT);
+            it.addCategory(android.content.Intent.CATEGORY_OPENABLE);
+            it.setType("*/*");
+            startActivityForResult(it, REQ_IMPORT);
+        } catch (Throwable t) {
+            Toast.makeText(this, "无法打开文件选择器", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, android.content.Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_IMPORT && resultCode == RESULT_OK
+                && data != null && data.getData() != null) {
+            importFromUri(data.getData());
+        }
+    }
+
+    private void importFromUri(final Uri uri) {
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                String hint = null;
+                BeadPattern bp = null;
+                try {
+                    java.io.InputStream is = getContentResolver().openInputStream(uri);
+                    java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+                    byte[] buf = new byte[8192];
+                    int n;
+                    while ((n = is.read(buf)) > 0) bos.write(buf, 0, n);
+                    is.close();
+                    JSONObject o = new JSONObject(new String(bos.toByteArray(), "UTF-8"));
+                    bp = PatternShare.parse(o);
+                } catch (Exception e) {
+                    hint = e.getMessage();
+                }
+                final BeadPattern got = bp;
+                final String err = hint;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (got == null) {
+                            Toast.makeText(EditorActivity.this,
+                                    "导入失败:" + err, Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        applyImportedPattern(got);
+                    }
+                });
+            }
+        });
+    }
+
+    /** 把导入的图纸装进编辑器:可编辑/导出/拼豆辅助,但不支持重新生成 */
+    private void applyImportedPattern(BeadPattern bp) {
+        imported = true;
+        rawPattern = bp;
+        pattern = bp;
+        source = null;
+        originalSource = null;
+        blankCanvas = true;
+        hidePhotoOnlyCards();
+        cols = bp.cols;
+        rows = bp.rows;
+        syncSizeUi();
+        editMap.clear();
+        beadDone.clear();
+        rollBeadDay();
+        beadDoneToday = 0;
+        undoStack.clear();
+        redoStack.clear();
+        updateUndoRedoButtons();
+        patternView.setPattern(pattern);
+        adapter.notifyDataSetChanged();
+        updateSummary();
+        updateEditsButton();
+        selectTab(1);
+        Toast.makeText(this, "已导入图纸,可以继续编辑、导出或按色拼豆",
+                Toast.LENGTH_SHORT).show();
+    }
+
     private void showExportMenu(View anchor) {
         PopupMenu menu = new PopupMenu(this, anchor);
         menu.getMenu().add(0, EXP_SHEET, 1, "保存图纸图片(可打印)");
         menu.getMenu().add(0, EXP_EFFECT, 2, "保存效果图");
         menu.getMenu().add(0, EXP_SHARE, 3, "分享图纸");
         menu.getMenu().add(0, EXP_PDF, 4, "导出 PDF 文档");
-        menu.getMenu().add(1, 5, 5, "💾 保存项目存档");
+        menu.getMenu().add(0, EXP_FILE, 5, "导出图纸文件(.json,发给别人导入)");
+        menu.getMenu().add(0, 7, 6, "📂 导入图纸文件(.json)");
+        menu.getMenu().add(1, 5, 7, "💾 保存项目存档");
         menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(android.view.MenuItem item) {
                 if (item.getItemId() == 5) {
                     saveProjectDialog();
+                } else if (item.getItemId() == 7) {
+                    importFile();
                 } else {
                     export(item.getItemId());
                 }
@@ -2090,6 +2319,11 @@ public class EditorActivity extends Activity {
         if (what == EXP_PDF) {
             // PDF 写到应用缓存再分享,不需要存储权限
             exportPdf();
+            return;
+        }
+        if (what == EXP_FILE) {
+            // 分享 JSON 同样写缓存,不需要存储权限
+            exportFile();
             return;
         }
         if (Build.VERSION.SDK_INT < 29 && checkSelfPermission(
@@ -2216,6 +2450,7 @@ public class EditorActivity extends Activity {
     /** 进入空白画布:没有源照片,直接在格子上手绘 */
     private void startBlankCanvas() {
         blankCanvas = true;
+        imported = false;
         cols = rows = 29;          // 默认一块标准板,适合挂件
         hidePhotoOnlyCards();
         setPaintMode(true, true);  // 进来就能直接画
@@ -2679,6 +2914,10 @@ public class EditorActivity extends Activity {
                         ed.put(pair);
                     }
                     o.put("edits", ed);
+                    if (imported && rawPattern != null) {
+                        // 导入图纸没有源照片,把完整格子数据存进项目才能再次打开
+                        o.put("share", PatternShare.build(rawPattern, name));
+                    }
 
                     JSONArray bd = new JSONArray();
                     for (int k : beadDone) bd.put(k);
@@ -2765,6 +3004,13 @@ public class EditorActivity extends Activity {
             dominant = s.optBoolean("dominant", false);
             denoise = Math.max(0, Math.min(3, s.optInt("denoise", 0)));
             preciseColor = s.optBoolean("precise", false);
+            JSONObject sh = o.optJSONObject("share");
+            if (sh != null) {
+                imported = true;
+                rawPattern = PatternShare.parse(sh);
+            } else {
+                imported = false;
+            }
             beadDone.clear();
             JSONArray bd = o.optJSONArray("beadDone");
             if (bd != null) {
@@ -2789,7 +3035,15 @@ public class EditorActivity extends Activity {
             btnAiRestore.setVisibility(View.GONE);
             syncLoadedWidgets();
 
-            if (blankCanvas || source == null) {
+            if (imported && rawPattern != null) {
+                blankCanvas = true;
+                hidePhotoOnlyCards();
+                pattern = rawPattern;
+                patternView.setPattern(pattern);
+                adapter.notifyDataSetChanged();
+                updateSummary();
+                updateEditsButton();
+            } else if (blankCanvas || source == null) {
                 blankCanvas = true;
                 hidePhotoOnlyCards();
                 rebuildBlankRaw();

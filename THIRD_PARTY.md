@@ -9,11 +9,19 @@
 |---|---|---|---|
 | ONNX Runtime (Android) | U²-Net 抠图模型的端侧推理 | MIT | https://github.com/microsoft/onnxruntime |
 | u2netp 模型 (4.7MB) | 轻量主体分割(一键去背景) | Apache-2.0 | https://github.com/xuebinqin/U-2-Net |
+| AnimeGANv3 吉卜力模型 (约 7MB) | 照片转吉卜力风(AI 风格化) | 自定义许可证(非商业免费) | https://github.com/TachibanaYoshino/AnimeGANv3 |
 
 - ONNX Runtime 以 AAR 形式在本地构建时解包使用(仓库不含二进制,见 build_apk.bat 说明)。
 - 随 APP 分发的 `app/src/main/assets/u2netp.onnx` 为 U²-Net 官方预训练小模型
   u2netp 的 ONNX 格式版本(格式转换,算法权重未修改);原始权重、论文与许可证
   见上方原仓库。按 Apache-2.0 要求,本页即其来源与许可证声明。
+- **AnimeGANv3** © Asher Chan。随 APP 分发的
+  `app/src/main/assets/animeganv3_ghibli.onnx` 为官方发布的
+  `AnimeGANv3_large_Ghibli_c1_e299.onnx`(未修改)。其许可证为自定义条款:
+  **非商业用途(学术研究、教学、个人创作等)可免费使用,商用需联系作者授权**
+  (作者邮箱见原仓库 README)。本 APP 为免费、无广告、不开源商业化的非商业
+  开源项目,符合该许可的使用范围;若你 fork 本项目用于商业用途,请自行
+  获得作者授权。
 - u2netp 模型文件随 APP 内置于 `app/src/main/assets/u2netp.onnx`,版权归 U²-Net 作者所有,按 Apache-2.0 分发。
 
 ## 模板素材
