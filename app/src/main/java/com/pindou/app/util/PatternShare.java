@@ -133,6 +133,71 @@ public final class PatternShare {
         return new BeadPattern(cols, rows, palette, cells, counts, used, total, empty, round);
     }
 
+    /**
+     * 从项目存档 JSON 还原图纸(合并采购清单用):
+     * 分享格式导入的项目直接解析;普通项目用保存的照片 + 参数重新生成。
+     * 失败返回 null。
+     */
+    public static BeadPattern fromProject(JSONObject o) {
+        try {
+            JSONObject sh = o.optJSONObject("share");
+            if (sh != null) return parse(sh);
+            JSONObject s = o.optJSONObject("settings");
+            if (s == null) return null;
+            String photo = o.optString("photo", "");
+            if (photo.isEmpty()) return null;
+            android.graphics.Bitmap src = Jsons.decodeBitmap(photo);
+            if (src == null) return null;
+
+            com.pindou.app.bead.PatternEngine.Options opt =
+                    new com.pindou.app.bead.PatternEngine.Options();
+            opt.cols = s.optInt("cols", 58);
+            opt.rows = s.optInt("rows", 58);
+            opt.dither = s.optBoolean("dither", false);
+            opt.brightness = s.optInt("brightness", 0);
+            opt.contrast = s.optInt("contrast", 0);
+            opt.saturation = s.optInt("saturation", 0);
+            opt.style = s.optInt("style", 0);
+            int[] bricks = {2, 3, 4, 6};
+            opt.brickSize = bricks[Math.max(0, Math.min(bricks.length - 1,
+                    s.optInt("brickIdx", 1)))];
+            opt.abstractUsePalette = s.optBoolean("absUse", true);
+            opt.abstractColors = Math.max(4, Math.min(16, s.optInt("absColors", 8)));
+            opt.abstractSnapToBeads = s.optBoolean("absSnap", true);
+            opt.bgRemove = s.optBoolean("bgOn", false);
+            opt.bgTolerance = s.optInt("bgTol", 45);
+            opt.roundBoard = s.optBoolean("round", false);
+            opt.maxColors = new int[]{0, 12, 18, 26, 40}[Math.max(0,
+                    Math.min(4, s.optInt("limitIdx", 0)))];
+            opt.dominant = s.optBoolean("dominant", false);
+            opt.denoise = Math.max(0, Math.min(3, s.optInt("denoise", 0)));
+            opt.preciseColor = s.optBoolean("precise", false);
+
+            List<BeadColor> palette = com.pindou.app.bead.BeadPalettes.getPalette(
+                    Math.max(0, Math.min(3, s.optInt("tierIdx", 2))));
+            BeadPattern raw = com.pindou.app.bead.PatternEngine.generate(src, palette, opt);
+
+            JSONArray ed = o.optJSONArray("edits");
+            if (ed != null && ed.length() > 0) {
+                java.util.Map<Integer, Integer> editMap =
+                        new java.util.HashMap<>();
+                for (int i = 0; i < ed.length(); i++) {
+                    JSONArray pair = ed.optJSONArray(i);
+                    if (pair == null || pair.length() < 2) continue;
+                    int k = pair.optInt(0, -1);
+                    int v = pair.optInt(1, -99);
+                    if (k >= 0 && k < opt.cols * opt.rows && v >= -1) {
+                        editMap.put(k, v);
+                    }
+                }
+                return com.pindou.app.bead.PatternPatch.apply(raw, editMap);
+            }
+            return raw;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
     private PatternShare() {
     }
 }

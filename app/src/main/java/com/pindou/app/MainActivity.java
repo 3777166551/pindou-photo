@@ -26,9 +26,11 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.pindou.app.bead.BeadPattern;
 import com.pindou.app.bead.Templates;
 import com.pindou.app.provider.AppFileProvider;
 import com.pindou.app.util.Jsons;
+import com.pindou.app.util.PatternShare;
 import com.pindou.app.util.ProjectStore;
 
 import java.io.File;
@@ -391,6 +393,23 @@ public class MainActivity extends Activity {
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
 
+        TextView mergeBtn = new TextView(this);
+        mergeBtn.setText("🛒 合并采购单(把几个项目的用量汇总成一张采购单)");
+        mergeBtn.setTextColor(0xFF1E6BB8);
+        mergeBtn.setTextSize(13);
+        mergeBtn.setPadding(pad, pad, pad, pad);
+        mergeBtn.setBackgroundResource(android.R.drawable.list_selector_background);
+        mergeBtn.setClickable(true);
+        mergeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showMergePicker(items);
+            }
+        });
+        box.addView(mergeBtn, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
+
         SimpleDateFormat fmt = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.CHINA);
         for (final ProjectStore.Entry e : items) {
             LinearLayout row = new LinearLayout(this);
@@ -461,6 +480,193 @@ public class MainActivity extends Activity {
                 .setView(sc)
                 .setPositiveButton("关闭", null)
                 .show();
+    }
+
+    // ---------------- 合并采购单 ----------------
+
+    /** 勾选若干项目,把它们的颜色用量汇总成一张跨项目采购单 */
+    private void showMergePicker(final List<ProjectStore.Entry> items) {
+        final String[] names = new String[items.size()];
+        final boolean[] checked = new boolean[items.size()];
+        for (int i = 0; i < items.size(); i++) {
+            names[i] = items.get(i).name;
+            checked[i] = i == 0;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("🛒 选择要汇总的项目")
+                .setMultiChoiceItems(names, checked,
+                        new DialogInterface.OnMultiChoiceClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which,
+                                                boolean isChecked) {
+                                checked[which] = isChecked;
+                            }
+                        })
+                .setPositiveButton("生成", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        buildMergedBom(items, checked);
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    private void buildMergedBom(final List<ProjectStore.Entry> items,
+                                final boolean[] checked) {
+        final AlertDialog loading = new AlertDialog.Builder(this)
+                .setTitle("🛒 正在汇总…")
+                .setMessage("按各项目保存的照片与参数重新计算用量,请稍等")
+                .show();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final java.util.LinkedHashMap<String, long[]> agg =
+                        new java.util.LinkedHashMap<>();
+                final java.util.LinkedHashMap<String, String> labels =
+                        new java.util.LinkedHashMap<>();
+                final java.util.LinkedHashMap<String, Integer> rgbs =
+                        new java.util.LinkedHashMap<>();
+                int ok = 0;
+                for (int i = 0; i < items.size(); i++) {
+                    if (!checked[i]) continue;
+                    org.json.JSONObject o = null;
+                    try {
+                        o = Jsons.read(items.get(i).file);
+                    } catch (Exception ignored) {
+                    }
+                    if (o == null) continue;
+                    BeadPattern p = PatternShare.fromProject(o);
+                    if (p == null) continue;
+                    ok++;
+                    for (BeadPattern.UsedColor uc : p.usedColors) {
+                        String key = String.format(Locale.CHINA, "%06X",
+                                0xFFFFFF & uc.color.rgb);
+                        long[] c = agg.get(key);
+                        if (c == null) {
+                            c = new long[1];
+                            agg.put(key, c);
+                            labels.put(key, uc.color.fullLabel());
+                            rgbs.put(key, uc.color.rgb);
+                        }
+                        c[0] += uc.count;
+                    }
+                }
+                final java.util.ArrayList<String> keys =
+                        new java.util.ArrayList<>(agg.keySet());
+                java.util.Collections.sort(keys, new java.util.Comparator<String>() {
+                    @Override
+                    public int compare(String a, String b) {
+                        return Long.compare(agg.get(b)[0], agg.get(a)[0]);
+                    }
+                });
+                final int okCount = ok;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        loading.dismiss();
+                        showMergedBomResult(keys, agg, labels, rgbs, okCount);
+                    }
+                });
+            }
+        }).start();
+    }
+
+    private void showMergedBomResult(final java.util.ArrayList<String> keys,
+                                     final java.util.LinkedHashMap<String, long[]> agg,
+                                     final java.util.LinkedHashMap<String, String> labels,
+                                     final java.util.LinkedHashMap<String, Integer> rgbs,
+                                     final int okProjects) {
+        if (keys.isEmpty() || okProjects == 0) {
+            Toast.makeText(this, "没有可汇总的项目(需要保存过照片的项目)",
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+        int pad = Math.round(10 * getResources().getDisplayMetrics().density);
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        long total = 0;
+        for (String k : keys) {
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(0, pad / 2, 0, pad / 2);
+            ImageView iv = new ImageView(this);
+            GradientDrawable gd = new GradientDrawable();
+            gd.setShape(GradientDrawable.OVAL);
+            gd.setColor(0xFF000000 | rgbs.get(k));
+            iv.setBackground(gd);
+            int side = Math.round(18 * getResources().getDisplayMetrics().density);
+            LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(side, side);
+            ip.rightMargin = pad;
+            row.addView(iv, ip);
+            TextView name = new TextView(this);
+            name.setText(labels.get(k));
+            name.setTextColor(0xFF333333);
+            name.setTextSize(13);
+            name.setLayoutParams(new LinearLayout.LayoutParams(0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+            row.addView(name);
+            TextView cnt = new TextView(this);
+            cnt.setText(String.format(Locale.CHINA, "%,d", agg.get(k)[0]));
+            cnt.setTextColor(0xFF333333);
+            cnt.setTextSize(13);
+            row.addView(cnt, new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT));
+            total += agg.get(k)[0];
+            box.addView(row, new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT));
+        }
+        TextView sum = new TextView(this);
+        sum.setText(String.format(Locale.CHINA,
+                "%d 个项目 · %d 种颜色 · 合计 %,d 颗", okProjects, keys.size(), total));
+        sum.setTextColor(0xFF8A8F98);
+        sum.setTextSize(12);
+        sum.setPadding(0, pad, 0, 0);
+        box.addView(sum);
+        ScrollView sc = new ScrollView(this);
+        sc.addView(box);
+        com.pindou.app.util.Skin.apply(sc);
+        new AlertDialog.Builder(this)
+                .setTitle("🛒 合并采购单")
+                .setView(sc)
+                .setNeutralButton("导出 CSV", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        exportCsv(keys, agg, labels);
+                    }
+                })
+                .setPositiveButton("关闭", null)
+                .show();
+    }
+
+    private void exportCsv(java.util.ArrayList<String> keys,
+                           java.util.LinkedHashMap<String, long[]> agg,
+                           java.util.LinkedHashMap<String, String> labels) {
+        try {
+            StringBuilder sb = new StringBuilder("\uFEFF");   // UTF-8 BOM,Excel 直接打开不乱码
+            sb.append("RGB,色号/名称,数量\r\n");
+            for (String k : keys) {
+                sb.append(String.format(Locale.CHINA, "#%s,%s,%d\r\n",
+                        k, labels.get(k).replace(",", "，"), agg.get(k)[0]));
+            }
+            String stamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA)
+                    .format(new Date());
+            File out = new File(getCacheDir(), "拼豆合并采购单_" + stamp + ".csv");
+            java.io.FileOutputStream fos = new java.io.FileOutputStream(out);
+            fos.write(sb.toString().getBytes("UTF-8"));
+            fos.close();
+            Uri uri = AppFileProvider.forCacheShare(out);
+            Intent it = new Intent(Intent.ACTION_SEND);
+            it.setType("text/csv");
+            it.putExtra(Intent.EXTRA_STREAM, uri);
+            it.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(it, "分享采购单 CSV"));
+        } catch (Exception e) {
+            Toast.makeText(this, "导出失败:" + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void confirmDeleteProject(final ProjectStore.Entry e,

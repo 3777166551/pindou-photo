@@ -53,6 +53,7 @@ import com.pindou.app.export.PdfExporter;
 import com.pindou.app.provider.AppFileProvider;
 import com.pindou.app.util.PatternShare;
 import com.pindou.app.util.Anim;
+import com.pindou.app.util.BeadCalendar;
 import com.pindou.app.util.GallerySaver;
 import com.pindou.app.util.ImageLoader;
 import com.pindou.app.util.Jsons;
@@ -243,6 +244,11 @@ public class EditorActivity extends Activity {
     private View btnAiRestore;
     private View btnRemoveWatermark;
     private View btnStyleGhibli;
+    private View btnAssistLocate, btnAssistCalendar, btnBrushMirror;
+    private View assistToolsRow;
+    private boolean paintMirror = false;
+    private boolean dragDirty = false;
+    private AlertDialog calendarDialog;
     private TextView tvLoading;
     private Spinner paletteSpinner, abstractColorSpinner;
     private Switch swDither, swSymbols, swGrid, swSnap, swKmeans;
@@ -400,6 +406,10 @@ public class EditorActivity extends Activity {
         btnAiRestore = findViewById(R.id.btnAiRestore);
         btnRemoveWatermark = findViewById(R.id.btnRemoveWatermark);
         btnStyleGhibli = findViewById(R.id.btnStyleGhibli);
+        btnAssistLocate = findViewById(R.id.btnAssistLocate);
+        btnAssistCalendar = findViewById(R.id.btnAssistCalendar);
+        btnBrushMirror = findViewById(R.id.btnBrushMirror);
+        assistToolsRow = findViewById(R.id.assistToolsRow);
         tvLoading = findViewById(R.id.tvLoading);
         chipBrickLight = findViewById(R.id.chipBrickLight);
         chipBrickMid = findViewById(R.id.chipBrickMid);
@@ -671,6 +681,7 @@ public class EditorActivity extends Activity {
                     if (!added) beadDone.remove(key);
                     rollBeadDay();
                     beadDoneToday = Math.max(0, beadDoneToday + (added ? 1 : -1));
+                    BeadCalendar.add(EditorActivity.this, added ? 1 : -1);
                     updateAssistUi();
                     updateSummary();
                     adapter.notifyDataSetChanged();
@@ -688,6 +699,34 @@ public class EditorActivity extends Activity {
                 floodFill(cellX, cellY);
             }
         });
+        // 拼豆模式按住滑动 = 连续标记完成
+        patternView.setOnAssistDragListener(new PatternView.OnAssistDragListener() {
+            @Override
+            public void onAssistDragCell(int cellX, int cellY) {
+                if (pattern == null) return;
+                if (pattern.outsideShape(cellX, cellY)) return;
+                int idx = pattern.cellAt(cellX, cellY);
+                if (idx < 0) return;
+                int key = cellY * pattern.cols + cellX;
+                if (beadDone.add(key)) {
+                    rollBeadDay();
+                    beadDoneToday++;
+                    BeadCalendar.add(EditorActivity.this, 1);
+                    patternView.invalidate();
+                    dragDirty = true;
+                }
+            }
+
+            @Override
+            public void onAssistDragEnd() {
+                if (dragDirty) {
+                    dragDirty = false;
+                    updateAssistUi();
+                    updateSummary();
+                    adapter.notifyDataSetChanged();
+                }
+            }
+        });
 
         // 画笔模式:在图纸上滑动连续涂色
         swPaint.setOnCheckedChangeListener(new Switch.OnCheckedChangeListener() {
@@ -702,6 +741,35 @@ public class EditorActivity extends Activity {
             @Override
             public void onClick(View v) {
                 cycleAssistColor();
+            }
+        });
+        btnAssistNext.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                locateAssistUndone();
+                return true;
+            }
+        });
+        btnAssistLocate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                locateAssistUndone();
+            }
+        });
+        btnAssistCalendar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showCalendarDialog();
+            }
+        });
+        btnBrushMirror.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                paintMirror = !paintMirror;
+                btnBrushMirror.setSelected(paintMirror);
+                Toast.makeText(EditorActivity.this,
+                        paintMirror ? "镜像已开:左右同时落笔" : "镜像已关",
+                        Toast.LENGTH_SHORT).show();
             }
         });
         // 色数上限(降色数)
@@ -1495,6 +1563,7 @@ public class EditorActivity extends Activity {
             tvAssistProgress.setVisibility(View.VISIBLE);
             Anim.expand(beadAssistPanel);
             Anim.expand(tvAssistProgress);
+            if (assistToolsRow != null) assistToolsRow.setVisibility(View.VISIBLE);
             getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             if (pattern != null && !pattern.usedColors.isEmpty() && assistFocus < 0) {
                 assistFocus = pattern.usedColors.get(0).index;
@@ -1504,6 +1573,7 @@ public class EditorActivity extends Activity {
         } else {
             beadAssistPanel.setVisibility(View.GONE);
             tvAssistProgress.setVisibility(View.GONE);
+            if (assistToolsRow != null) assistToolsRow.setVisibility(View.GONE);
             getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
         updateAssistUi();
@@ -2286,6 +2356,157 @@ public class EditorActivity extends Activity {
                 Toast.LENGTH_SHORT).show();
     }
 
+    /** 定位本色第一颗未拼的格子:居中显示并闪烁提示(拼豆模式) */
+    private void locateAssistUndone() {
+        if (pattern == null || assistFocus < 0) return;
+        for (int y = 0; y < pattern.rows; y++) {
+            for (int x = 0; x < pattern.cols; x++) {
+                if (pattern.cellAt(x, y) != assistFocus) continue;
+                if (!beadDone.contains(y * pattern.cols + x)) {
+                    patternView.centerOn(x, y);
+                    patternView.flashCell(x, y);
+                    return;
+                }
+            }
+        }
+        Toast.makeText(this, "🎉 本色已经全部拼完了", Toast.LENGTH_SHORT).show();
+    }
+
+    /** 打卡日历:按月查看每天完成的颗数(全局记录,纯本地) */
+    private void showCalendarDialog() {
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        showCalendarDialog(cal.get(java.util.Calendar.YEAR),
+                cal.get(java.util.Calendar.MONTH));
+    }
+
+    private void showCalendarDialog(final int year, final int month) {
+        float dm = getResources().getDisplayMetrics().density;
+        int pad = Math.round(10 * dm);
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(pad, pad, pad, 0);
+
+        LinearLayout head = new LinearLayout(this);
+        head.setOrientation(LinearLayout.HORIZONTAL);
+        head.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        TextView prev = calChip("◀");
+        TextView next = calChip("▶");
+        TextView title = new TextView(this);
+        title.setPadding(Math.round(14 * dm), 0, Math.round(14 * dm), 0);
+        title.setText(String.format(Locale.CHINA, "%d 年 %d 月", year, month + 1));
+        title.setTextColor(0xFF232323);
+        title.setTextSize(16);
+        title.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        head.addView(prev);
+        head.addView(title);
+        head.addView(next);
+        box.addView(head);
+
+        String[] week = {"一", "二", "三", "四", "五", "六", "日"};
+        LinearLayout weekRow = new LinearLayout(this);
+        weekRow.setOrientation(LinearLayout.HORIZONTAL);
+        weekRow.setPadding(0, Math.round(8 * dm), 0, 0);
+        for (String w : week) {
+            TextView tv = new TextView(this);
+            tv.setText(w);
+            tv.setTextSize(11);
+            tv.setTextColor(0xFF8A8F98);
+            tv.setGravity(android.view.Gravity.CENTER);
+            tv.setLayoutParams(new LinearLayout.LayoutParams(0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+            weekRow.addView(tv);
+        }
+        box.addView(weekRow);
+
+        java.util.Calendar first = java.util.Calendar.getInstance();
+        first.set(year, month, 1, 12, 0, 0);
+        int offset = (first.get(java.util.Calendar.DAY_OF_WEEK) + 5) % 7;   // 周一为第一列
+        int daysInMonth = first.getActualMaximum(java.util.Calendar.DAY_OF_MONTH);
+        java.util.Calendar nowC = java.util.Calendar.getInstance();
+        boolean thisMonth = nowC.get(java.util.Calendar.YEAR) == year
+                && nowC.get(java.util.Calendar.MONTH) == month;
+        int today = nowC.get(java.util.Calendar.DAY_OF_MONTH);
+
+        LinearLayout row = new LinearLayout(this);
+        box.addView(row, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
+        int slot = 0;
+        for (int i = 0; i < offset; i++, slot++) {
+            TextView blank = new TextView(this);
+            blank.setLayoutParams(new LinearLayout.LayoutParams(0,
+                    Math.round(46 * dm), 1f));
+            row.addView(blank);
+        }
+        for (int d = 1; d <= daysInMonth; d++, slot++) {
+            if (slot % 7 == 0) {
+                row = new LinearLayout(this);
+                box.addView(row, new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT));
+            }
+            String day = String.format(Locale.CHINA, "%04d-%02d-%02d", year, month + 1, d);
+            int cnt = BeadCalendar.get(this, day);
+            TextView cell = new TextView(this);
+            cell.setGravity(android.view.Gravity.CENTER);
+            cell.setText(cnt > 0 ? d + "\n🔥" + cnt : String.valueOf(d));
+            cell.setTextSize(10);
+            if (thisMonth && d == today) {
+                cell.setTextColor(0xFF1E88E5);
+                cell.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            } else {
+                cell.setTextColor(cnt > 0 ? 0xFFE65100 : 0xFFB9BEC5);
+            }
+            cell.setLayoutParams(new LinearLayout.LayoutParams(0,
+                    Math.round(46 * dm), 1f));
+            row.addView(cell);
+        }
+
+        android.widget.ScrollView sc = new android.widget.ScrollView(this);
+        sc.addView(box);
+        calendarDialog = new AlertDialog.Builder(this)
+                .setTitle("📅 拼豆打卡日历")
+                .setMessage("每天完成的颗数(所有项目合计),纯本地记录")
+                .setView(sc)
+                .setPositiveButton("关闭", null)
+                .show();
+        prev.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (calendarDialog != null) calendarDialog.dismiss();
+                int m = month - 1, y = year;
+                if (m < 0) {
+                    m = 11;
+                    y--;
+                }
+                showCalendarDialog(y, m);
+            }
+        });
+        next.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (calendarDialog != null) calendarDialog.dismiss();
+                int m = month + 1, y = year;
+                if (m > 11) {
+                    m = 0;
+                    y++;
+                }
+                showCalendarDialog(y, m);
+            }
+        });
+    }
+
+    private TextView calChip(String text) {
+        TextView tv = new TextView(this);
+        tv.setText(text);
+        tv.setTextSize(14);
+        int cp = Math.round(12 * getResources().getDisplayMetrics().density);
+        tv.setPadding(cp, 0, cp, 0);
+        tv.setTextColor(0xFF444444);
+        tv.setClickable(true);
+        return tv;
+    }
+
     private void showExportMenu(View anchor) {
         PopupMenu menu = new PopupMenu(this, anchor);
         menu.getMenu().add(0, EXP_SHEET, 1, "保存图纸图片(可打印)");
@@ -2564,9 +2785,21 @@ public class EditorActivity extends Activity {
         if (pattern.outsideShape(x, y)) return;   // 圆形板板外无格
         int target = eraseOn ? -1 : brushPalIdx;
         if (target < -1) return;
+        boolean changed = applyBrush(x, y, target);
+        if (paintMirror) {
+            int mx = cols - 1 - x;
+            if (mx != x && mx >= 0 && !pattern.outsideShape(mx, y)) {
+                changed |= applyBrush(mx, y, target);
+            }
+        }
+        if (changed) queuePaintFlush();
+    }
+
+    /** 在一个格子落笔(镜像是同一支笔);返回是否真的改动 */
+    private boolean applyBrush(int x, int y, int target) {
         int idx = y * cols + x;
         Integer cur = editMap.get(idx);
-        if (cur != null && cur.intValue() == target) return;
+        if (cur != null && cur.intValue() == target) return false;
         Integer base = rawPattern.cellAt(x, y);
         if (base != null && base.intValue() == target) {
             // 与自动结果相同:删掉覆盖记录即可,但只要真有变动就记一笔撤销
@@ -2576,16 +2809,16 @@ public class EditorActivity extends Activity {
                     strokeSnapPending = false;
                 }
                 editMap.remove(idx);
-                queuePaintFlush();
+                return true;
             }
-            return;
+            return false;
         }
         if (strokeSnapPending) {
             pushUndoState();          // 一笔 = 一条撤销记录
             strokeSnapPending = false;
         }
         editMap.put(idx, target);
-        queuePaintFlush();
+        return true;
     }
 
     /** 油漆桶:把与落点同色的四连通区域整体换成画笔色(橡皮 = 整片挖空) */
@@ -2654,6 +2887,7 @@ public class EditorActivity extends Activity {
     /** 刷新画笔行的颜色块 / 名称 / 橡皮选中态 */
     private void syncBrushUi() {
         btnBrushEraser.setSelected(eraseOn);
+        if (btnBrushMirror != null) btnBrushMirror.setSelected(paintMirror);
         GradientDrawable gd = new GradientDrawable();
         gd.setShape(GradientDrawable.OVAL);
         String label;

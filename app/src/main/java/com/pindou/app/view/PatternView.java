@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.GestureDetector;
@@ -195,6 +196,30 @@ public class PatternView extends View {
         this.longPressListener = l;
     }
 
+    /** 拼豆模式拖动刷选:滑过的格子逐个回调(只做"标记完成",不取消) */
+    public interface OnAssistDragListener {
+        void onAssistDragCell(int cellX, int cellY);
+
+        void onAssistDragEnd();
+    }
+
+    private OnAssistDragListener assistDragListener;
+
+    public void setOnAssistDragListener(OnAssistDragListener l) {
+        this.assistDragListener = l;
+    }
+
+    // 拼豆模式触摸状态
+    private boolean dragging, dragMarking;
+    private int lastDragX = -1, lastDragY = -1;
+    private Runnable pendingTap;
+    private long lastTapUp;
+    private float lastTapX, lastTapY;
+    // 定位闪烁
+    private int[] flashCell;
+    private long flashUntil;
+    private Paint flashPaint;
+
     // ---- 拼豆模式(逐色辅助)----
     /** true = 只突出 assistFocus 颜色,已完成的格子画描边 */
     private boolean assistOn;
@@ -249,6 +274,9 @@ public class PatternView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (assistOn && mode == MODE_PATTERN && handleAssistTouch(event)) {
+            return true;
+        }
         if (paintEnabled && mode == MODE_PATTERN && handlePaintTouch(event)) {
             return true;
         }
@@ -257,6 +285,148 @@ public class PatternView extends View {
         }
         scaleDetector.onTouchEvent(event);
         return true;
+    }
+
+    /**
+     * 拼豆模式的触摸处理:单击 = 切换完成标记(双击仍复位缩放),
+     * 按住滑动 = 连续刷选(只标记完成,不取消)。
+     */
+    private boolean handleAssistTouch(MotionEvent event) {
+        if (pattern == null || fitCell() <= 0) return false;
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN: {
+                int[] c = cellAt(event.getX(), event.getY());
+                if (c == null) return false;
+                downX = event.getX();
+                downY = event.getY();
+                downCell = c;
+                dragging = true;
+                dragMarking = false;
+                return true;
+            }
+            case MotionEvent.ACTION_MOVE: {
+                if (!dragging || event.getPointerCount() != 1) return dragging;
+                if (!dragMarking) {
+                    if (!isBeyondSlop(event)) return true;
+                    dragMarking = true;
+                    if (pendingTap != null) {
+                        removeCallbacks(pendingTap);
+                        pendingTap = null;
+                    }
+                    lastDragX = -1;
+                    lastDragY = -1;
+                    markAt(downX, downY);
+                }
+                markLine(event.getX(), event.getY());
+                return true;
+            }
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL: {
+                if (!dragging) return false;
+                dragging = false;
+                if (dragMarking) {
+                    dragMarking = false;
+                    if (assistDragListener != null) assistDragListener.onAssistDragEnd();
+                    return true;
+                }
+                int[] c = cellAt(event.getX(), event.getY());
+                if (c == null) return true;
+                long now = SystemClock.uptimeMillis();
+                if (now - lastTapUp <= 280
+                        && Math.abs(event.getX() - lastTapX) < dp(24)
+                        && Math.abs(event.getY() - lastTapY) < dp(24)) {
+                    // 双击复位缩放
+                    lastTapUp = 0;
+                    if (pendingTap != null) {
+                        removeCallbacks(pendingTap);
+                        pendingTap = null;
+                    }
+                    zoom = 1f;
+                    offX = 0f;
+                    offY = 0f;
+                    invalidate();
+                    return true;
+                }
+                lastTapUp = now;
+                lastTapX = event.getX();
+                lastTapY = event.getY();
+                final int fx = c[0];
+                final int fy = c[1];
+                if (pendingTap != null) {
+                    removeCallbacks(pendingTap);
+                    pendingTap = null;
+                }
+                pendingTap = new Runnable() {
+                    @Override
+                    public void run() {
+                        pendingTap = null;
+                        if (tapListener != null) tapListener.onCellTap(fx, fy);
+                    }
+                };
+                postDelayed(pendingTap, 260);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void markAt(float vx, float vy) {
+        int[] c = cellAt(vx, vy);
+        if (c != null) {
+            lastDragX = c[0];
+            lastDragY = c[1];
+            if (assistDragListener != null) assistDragListener.onAssistDragCell(c[0], c[1]);
+        }
+    }
+
+    private void markLine(float vx, float vy) {
+        int[] c = cellAt(vx, vy);
+        if (c == null) {
+            lastDragX = -1;
+            lastDragY = -1;
+            return;
+        }
+        if (lastDragX < 0) {
+            markAt(vx, vy);
+        } else {
+            int dx = Math.abs(c[0] - lastDragX);
+            int dy = Math.abs(c[1] - lastDragY);
+            int steps = Math.max(dx, dy);
+            for (int s = 0; s <= steps; s++) {
+                int ix = lastDragX + (int) Math.round(
+                        (c[0] - lastDragX) * (steps == 0 ? 0 : s / (float) steps));
+                int iy = lastDragY + (int) Math.round(
+                        (c[1] - lastDragY) * (steps == 0 ? 0 : s / (float) steps));
+                if (assistDragListener != null) assistDragListener.onAssistDragCell(ix, iy);
+            }
+        }
+        lastDragX = c[0];
+        lastDragY = c[1];
+    }
+
+    /** 把指定格居中显示(拼豆模式"定位未拼"用) */
+    public void centerOn(int gx, int gy) {
+        if (pattern == null || pattern.cols == 0 || fitCell() <= 0) return;
+        float cell = fitCell() * zoom;
+        float w = getWidth();
+        float h = getHeight();
+        float cx = (gx + 0.5f) * cell;
+        float cy = (gy + 0.5f) * cell;
+        float cw = pattern.cols * cell;
+        float ch = pattern.rows * cell;
+        if (cw <= w) offX = (w - cw) / 2f;
+        else offX = Math.max(Math.min(w / 2f - cx, 0), w - cw);
+        if (ch <= h) offY = (h - ch) / 2f;
+        else offY = Math.max(Math.min(h / 2f - cy, 0), h - ch);
+        invalidate();
+    }
+
+    /** 在指定格上画一个渐隐的橙色高亮框(定位反馈) */
+    public void flashCell(int gx, int gy) {
+        flashCell = new int[]{gx, gy};
+        flashUntil = SystemClock.uptimeMillis() + 1400;
+        invalidate();
+        postInvalidateDelayed(1500);
     }
 
     /**
@@ -427,6 +597,18 @@ public class PatternView extends View {
             drawEffect(canvas, cell);
         } else {
             drawPatternGrid(canvas, cell);
+            if (flashCell != null && SystemClock.uptimeMillis() < flashUntil) {
+                float k = 1f - (flashUntil - SystemClock.uptimeMillis()) / 1400f;
+                if (flashPaint == null) {
+                    flashPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                    flashPaint.setStyle(Paint.Style.STROKE);
+                }
+                flashPaint.setColor(Color.argb(
+                        (int) (200 * (1 - k * k)), 0xFF, 0x8C, 0x00));
+                flashPaint.setStrokeWidth(Math.max(2f, cell * 0.12f));
+                canvas.drawRect(flashCell[0] * cell, flashCell[1] * cell,
+                        (flashCell[0] + 1) * cell, (flashCell[1] + 1) * cell, flashPaint);
+            }
         }
         canvas.restore();
     }
