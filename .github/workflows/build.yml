@@ -58,6 +58,8 @@ jobs:
 
       - name: Install emulator and system image
         run: |
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
           yes | sdkmanager --licenses > /dev/null 2>&1 || true
           sdkmanager --install "platform-tools" "emulator" \
             "system-images;android-30;google_apis;x86_64" > /dev/null
@@ -66,6 +68,8 @@ jobs:
 
       - name: Start headless emulator
         run: |
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
           if [ -e /dev/kvm ]; then ACCEL="-accel on"; echo "KVM available"; else ACCEL="-no-accel"; echo "KVM missing, software emulation"; fi
           emulator -avd smoke -no-window -no-audio -no-boot-anim \
             -gpu swiftshader_indirect $ACCEL -camera-back none -camera-front none &
