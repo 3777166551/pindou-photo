@@ -41,8 +41,8 @@ dump_ui() {
 # $1 = 属性匹配片段(如 "resource-id=\".../btnNew\""), $2 = must(1/0)
 _tap_match() {
   local pat="$1" must="$2" b x1 y1 x2 y2
-  dump_ui
-  b=$(grep -o "$pat[^\>]*bounds=\"\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]\"" ui.xml \
+  dump_ui || return 1
+  b=$(grep -oi "$pat[^\>]*bounds=\"\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]\"" ui.xml \
     | grep -o 'bounds="\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]"' | head -1)
   [ -z "$b" ] && return 1
   b=${b#bounds=\"}; b=${b%\"}          # -> [72,168][300,264]
@@ -99,7 +99,7 @@ check_text() {
   local txt="$1" must="${2:-1}" n
   for n in 1 2 3; do
     dump_ui
-    if grep -q "text=\"[^\"]*${txt}[^\"]*\"" ui.xml; then
+    if grep -qi "text=\"[^\"]*${txt}[^\"]*\"" ui.xml; then
       log "found: $txt"
       return 0
     fi
@@ -115,16 +115,18 @@ check_text() {
 
 back() { adb shell input keyevent 4; sleep 1.5; }
 
-# 确保回到首页:不在首页就 am start 拉回前台(不会重建任务)
+# 确保回到首页:不在首页就拉起 Splash(exported,必能启动,自动进首页)
 ensure_home() {
   local n
   for n in 1 2 3; do
-    dump_ui && grep -q "text=\"[^\"]*Start a new pattern[^\"]*\"" ui.xml && {
+    dump_ui && grep -qi "text=\"[^\"]*Start a new pattern[^\"]*\"" ui.xml && {
       log "home visible"; return 0
     }
-    adb shell am start -n $PKG/.MainActivity > /dev/null 2>&1
-    sleep 2
+    adb shell am start -n $PKG/.SplashActivity > /dev/null 2>&1
+    sleep 4
   done
+  adb shell monkey -p $PKG 1 > /dev/null 2>&1
+  sleep 3
   log "soft-miss: home not confirmed"
 }
 
