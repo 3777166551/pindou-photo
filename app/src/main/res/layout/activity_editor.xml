@@ -36,7 +36,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="拼豆编辑"
+                android:text="@string/editor_title"
                 android:textColor="@color/textMain"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -105,7 +105,7 @@
                 android:layout_weight="1"
                 android:background="@drawable/bg_tab"
                 android:gravity="center"
-                android:text="效果图"
+                android:text="@string/tab_effect"
                 android:textColor="@color/text_tab"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -118,7 +118,7 @@
                 android:layout_weight="1"
                 android:background="@drawable/bg_tab"
                 android:gravity="center"
-                android:text="图纸"
+                android:text="@string/tab_pattern"
                 android:textColor="@color/text_tab"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -130,7 +130,7 @@
                 android:layout_weight="1"
                 android:background="@drawable/bg_tab"
                 android:gravity="center"
-                android:text="豆豆清单"
+                android:text="@string/tab_list"
                 android:textColor="@color/text_tab"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -194,7 +194,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:text="画幅尺寸(格数)" />
+                    android:text="@string/sec_size" />
 
                 <TextView
                     android:id="@+id/tvBoardHint"
@@ -223,7 +223,7 @@
                         android:elevation="2dp"
                         android:focusable="true"
                         android:gravity="center"
-                        android:text="▭ 方形板"
+                        android:text="@string/shape_rect"
                         android:textColor="@color/text_chip"
                         android:textSize="13sp" />
 
@@ -237,7 +237,7 @@
                         android:elevation="2dp"
                         android:focusable="true"
                         android:gravity="center"
-                        android:text="⬤ 圆形板"
+                        android:text="@string/shape_round"
                         android:textColor="@color/text_chip"
                         android:textSize="13sp" />
                 </LinearLayout>
@@ -420,7 +420,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="18dp"
-                    android:text="色板与图纸风格" />
+                    android:text="@string/sec_palette" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -440,7 +440,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="豆豆色板"
+                            android:text="@string/palette_label"
                             android:textColor="@color/textMain"
                             android:textSize="14sp" />
 
@@ -469,7 +469,7 @@
                             android:elevation="2dp"
                             android:focusable="true"
                             android:gravity="center"
-                            android:text="不限"
+                            android:text="@string/limit0"
                             android:textColor="@color/text_chip"
                             android:textSize="12sp" />
 
@@ -484,7 +484,7 @@
                             android:elevation="2dp"
                             android:focusable="true"
                             android:gravity="center"
-                            android:text="12色"
+                            android:text="@string/limit1"
                             android:textColor="@color/text_chip"
                             android:textSize="12sp" />
 
@@ -499,7 +499,7 @@
                             android:elevation="2dp"
                             android:focusable="true"
                             android:gravity="center"
-                            android:text="18色"
+                            android:text="@string/limit2"
                             android:textColor="@color/text_chip"
                             android:textSize="12sp" />
 
@@ -514,7 +514,7 @@
                             android:elevation="2dp"
                             android:focusable="true"
                             android:gravity="center"
-                            android:text="26色"
+                            android:text="@string/limit3"
                             android:textColor="@color/text_chip"
                             android:textSize="12sp" />
 
@@ -528,7 +528,7 @@
                             android:elevation="2dp"
                             android:focusable="true"
                             android:gravity="center"
-                            android:text="40色"
+                            android:text="@string/limit4"
                             android:textColor="@color/text_chip"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -537,7 +537,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="色数上限:自动合并最接近的颜色,少买几种豆(写实模式生效)"
+                        android:text="@string/limit_hint"
                         android:textColor="@color/textSub"
                         android:textSize="10sp" />
 
@@ -559,7 +559,7 @@
                             android:elevation="2dp"
                             android:focusable="true"
                             android:gravity="center"
-                            android:text="写实"
+                            android:text="@string/style_real"
                             android:textColor="@color/text_chip"
                             android:textSize="13sp" />
 
@@ -573,7 +573,7 @@
                             android:elevation="2dp"
                             android:focusable="true"
                             android:gravity="center"
-                            android:text="抽象"
+                            android:text="@string/style_abs"
                             android:textColor="@color/text_chip"
                             android:textSize="13sp" />
                     </LinearLayout>
@@ -594,7 +594,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="抽象程度(砖块大小)"
+                        android:text="@string/abs_degree"
                         android:textColor="@color/textMain"
                         android:textSize="14sp" />
 
@@ -602,7 +602,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="一小片像素合并成同一种颜色,越大越像积木"
+                        android:text="@string/abs_degree_hint"
                         android:textColor="@color/textSub"
                         android:textSize="11sp" />
 
@@ -624,7 +624,7 @@
                             android:elevation="2dp"
                             android:focusable="true"
                             android:gravity="center"
-                            android:text="轻 2×2"
+                            android:text="@string/brick0"
                             android:textColor="@color/text_chip"
                             android:textSize="12sp" />
 
@@ -639,7 +639,7 @@
                             android:elevation="2dp"
                             android:focusable="true"
                             android:gravity="center"
-                            android:text="中 3×3"
+                            android:text="@string/brick1"
                             android:textColor="@color/text_chip"
                             android:textSize="12sp" />
 
@@ -654,7 +654,7 @@
                             android:elevation="2dp"
                             android:focusable="true"
                             android:gravity="center"
-                            android:text="强 4×4"
+                            android:text="@string/brick2"
                             android:textColor="@color/text_chip"
                             android:textSize="12sp" />
 
@@ -668,7 +668,7 @@
                             android:elevation="2dp"
                             android:focusable="true"
                             android:gravity="center"
-                            android:text="超强 6×6"
+                            android:text="@string/brick3"
                             android:textColor="@color/text_chip"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -689,7 +689,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="限定主色调(海报感)"
+                                android:text="@string/abs_limited"
                                 android:textColor="@color/textMain"
                                 android:textSize="14sp" />
 
@@ -697,7 +697,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="关闭后使用整套拼豆色板,色彩更自然"
+                                android:text="@string/abs_limited_hint"
                                 android:textColor="@color/textSub"
                                 android:textSize="11sp" />
                         </LinearLayout>
@@ -726,7 +726,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="提取主色数量"
+                                android:text="@string/abs_colors"
                                     android:textColor="@color/textMain"
                                     android:textSize="14sp" />
 
@@ -734,7 +734,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
-                                    android:text="自动抓取照片里最主要的几种颜色"
+                                    android:text="@string/abs_colors_hint"
                                     android:textColor="@color/textSub"
                                     android:textSize="11sp" />
                             </LinearLayout>
@@ -762,7 +762,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="颜色吸附到拼豆色板"
+                                android:text="@string/abs_snap"
                                     android:textColor="@color/textMain"
                                     android:textSize="14sp" />
 
@@ -770,7 +770,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
-                                    android:text="开启后可直接按清单买豆;关闭则用照片原色"
+                                    android:text="@string/abs_snap_hint"
                                     android:textColor="@color/textSub"
                                     android:textSize="11sp" />
                             </LinearLayout>
@@ -799,7 +799,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="抖动(更接近照片)"
+                                android:text="@string/dither"
                                 android:textColor="@color/textMain"
                                 android:textSize="14sp" />
 
@@ -807,7 +807,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="颜色过渡更自然,但图纸更复杂"
+                                android:text="@string/dither_hint"
                                 android:textColor="@color/textSub"
                                 android:textSize="11sp" />
                         </LinearLayout>
@@ -834,7 +834,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="清晰轮廓(众数取色)"
+                                android:text="@string/dominant"
                                 android:textColor="@color/textMain"
                                 android:textSize="14sp" />
 
@@ -842,7 +842,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="每格取主色而不是平均色,轮廓干净少灰边"
+                                android:text="@string/dominant_hint"
                                 android:textColor="@color/textSub"
                                 android:textSize="11sp" />
                         </LinearLayout>
@@ -869,7 +869,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="精准配色(CIEDE2000)"
+                                android:text="@string/precise"
                                 android:textColor="@color/textMain"
                                 android:textSize="14sp" />
 
@@ -877,7 +877,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="更贴人眼的色差算法,颜色选得更准,大图稍慢"
+                                android:text="@string/precise_hint"
                                 android:textColor="@color/textSub"
                                 android:textSize="11sp" />
                         </LinearLayout>
@@ -904,7 +904,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="杂色清理"
+                                android:text="@string/denoise"
                                 android:textColor="@color/textMain"
                                 android:textSize="14sp" />
 
@@ -931,7 +931,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="把相邻的相近色连成片,清掉孤立的杂色颗粒;调太强会丢细节"
+                            android:text="@string/denoise_hint"
                             android:textColor="@color/textSub"
                             android:textSize="10sp" />
                     </LinearLayout>
@@ -947,7 +947,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="图纸显示符号"
+                            android:text="@string/symbols"
                             android:textColor="@color/textMain"
                             android:textSize="14sp" />
 
@@ -969,7 +969,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="显示网格线"
+                            android:text="@string/grid_lines"
                             android:textColor="@color/textMain"
                             android:textSize="14sp" />
 
@@ -986,7 +986,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="18dp"
-                    android:text="照片预处理" />
+                    android:text="@string/sec_preprocess" />
 
                 <LinearLayout
                     android:id="@+id/preprocessCardWrap"
@@ -1013,7 +1013,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="一键去背景"
+                                android:text="@string/bg_auto"
                                 android:textColor="@color/textMain"
                                 android:textSize="14sp" />
 
@@ -1021,7 +1021,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="适合纯色背景照片,抠掉后自动留空格"
+                                android:text="@string/bg_auto_hint"
                                 android:textColor="@color/textSub"
                                 android:textSize="11sp" />
                         </LinearLayout>
@@ -1050,7 +1050,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="容差(抠得多少)"
+                                android:text="@string/bg_tol"
                                 android:textColor="@color/textMain"
                                 android:textSize="14sp" />
 
@@ -1077,7 +1077,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="抠不干净往右调,把人物吃掉了往回调;背景有渐变也能顺着抠掉"
+                            android:text="@string/bg_tol_hint"
                             android:textColor="@color/textSub"
                             android:textSize="10sp" />
                     </LinearLayout>
@@ -1092,7 +1092,7 @@
                         android:elevation="2dp"
                         android:focusable="true"
                         android:gravity="center"
-                        android:text="🩹 去水印(框选水印,自动修复)"
+                        android:text="@string/btn_watermark"
                         android:textColor="@color/text_chip"
                         android:textSize="11sp" />
 
@@ -1106,7 +1106,7 @@
                         android:elevation="2dp"
                         android:focusable="true"
                         android:gravity="center"
-                        android:text="🎨 吉卜力风(AI 风格化,离线)"
+                        android:text="@string/btn_ghibli"
                         android:textColor="@color/text_chip"
                         android:textSize="11sp" />
 
@@ -1120,7 +1120,7 @@
                         android:elevation="2dp"
                         android:focusable="true"
                         android:gravity="center"
-                        android:text="还原原始照片"
+                        android:text="@string/btn_restore"
                         android:textColor="@color/text_chip"
                         android:textSize="13sp"
                         android:visibility="gone" />
@@ -1144,7 +1144,7 @@
                             android:elevation="2dp"
                             android:focusable="true"
                             android:gravity="center"
-                            android:text="⇋ 左右镜像"
+                            android:text="@string/mirror_h"
                             android:textColor="@color/text_chip"
                             android:textSize="11sp" />
 
@@ -1159,7 +1159,7 @@
                             android:elevation="2dp"
                             android:focusable="true"
                             android:gravity="center"
-                            android:text="↕ 上下镜像"
+                            android:text="@string/mirror_v"
                             android:textColor="@color/text_chip"
                             android:textSize="11sp" />
 
@@ -1173,7 +1173,7 @@
                             android:elevation="2dp"
                             android:focusable="true"
                             android:gravity="center"
-                            android:text="⟳ 右转90°"
+                            android:text="@string/rotate90"
                             android:textColor="@color/text_chip"
                             android:textSize="11sp" />
                     </LinearLayout>
@@ -1182,7 +1182,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
-                        android:text="镜像/旋转后图纸会重新生成,手动修过的格子也会跟着转"
+                        android:text="@string/transform_hint"
                         android:textColor="@color/textSub"
                         android:textSize="10sp" />
                 </LinearLayout>
@@ -1192,7 +1192,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="AI 图像风格" />
+                    android:text="@string/sec_ai_style" />
 
                 
 
@@ -1201,7 +1201,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="手动修格(图纸页点格子换色)" />
+                    android:text="@string/sec_manual" />
 
                 <LinearLayout
                     android:id="@+id/manualEditCardWrap"
@@ -1228,7 +1228,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="开启点格修改"
+                                android:text="@string/edit_cell"
                                 android:textColor="@color/textMain"
                                 android:textSize="14sp" />
 
@@ -1236,7 +1236,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="在「图纸」标签页单击任意格子弹出选色"
+                                android:text="@string/edit_cell_hint"
                                 android:textColor="@color/textSub"
                                 android:textSize="11sp" />
                         </LinearLayout>
@@ -1263,7 +1263,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="画笔模式(滑动涂色)"
+                                android:text="@string/paint_mode"
                                 android:textColor="@color/textMain"
                                 android:textSize="14sp" />
 
@@ -1271,7 +1271,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="在「图纸」页按住滑动连续涂色,双指仍可缩放;空白画布也会用它作画"
+                                android:text="@string/paint_mode_hint"
                                 android:textColor="@color/textSub"
                                 android:textSize="11sp" />
                         </LinearLayout>
@@ -1298,7 +1298,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="🧩 拼豆模式(逐色辅助)"
+                                android:text="@string/bead_assist"
                                 android:textColor="@color/textMain"
                                 android:textSize="14sp" />
 
@@ -1306,7 +1306,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="一次只突出一种颜色,点格子记完成度,拼的时候不看串行;开启后屏幕保持常亮"
+                                android:text="@string/bead_assist_hint"
                                 android:textColor="@color/textSub"
                                 android:textSize="11sp" />
                         </LinearLayout>
@@ -1341,7 +1341,7 @@
                             android:layout_weight="1"
                             android:ellipsize="end"
                             android:singleLine="true"
-                            android:text="颜色 1/1"
+                            android:text="@string/assist_color_default"
                             android:textColor="@color/textMain"
                             android:textSize="13sp" />
 
@@ -1356,7 +1356,7 @@
                             android:gravity="center"
                             android:paddingStart="12dp"
                             android:paddingEnd="12dp"
-                            android:text="下一个颜色"
+                            android:text="@string/assist_next"
                             android:textColor="@color/text_chip"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -1366,7 +1366,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="已完成 0 / 0 颗(0%)"
+                        android:text="@string/assist_progress_default"
                         android:textColor="@color/textSub"
                         android:textSize="11sp"
                         android:visibility="gone" />
@@ -1390,7 +1390,7 @@
                             android:elevation="2dp"
                             android:focusable="true"
                             android:gravity="center"
-                            android:text="📍 定位未拼"
+                            android:text="@string/assist_locate"
                             android:textColor="@color/text_chip"
                             android:textSize="12sp" />
 
@@ -1404,7 +1404,7 @@
                             android:elevation="2dp"
                             android:focusable="true"
                             android:gravity="center"
-                            android:text="📅 打卡日历"
+                            android:text="@string/assist_calendar"
                             android:textColor="@color/text_chip"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -1433,7 +1433,7 @@
                             android:layout_weight="1"
                             android:singleLine="true"
                             android:ellipsize="end"
-                            android:text="黑色(5号)"
+                            android:text="@string/brush_default_name"
                             android:textColor="@color/textMain"
                             android:textSize="13sp" />
 
@@ -1449,7 +1449,7 @@
                             android:gravity="center"
                             android:paddingStart="12dp"
                             android:paddingEnd="12dp"
-                            android:text="换一支 🖌"
+                            android:text="@string/brush_change"
                             android:textColor="@color/text_chip"
                             android:textSize="12sp" />
 
@@ -1465,7 +1465,7 @@
                             android:gravity="center"
                             android:paddingStart="12dp"
                             android:paddingEnd="12dp"
-                            android:text="⌫ 橡皮"
+                            android:text="@string/brush_eraser"
                             android:textColor="@color/text_chip"
                             android:textSize="12sp" />
 
@@ -1496,7 +1496,7 @@
                         android:elevation="2dp"
                         android:focusable="true"
                         android:gravity="center"
-                        android:text="清除全部手动修改"
+                        android:text="@string/clear_edits"
                         android:textColor="@color/text_chip"
                         android:textSize="13sp"
                         android:visibility="gone" />
@@ -1507,7 +1507,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="18dp"
-                    android:text="画面调节" />
+                    android:text="@string/sec_adjust" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -1528,7 +1528,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="亮度"
+                            android:text="@string/brightness"
                             android:textColor="@color/textMain"
                             android:textSize="14sp" />
 
@@ -1562,7 +1562,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="对比度"
+                            android:text="@string/contrast"
                             android:textColor="@color/textMain"
                             android:textSize="14sp" />
 
@@ -1596,7 +1596,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="饱和度"
+                            android:text="@string/saturation"
                             android:textColor="@color/textMain"
                             android:textSize="14sp" />
 
@@ -1637,7 +1637,7 @@
                         android:elevation="2dp"
                         android:focusable="true"
                         android:gravity="center"
-                        android:text="恢复默认"
+                        android:text="@string/btn_reset"
                         android:textColor="@color/text_chip"
                         android:textSize="14sp" />
 
@@ -1652,7 +1652,7 @@
                         android:elevation="3dp"
                         android:focusable="true"
                         android:gravity="center"
-                        android:text="换个照片"
+                        android:text="@string/btn_change_photo"
                         android:textColor="@color/primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -1687,7 +1687,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="正在生成…"
+                android:text="@string/generating"
                 android:textColor="#FFFFFF"
                 android:textSize="13sp" />
         </LinearLayout>

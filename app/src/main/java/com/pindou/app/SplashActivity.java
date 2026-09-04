@@ -224,10 +224,10 @@ public class SplashActivity extends Activity {
                 canvas.save();
                 canvas.translate(w / 2f, oy + boardH + h * 0.1f);
                 canvas.scale(pop, pop);
-                canvas.drawText("照片变拼豆", 0, 0, tp);
+                canvas.drawText(getString(R.string.app_name), 0, 0, tp);
                 tp.setTextSize(w * 0.036f);
                 tp.setColor(0xFF8A8F98);
-                canvas.drawText("· 拼出你的快乐 ·", 0, w * 0.06f, tp);
+                canvas.drawText(getString(R.string.main_footer), 0, w * 0.06f, tp);
                 canvas.restore();
             }
         }

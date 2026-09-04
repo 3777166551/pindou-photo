@@ -10,9 +10,16 @@ import java.util.List;
  */
 public final class BeadPalettes {
 
-    public static final String[] TIER_NAMES = {
+    /** 档位名默认中文,L10n.apply 会套用本地化版本 */
+    private static String[] TIER_NAMES = {
             "24色 · 经典", "48色 · 标准", "90色 · 进阶", "120色 · 全彩"
     };
+
+    /** 选择列表里品牌色号表的颜色数后缀,如 "(24色)";L10n 可覆盖 */
+    private static String COLOR_COUNT_FMT = "(%d色)";
+
+    /** 豆仓生成色的名称模板;L10n 可覆盖 */
+    private static String MY_COLOR_FMT = "我的色%d";
 
     private static final int[] HEX_T1 = {
             0xFFFFFF, 0xF7F0DD, 0xA8A8A8, 0x4A4A4A, 0x141414, 0xE3242B, 0x9C1C1C, 0xE4007C,
@@ -111,7 +118,8 @@ public final class BeadPalettes {
         System.arraycopy(TIER_NAMES, 0, n, 0, GENERIC_COUNT);
         for (int i = 0; i < BeadBrandCharts.ALL.length; i++) {
             BeadBrandCharts.Chart c = BeadBrandCharts.ALL[i];
-            n[GENERIC_COUNT + i] = c.name + "(" + c.colors.size() + "色)";
+            n[GENERIC_COUNT + i] = c.name
+                    + String.format(java.util.Locale.CHINA, COLOR_COUNT_FMT, c.colors.size());
         }
         for (int i = 0; i < customCount; i++) {
             BeadBrandCharts.Chart c = BeadBrandCharts.customAt(i);
@@ -192,10 +200,41 @@ public final class BeadPalettes {
         if (rgbs.isEmpty()) return null;
         List<BeadColor> out = new ArrayList<>(rgbs.size());
         for (int i = 0; i < rgbs.size(); i++) {
-            out.add(new BeadColor(i + 1, "我的色" + (i + 1), rgbs.get(i)));
+            out.add(new BeadColor(i + 1, String.format(java.util.Locale.CHINA,
+                    MY_COLOR_FMT, i + 1), rgbs.get(i)));
         }
         sortByHue(out);
         return out;
+    }
+
+    /** L10n 钩子:套用本地化档位名/数量后缀/120 通用色名(qa 纯 JVM 下不调用) */
+    public static void applyLocalization(String[] tierNames, String countFmt,
+                                          String[] colorNames) {
+        applyLocalization(tierNames, countFmt, colorNames, null);
+    }
+
+    /** @param myColorFmt "我的色N" 名称模板,如 "My color %d" */
+    public static void applyLocalization(String[] tierNames, String countFmt,
+                                          String[] colorNames, String myColorFmt) {
+        if (tierNames != null && tierNames.length == TIER_NAMES.length) {
+            TIER_NAMES = tierNames.clone();
+        }
+        if (countFmt != null && countFmt.contains("%d")) {
+            COLOR_COUNT_FMT = countFmt;
+        }
+        if (myColorFmt != null && myColorFmt.contains("%d")) {
+            MY_COLOR_FMT = myColorFmt;
+        }
+        if (colorNames != null && colorNames.length >= MASTER.size()) {
+            List<BeadColor> localized = new ArrayList<>(MASTER.size());
+            for (int i = 0; i < MASTER.size(); i++) {
+                BeadColor m = MASTER.get(i);
+                localized.add(new BeadColor(m.code, colorNames[i], m.rgb));
+            }
+            MASTER.clear();
+            MASTER.addAll(localized);
+        }
+        resetCache();
     }
 
     public static String tierName(int sel) {

@@ -137,3 +137,27 @@ javac 报 `illegal character: '\ufeff'`。
   色板下拉框；改过自定义色板内容才会清修格并重新生成。
 - 色板下拉框监听器加了"位置没变就跳过"守卫——`setAdapter` 会异步触发
   onItemSelected，重入会把用户手动修格/空白画布涂色全清掉。
+
+## 13. .NET 正则 `[^"]` 会跨行（v2.35 教训，险些大面积毁码）
+
+**现象**：批量替换 Java 字符串字面量用了 `"[^"]*锚点[^"]*"`。在 .NET 里
+**否定字符类默认匹配换行符**（只有 `.` 不匹配），结果一个锚点从某行的一个引号
+一路吞到几行后的下一个引号，中间整段代码被替换成了 `getString(...)`，
+把赋值语句拼成了无法编译的怪物，而且坏得很隐蔽（恰好在注释/引号密集区）。
+
+**修法**：凡是想限定"行内"的匹配，字符类必须显式排除回车换行：
+`"[^\r\n"]*锚点[^\r\n"]*"`。批量替换脚本（tools/i18n_apply.ps1）已按此写法,
+并对每条映射报告 MISS,替换前先 `git status` 干净、出问题可 `git checkout` 回滚。
+
+**教训**：大规模机械替换前,先用一小段样例验证正则的"可跨越范围",
+并确保工作区干净可以整体回滚——这次靠 git checkout -- 三个文件救回来。
+
+## 14. i18n 的形状(v2.35 起)
+
+- `values/`（中文默认）+ `values-en` + `values-ja`：strings.xml + arrays.xml
+  （tier/brick/denoise/week/generic_color_names 120 色）+ knowledge.xml。
+- 纯 Java 数据类（BeadPalettes/BeadColor）**不能引用 R 类**（qa 在桌面 JVM
+  编译会炸"程序包 R 不存在"）,本地化文本经 `util/L10n.apply(context)`
+  在 Activity onCreate 套到静态字段上;不调用时保持中文默认,qa 不受影响。
+- CI 模拟器是英文环境,qa/ui_smoke.sh 的文本锚点全部用英文串,
+  顺带把英文翻译也端到端验了。新增 UI 时记得三语一起补键。

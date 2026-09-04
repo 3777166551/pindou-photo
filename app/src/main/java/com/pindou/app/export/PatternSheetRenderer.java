@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 
+import com.pindou.app.R;
 import com.pindou.app.bead.BeadBrand;
 import com.pindou.app.bead.BeadPattern;
 import com.pindou.app.bead.ColorMath;
@@ -21,7 +22,7 @@ import java.util.Locale;
  */
 public final class PatternSheetRenderer {
 
-    public static Bitmap render(BeadPattern p, String paletteName) {
+    public static Bitmap render(android.content.Context ctx, BeadPattern p, String paletteName) {
         int cols = p.cols;
         int rows = p.rows;
         int cell = (int) Math.max(20, Math.min(48, 2800.0 / Math.max(cols, rows)));
@@ -58,14 +59,16 @@ public final class PatternSheetRenderer {
 
         // 标题
         String date = new SimpleDateFormat("yyyy/MM/dd", Locale.CHINA).format(new Date());
-        c.drawText("拼豆图纸", margin, margin + 62, titleP);
+        c.drawText(ctx.getString(R.string.sheet_title), margin, margin + 62, titleP);
         String info = String.format(Locale.CHINA,
-                "%d×%d 格%s · %s · 共 %d 颗 · %s",
-                cols, rows, p.round ? "(圆形板)" : "", paletteName,
-                p.totalBeads,
+                ctx.getString(R.string.fmt_sheet_info),
+                cols, rows, p.round ? ctx.getString(R.string.sheet_round) : "",
+                paletteName, p.totalBeads,
                 p.round
-                        ? String.format(Locale.CHINA, "直径约 %.0f cm", cols * 0.5)
-                        : "29×29 拼板 " + p.boardsNeeded() + " 块")
+                        ? String.format(Locale.CHINA, ctx.getString(R.string.fmt_sheet_dia),
+                        cols * 0.5)
+                        : String.format(Locale.CHINA,
+                        ctx.getString(R.string.fmt_sheet_boards), p.boardsNeeded()))
                 + " · " + date;
         c.drawText(info, margin, margin + 118, infoP);
 
@@ -190,7 +193,7 @@ public final class PatternSheetRenderer {
         if (entries > 0) {
             int top = gy + gridH + 60;
             Paint legendTitleP = textPaint(40, 0xFF232323, true);
-            c.drawText("豆豆清单(按用量排序)", margin, top + 46, legendTitleP);
+            c.drawText(ctx.getString(R.string.sheet_bom_title), margin, top + 46, legendTitleP);
 
             Paint swatchP = new Paint(Paint.ANTI_ALIAS_FLAG);
             Paint symSmallP = textPaint(26, 0xFF000000, true);
@@ -213,13 +216,13 @@ public final class PatternSheetRenderer {
                     rgb = uc.color.rgb;
                     sym = uc.symbol;
                     label = uc.color.fullLabel()
-                            + (uc.color.hasOfficialCode() ? " 官方色号"
+                            + (uc.color.hasOfficialCode() ? ctx.getString(R.string.sheet_official)
                               : " " + BeadBrand.shortTagOf(uc.color.rgb));
                     count = "× " + String.format(Locale.CHINA, "%,d", uc.count);
                 } else {
                     rgb = 0xFFFFFF;
                     sym = "×";
-                    label = "空格(不放置)";
+                    label = ctx.getString(R.string.sheet_empty);
                     count = "× " + String.format(Locale.CHINA, "%,d", p.emptyCount);
                 }
                 swatchP.setColor(0xFF000000 | rgb);
@@ -242,8 +245,8 @@ public final class PatternSheetRenderer {
         // 页脚
         Paint footP = textPaint(26, 0xFFB0A79E, false);
         String foot = String.format(Locale.CHINA,
-                "总计 %d 颗 / %d 种颜色 · 由「照片变拼豆」生成 · 颜色为参考色,请以实物豆为准",
-                p.totalBeads, p.usedColors.size());
+                ctx.getString(R.string.fmt_sheet_footer),
+                p.totalBeads, p.usedColors.size(), ctx.getString(R.string.app_name));
         c.drawText(foot, margin, pageH - margin - 30, footP);
         return bmp;
     }

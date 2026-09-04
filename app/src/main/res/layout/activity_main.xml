@@ -40,7 +40,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="8dp"
-            android:text="把手机里的照片,一键变成拼豆图纸 ✨"
+            android:text="@string/main_tagline"
             android:textColor="@color/textSub"
             android:textSize="13sp" />
 
@@ -75,7 +75,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="开始一张新图纸"
+                        android:text="@string/main_new_title"
                         android:textColor="@color/textMain"
                         android:textSize="19sp"
                         android:textStyle="bold" />
@@ -84,7 +84,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="自动匹配豆色 · 生成可打印图纸"
+                        android:text="@string/main_new_desc"
                         android:textColor="#6B7280"
                         android:textSize="11sp" />
                 </LinearLayout>
@@ -98,7 +98,7 @@
                 android:layout_marginTop="14dp"
                 android:background="@drawable/bg_btn_primary"
                 android:elevation="3dp"
-                android:text="从相册选照片"
+                android:text="@string/main_pick_gallery"
                 android:textColor="#FFFFFF" />
 
             <TextView
@@ -109,7 +109,7 @@
                 android:layout_marginTop="10dp"
                 android:background="@drawable/bg_btn_secondary"
                 android:elevation="1dp"
-                android:text="拍一张照片"
+                android:text="@string/main_pick_camera"
                 android:textColor="@color/textMain" />
         </LinearLayout>
 
@@ -125,7 +125,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🧰 好用的小工具"
+                android:text="@string/main_tools"
                 android:textColor="@color/textMain"
                 android:textSize="15sp"
                 android:textStyle="bold" />
@@ -149,8 +149,8 @@
                 android:layout_marginEnd="6dp">
 
                 <TextView style="@style/ToolCardIcon" android:text="🩹" />
-                <TextView style="@style/ToolCardTitle" android:text="去水印" />
-                <TextView style="@style/ToolCardDesc" android:text="框住水印一键清除" />
+                <TextView style="@style/ToolCardTitle" android:text="@string/tool_watermark" />
+                <TextView style="@style/ToolCardDesc" android:text="@string/tool_watermark_desc" />
             </LinearLayout>
         </LinearLayout>
 
@@ -166,8 +166,8 @@
                 android:layout_marginEnd="6dp">
 
                 <TextView style="@style/ToolCardIcon" android:text="📷" />
-                <TextView style="@style/ToolCardTitle" android:text="识别图纸" />
-                <TextView style="@style/ToolCardDesc" android:text="现成图纸变同款" />
+                <TextView style="@style/ToolCardTitle" android:text="@string/tool_scan" />
+                <TextView style="@style/ToolCardDesc" android:text="@string/tool_scan_desc" />
             </LinearLayout>
 
             <LinearLayout
@@ -176,8 +176,8 @@
                 android:layout_marginStart="6dp">
 
                 <TextView style="@style/ToolCardIcon" android:text="🧩" />
-                <TextView style="@style/ToolCardTitle" android:text="模板库" />
-                <TextView style="@style/ToolCardDesc" android:text="460+ 图案离线拼" />
+                <TextView style="@style/ToolCardTitle" android:text="@string/tool_templates" />
+                <TextView style="@style/ToolCardDesc" android:text="@string/tool_templates_desc" />
             </LinearLayout>
         </LinearLayout>
 
@@ -193,8 +193,8 @@
                 android:layout_marginEnd="6dp">
 
                 <TextView style="@style/ToolCardIcon" android:text="🔤" />
-                <TextView style="@style/ToolCardTitle" android:text="文字生成" />
-                <TextView style="@style/ToolCardDesc" android:text="名字变挂件图纸" />
+                <TextView style="@style/ToolCardTitle" android:text="@string/tool_text" />
+                <TextView style="@style/ToolCardDesc" android:text="@string/tool_text_desc" />
             </LinearLayout>
 
             <LinearLayout
@@ -203,8 +203,8 @@
                 android:layout_marginStart="6dp">
 
                 <TextView style="@style/ToolCardIcon" android:text="✏️" />
-                <TextView style="@style/ToolCardTitle" android:text="空白画布" />
-                <TextView style="@style/ToolCardDesc" android:text="从零手绘图纸" />
+                <TextView style="@style/ToolCardTitle" android:text="@string/tool_blank" />
+                <TextView style="@style/ToolCardDesc" android:text="@string/tool_blank_desc" />
             </LinearLayout>
         </LinearLayout>
 
@@ -220,8 +220,8 @@
                 android:layout_marginEnd="6dp">
 
                 <TextView style="@style/ToolCardIcon" android:text="📖" />
-                <TextView style="@style/ToolCardTitle" android:text="拼豆知识" />
-                <TextView style="@style/ToolCardDesc" android:text="新手入门不迷路" />
+                <TextView style="@style/ToolCardTitle" android:text="@string/tool_knowledge" />
+                <TextView style="@style/ToolCardDesc" android:text="@string/tool_knowledge_desc" />
             </LinearLayout>
         </LinearLayout>
 
@@ -237,7 +237,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🗂 继续拼"
+                android:text="@string/main_continue"
                 android:textColor="@color/textMain"
                 android:textSize="15sp"
                 android:textStyle="bold" />
@@ -264,8 +264,8 @@
                 android:layout_weight="1"
                 android:orientation="vertical">
 
-                <TextView style="@style/ToolCardTitle" android:text="我的项目" />
-                <TextView style="@style/ToolCardDesc" android:text="存档随时接着拼,豆仓进度都在" />
+                <TextView style="@style/ToolCardTitle" android:text="@string/tool_projects" />
+                <TextView style="@style/ToolCardDesc" android:text="@string/tool_projects_desc" />
             </LinearLayout>
         </LinearLayout>
 
@@ -274,7 +274,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="22dp"
-            android:text="· 拼出你的快乐 ·"
+            android:text="@string/main_footer"
             android:textColor="@color/textSub"
             android:textSize="12sp" />
 

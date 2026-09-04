@@ -574,7 +574,8 @@ public class PatternView extends View {
             hintPaint.setColor(0xFFB3A99F);
             hintPaint.setTextSize(dp(15));
             hintPaint.setTextAlign(Paint.Align.CENTER);
-            canvas.drawText("选择照片后自动生成预览", w / 2f, h / 2f, hintPaint);
+            canvas.drawText(getContext().getString(com.pindou.app.R.string.preview_hint),
+                    w / 2f, h / 2f, hintPaint);
             return;
         }
 

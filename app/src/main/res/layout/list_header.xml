@@ -14,7 +14,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="用量统计"
+        android:text="@string/summary_title"
         android:textColor="@color/textMain"
         android:textSize="15sp"
         android:textStyle="bold" />
@@ -39,7 +39,7 @@
         android:elevation="2dp"
         android:focusable="true"
         android:gravity="center"
-        android:text="🎒 豆仓库存(登记手头豆子,自动算缺口)"
+        android:text="@string/btn_inventory"
         android:textColor="@color/text_chip"
         android:textSize="12sp"
         android:textStyle="bold" />
@@ -54,7 +54,7 @@
         android:elevation="2dp"
         android:focusable="true"
         android:gravity="center"
-        android:text="🎨 我的色板(自定义颜色组合,可导入导出)"
+        android:text="@string/btn_palettes"
         android:textColor="@color/text_chip"
         android:textSize="12sp"
         android:textStyle="bold" />
@@ -63,7 +63,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="💡 建议每种颜色多备 10% 左右的用量\n🏷️ 品牌色号为近似对照,下单前请核对官方色卡"
+        android:text="@string/header_tip"
         android:textColor="#B26A00"
         android:textSize="12sp" />
 </LinearLayout>

@@ -65,6 +65,7 @@ public class PaletteActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_palette);
+        com.pindou.app.util.L10n.apply(this);
         CustomPalettes.loadIfNeeded(this);
 
         tvCount = findViewById(R.id.tvCount);
@@ -134,7 +135,8 @@ public class PaletteActivity extends Activity {
     private void refresh() {
         adapter.notifyDataSetChanged();
         int n = BeadBrandCharts.customCount();
-        tvCount.setText(n == 0 ? "空" : n + " 套");
+        tvCount.setText(n == 0 ? getString(R.string.palette_count_none)
+                : getString(R.string.palette_count_fmt, n));
     }
 
     // ---------------- 色板列表 ----------------
@@ -171,8 +173,7 @@ public class PaletteActivity extends Activity {
 
             if (BeadBrandCharts.customCount() == 0) {
                 TextView empty = new TextView(PaletteActivity.this);
-                empty.setText("还没有自定义色板。\n\n点下面「➕ 新建」从零开始,「🎒 从豆仓生成」"
-                        + "用手头有的豆子一键生成,或「📥 导入」别人分享的色板文件。");
+                empty.setText(getString(R.string.palette_empty_hint));
                 empty.setTextColor(0xFF4E4A46);
                 empty.setTextSize(14);
                 empty.setLineSpacing(dp(3), 1f);
@@ -222,8 +223,9 @@ public class PaletteActivity extends Activity {
             texts.addView(name);
 
             TextView sub = new TextView(PaletteActivity.this);
-            String extra = CustomPalettes.inventoryIndex() == position ? " · 豆仓自动" : "";
-            sub.setText(c.colors.size() + " 色" + extra + " · 点按管理");
+            sub.setText(getString(R.string.palette_sub_fmt, c.colors.size(),
+                    CustomPalettes.inventoryIndex() == position
+                            ? getString(R.string.palette_auto_tag) : ""));
             sub.setTextColor(0xFF8A857F);
             sub.setTextSize(12);
             texts.addView(sub);
@@ -243,7 +245,8 @@ public class PaletteActivity extends Activity {
         new AlertDialog.Builder(this)
                 .setTitle(c.name)
                 .setItems(new String[]{
-                        "✏️ 编辑颜色", "✍️ 重命名", "📤 导出 JSON", "🗑 删除"
+                        getString(R.string.action_edit), getString(R.string.action_rename),
+                        getString(R.string.action_export_json), getString(R.string.action_delete)
                 }, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int which) {
@@ -259,19 +262,20 @@ public class PaletteActivity extends Activity {
     private void confirmDelete(final int idx) {
         final BeadBrandCharts.Chart c = BeadBrandCharts.customAt(idx);
         new AlertDialog.Builder(this)
-                .setTitle("删除色板")
-                .setMessage("确定删除「" + c.name + "」?" + (CustomPalettes.inventoryIndex() == idx
-                        ? "\n这是豆仓生成的\"我的豆板\",删除后可再次生成。"
+                .setTitle(getString(R.string.del_palette_title))
+                .setMessage(getString(R.string.fmt_del_palette, c.name)
+                        + (CustomPalettes.inventoryIndex() == idx
+                        ? getString(R.string.del_auto_note)
                         : ""))
-                .setPositiveButton("删除", new DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.btn_delete), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int w) {
                         CustomPalettes.remove(PaletteActivity.this, idx);
                         refresh();
-                        Toast.makeText(PaletteActivity.this, "已删除", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(PaletteActivity.this, getString(R.string.deleted), Toast.LENGTH_SHORT).show();
                     }
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 
@@ -282,22 +286,22 @@ public class PaletteActivity extends Activity {
         et.setText(c.name);
         et.setSelection(et.getText().length());
         new AlertDialog.Builder(this)
-                .setTitle("重命名色板")
+                .setTitle(getString(R.string.rename_title))
                 .setView(et)
-                .setPositiveButton("保存", new DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.btn_save), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int w) {
                         String name = et.getText().toString().trim();
                         if (name.isEmpty()) {
                             Toast.makeText(PaletteActivity.this,
-                                    "名称不能为空", Toast.LENGTH_SHORT).show();
+                                    getString(R.string.err_empty_name), Toast.LENGTH_SHORT).show();
                             return;
                         }
                         CustomPalettes.update(PaletteActivity.this, idx, name, c.colors);
                         refresh();
                     }
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 
@@ -318,13 +322,13 @@ public class PaletteActivity extends Activity {
 
         final EditText etName = new EditText(this);
         etName.setInputType(InputType.TYPE_CLASS_TEXT);
-        etName.setHint("色板名称");
-        etName.setText(src == null ? "我的色板" : src.name);
+        etName.setHint(getString(R.string.hint_palette_name));
+        etName.setText(src == null ? getString(R.string.default_palette_name) : src.name);
         etName.setSelection(etName.getText().length());
         box.addView(etName);
 
         final TextView hint = new TextView(this);
-        hint.setText("点按颜色可改 RGB/名称/色号,长按删除:");
+        hint.setText(getString(R.string.edit_colors_hint));
         hint.setTextColor(0xFF8A857F);
         hint.setTextSize(12);
         hint.setPadding(0, dp(8), 0, dp(4));
@@ -347,7 +351,7 @@ public class PaletteActivity extends Activity {
         LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(
                 0, dp(38), 1f);
         blp.rightMargin = dp(8);
-        TextView btnAdd = chipButton("➕ 添加颜色");
+        TextView btnAdd = chipButton(getString(R.string.color_add_title));
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -355,7 +359,7 @@ public class PaletteActivity extends Activity {
             }
         });
         btnRow.addView(btnAdd, blp);
-        TextView btnSort = chipButton("🌈 按色相排序");
+        TextView btnSort = chipButton(getString(R.string.btn_sort_hue));
         btnSort.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -368,18 +372,18 @@ public class PaletteActivity extends Activity {
         box.addView(btnRow);
 
         new AlertDialog.Builder(this)
-                .setTitle(isNew ? "新建色板" : "编辑色板")
+                .setTitle(isNew ? getString(R.string.palette_new_title) : getString(R.string.palette_edit_title))
                 .setView(box)
-                .setPositiveButton("保存", new DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.btn_save), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int w) {
                         if (work.isEmpty()) {
                             Toast.makeText(PaletteActivity.this,
-                                    "色板至少要有一种颜色", Toast.LENGTH_SHORT).show();
+                                    getString(R.string.err_palette_empty), Toast.LENGTH_SHORT).show();
                             return;
                         }
                         String name = etName.getText().toString().trim();
-                        if (name.isEmpty()) name = "我的色板";
+                        if (name.isEmpty()) name = getString(R.string.default_palette_name);
                         List<BeadColor> fixed = new ArrayList<>(work.size());
                         for (int i = 0; i < work.size(); i++) {
                             BeadColor c = work.get(i);
@@ -392,11 +396,11 @@ public class PaletteActivity extends Activity {
                         }
                         refresh();
                         Toast.makeText(PaletteActivity.this,
-                                "已保存:" + name + "(" + fixed.size() + "色)",
+                                getString(R.string.fmt_palette_saved, name, fixed.size()),
                                 Toast.LENGTH_SHORT).show();
                     }
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 
@@ -458,16 +462,16 @@ public class PaletteActivity extends Activity {
                 @Override
                 public boolean onLongClick(View v) {
                     new AlertDialog.Builder(PaletteActivity.this)
-                            .setTitle("删除颜色")
-                            .setMessage("从色板移除「" + c.name + "」?")
-                            .setPositiveButton("删除", new DialogInterface.OnClickListener() {
+                            .setTitle(getString(R.string.del_color_title))
+                            .setMessage(getString(R.string.fmt_del_color, c.name))
+                            .setPositiveButton(getString(R.string.btn_delete), new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface d, int w) {
                                     colors.remove(position);
                                     notifyDataSetChanged();
                                 }
                             })
-                            .setNegativeButton("取消", null)
+                            .setNegativeButton(getString(R.string.btn_cancel), null)
                             .show();
                     return true;
                 }
@@ -489,13 +493,13 @@ public class PaletteActivity extends Activity {
 
         final EditText etName = new EditText(this);
         etName.setInputType(InputType.TYPE_CLASS_TEXT);
-        etName.setHint("颜色名称");
+        etName.setHint(getString(R.string.hint_color_name));
         etName.setText(cur == null ? "" : cur.name);
         box.addView(etName);
 
         final EditText etTag = new EditText(this);
         etTag.setInputType(InputType.TYPE_CLASS_TEXT);
-        etTag.setHint("色号(选填,如 S-47)");
+        etTag.setHint(getString(R.string.hint_color_tag));
         etTag.setText(cur == null ? "" : cur.tag);
         box.addView(etTag);
 
@@ -618,22 +622,22 @@ public class PaletteActivity extends Activity {
         });
 
         new AlertDialog.Builder(this)
-                .setTitle(rowIdx < 0 ? "添加颜色" : "编辑颜色")
+                .setTitle(rowIdx < 0 ? getString(R.string.color_add_title) : getString(R.string.color_edit_title))
                 .setView(box)
-                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.btn_ok), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int w) {
                         int rgb = PaletteShare.parseHexColor(etHex.getText().toString());
                         if (rgb < 0) {
                             Toast.makeText(PaletteActivity.this,
-                                    "颜色值不合法,请填 #RRGGBB", Toast.LENGTH_SHORT).show();
+                                    getString(R.string.err_bad_hex), Toast.LENGTH_SHORT).show();
                             return;
                         }
                         String name = etName.getText().toString().trim();
                         if (name.isEmpty()) {
                             name = rowIdx < 0
-                                    ? "色" + (work.size() + 1)
-                                    : "色" + (rowIdx + 1);
+                                    ? getString(R.string.fmt_color_n, work.size() + 1)
+                                    : getString(R.string.fmt_color_n, rowIdx + 1);
                         }
                         String tag = etTag.getText().toString().trim();
                         BeadColor c = new BeadColor(rowIdx < 0 ? work.size() + 1
@@ -646,7 +650,7 @@ public class PaletteActivity extends Activity {
                         notifier.notifyDataSetChanged();
                     }
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 
@@ -682,14 +686,14 @@ public class PaletteActivity extends Activity {
     private void regenerateFromInventory() {
         int idx = CustomPalettes.regenerateInventory(this);
         if (idx < 0) {
-            Toast.makeText(this, "豆仓还没有有货的颜色,先在编辑器的豆仓里登记数量",
+            Toast.makeText(this, getString(R.string.inv_empty_palette),
                     Toast.LENGTH_LONG).show();
             return;
         }
         refresh();
         lv.smoothScrollToPosition(idx);
-        Toast.makeText(this, "🎒 我的豆板已按豆仓库存重建:"
-                + BeadBrandCharts.customAt(idx).colors.size() + " 色", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, getString(R.string.fmt_inv_rebuilt,
+                BeadBrandCharts.customAt(idx).colors.size()), Toast.LENGTH_SHORT).show();
     }
 
     private void export(final int idx) {
@@ -699,14 +703,15 @@ public class PaletteActivity extends Activity {
             if (safe.isEmpty()) safe = "palette";
             String stamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA)
                     .format(new Date());
-            File out = new File(getCacheDir(), "拼豆色板_" + safe + "_" + stamp + ".json");
+            File out = new File(getCacheDir(), getString(R.string.file_palette_prefix)
+                    + safe + "_" + stamp + ".json");
             JSONObject o = PaletteShare.build(c.name, c.colors);
             FileOutputStream fos = new FileOutputStream(out);
             fos.write(o.toString().getBytes("UTF-8"));
             fos.close();
             share(AppFileProvider.forCacheShare(out));
         } catch (Exception e) {
-            Toast.makeText(this, "导出失败:" + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.err_prefix_export) + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -716,9 +721,9 @@ public class PaletteActivity extends Activity {
         send.putExtra(android.content.Intent.EXTRA_STREAM, uri);
         send.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
         try {
-            startActivity(android.content.Intent.createChooser(send, "分享色板文件"));
+            startActivity(android.content.Intent.createChooser(send, getString(R.string.share_palette_title)));
         } catch (Exception e) {
-            Toast.makeText(this, "分享失败", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.share_failed), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -730,7 +735,7 @@ public class PaletteActivity extends Activity {
             it.setType("*/*");
             startActivityForResult(it, REQ_IMPORT);
         } catch (Throwable t) {
-            Toast.makeText(this, "无法打开文件选择器", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_no_picker), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -751,10 +756,11 @@ public class PaletteActivity extends Activity {
             int idx = CustomPalettes.add(this, c.name, c.colors);
             refresh();
             lv.smoothScrollToPosition(idx);
-            Toast.makeText(this, "已导入:" + c.name + "(" + c.colors.size() + "色)",
-                    Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.fmt_imported,
+                    c.name, c.colors.size()), Toast.LENGTH_LONG).show();
         } catch (Exception e) {
-            Toast.makeText(this, "导入失败:" + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.err_prefix_import)
+                    + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 

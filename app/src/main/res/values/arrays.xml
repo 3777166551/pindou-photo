@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 中文(默认)数组:档位/砖块/去噪/星期/通用120色名 -->
+<resources>
+    <string-array name="tier_names">
+        <item>24色 · 经典</item>
+        <item>48色 · 标准</item>
+        <item>90色 · 进阶</item>
+        <item>120色 · 全彩</item>
+    </string-array>
+    <string-array name="brick_labels">
+        <item>轻度</item>
+        <item>中度</item>
+        <item>强度</item>
+        <item>超强</item>
+    </string-array>
+    <string-array name="denoise_labels">
+        <item>关</item>
+        <item>轻</item>
+        <item>中</item>
+        <item>强</item>
+    </string-array>
+    <string-array name="week_short">
+        <item>一</item>
+        <item>二</item>
+        <item>三</item>
+        <item>四</item>
+        <item>五</item>
+        <item>六</item>
+        <item>日</item>
+    </string-array>
+    <string-array name="generic_color_names">
+        <item>白色</item><item>奶白</item><item>灰色</item><item>深灰</item>
+        <item>黑色</item><item>大红</item><item>深红</item><item>玫红</item>
+        <item>粉红</item><item>橙色</item><item>柠檬黄</item><item>大黄</item>
+        <item>草绿</item><item>深绿</item><item>青色</item><item>天蓝</item>
+        <item>宝蓝</item><item>深蓝</item><item>紫色</item><item>棕色</item>
+        <item>浅棕</item><item>肤色</item><item>咖啡色</item><item>浅蓝</item>
+        <item>银灰</item><item>中灰</item><item>酒红</item><item>砖红</item>
+        <item>珊瑚红</item><item>浅粉</item><item>艳粉</item><item>浅橙</item>
+        <item>深橙</item><item>浅黄</item><item>深黄</item><item>芥末黄</item>
+        <item>苹果绿</item><item>军绿</item><item>深青</item><item>浅青</item>
+        <item>湖蓝</item><item>藏蓝</item><item>灰蓝</item><item>深紫</item>
+        <item>浅紫</item><item>驼色</item><item>卡其</item><item>浅肤色</item>
+        <item>象牙白</item><item>炭灰</item><item>暖灰</item><item>冷灰</item>
+        <item>番茄红</item><item>深酒红</item><item>藕粉</item><item>杏色</item>
+        <item>肤橙</item><item>土黄</item><item>金黄</item><item>黄绿</item>
+        <item>墨绿</item><item>薄荷绿</item><item>灰绿</item><item>荧光绿</item>
+        <item>孔雀绿</item><item>淡蓝</item><item>靛蓝</item><item>亮蓝</item>
+        <item>蓝紫</item><item>葡萄紫</item><item>藕紫</item><item>深棕</item>
+        <item>栗色</item><item>红棕</item><item>深肤色</item><item>小麦色</item>
+        <item>银色</item><item>金色</item><item>荧光橙</item><item>深天蓝</item>
+        <item>森林绿</item><item>浅卡其</item><item>砖橘</item><item>雾蓝</item>
+        <item>灰粉</item><item>黑棕</item><item>翠绿</item><item>橄榄绿</item>
+        <item>深玫红</item><item>古铜色</item>
+        <item>浅砖红</item><item>玫粉</item><item>荧光粉</item><item>樱桃红</item>
+        <item>铁锈红</item><item>鹅黄</item><item>荧光黄</item><item>荧光蓝</item>
+        <item>宝石绿</item><item>深湖蓝</item><item>灰紫</item><item>深靛</item>
+        <item>咖啡驼</item><item>深海军</item><item>豆沙色</item><item>深灰蓝</item>
+        <item>香芋紫</item><item>深青绿</item><item>深橄榄</item><item>珊瑚粉</item>
+        <item>蜜桃色</item><item>深灰绿</item><item>浅金</item><item>青灰</item>
+        <item>卡其绿</item><item>亮紫</item><item>深珊瑚</item><item>湖水绿</item>
+        <item>紫红</item><item>奶油白</item>
+    </string-array>
+</resources>

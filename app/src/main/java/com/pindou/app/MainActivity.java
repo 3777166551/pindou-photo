@@ -58,6 +58,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         com.pindou.app.util.Skin.apply(getWindow().getDecorView());
+        com.pindou.app.util.L10n.apply(this);
 
         // 自定义色板仓库:「合并采购单」等后台重算会用到,提前惰性载入
         com.pindou.app.bead.CustomPalettes.loadIfNeeded(this);
@@ -79,7 +80,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 pickForAction(com.pindou.app.EditorActivity.PENDING_WATERMARK,
-                        "选一张带水印的图");
+                        getString(R.string.pick_wm_photo));
             }
         });
 
@@ -133,18 +134,18 @@ public class MainActivity extends Activity {
     /** 文字生成:把名字/词语渲染成黑字透明底位图,交给编辑器变成拼豆图纸 */
     private void showTextDialog() {
         final EditText input = new EditText(this);
-        input.setHint("输入名字或词语,最多 12 个字");
+        input.setHint(getString(R.string.textgen_hint));
         input.setFilters(new InputFilter[]{new InputFilter.LengthFilter(12)});
         new AlertDialog.Builder(this)
-                .setTitle("文字生成拼豆")
-                .setMessage("文字会变成拼豆图纸(黑字,背景留空格)")
+                .setTitle(getString(R.string.textgen_title))
+                .setMessage(getString(R.string.textgen_msg))
                 .setView(input)
-                .setPositiveButton("生成", new android.content.DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.btn_generate), new android.content.DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(android.content.DialogInterface dialog, int which) {
                         String text = input.getText().toString().trim();
                         if (text.isEmpty()) {
-                            Toast.makeText(MainActivity.this, "先输入文字哦",
+                            Toast.makeText(MainActivity.this, getString(R.string.err_empty_text),
                                     Toast.LENGTH_SHORT).show();
                             return;
                         }
@@ -153,7 +154,7 @@ public class MainActivity extends Activity {
                         overridePendingTransition(R.anim.enter_up, R.anim.exit_dim);
                     }
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 
@@ -226,9 +227,9 @@ public class MainActivity extends Activity {
         });
 
         new AlertDialog.Builder(this)
-                .setTitle("图案模板库 🧩")
+                .setTitle(getString(R.string.templates_title))
                 .setView(wrapScroll(gv))
-                .setPositiveButton("关闭", null)
+                .setPositiveButton(getString(R.string.btn_close), null)
                 .show();
     }
 
@@ -249,7 +250,7 @@ public class MainActivity extends Activity {
         new AlertDialog.Builder(this)
                 .setTitle(cat.name)
                 .setView(wrapScroll(gv))
-                .setPositiveButton("分类 ⬅", new DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.btn_categories), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int w) {
                         showTemplateGallery();
@@ -311,7 +312,7 @@ public class MainActivity extends Activity {
             cell.addView(name);
 
             TextView count = new TextView(MainActivity.this);
-            count.setText(cat.items.length + " 个图案");
+            count.setText(getString(R.string.fmt_cat_count, cat.items.length));
             count.setTextColor(0xFF8A8F98);
             count.setTextSize(11);
             cell.addView(count);
@@ -384,7 +385,7 @@ public class MainActivity extends Activity {
             items = new ArrayList<>();
         }
         if (items.isEmpty()) {
-            Toast.makeText(this, "还没有项目存档。在编辑页右上方 ⋮ 菜单里「保存项目存档」即可。",
+            Toast.makeText(this, getString(R.string.no_projects),
                     Toast.LENGTH_LONG).show();
             return;
         }
@@ -397,7 +398,7 @@ public class MainActivity extends Activity {
         box.setOrientation(LinearLayout.VERTICAL);
 
         TextView mergeBtn = new TextView(this);
-        mergeBtn.setText("🛒 合并采购单(把几个项目的用量汇总成一张采购单)");
+        mergeBtn.setText(getString(R.string.btn_merge_bom));
         mergeBtn.setTextColor(0xFF1E6BB8);
         mergeBtn.setTextSize(13);
         mergeBtn.setPadding(pad, pad, pad, pad);
@@ -449,7 +450,7 @@ public class MainActivity extends Activity {
                     0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
             TextView del = new TextView(this);
-            del.setText("删除");
+            del.setText(getString(R.string.btn_delete));
             del.setTextColor(0xFFD32F2F);
             del.setTextSize(13);
             del.setPadding(pad, pad, pad, pad);
@@ -479,9 +480,9 @@ public class MainActivity extends Activity {
         sc.addView(box);
         com.pindou.app.util.Skin.apply(sc);
         new AlertDialog.Builder(this)
-                .setTitle("我的项目 🗂(" + items.size() + ")")
+                .setTitle(getString(R.string.projects_title_fmt, items.size()))
                 .setView(sc)
-                .setPositiveButton("关闭", null)
+                .setPositiveButton(getString(R.string.btn_close), null)
                 .show();
     }
 
@@ -496,7 +497,7 @@ public class MainActivity extends Activity {
             checked[i] = i == 0;
         }
         new AlertDialog.Builder(this)
-                .setTitle("🛒 选择要汇总的项目")
+                .setTitle(getString(R.string.merge_pick_title))
                 .setMultiChoiceItems(names, checked,
                         new DialogInterface.OnMultiChoiceClickListener() {
                             @Override
@@ -505,21 +506,21 @@ public class MainActivity extends Activity {
                                 checked[which] = isChecked;
                             }
                         })
-                .setPositiveButton("生成", new DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.btn_generate), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         buildMergedBom(items, checked);
                     }
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 
     private void buildMergedBom(final List<ProjectStore.Entry> items,
                                 final boolean[] checked) {
         final AlertDialog loading = new AlertDialog.Builder(this)
-                .setTitle("🛒 正在汇总…")
-                .setMessage("按各项目保存的照片与参数重新计算用量,请稍等")
+                .setTitle(getString(R.string.merge_running))
+                .setMessage(getString(R.string.merge_wait))
                 .show();
         new Thread(new Runnable() {
             @Override
@@ -581,7 +582,7 @@ public class MainActivity extends Activity {
                                      final java.util.LinkedHashMap<String, Integer> rgbs,
                                      final int okProjects) {
         if (keys.isEmpty() || okProjects == 0) {
-            Toast.makeText(this, "没有可汇总的项目(需要保存过照片的项目)",
+            Toast.makeText(this, getString(R.string.merge_none),
                     Toast.LENGTH_LONG).show();
             return;
         }
@@ -633,15 +634,15 @@ public class MainActivity extends Activity {
         sc.addView(box);
         com.pindou.app.util.Skin.apply(sc);
         new AlertDialog.Builder(this)
-                .setTitle("🛒 合并采购单")
+                .setTitle(getString(R.string.merge_title))
                 .setView(sc)
-                .setNeutralButton("导出 CSV", new DialogInterface.OnClickListener() {
+                .setNeutralButton(getString(R.string.btn_csv), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         exportCsv(keys, agg, labels);
                     }
                 })
-                .setPositiveButton("关闭", null)
+                .setPositiveButton(getString(R.string.btn_close), null)
                 .show();
     }
 
@@ -657,7 +658,8 @@ public class MainActivity extends Activity {
             }
             String stamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA)
                     .format(new Date());
-            File out = new File(getCacheDir(), "拼豆合并采购单_" + stamp + ".csv");
+            File out = new File(getCacheDir(), getString(R.string.merge_file_prefix)
+                    + stamp + ".csv");
             java.io.FileOutputStream fos = new java.io.FileOutputStream(out);
             fos.write(sb.toString().getBytes("UTF-8"));
             fos.close();
@@ -666,25 +668,25 @@ public class MainActivity extends Activity {
             it.setType("text/csv");
             it.putExtra(Intent.EXTRA_STREAM, uri);
             it.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            startActivity(Intent.createChooser(it, "分享采购单 CSV"));
+            startActivity(Intent.createChooser(it, getString(R.string.share_csv)));
         } catch (Exception e) {
-            Toast.makeText(this, "导出失败:" + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_prefix_export) + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
     private void confirmDeleteProject(final ProjectStore.Entry e,
                                       final List<ProjectStore.Entry> all) {
         new AlertDialog.Builder(this)
-                .setMessage("确定删除「" + e.name + "」吗?\n删除后不可恢复。")
-                .setPositiveButton("删除", new DialogInterface.OnClickListener() {
+                .setMessage(getString(R.string.fmt_delete_confirm, e.name))
+                .setPositiveButton(getString(R.string.btn_delete), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int w) {
                         ProjectStore.delete(e.file);
-                        Toast.makeText(MainActivity.this, "已删除",
+                        Toast.makeText(MainActivity.this, getString(R.string.deleted),
                                 Toast.LENGTH_SHORT).show();
                     }
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 
@@ -695,7 +697,7 @@ public class MainActivity extends Activity {
             startActivity(new Intent(MainActivity.this, EditorActivity.class));
             overridePendingTransition(R.anim.enter_up, R.anim.exit_dim);
         } catch (Exception ex) {
-            Toast.makeText(this, "这个存档读不出来了,可以删掉它", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.proj_unreadable_del), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -704,9 +706,9 @@ public class MainActivity extends Activity {
         i.addCategory(Intent.CATEGORY_OPENABLE);
         i.setType("image/*");
         try {
-            startActivityForResult(Intent.createChooser(i, "选择一张照片"), REQ_PICK_GALLERY);
+            startActivityForResult(Intent.createChooser(i, getString(R.string.pick_photo)), REQ_PICK_GALLERY);
         } catch (ActivityNotFoundException e) {
-            Toast.makeText(this, "没有可用的相册应用", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_no_gallery), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -716,9 +718,9 @@ public class MainActivity extends Activity {
         i.addCategory(Intent.CATEGORY_OPENABLE);
         i.setType("image/*");
         try {
-            startActivityForResult(Intent.createChooser(i, "选择一张图纸照片"), REQ_SCAN_PATTERN);
+            startActivityForResult(Intent.createChooser(i, getString(R.string.pick_pattern_photo)), REQ_SCAN_PATTERN);
         } catch (ActivityNotFoundException e) {
-            Toast.makeText(this, "没有可用的相册应用", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_no_gallery), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -731,7 +733,7 @@ public class MainActivity extends Activity {
         try {
             startActivityForResult(Intent.createChooser(i, title), REQ_ACTION_PICK);
         } catch (ActivityNotFoundException e) {
-            Toast.makeText(this, "没有可用的相册应用", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_no_gallery), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -745,7 +747,7 @@ public class MainActivity extends Activity {
         try {
             startActivityForResult(i, REQ_TAKE_PHOTO);
         } catch (ActivityNotFoundException e) {
-            Toast.makeText(this, "没有可用的相机应用", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_no_camera), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -761,7 +763,7 @@ public class MainActivity extends Activity {
             if (cameraFile != null && cameraFile.exists() && cameraFile.length() > 0) {
                 openEditor(Uri.fromFile(cameraFile));
             } else {
-                Toast.makeText(this, "拍照失败,请重试", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.err_camera), Toast.LENGTH_SHORT).show();
             }
         } else if (requestCode == REQ_SCAN_PATTERN) {
             if (data != null && data.getData() != null) {
@@ -806,11 +808,11 @@ public class MainActivity extends Activity {
             bmp = android.graphics.BitmapFactory.decodeStream(in2, null, o2);
             if (in2 != null) in2.close();
         } catch (Exception e) {
-            Toast.makeText(this, "图片读不出来", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_image), Toast.LENGTH_SHORT).show();
             return;
         }
         if (bmp == null) {
-            Toast.makeText(this, "图片读不出来", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_image), Toast.LENGTH_SHORT).show();
             return;
         }
         final android.graphics.Bitmap src = bmp;
@@ -838,23 +840,22 @@ public class MainActivity extends Activity {
         com.pindou.app.util.Skin.apply(wrap);
 
         new AlertDialog.Builder(this)
-                .setTitle("📷 识别图纸")
-                .setMessage("拖框贴住图纸的网格区域(别框进旁边的空白),"
-                        + "然后点「识别」。识别完直接进编辑器,可换色板重新生成。")
+                .setTitle(getString(R.string.tool_scan))
+                .setMessage(getString(R.string.scan_msg))
                 .setView(wrap)
-                .setPositiveButton("识别", new DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.btn_detect), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int which) {
                         android.graphics.Rect r = overlay.rect;
                         if (r.width() < 40 || r.height() < 40) {
                             Toast.makeText(MainActivity.this,
-                                    "先把框拖到图纸网格上", Toast.LENGTH_SHORT).show();
+                                    getString(R.string.scan_need_box), Toast.LENGTH_SHORT).show();
                             return;
                         }
                         runScan(src, r, dw, dh);
                     }
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 
@@ -862,7 +863,7 @@ public class MainActivity extends Activity {
     private void runScan(final android.graphics.Bitmap src, final android.graphics.Rect sel,
                          final int dw, final int dh) {
         final android.app.ProgressDialog pd = new android.app.ProgressDialog(this);
-        pd.setMessage("识别网格中…");
+        pd.setMessage(getString(R.string.working_scan));
         pd.setCanceledOnTouchOutside(false);
         pd.show();
         new Thread(new Runnable() {
@@ -886,7 +887,7 @@ public class MainActivity extends Activity {
                             public void run() {
                                 pd.dismiss();
                                 Toast.makeText(MainActivity.this,
-                                        "没认出规则网格:请贴着网格框,光线充足再拍一张试试",
+                                        getString(R.string.scan_fail_nogrid),
                                         Toast.LENGTH_LONG).show();
                             }
                         });
@@ -916,7 +917,7 @@ public class MainActivity extends Activity {
                         public void run() {
                             pd.dismiss();
                             Toast.makeText(MainActivity.this,
-                                    "识别失败:" + t.getMessage(), Toast.LENGTH_LONG).show();
+                                    getString(R.string.err_prefix_scan) + t.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
                 }

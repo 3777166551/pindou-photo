@@ -1,14 +1,15 @@
 # 路线图与交接文档 (ROADMAP & HANDOFF)
 
 > 本文档是项目的**持续交接入口**：当前状态、待办功能、开发约定、操作备忘。
-> 新会话/新开发者从这里开始读。最后更新：2026-09-04（v2.34 代码完成，待发布）
+> 新会话/新开发者从这里开始读。最后更新：2026-09-04（v2.35 代码完成，待发布）
 
 ## 一、当前状态快照（2026-09-04）
 
-- 主干 = **v2.34 待发布**：自定义色板完整编辑器已实现（见下），
+- 主干 = **v2.35 待发布**：多语言(英/日) + 强化 UI 冒烟 + 64 位声明 + 隐私政策页;
   签名 APK 待用户用 build_apk.bat 构建（口令走 PINDOU_KS_PASS）
-- **CI 全绿**：每次 push 自动跑 qa 测试套件 + Gradle 编译 + 云端模拟器冒烟
-  （安装 APK → 启动 → 空白画布手绘 → 崩溃检查，截图存为构建产物）
+- **CI 全绿**：每次 push 自动跑 qa 测试套件 + Gradle 编译 + 云端模拟器 UI 冒烟
+  （qa/ui_smoke.sh:首页/知识/模板/空白画布/清单/色板管理/豆仓/文字生成 全点击走查,
+  英文环境运行顺带验证 i18n,截图存为构建产物）
 - **测试**：`qa/` 四套 66 项断言全绿
   （TestColorMath 17 / TestPatternEngine 8 / TestPatternPatch 13 / TestCustomPalette 28），
   入口 `qa/run_tests.sh`（CI/Linux）或 `qa/run_tests.bat`（Windows 本地）；
@@ -29,24 +30,26 @@
 运行时槽位在 BeadBrandCharts.customs（可多套），EditorActivity 靠
 `CustomPalettes.revision()` 在 onResume 自动刷新色板下拉框。
 
-### 2. 多语言（英/日）—— Google Play 出海的最大杠杆
+### 2. ✅ 多语言(英/日)(v2.35 已完成)
 
-工程量：把所有中文串抽到 `res/values/strings.xml`，再出 `values-en`/`values-ja`。
-注意：代码里有少量硬编码中文 Toast/文案（EditorActivity 等），需一并抽取；
-docs/完整文档.md、README 双语化另算。
+全部 UI 串抽到 `values/strings.xml`(中文默认),`values-en` / `values-ja` 同步;
+120 个通用色名、档位名、砖块/去噪档位、星期、知识页 7 篇文章均为三语资源数组,
+由 `util/L10n.apply(context)` 在各 Activity onCreate 时套用(未调用时保持中文,
+qa 纯 JVM 测试不受影响)。跟随系统语言,无应用内切换(如需 per-app 语言,
+等 minSdk 提到 33 用系统设置或接 appcompat)。CI 冒烟跑在英文模拟器上,
+顺带端到端验证英文串。
 
-### 3. 全 ABI 打包或声明（上架前必须决策）
+### 3. ✅ 全 ABI 决策:声明仅支持 64 位(v2.35 已定)
 
-现状：本地 bat 构建只拷 `arm64-v8a` 的 ONNX so（tools/ort_aar 只有 arm64），
-**32 位老手机会闪退**。二选一：
-- ort_aar 补 `armeabi-v7a`（从 Gradle 依赖的 AAR 里解包）
-- 商店声明"仅支持 64 位设备"（最省事，2019 年后设备几乎全 64 位）
-Gradle/CI 构建的 debug APK 自动含全 ABI，不受影响。
+`app/build.gradle` 加 `ndk { abiFilters 'arm64-v8a' }`,Gradle/CI 构建的 APK
+同样只含 arm64,与本地 bat 构建一致;商店侧按 64 位 APK 自动过滤 32 位设备,
+列表再标注"仅支持 64 位设备"。32 位老手机明确不支持(2019 年后设备几乎全 64 位)。
 
-### 4. 隐私政策网页（Google Play 强制）
+### 4. ✅ 隐私政策网页(v2.35 已建)
 
-用 GitHub Pages 承载一个页面（内容取自 DISCLAIMER.md + 数据安全说明），
-把 URL 填进商店后台。半小时的事。
+`docs/privacy.html`(中英双语,内容取自 DISCLAIMER + 数据安全说明)。
+仓库 Settings → Pages → 选 main 分支 /docs 目录启用后,
+URL 为 `https://3777166551.github.io/pindou-photo/privacy.html`,填进商店后台即可。
 
 ### 5. 图纸社区模板仓库（零服务器飞轮）
 
@@ -101,3 +104,4 @@ Kenney 素材 + 社区精选开始。
 | v2.32 | 滑动刷选 + 打卡日历 + 镜像绘画 + 合并采购单 |
 | v2.33 | 我的豆板（豆仓生成色板）+ 色板数据官方级验证 + CI 模拟器冒烟 |
 | v2.34 | 自定义色板完整编辑器（多套色板/单色增删改/RGB取色器/导入导出） |
+| v2.35 | 多语言（英/日）+ 强化 UI 点击冒烟 + 64 位 ABI 声明 + 隐私政策页 |

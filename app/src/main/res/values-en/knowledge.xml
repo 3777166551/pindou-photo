@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bead basics (English) -->
+<resources>
+    <string-array name="knowledge_titles">
+        <item>What are fuse beads?</item>
+        <item>Bead sizes</item>
+        <item>Pegboard basics</item>
+        <item>Colors &amp; shopping</item>
+        <item>Ironing steps</item>
+        <item>Bead-along tips</item>
+        <item>Tips for this app</item>
+    </string-array>
+    <string-array name="knowledge_bodies">
+        <item>Fuse beads (Perler/Hama beads) are plastic tubes about 5mm across with a hole in the middle. Place beads on a pegboard following a chart, cover with ironing paper, and fuse them with a household iron. Once cooled you get a pixel-art piece — keychains, coasters, ornaments, frames and more.</item>
+        <item>• Standard beads (5mm): the most common kind, most colors, cheap. Each cell is ~0.5cm; one 29×29 board makes about a 15×15cm piece.\n• Mini beads (2.6mm): finer detail for small designs, about half the finished size; harder on the eyes — tweezers recommended.\nNote: the two sizes have different peg spacing and can\'t be mixed on the same board.</item>
+        <item>Square boards are the most common; a standard 5mm board has 29×29 pegs. Boards snap together for bigger works: 58×58 needs 4, 87×87 needs 9, 116×116 needs 16. Round, hexagon and heart boards are great for small ornaments. For big projects, fasten boards together with linking clips before placing beads.</item>
+        <item>Common sets come in 24/44/48/60/90/120 colors. More colors = closer photo reproduction: 24 for simple cartoons and emoji, 48–60 for general subjects, 90+ for portraits and scenery.\nBrands: Perler (US), Hama (Denmark), Artkal, plus domestic brands — each has its own code system. Colors in this app are curated approximations; compare with your real beads.\nTip: black, dark blue, dark brown, white and skin tones are usually used the most — stock up.</item>
+        <item>① When finished, lay ironing paper (or baking paper) over the beads — never touch beads with the iron directly.\n② Set the iron to medium (about 120–150°C), steam OFF. Press gently with one hand and move steadily, about 10–20 seconds per side.\n③ Peek through the paper: holes slightly shrunk and surface lightly fused is enough; overheating warps the piece.\n④ Let it cool completely before peeling the paper; pressing with a heavy book while cooling keeps it flat.\n⑤ Flip and repeat. Fusing both sides makes it stronger; add paper and re-iron if edges lift.</item>
+        <item>• Start from one corner and work row by row, checking each finished row — fewer mistakes.\n• Place the few dark outline beads first, then fill large light areas.\n• Sort beads into a compartment box and pick them by chart symbol.\n• Tweezers save effort and are basically required for mini beads.\n• Wrong bead? Don\'t yank it out — push it out from the back with another bead.</item>
+        <item>• Photo choice: clear subject + simple background works best (cartoon avatars, pet close-ups, ID photos). For busy portraits, remove the background first or go 87+.\n• Size: 29×29 for emoji/chibi, 58×58 for avatars, 87×87+ for half-body and scenery.\n• Palette: start with the default 90 colors; if you\'re missing some, switch to a smaller palette or substitute similar colors while beading.\n• Adjustments: pixelation looks a bit "gray" — add saturation (+10~+30) and contrast (+5~+20) to get closer to the original.\n• Dithering: smoother gradients but busier charts; beginners should keep it off.</item>
+    </string-array>
+</resources>

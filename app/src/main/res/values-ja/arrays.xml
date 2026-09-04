@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 日本語配列 -->
+<resources>
+    <string-array name="tier_names">
+        <item>24色 · ベーシック</item>
+        <item>48色 · スタンダード</item>
+        <item>90色 · アドバンス</item>
+        <item>120色 · フル</item>
+    </string-array>
+    <string-array name="brick_labels">
+        <item>軽</item>
+        <item>中</item>
+        <item>強</item>
+        <item>超強</item>
+    </string-array>
+    <string-array name="denoise_labels">
+        <item>オフ</item>
+        <item>軽</item>
+        <item>中</item>
+        <item>強</item>
+    </string-array>
+    <string-array name="week_short">
+        <item>月</item>
+        <item>火</item>
+        <item>水</item>
+        <item>木</item>
+        <item>金</item>
+        <item>土</item>
+        <item>日</item>
+    </string-array>
+    <string-array name="generic_color_names">
+        <item>白</item><item>クリーム</item><item>グレー</item><item>濃グレー</item>
+        <item>黒</item><item>赤</item><item>深赤</item><item>ローズ</item>
+        <item>ピンク</item><item>オレンジ</item><item>レモン</item><item>黄</item>
+        <item>黄緑</item><item>深緑</item><item>青緑</item><item>空色</item>
+        <item>ロイヤルブルー</item><item>紺</item><item>紫</item><item>茶色</item>
+        <item>薄茶</item><item>肌色</item><item>コーヒー</item><item>水色</item>
+        <item>シルバーグレー</item><item>中グレー</item><item>ワインレッド</item><item>レンガ色</item>
+        <item>コーラルレッド</item><item>薄ピンク</item><item>ホットピンク</item><item>薄オレンジ</item>
+        <item>深オレンジ</item><item>薄黄</item><item>深黄</item><item>マスタード</item>
+        <item>アップルグリーン</item><item>オリーブ</item><item>深青緑</item><item>薄青緑</item>
+        <item>コバルト</item><item>深紺</item><item>灰青</item><item>深紫</item>
+        <item>薄紫</item><item>キャメル</item><item>カーキ</item><item>薄肌色</item>
+        <item>アイボリー</item><item>チャコール</item><item>ウォームグレー</item><item>クールグレー</item>
+        <item>トマトレッド</item><item>深ワイン</item><item>ロータスピンク</item><item>アプリコット</item>
+        <item>肌オレンジ</item><item>土黄</item><item>ゴールデンイエロー</item><item>黄緑</item>
+        <item>ダークグリーン</item><item>ミント</item><item>セージ</item><item>蛍光グリーン</item>
+        <item>孔雀緑</item><item>淡青</item><item>インディゴ</item><item>ブライトブルー</item>
+        <item>青紫</item><item>グレープ</item><item>モーブ</item><item>濃茶</item>
+        <item>栗色</item><item>赤茶</item><item>濃肌</item><item>小麦色</item>
+        <item>シルバー</item><item>ゴールド</item><item>蛍光オレンジ</item><item>深空色</item>
+        <item>フォレストグリーン</item><item>薄カーキ</item><item>テラコッタ</item><item>ミストブルー</item>
+        <item>グレイッシュピンク</item><item>黒茶</item><item>エメラルド</item><item>オリーブグリーン</item>
+        <item>深ローズ</item><item>ブロンズ</item>
+        <item>薄レンガ</item><item>ローズピンク</item><item>蛍光ピンク</item><item>チェリーレッド</item>
+        <item>ラスト</item><item>バターイエロー</item><item>蛍光イエロー</item><item>蛍光ブルー</item>
+        <item>ジュエルグリーン</item><item>深コバルト</item><item>灰紫</item><item>深インディゴ</item>
+        <item>コーヒーキャメル</item><item>ミッドナイトネイビー</item><item>小豆色</item><item>深灰青</item>
+        <item>ラベンダー</item><item>ダークティール</item><item>深オリーブ</item><item>コーラルピンク</item>
+        <item>ピーチ</item><item>深セージ</item><item>薄金</item><item>青灰</item>
+        <item>カーキグリーン</item><item>ブライトパープル</item><item>深コーラル</item><item>レイクグリーン</item>
+        <item>マゼンタ</item><item>クリームホワイト</item>
+    </string-array>
+</resources>

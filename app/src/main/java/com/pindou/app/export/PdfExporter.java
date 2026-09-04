@@ -10,6 +10,7 @@ import android.graphics.RectF;
 import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 
+import com.pindou.app.R;
 import com.pindou.app.bead.BeadPattern;
 import com.pindou.app.bead.ColorMath;
 import com.pindou.app.provider.AppFileProvider;
@@ -48,7 +49,7 @@ public final class PdfExporter {
     public static Uri export(Context ctx, Bitmap sheet, BeadPattern p,
                              String paletteName, String fileName) throws Exception {
         if (sheet == null || sheet.getWidth() <= 0 || sheet.getHeight() <= 0) {
-            throw new Exception("图纸还没有生成");
+            throw new Exception(ctx.getString(R.string.err_no_pattern));
         }
         PdfDocument doc = new PdfDocument();
         try {
@@ -62,10 +63,10 @@ public final class PdfExporter {
             int total = 1 + bomPages + sheetPages;
             int[] counter = {1};
 
-            coverPage(doc, sheet, p, paletteName, counter, total);
+            coverPage(ctx, doc, sheet, p, paletteName, counter, total);
             for (int start = 0; start < bomPages * BOM_ROWS_PER_PAGE;
                  start += BOM_ROWS_PER_PAGE) {
-                bomPage(doc, p, start, counter, total);
+                bomPage(ctx, doc, p, start, counter, total);
             }
             for (int top = 0; top < sheet.getHeight(); top += stripH) {
                 int bottom = Math.min(sheet.getHeight(), top + stripH);
@@ -78,7 +79,7 @@ public final class PdfExporter {
                 RectF dst = new RectF(MARGIN, MARGIN,
                         MARGIN + drawW, MARGIN + (bottom - top) * scale);
                 c.drawBitmap(sheet, src, dst, null);
-                footer(c, counter[0], total);
+                footer(ctx, c, counter[0], total);
                 doc.finishPage(page);
                 counter[0]++;
             }
@@ -94,16 +95,17 @@ public final class PdfExporter {
     }
 
     /** 封面页:标题 + 统计 + 整图缩略预览 */
-    private static void coverPage(PdfDocument doc, Bitmap sheet, BeadPattern p,
+    private static void coverPage(Context ctx, PdfDocument doc, Bitmap sheet, BeadPattern p,
                                   String paletteName, int[] counter, int total) {
         PdfDocument.PageInfo info =
                 new PdfDocument.PageInfo.Builder(PAGE_W, PAGE_H, counter[0]).create();
         PdfDocument.Page page = doc.startPage(info);
         Canvas c = page.getCanvas();
         c.drawColor(Color.WHITE);
-        c.drawText("照片变拼豆 · 拼豆图纸", MARGIN, MARGIN + 30,
+        c.drawText(ctx.getString(R.string.pdf_header_fmt,
+                        ctx.getString(R.string.app_name)), MARGIN, MARGIN + 30,
                 textPaint(26, 0xFF232323, true));
-        c.drawText("PindouPhoto · 完全免费 · 无广告 · AGPL-3.0 开源",
+        c.drawText(ctx.getString(R.string.pdf_tagline),
                 MARGIN, MARGIN + 48, textPaint(10, 0xFF8A8F98, false));
         c.drawLine(MARGIN, MARGIN + 60, PAGE_W - MARGIN, MARGIN + 60, linePaint());
 
@@ -111,15 +113,18 @@ public final class PdfExporter {
         float y = MARGIN + 92;
         if (p != null) {
             String[] lines = {
-                    String.format(Locale.CHINA, "图纸尺寸:%d × %d 格", p.cols, p.rows),
-                    String.format(Locale.CHINA, "总用豆:%,d 颗 · 颜色 %d 种",
+                    String.format(Locale.CHINA, ctx.getString(R.string.fmt_pdf_size),
+                            p.cols, p.rows),
+                    String.format(Locale.CHINA, ctx.getString(R.string.fmt_pdf_total),
                             p.totalBeads, p.usedColors.size()),
-                    String.format(Locale.CHINA, "29×29 拼板:%d 块 · 成品约 %.0f × %.0f cm",
+                    String.format(Locale.CHINA, ctx.getString(R.string.fmt_pdf_boards),
                             p.boardsNeeded(), p.cols * 0.5, p.rows * 0.5),
-                    String.format(Locale.CHINA, "约重 %,d g(标准 5mm 豆)",
+                    String.format(Locale.CHINA, ctx.getString(R.string.fmt_pdf_weight),
                             Math.round(p.totalBeads * 0.024f)),
-                    "色板:" + (paletteName == null || paletteName.isEmpty() ? "-" : paletteName),
-                    "生成日期:" + new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.CHINA)
+                    ctx.getString(R.string.pdf_palette_prefix)
+                            + (paletteName == null || paletteName.isEmpty() ? "-" : paletteName),
+                    ctx.getString(R.string.pdf_date_prefix)
+                            + new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.CHINA)
                             .format(new Date()),
             };
             for (String line : lines) {
@@ -127,7 +132,7 @@ public final class PdfExporter {
                 y += 20;
             }
             if (p.emptyCount > 0) {
-                c.drawText(String.format(Locale.CHINA, "空格 %,d 格(不摆放)",
+                c.drawText(String.format(Locale.CHINA, ctx.getString(R.string.fmt_pdf_empty),
                         p.emptyCount), MARGIN, y, label);
                 y += 20;
             }
@@ -145,24 +150,25 @@ public final class PdfExporter {
             Paint border = linePaint();
             c.drawRect(dst, border);
         }
-        footer(c, counter[0], total);
+        footer(ctx, c, counter[0], total);
         doc.finishPage(page);
         counter[0]++;
     }
 
     /** 材料清单页:逐色色块/色号/用量/占比 */
-    private static void bomPage(PdfDocument doc, BeadPattern p, int start,
+    private static void bomPage(Context ctx, PdfDocument doc, BeadPattern p, int start,
                                 int[] counter, int total) {
         PdfDocument.PageInfo info =
                 new PdfDocument.PageInfo.Builder(PAGE_W, PAGE_H, counter[0]).create();
         PdfDocument.Page page = doc.startPage(info);
         Canvas c = page.getCanvas();
         c.drawColor(Color.WHITE);
-        c.drawText("材料清单(按用量排序)", MARGIN, MARGIN + 24, textPaint(18, 0xFF232323, true));
+        c.drawText(ctx.getString(R.string.pdf_bom_title), MARGIN, MARGIN + 24,
+                textPaint(18, 0xFF232323, true));
         Paint head = textPaint(10, 0xFF8A8F98, false);
-        c.drawText("色号 / 名称", MARGIN + 56, MARGIN + 44, head);
-        c.drawText("用量", PAGE_W - MARGIN - 130, MARGIN + 44, head);
-        c.drawText("占比", PAGE_W - MARGIN - 46, MARGIN + 44, head);
+        c.drawText(ctx.getString(R.string.pdf_col_code), MARGIN + 56, MARGIN + 44, head);
+        c.drawText(ctx.getString(R.string.pdf_col_qty), PAGE_W - MARGIN - 130, MARGIN + 44, head);
+        c.drawText(ctx.getString(R.string.pdf_col_pct), PAGE_W - MARGIN - 46, MARGIN + 44, head);
         c.drawLine(MARGIN, MARGIN + 52, PAGE_W - MARGIN, MARGIN + 52, linePaint());
 
         float y = MARGIN + 74;
@@ -176,21 +182,22 @@ public final class PdfExporter {
             c.drawText(uc.symbol, MARGIN + 14, y - 1,
                     textPaint(9, ColorMath.textColorOn(uc.color.rgb), true));
             c.drawText(uc.color.fullLabel(), MARGIN + 56, y, tp);
-            c.drawText(String.format(Locale.CHINA, "%,d 颗", uc.count),
-                    PAGE_W - MARGIN - 130, y, tp);
+            c.drawText(String.format(Locale.CHINA, ctx.getString(R.string.fmt_qty_beads),
+                    uc.count), PAGE_W - MARGIN - 130, y, tp);
             float pct = p.totalBeads > 0 ? uc.count * 100f / p.totalBeads : 0f;
             c.drawText(String.format(Locale.CHINA, "%.1f%%", pct),
                     PAGE_W - MARGIN - 46, y, tp);
             y += 24;
         }
-        footer(c, counter[0], total);
+        footer(ctx, c, counter[0], total);
         doc.finishPage(page);
         counter[0]++;
     }
 
-    private static void footer(Canvas c, int pageNo, int total) {
+    private static void footer(Context ctx, Canvas c, int pageNo, int total) {
         Paint fp = textPaint(9, 0xFF9AA0A6, false);
-        String txt = String.format(Locale.CHINA, "第 %d 页 / 共 %d 页", pageNo, total);
+        String txt = String.format(Locale.CHINA, ctx.getString(R.string.fmt_pdf_page),
+                pageNo, total);
         float w = fp.measureText(txt);
         c.drawText(txt, (PAGE_W - w) / 2f, PAGE_H - 12, fp);
     }

@@ -22,9 +22,12 @@ public final class BeadColor {
         this.tag = tag == null ? "" : tag;
     }
 
+    /** 通用色板的编号后缀(默认中文"号",L10n.apply 按语言覆盖) */
+    public static String codeSuffix = "号";
+
     /** 展示用色号:品牌色板显示官方色号,通用色板显示内部编号 */
     public String displayCode() {
-        return tag.isEmpty() ? code + "号" : tag;
+        return tag.isEmpty() ? code + codeSuffix : tag;
     }
 
     /** 完整展示名:"名称(色号)";品牌色号与名称相同时只显示一次 */

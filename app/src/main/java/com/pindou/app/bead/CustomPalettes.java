@@ -68,13 +68,15 @@ public final class CustomPalettes {
                                 JSONObject cc = cs.optJSONObject(j);
                                 if (cc == null) continue;
                                 colors.add(new BeadColor(Math.max(1, cc.optInt("code", j + 1)),
-                                        cc.optString("name", "色" + (j + 1)),
+                                        cc.optString("name",
+                                                c.getString(com.pindou.app.R.string.fmt_color_n, j + 1)),
                                         cc.optInt("rgb", 0) & 0xFFFFFF,
                                         cc.optString("tag", "")));
                             }
                         }
                         if (!colors.isEmpty()) {
-                            list.add(BeadBrandCharts.make(p.optString("name", "我的色板"), colors));
+                            list.add(BeadBrandCharts.make(p.optString("name",
+                                    c.getString(com.pindou.app.R.string.default_palette_name)), colors));
                         } else if (i < autoIdx) {
                             autoIdx--;   // 前面的空套被丢弃,槽位前移
                         } else if (i == autoIdx) {
@@ -130,7 +132,8 @@ public final class CustomPalettes {
         loadIfNeeded(c);
         List<BeadColor> mine = BeadPalettes.buildInventoryPalette(c);
         if (mine == null) return -1;
-        String name = "🎨 我的豆板(" + mine.size() + "色)";
+        String name = c.getString(com.pindou.app.R.string.palette_inventory_name_fmt,
+                mine.size());
         int idx = (autoIdx >= 0 && autoIdx < BeadBrandCharts.customCount())
                 ? autoIdx : -1;
         autoIdx = BeadBrandCharts.upsertCustom(idx, BeadBrandCharts.make(name, mine));

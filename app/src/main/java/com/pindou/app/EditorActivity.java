@@ -55,6 +55,7 @@ import com.pindou.app.export.PdfExporter;
 import com.pindou.app.provider.AppFileProvider;
 import com.pindou.app.util.PatternShare;
 import com.pindou.app.util.Anim;
+import com.pindou.app.util.L10n;
 import com.pindou.app.util.BeadCalendar;
 import com.pindou.app.util.GallerySaver;
 import com.pindou.app.util.ImageLoader;
@@ -112,7 +113,6 @@ public class EditorActivity extends Activity {
     private static final int MAX_SIZE = 160;
     private static final int[] ABSTRACT_CHOICES = {4, 6, 8, 10, 12, 16};
     private static final int[] BRICK_SIZES = {2, 3, 4, 6};
-    private static final String[] BRICK_LABELS = {"轻度", "中度", "强度", "超强"};
     // 导出菜单项
     private static final int EXP_SHEET = 1;
     private static final int EXP_EFFECT = 2;
@@ -268,6 +268,7 @@ public class EditorActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_editor);
         Skin.apply(getWindow().getDecorView());
+        L10n.apply(this);
 
         bindViews();
         setupTabs();
@@ -353,7 +354,7 @@ public class EditorActivity extends Activity {
             }
             regenerate();
         } else if (uriStr == null) {
-            Toast.makeText(this, "没有选择照片", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_no_photo), Toast.LENGTH_SHORT).show();
             finish();
             return;
         } else {
@@ -464,7 +465,7 @@ public class EditorActivity extends Activity {
                         public void run() {
                             showLoading(false);
                             Toast.makeText(EditorActivity.this,
-                                    "这张照片读取失败,换一张试试吧", Toast.LENGTH_SHORT).show();
+                                    getString(R.string.err_photo_read), Toast.LENGTH_SHORT).show();
                             finish();
                         }
                     });
@@ -666,8 +667,8 @@ public class EditorActivity extends Activity {
                     setBeadAssist(false);
                 }
                 Toast.makeText(EditorActivity.this,
-                        isChecked ? "已开启:去「图纸」页点任意格子换色"
-                                : "已关闭点格修改",
+                        isChecked ? getString(R.string.cell_switch_on)
+                                : getString(R.string.cell_switch_off),
                         Toast.LENGTH_SHORT).show();
             }
         });
@@ -781,7 +782,7 @@ public class EditorActivity extends Activity {
                 paintMirror = !paintMirror;
                 btnBrushMirror.setSelected(paintMirror);
                 Toast.makeText(EditorActivity.this,
-                        paintMirror ? "镜像已开:左右同时落笔" : "镜像已关",
+                        paintMirror ? getString(R.string.mirror_on) : getString(R.string.mirror_off),
                         Toast.LENGTH_SHORT).show();
             }
         });
@@ -933,14 +934,13 @@ public class EditorActivity extends Activity {
                 scheduleRegen();
             }
         });
-        String[] denoiseLabels = {"关", "轻", "中", "强"};
         sbDenoise.setMax(3);
         sbDenoise.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (!fromUser) return;
                 denoise = progress;
-                tvDenoise.setText(denoiseLabels[progress]);
+                tvDenoise.setText(L10n.DENOISE_LABELS[progress]);
                 scheduleRegen();
             }
 
@@ -1048,7 +1048,7 @@ public class EditorActivity extends Activity {
 
     private void undoEdit() {
         if (undoStack.isEmpty()) {
-            Toast.makeText(this, "没有可撤销的操作了", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_no_undo), Toast.LENGTH_SHORT).show();
             return;
         }
         redoStack.addLast(new HashMap<>(editMap));
@@ -1061,7 +1061,7 @@ public class EditorActivity extends Activity {
 
     private void redoEdit() {
         if (redoStack.isEmpty()) {
-            Toast.makeText(this, "没有可重做的操作了", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_no_redo), Toast.LENGTH_SHORT).show();
             return;
         }
         undoStack.addLast(new HashMap<>(editMap));
@@ -1110,12 +1110,12 @@ public class EditorActivity extends Activity {
         }
         if (roundBoard) {
             tvBoardHint.setText(String.format(Locale.CHINA,
-                    "圆形板直径 %d 格 · 成品约 %.0f cm(标准 5mm 豆)",
+                    getString(R.string.fmt_board_round),
                     cols, cols * 0.5));
         } else {
             int boards = (int) (Math.ceil(cols / 29.0) * Math.ceil(rows / 29.0));
             tvBoardHint.setText(String.format(Locale.CHINA,
-                    "需要 29×29 拼板 %d 块 · 成品约 %.0f × %.0f cm(标准 5mm 豆)",
+                    getString(R.string.fmt_board_rect),
                     boards, cols * 0.5, rows * 0.5));
         }
     }
@@ -1193,7 +1193,7 @@ public class EditorActivity extends Activity {
         swDominant.setChecked(false);
         swPrecise.setChecked(false);
         sbDenoise.setProgress(0);
-        tvDenoise.setText("关");
+        tvDenoise.setText(L10n.DENOISE_LABELS[0]);
         swSymbols.setChecked(true);
         swGrid.setChecked(true);
         style = PatternEngine.STYLE_REALISTIC;
@@ -1238,22 +1238,19 @@ public class EditorActivity extends Activity {
     private void showStyleDialog() {
         if (aiRunning) return;
         if (source == null) {
-            Toast.makeText(this, "空白画布不需要风格化,先导入照片", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_ghibli_blank), Toast.LENGTH_SHORT).show();
             return;
         }
         new AlertDialog.Builder(this)
-                .setTitle("🎨 吉卜力风(AI 风格化)")
-                .setMessage("用内置的 AnimeGANv3 模型把照片变成吉卜力动画风,"
-                        + "颜色块面更干净,转出来的拼豆图纸轮廓更好看。\n\n"
-                        + "纯本地离线推理,约 2~10 秒;\n"
-                        + "结果会替换当前照片,之后点「↺ 恢复原始照片」可随时还原。")
-                .setPositiveButton("开始", new DialogInterface.OnClickListener() {
+                .setTitle(getString(R.string.ghibli_title))
+                .setMessage(getString(R.string.ghibli_msg))
+                .setPositiveButton(getString(R.string.btn_start), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int which) {
                         runStyle();
                     }
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 
@@ -1266,14 +1263,14 @@ public class EditorActivity extends Activity {
             public void run() {
                 try {
                     if (!StyleTransfer.ensureInit(EditorActivity.this)) {
-                        throw new Exception("风格化模型不可用");
+                        throw new Exception(getString(R.string.err_style_model));
                     }
                     int[] px = new int[bmp.getWidth() * bmp.getHeight()];
                     bmp.getPixels(px, 0, bmp.getWidth(), 0, 0,
                             bmp.getWidth(), bmp.getHeight());
                     Object[] r = StyleTransfer.stylize(px,
                             bmp.getWidth(), bmp.getHeight());
-                    if (r == null) throw new Exception("推理失败,请重试");
+                    if (r == null) throw new Exception(getString(R.string.err_infer));
                     final int[] outPx = (int[]) r[0];
                     final int ow = (Integer) r[1];
                     final int oh = (Integer) r[2];
@@ -1294,7 +1291,7 @@ public class EditorActivity extends Activity {
                             imported = false;
                             regenerate();
                             Toast.makeText(EditorActivity.this,
-                                    "风格化完成,照片已替换", Toast.LENGTH_SHORT).show();
+                                    getString(R.string.style_done), Toast.LENGTH_SHORT).show();
                         }
                     });
                 } catch (final Throwable t) {
@@ -1304,7 +1301,7 @@ public class EditorActivity extends Activity {
                             aiRunning = false;
                             showLoading(false);
                             Toast.makeText(EditorActivity.this,
-                                    "风格化失败:" + t.getMessage(), Toast.LENGTH_LONG).show();
+                                    getString(R.string.err_prefix_style) + t.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
                 }
@@ -1322,7 +1319,7 @@ public class EditorActivity extends Activity {
     private void showWatermarkDialog() {
         if (aiRunning) return;
         if (source == null) {
-            Toast.makeText(this, "还没有照片", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_no_photo_yet), Toast.LENGTH_SHORT).show();
             return;
         }
         final Bitmap bmp = source;
@@ -1347,24 +1344,22 @@ public class EditorActivity extends Activity {
         Skin.apply(wrap);
 
         new AlertDialog.Builder(this)
-                .setTitle("🩹 去水印")
-                .setMessage("用来清除别的 APP 出图自带的水印/角标。\n"
-                        + "用法:在图上拖一个框,把水印完整盖住、框紧贴水印,点「修复」;\n"
-                        + "不要圈进大块背景。图上有多个水印时,修完一次再框下一处即可。")
+                .setTitle(getString(R.string.wm_title))
+                .setMessage(getString(R.string.wm_msg))
                 .setView(wrap)
-                .setPositiveButton("修复", new DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.btn_fix), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int which) {
                         Rect r = overlay.rect;
                         if (r == null || r.width() < 8 || r.height() < 8) {
                             Toast.makeText(EditorActivity.this,
-                                    "先在图上拖一个框盖住水印", Toast.LENGTH_SHORT).show();
+                                    getString(R.string.wm_need_box), Toast.LENGTH_SHORT).show();
                             return;
                         }
                         applyWatermarkFix(bmp, r, dw, dh);
                     }
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 
@@ -1378,7 +1373,7 @@ public class EditorActivity extends Activity {
         final int by1 = Math.min(bmp.getHeight() - 1,
                 Math.round(sel.bottom * bmp.getHeight() / (float) dh) + 2);
         aiRunning = true;
-        showLoading(true, "正在修复水印…");
+        showLoading(true, getString(R.string.working_wm));
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -1402,7 +1397,7 @@ public class EditorActivity extends Activity {
                             Anim.expand(btnAiRestore);
                             regenerate();
                             Toast.makeText(EditorActivity.this,
-                                    "已修复,还有水印可再框一次", Toast.LENGTH_SHORT).show();
+                                    getString(R.string.wm_done), Toast.LENGTH_SHORT).show();
                         }
                     });
                 } catch (final Throwable t) {
@@ -1412,7 +1407,7 @@ public class EditorActivity extends Activity {
                             aiRunning = false;
                             showLoading(false);
                             Toast.makeText(EditorActivity.this,
-                                    "修复失败:" + t.getMessage(), Toast.LENGTH_LONG).show();
+                                    getString(R.string.err_prefix_wm) + t.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
                 }
@@ -1474,7 +1469,7 @@ public class EditorActivity extends Activity {
     /** 恢复为原始照片(去水印/二次元等改动后可一键还原) */
     private void restoreOriginal() {
         if (originalSource == null || source == originalSource) {
-            Toast.makeText(this, "当前已是原始照片", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.already_original), Toast.LENGTH_SHORT).show();
             return;
         }
         if (source != null) source.recycle();
@@ -1493,7 +1488,7 @@ public class EditorActivity extends Activity {
 
     private void regenerate() {
         if (imported) {
-            Toast.makeText(this, "导入的图纸不支持改参数重新生成,可继续编辑、导出",
+            Toast.makeText(this, getString(R.string.imported_note),
                     Toast.LENGTH_SHORT).show();
             return;
         }
@@ -1581,7 +1576,7 @@ public class EditorActivity extends Activity {
             if (pattern != null && !pattern.usedColors.isEmpty() && assistFocus < 0) {
                 assistFocus = pattern.usedColors.get(0).index;
             }
-            Toast.makeText(this, "已开启:图纸页点一下 = 标记已拼好,再点取消",
+            Toast.makeText(this, getString(R.string.assist_on),
                     Toast.LENGTH_LONG).show();
         } else {
             beadAssistPanel.setVisibility(View.GONE);
@@ -1648,7 +1643,7 @@ public class EditorActivity extends Activity {
 
     private void updateAssistUi() {
         if (pattern == null || tvAssistColor == null) return;        if (assistFocus < 0 || assistFocus >= pattern.palette.size()) {
-            tvAssistColor.setText("先生成图纸");
+            tvAssistColor.setText(getString(R.string.gen_first_short));
             return;
         }
         BeadColor c = pattern.palette.get(assistFocus);
@@ -1676,13 +1671,13 @@ public class EditorActivity extends Activity {
         }
         int remain = total - done;
         tvAssistColor.setText(String.format(Locale.CHINA,
-                remain > 0 ? "颜色 %d/%d · 本色 %d 颗 · 剩 %d 颗"
-                        : "颜色 %d/%d · 本色 %d 颗 · 🎉拼完",
+                remain > 0 ? getString(R.string.fmt_assist_remain)
+                        : getString(R.string.fmt_assist_done),
                 order, pattern.usedColors.size(), total, remain));
         float pct = pattern.totalBeads > 0
                 ? beadDone.size() * 100f / pattern.totalBeads : 0f;
         tvAssistProgress.setText(String.format(Locale.CHINA,
-                "✅ 已拼 %d/%d 颗 · 总进度 %.0f%%(%d/%d 颗) · 🔥今日 %d 颗",
+                getString(R.string.fmt_assist_head),
                 done, total, pct, beadDone.size(), pattern.totalBeads, todayCount()));
     }
 
@@ -1767,16 +1762,16 @@ public class EditorActivity extends Activity {
         if (pattern == null) return;
         computeSubstitutes();
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format(Locale.CHINA, "总用豆:%,d 颗\n", pattern.totalBeads));
-        sb.append(String.format(Locale.CHINA, "颜色:%d 种 · 29×29 拼板:%d 块\n",
+        sb.append(String.format(Locale.CHINA, getString(R.string.fmt_sum_total), pattern.totalBeads));
+        sb.append(String.format(Locale.CHINA, getString(R.string.fmt_sum_colors),
                 pattern.usedColors.size(), pattern.boardsNeeded()));
-        sb.append(String.format(Locale.CHINA, "成品约:%.0f × %.0f cm(标准 5mm 豆)",
+        sb.append(String.format(Locale.CHINA, getString(R.string.fmt_sum_size),
                 pattern.cols * 0.5, pattern.rows * 0.5));
         if (pattern.emptyCount > 0) {
-            sb.append(String.format(Locale.CHINA, "\n空格:%,d 格(不放置)", pattern.emptyCount));
+            sb.append(String.format(Locale.CHINA, getString(R.string.fmt_sum_empty), pattern.emptyCount));
         }
         // 克重与成本估算(标准 5mm 豆约 0.024g/颗;单价可在设置里改)
-        sb.append(String.format(Locale.CHINA, "\n约重 %,d g · 参考成本 ¥%.2f(点此改单价)",
+        sb.append(String.format(Locale.CHINA, getString(R.string.fmt_sum_weight),
                 Math.round(pattern.totalBeads * 0.024f),
                 pattern.totalBeads * beadUnitPrice()));
         // 豆仓缺口:只在登记过至少一种颜色时显示
@@ -1795,12 +1790,12 @@ public class EditorActivity extends Activity {
         }
         if (registered > 0) {
             sb.append(String.format(Locale.CHINA,
-                    "\n🎒 豆仓:%d/%d 色够用 · 还需补 %,d 颗",
+                    getString(R.string.fmt_sum_inv),
                     enough, pattern.usedColors.size(), shortage));
         }
         if (!beadDone.isEmpty()) {
             sb.append(String.format(Locale.CHINA,
-                    "\n🧩 已拼 %,d/%,d 颗 · 今日完成 %d 颗",
+                    getString(R.string.fmt_sum_done),
                     beadDone.size(), pattern.totalBeads, todayCount()));
         }
         tvSummary.setText(sb.toString());
@@ -1809,7 +1804,7 @@ public class EditorActivity extends Activity {
     /** 全局替换:长按豆单某一行,把该色所有格子一键换成另一个已用色 */
     private void showReplaceDialog(final BeadPattern.UsedColor from) {
         if (pattern == null || pattern.usedColors.size() < 2) {
-            Toast.makeText(this, "图纸里只有一种颜色,没得换", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_one_color), Toast.LENGTH_SHORT).show();
             return;
         }
         final List<BeadPattern.UsedColor> choices = new ArrayList<>();
@@ -1819,10 +1814,10 @@ public class EditorActivity extends Activity {
         String[] labels = new String[choices.size()];
         for (int i = 0; i < choices.size(); i++) {
             labels[i] = choices.get(i).color.fullLabel()
-                    + String.format(Locale.CHINA, "(已有 %,d 颗)", choices.get(i).count);
+                    + String.format(Locale.CHINA, getString(R.string.fmt_have_n), choices.get(i).count);
         }
         new AlertDialog.Builder(this)
-                .setTitle(String.format(Locale.CHINA, "把「%s」的 %,d 颗全部换成:",
+                .setTitle(String.format(Locale.CHINA, getString(R.string.fmt_replace_title),
                         from.color.fullLabel(), from.count))
                 .setItems(labels, new DialogInterface.OnClickListener() {
                     @Override
@@ -1853,7 +1848,7 @@ public class EditorActivity extends Activity {
         applyEditsToUi();
         updateEditsButton();
         Toast.makeText(this,
-                String.format(Locale.CHINA, "已替换 %d 格,点 ↺ 可回退", changed),
+                String.format(Locale.CHINA, getString(R.string.fmt_replaced), changed),
                 Toast.LENGTH_SHORT).show();
     }
 
@@ -1955,9 +1950,9 @@ public class EditorActivity extends Activity {
         lv.setAdapter(invAdapter);
 
         new AlertDialog.Builder(this)
-                .setTitle("🎒 豆仓库存(当前色板 " + pal.size() + " 色)")
+                .setTitle(getString(R.string.inv_title_fmt, pal.size()))
                 .setView(lv)
-                .setPositiveButton("保存", new DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.btn_save), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int w) {
                         for (InvRow r : rows) {
@@ -1972,10 +1967,10 @@ public class EditorActivity extends Activity {
                         adapter.notifyDataSetChanged();
                         updateSummary();
                         Toast.makeText(EditorActivity.this,
-                                "豆仓已更新,豆单已标注缺口", Toast.LENGTH_SHORT).show();
+                                getString(R.string.inv_saved), Toast.LENGTH_SHORT).show();
                     }
                 })
-                .setNeutralButton("🎨 生成我的豆板", new DialogInterface.OnClickListener() {
+                .setNeutralButton(getString(R.string.btn_gen_mine), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int w) {
                         // 先把当前对话框里的草稿登记进豆仓,再从豆仓重建色板
@@ -1991,7 +1986,7 @@ public class EditorActivity extends Activity {
                         int idx = CustomPalettes.regenerateInventory(EditorActivity.this);
                         if (idx < 0) {
                             Toast.makeText(EditorActivity.this,
-                                    "豆仓还没有有货的颜色,先给颜色填上数量",
+                                    getString(R.string.inv_empty),
                                     Toast.LENGTH_LONG).show();
                             return;
                         }
@@ -2004,7 +1999,7 @@ public class EditorActivity extends Activity {
                                 Toast.LENGTH_LONG).show();
                     }
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 
@@ -2019,9 +2014,9 @@ public class EditorActivity extends Activity {
                 | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
         et.setText(String.valueOf(beadUnitPrice()));
         new AlertDialog.Builder(this)
-                .setTitle("每颗豆单价(元)")
+                .setTitle(getString(R.string.price_title))
                 .setView(et)
-                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.btn_ok), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int w) {
                         try {
@@ -2031,13 +2026,13 @@ public class EditorActivity extends Activity {
                                         .edit().putFloat("bead_price", p).apply();
                                 updateSummary();
                                 Toast.makeText(EditorActivity.this,
-                                        "已更新单价", Toast.LENGTH_SHORT).show();
+                                        getString(R.string.price_saved), Toast.LENGTH_SHORT).show();
                             }
                         } catch (NumberFormatException ignored) {
                         }
                     }
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 
@@ -2096,19 +2091,21 @@ public class EditorActivity extends Activity {
 
             TextView brand = v.findViewById(R.id.tvBrand);
             if (uc.color.hasOfficialCode()) {
-                brand.setText("官方色号,可直接照单");
+                brand.setText(getString(R.string.bead_official));
             } else {
                 String bt = BeadBrand.tagOf(uc.color.rgb);
-                brand.setText(bt.isEmpty() ? "暂无对照" : "≈ " + bt);
+                brand.setText(bt.isEmpty() ? getString(R.string.bead_no_tag) : "≈ " + bt);
             }
 
             TextView count = v.findViewById(R.id.tvCount);
             if (donePerColor != null && donePerColor[uc.index] > 0) {
                 int left = uc.count - donePerColor[uc.index];
                 count.setText(String.format(Locale.CHINA, left > 0
-                        ? "%,d 颗 · 剩 %d" : "%,d 颗 · ✅拼完", uc.count, left));
+                        ? getString(R.string.fmt_qty_left)
+                        : getString(R.string.fmt_qty_done), uc.count, left));
             } else {
-                count.setText(String.format(Locale.CHINA, "%,d 颗", uc.count));
+                count.setText(String.format(Locale.CHINA,
+                        getString(R.string.fmt_qty_beads), uc.count));
             }
 
             TextView percent = v.findViewById(R.id.tvPercent);
@@ -2120,13 +2117,13 @@ public class EditorActivity extends Activity {
             TextView inv = v.findViewById(R.id.tvInv);
             int have = BeadInventory.get(EditorActivity.this, uc.color.rgb);
             if (have < 0) {
-                inv.setText("库存未登记");
+                inv.setText(getString(R.string.inv_unregistered));
                 inv.setTextColor(0xFF8A8F98);
             } else if (have >= uc.count) {
-                inv.setText("✔ 库存够·余 " + (have - uc.count));
+                inv.setText(getString(R.string.fmt_inv_enough, have - uc.count));
                 inv.setTextColor(0xFF22B57F);
             } else {
-                inv.setText("缺 " + (uc.count - have) + " 颗");
+                inv.setText(getString(R.string.inv_short_fmt, uc.count - have));
                 inv.setTextColor(0xFFF0654E);
             }
 
@@ -2135,7 +2132,7 @@ public class EditorActivity extends Activity {
             Integer subIdx = beadSubstitutes.get(uc.index);
             if (subIdx != null && subIdx < pattern.palette.size()) {
                 BeadColor sc = pattern.palette.get(subIdx);
-                sub.setText("💡 可用「" + sc.fullLabel() + "」代替");
+                sub.setText(getString(R.string.fmt_substitute, sc.fullLabel()));
                 sub.setVisibility(View.VISIBLE);
             } else {
                 sub.setVisibility(View.GONE);
@@ -2243,20 +2240,22 @@ public class EditorActivity extends Activity {
 
         Row r = new Row();
 
-        r.addHeader("当前格 " + (cellIndex % pattern.cols + 1) + "," + (cellIndex / pattern.cols + 1));
+        r.addHeader(getString(R.string.fmt_cell_hdr,
+                cellIndex % pattern.cols + 1, cellIndex / pattern.cols + 1));
         int curIdx = pattern.cells[cellIndex];
-        String autoLabel = curIdx >= 0 ? "自动匹配的是 "
-                + rawPaletteName(curIdx) : "该格当前为空";
-        r.add("↺ 恢复自动匹配" + (curIdx >= 0 ? "(" + autoLabel + ")" : ""),
+        String autoLabel = curIdx >= 0 ? getString(R.string.fmt_auto_match,
+                rawPaletteName(curIdx)) : getString(R.string.cell_empty);
+        r.add(getString(R.string.restore_auto)
+                        + (curIdx >= 0 ? "(" + autoLabel + ")" : ""),
                 null, curIdx >= 0 ? pattern.palette.get(curIdx).rgb : 0xFFCCCCCC, true);
 
-        r.addHeader("已用颜色");
+        r.addHeader(getString(R.string.hdr_used));
         for (final BeadPattern.UsedColor uc : pattern.usedColors) {
             r.add(uc.symbol + "  " + uc.color.fullLabel(),
                     uc.index, uc.color.rgb, false);
         }
 
-        r.addHeader("全部色板");
+        r.addHeader(getString(R.string.hdr_palette));
         List<BeadColor> pal = pattern.palette;
         for (int i = 0; i < pal.size(); i++) {
             final int idx = i;
@@ -2264,9 +2263,9 @@ public class EditorActivity extends Activity {
         }
 
         holder[0] = new AlertDialog.Builder(this)
-                .setTitle("选择这一格的豆色")
+                .setTitle(getString(R.string.pick_color_title))
                 .setView(sc)
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .create();
         holder[0].show();
     }
@@ -2282,14 +2281,15 @@ public class EditorActivity extends Activity {
 
     /** 导出可分享的图纸文件(.json,自含色板,规范见 docs/SHARE-FORMAT.md) */
     private void exportFile() {
-        showLoading(true, "正在打包图纸文件…");
+        showLoading(true, getString(R.string.working_pack));
         exec.execute(new Runnable() {
             @Override
             public void run() {
                 try {
                     String stamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA)
                             .format(new Date());
-                    final String fileName = "拼豆图纸_" + pattern.cols + "x" + pattern.rows
+                    final String fileName = getString(R.string.file_pattern_prefix)
+                            + pattern.cols + "x" + pattern.rows
                             + "_" + stamp + ".json";
                     JSONObject o = PatternShare.build(pattern, fileName.substring(0,
                             fileName.lastIndexOf('_')));
@@ -2311,7 +2311,7 @@ public class EditorActivity extends Activity {
                         public void run() {
                             showLoading(false);
                             Toast.makeText(EditorActivity.this,
-                                    "导出失败:" + e.getMessage(), Toast.LENGTH_LONG).show();
+                                    getString(R.string.err_prefix_export) + e.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
                 }
@@ -2328,7 +2328,7 @@ public class EditorActivity extends Activity {
             it.setType("*/*");
             startActivityForResult(it, REQ_IMPORT);
         } catch (Throwable t) {
-            Toast.makeText(this, "无法打开文件选择器", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_no_picker), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -2366,7 +2366,7 @@ public class EditorActivity extends Activity {
                     public void run() {
                         if (got == null) {
                             Toast.makeText(EditorActivity.this,
-                                    "导入失败:" + err, Toast.LENGTH_LONG).show();
+                                    getString(R.string.err_prefix_import) + err, Toast.LENGTH_LONG).show();
                             return;
                         }
                         applyImportedPattern(got);
@@ -2400,7 +2400,7 @@ public class EditorActivity extends Activity {
         updateSummary();
         updateEditsButton();
         selectTab(1);
-        Toast.makeText(this, "已导入图纸,可以继续编辑、导出或按色拼豆",
+        Toast.makeText(this, getString(R.string.imported_done),
                 Toast.LENGTH_SHORT).show();
     }
 
@@ -2417,7 +2417,7 @@ public class EditorActivity extends Activity {
                 }
             }
         }
-        Toast.makeText(this, "🎉 本色已经全部拼完了", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, getString(R.string.assist_all_done), Toast.LENGTH_SHORT).show();
     }
 
     /** 打卡日历:按月查看每天完成的颗数(全局记录,纯本地) */
@@ -2441,7 +2441,8 @@ public class EditorActivity extends Activity {
         TextView next = calChip("▶");
         TextView title = new TextView(this);
         title.setPadding(Math.round(14 * dm), 0, Math.round(14 * dm), 0);
-        title.setText(String.format(Locale.CHINA, "%d 年 %d 月", year, month + 1));
+        title.setText(String.format(Locale.CHINA, getString(R.string.fmt_cal_title),
+                year, month + 1));
         title.setTextColor(0xFF232323);
         title.setTextSize(16);
         title.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
@@ -2450,7 +2451,7 @@ public class EditorActivity extends Activity {
         head.addView(next);
         box.addView(head);
 
-        String[] week = {"一", "二", "三", "四", "五", "六", "日"};
+        String[] week = L10n.WEEK_SHORT;
         LinearLayout weekRow = new LinearLayout(this);
         weekRow.setOrientation(LinearLayout.HORIZONTAL);
         weekRow.setPadding(0, Math.round(8 * dm), 0, 0);
@@ -2513,10 +2514,10 @@ public class EditorActivity extends Activity {
         android.widget.ScrollView sc = new android.widget.ScrollView(this);
         sc.addView(box);
         calendarDialog = new AlertDialog.Builder(this)
-                .setTitle("📅 拼豆打卡日历")
-                .setMessage("每天完成的颗数(所有项目合计),纯本地记录")
+                .setTitle(getString(R.string.cal_title))
+                .setMessage(getString(R.string.cal_msg))
                 .setView(sc)
-                .setPositiveButton("关闭", null)
+                .setPositiveButton(getString(R.string.btn_close), null)
                 .show();
         prev.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -2557,13 +2558,13 @@ public class EditorActivity extends Activity {
 
     private void showExportMenu(View anchor) {
         PopupMenu menu = new PopupMenu(this, anchor);
-        menu.getMenu().add(0, EXP_SHEET, 1, "保存图纸图片(可打印)");
-        menu.getMenu().add(0, EXP_EFFECT, 2, "保存效果图");
-        menu.getMenu().add(0, EXP_SHARE, 3, "分享图纸");
-        menu.getMenu().add(0, EXP_PDF, 4, "导出 PDF 文档");
-        menu.getMenu().add(0, EXP_FILE, 5, "导出图纸文件(.json,发给别人导入)");
+        menu.getMenu().add(0, EXP_SHEET, 1, getString(R.string.menu_sheet));
+        menu.getMenu().add(0, EXP_EFFECT, 2, getString(R.string.menu_effect));
+        menu.getMenu().add(0, EXP_SHARE, 3, getString(R.string.menu_share));
+        menu.getMenu().add(0, EXP_PDF, 4, getString(R.string.menu_pdf));
+        menu.getMenu().add(0, EXP_FILE, 5, getString(R.string.menu_file));
         menu.getMenu().add(0, 7, 6, "📂 导入图纸文件(.json)");
-        menu.getMenu().add(1, 5, 7, "💾 保存项目存档");
+        menu.getMenu().add(1, 5, 7, getString(R.string.save_proj_title));
         menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(android.view.MenuItem item) {
@@ -2582,7 +2583,7 @@ public class EditorActivity extends Activity {
 
     private void export(int what) {
         if (pattern == null) {
-            Toast.makeText(this, "图纸还没生成好,稍等一下", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_not_ready), Toast.LENGTH_SHORT).show();
             return;
         }
         if (what == EXP_PDF) {
@@ -2608,16 +2609,17 @@ public class EditorActivity extends Activity {
 
     /** 渲染大图 -> 切 A4 多页 PDF -> 弹分享 */
     private void exportPdf() {
-        showLoading(true, "正在生成 PDF…");
+        showLoading(true, getString(R.string.working_pdf));
         exec.execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    Bitmap sheet = PatternSheetRenderer.render(pattern,
-                            currentPaletteName());
+                    Bitmap sheet = PatternSheetRenderer.render(EditorActivity.this,
+                            pattern, currentPaletteName());
                     String stamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA)
                             .format(new Date());
-                    String name = "拼豆图纸_" + pattern.cols + "x" + pattern.rows
+                    String name = getString(R.string.file_pattern_prefix)
+                + pattern.cols + "x" + pattern.rows
                             + "_" + stamp + ".pdf";
                     final Uri uri = PdfExporter.export(EditorActivity.this, sheet,
                             pattern, currentPaletteName(), name);
@@ -2635,7 +2637,7 @@ public class EditorActivity extends Activity {
                         public void run() {
                             showLoading(false);
                             Toast.makeText(EditorActivity.this,
-                                    "PDF 导出失败:" + e.getMessage(), Toast.LENGTH_LONG).show();
+                                    getString(R.string.err_prefix_export) + e.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
                 }
@@ -2694,13 +2696,15 @@ public class EditorActivity extends Activity {
     /** 导出图纸标题里显示的色板名 */
     private String currentPaletteName() {
         if (style == PatternEngine.STYLE_ABSTRACT) {
-            String deg = BRICK_LABELS[Math.max(0, Math.min(3, brickIdx))]
+            String deg = L10n.BRICK_LABELS[Math.max(0, Math.min(3, brickIdx))]
                     + "(" + BRICK_SIZES[brickIdx] + "×" + BRICK_SIZES[brickIdx] + ")";
             String colorPart = abstractUsePalette
-                    ? "主色" + abstractColors
-                    + (abstractSnap ? "·吸附" + BeadPalettes.tierName(tierIdx) : "·原色")
-                    : "整套" + BeadPalettes.tierName(tierIdx);
-            return "抽象·" + deg + "·" + colorPart;
+                    ? getString(R.string.palname_main_fmt, abstractColors)
+                    + (abstractSnap ? getString(R.string.palname_snap_fmt,
+                    BeadPalettes.tierName(tierIdx))
+                    : getString(R.string.palname_free))
+                    : getString(R.string.palname_all_fmt, BeadPalettes.tierName(tierIdx));
+            return getString(R.string.palname_abs_fmt, deg, colorPart);
         }
         return BeadPalettes.tierName(tierIdx);
     }
@@ -2715,11 +2719,13 @@ public class EditorActivity extends Activity {
                     if (what == 2) {
                         bmp = EffectRenderer.render(pattern);
                     } else {
-                        bmp = PatternSheetRenderer.render(pattern, currentPaletteName());
+                        bmp = PatternSheetRenderer.render(EditorActivity.this, pattern,
+                            currentPaletteName());
                     }
                     String stamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA)
                             .format(new Date());
-                    String name = (what == 2 ? "拼豆效果图_" : "拼豆图纸_")
+                    String name = (what == 2 ? getString(R.string.file_effect_prefix)
+                    : getString(R.string.file_pattern_prefix))
                             + pattern.cols + "x" + pattern.rows + "_" + stamp + ".png";
                     final Uri uri = GallerySaver.save(EditorActivity.this, bmp, name);
                     bmp.recycle();
@@ -2731,7 +2737,8 @@ public class EditorActivity extends Activity {
                                 share(uri, "image/png");
                             } else {
                                 Toast.makeText(EditorActivity.this,
-                                        "已保存到相册 Pictures/" + GallerySaver.DIR_NAME,
+                                        getString(R.string.saved_gallery_fmt,
+                                        GallerySaver.dirName(EditorActivity.this)),
                                         Toast.LENGTH_LONG).show();
                             }
                         }
@@ -2742,7 +2749,7 @@ public class EditorActivity extends Activity {
                         public void run() {
                             showLoading(false);
                             Toast.makeText(EditorActivity.this,
-                                    "保存失败:" + e.getMessage(), Toast.LENGTH_LONG).show();
+                                    getString(R.string.err_prefix_save) + e.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
                 }
@@ -2756,9 +2763,9 @@ public class EditorActivity extends Activity {
         send.putExtra(Intent.EXTRA_STREAM, uri);
         send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         try {
-            startActivity(Intent.createChooser(send, "分享拼豆图纸"));
+            startActivity(Intent.createChooser(send, getString(R.string.share_title)));
         } catch (Exception e) {
-            Toast.makeText(this, "分享失败", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.share_failed), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -2774,7 +2781,7 @@ public class EditorActivity extends Activity {
         ensureBrushDefault();
         rebuildBlankRaw();
         selectTab(1);              // 直接停在图纸页
-        Toast.makeText(this, "空白画布已就绪,滑动即可涂色 🎨",
+        Toast.makeText(this, getString(R.string.blank_ready),
                 Toast.LENGTH_SHORT).show();
     }
 
@@ -2832,8 +2839,8 @@ public class EditorActivity extends Activity {
                         setPaintMode(false, true);
                     }
                     Toast.makeText(EditorActivity.this,
-                            isChecked ? "已开启:去「图纸」页点任意格子换色"
-                                    : "已关闭点格修改",
+                            isChecked ? getString(R.string.cell_switch_on)
+                                    : getString(R.string.cell_switch_off),
                             Toast.LENGTH_SHORT).show();
                 }
             });
@@ -2850,12 +2857,12 @@ public class EditorActivity extends Activity {
         if (on && !silent) {
             selectTab(1);
             if (rawPattern == null && !blankCanvas) {
-                Toast.makeText(this, "等图纸生成好后就可以涂色了",
+                Toast.makeText(this, getString(R.string.paint_wait),
                         Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this,
-                        eraseOn ? "橡皮已选好,滑过即可擦除,长按可整片擦除"
-                                : "在图纸上滑动涂色,长按一格可整片填充;点「换一支」可选颜色",
+                        eraseOn ? getString(R.string.eraser_ready)
+                                : getString(R.string.brush_ready),
                         Toast.LENGTH_SHORT).show();
             }
         }
@@ -2962,7 +2969,7 @@ public class EditorActivity extends Activity {
         if (filled > 0) {
             applyEditsToUi();
             updateEditsButton();
-            Toast.makeText(this, String.format(Locale.CHINA, "油漆桶:已填充 %d 格", filled),
+            Toast.makeText(this, String.format(Locale.CHINA, getString(R.string.fmt_bucket), filled),
                     Toast.LENGTH_SHORT).show();
         }
     }
@@ -2989,13 +2996,13 @@ public class EditorActivity extends Activity {
         String label;
         if (eraseOn) {
             gd.setColor(0xFFEFEAE3);
-            label = "橡皮擦(擦成空格)";
+            label = getString(R.string.eraser_label);
         } else {
             ensureBrushDefault();
             BeadColor c = currentPatternPalette().get(
                     Math.min(brushPalIdx, currentPatternPalette().size() - 1));
             gd.setColor(0xFF000000 | c.rgb);
-            label = c.name + "(" + c.code + "号)";
+            label = getString(R.string.fmt_brush_color, c.name, c.code);
         }
         brushSwatch.setBackground(gd);
         ((TextView) brushName).setText(label);
@@ -3013,7 +3020,7 @@ public class EditorActivity extends Activity {
     /** 选画笔颜色:列出当前图纸生效色板 */
     private void showBrushPicker() {
         if (pattern == null || pattern.palette == null || pattern.palette.isEmpty()) {
-            Toast.makeText(this, "先等图纸生成好", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.gen_first), Toast.LENGTH_SHORT).show();
             return;
         }
         LinearLayout box = new LinearLayout(this);
@@ -3023,7 +3030,7 @@ public class EditorActivity extends Activity {
         final AlertDialog[] holder = new AlertDialog[1];
 
         TextView tip = new TextView(this);
-        tip.setText("点任意颜色设为画笔");
+        tip.setText(getString(R.string.pick_brush_hint));
         tip.setTextColor(0xFF22B57F);
         tip.setTextSize(12);
         int pad = Math.round(12 * getResources().getDisplayMetrics().density);
@@ -3065,7 +3072,7 @@ public class EditorActivity extends Activity {
                     eraseOn = false;
                     syncBrushUi();
                     if (holder[0] != null) holder[0].dismiss();
-                    Toast.makeText(EditorActivity.this, "已换画笔 🖌",
+                    Toast.makeText(EditorActivity.this, getString(R.string.brush_changed),
                             Toast.LENGTH_SHORT).show();
                 }
             });
@@ -3073,9 +3080,9 @@ public class EditorActivity extends Activity {
         }
 
         holder[0] = new AlertDialog.Builder(this)
-                .setTitle("选择画笔颜色")
+                .setTitle(getString(R.string.pick_brush_title))
                 .setView(sc)
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .create();
         holder[0].show();
     }
@@ -3171,36 +3178,36 @@ public class EditorActivity extends Activity {
 
     private void saveProjectDialog() {
         if (pattern == null) {
-            Toast.makeText(this, "图纸还没生成好,稍等一下", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_not_ready), Toast.LENGTH_SHORT).show();
             return;
         }
-        String def = "拼豆_" + new SimpleDateFormat("MMdd_HHmm", Locale.CHINA)
-                .format(new Date());
+        String def = getString(R.string.def_proj_name_fmt,
+                new SimpleDateFormat("MMdd_HHmm", Locale.CHINA)
+                        .format(new Date()));
         final EditText input = new EditText(this);
         input.setText(def);
         input.setSelection(def.length());
         new AlertDialog.Builder(this)
-                .setTitle("保存项目存档 💾")
-                .setMessage("照片(压缩备份)、全部参数和手动修改会存进 APP,"
-                        + "之后可在首页「我的项目」继续编辑或导出。")
+                .setTitle(getString(R.string.save_proj_title))
+                .setMessage(getString(R.string.proj_msg))
                 .setView(input)
-                .setPositiveButton("保存", new android.content.DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.btn_save), new android.content.DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(android.content.DialogInterface dialog, int which) {
                         saveProjectNow(input.getText().toString().trim());
                     }
                 })
-                .setNegativeButton("取消", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 
     private void saveProjectNow(String name) {
         if (name.isEmpty()) {
-            Toast.makeText(this, "名字不能为空", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_empty_name), Toast.LENGTH_SHORT).show();
             return;
         }
         if (blankCanvas && editMap.isEmpty()) {
-            Toast.makeText(this, "画布还是空的,先画点什么吧 ✏️", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.canvas_empty), Toast.LENGTH_SHORT).show();
             return;
         }
         showLoading(true);
@@ -3268,7 +3275,7 @@ public class EditorActivity extends Activity {
                         public void run() {
                             showLoading(false);
                             Toast.makeText(EditorActivity.this,
-                                    "已存档:「" + name + "」,首页「我的项目」可查看",
+                                    getString(R.string.fmt_saved_proj, name),
                                     Toast.LENGTH_LONG).show();
                         }
                     });
@@ -3278,7 +3285,7 @@ public class EditorActivity extends Activity {
                         public void run() {
                             showLoading(false);
                             Toast.makeText(EditorActivity.this,
-                                    "存档失败:" + e.getMessage(),
+                                    getString(R.string.err_prefix_proj) + e.getMessage(),
                                     Toast.LENGTH_LONG).show();
                         }
                     });
@@ -3380,10 +3387,10 @@ public class EditorActivity extends Activity {
             } else {
                 regenerate();
             }
-            Toast.makeText(this, "项目「" + o.optString("name", "") + "」已打开",
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.fmt_proj_opened,
+                    o.optString("name", "")), Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            Toast.makeText(this, "这个项目文件读不出来了", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.err_proj_read), Toast.LENGTH_LONG).show();
             finish();
         }
     }
@@ -3420,7 +3427,7 @@ public class EditorActivity extends Activity {
         swDominant.setChecked(dominant);
         swPrecise.setChecked(preciseColor);
         sbDenoise.setProgress(denoise);
-        tvDenoise.setText(new String[]{"关", "轻", "中", "强"}[denoise]);
+        tvDenoise.setText(L10n.DENOISE_LABELS[denoise]);
         swSymbols.setChecked(true);
         swGrid.setChecked(true);
 
@@ -3449,8 +3456,8 @@ public class EditorActivity extends Activity {
                     setPaintMode(false, true);
                 }
                 Toast.makeText(EditorActivity.this,
-                        isChecked ? "已开启:去「图纸」页点任意格子换色"
-                                : "已关闭点格修改",
+                        isChecked ? getString(R.string.cell_switch_on)
+                                : getString(R.string.cell_switch_off),
                         Toast.LENGTH_SHORT).show();
             }
         });
@@ -3486,7 +3493,7 @@ public class EditorActivity extends Activity {
                 && pendingExport > 0) {
             doExport(pendingExport);
         } else if (pendingExport > 0) {
-            Toast.makeText(this, "没有存储权限,无法保存到相册", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.err_no_storage), Toast.LENGTH_SHORT).show();
         }
         pendingExport = 0;
     }

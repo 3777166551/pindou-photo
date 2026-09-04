@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English arrays -->
+<resources>
+    <string-array name="tier_names">
+        <item>24 · Classic</item>
+        <item>48 · Standard</item>
+        <item>90 · Advanced</item>
+        <item>120 · Full</item>
+    </string-array>
+    <string-array name="brick_labels">
+        <item>Light</item>
+        <item>Mid</item>
+        <item>Strong</item>
+        <item>Super</item>
+    </string-array>
+    <string-array name="denoise_labels">
+        <item>Off</item>
+        <item>Light</item>
+        <item>Mid</item>
+        <item>Strong</item>
+    </string-array>
+    <string-array name="week_short">
+        <item>Mo</item>
+        <item>Tu</item>
+        <item>We</item>
+        <item>Th</item>
+        <item>Fr</item>
+        <item>Sa</item>
+        <item>Su</item>
+    </string-array>
+    <string-array name="generic_color_names">
+        <item>White</item><item>Cream</item><item>Gray</item><item>Dark Gray</item>
+        <item>Black</item><item>Red</item><item>Dark Red</item><item>Rose</item>
+        <item>Pink</item><item>Orange</item><item>Lemon</item><item>Yellow</item>
+        <item>Grass Green</item><item>Dark Green</item><item>Teal</item><item>Sky Blue</item>
+        <item>Royal Blue</item><item>Navy</item><item>Purple</item><item>Brown</item>
+        <item>Light Brown</item><item>Skin Tone</item><item>Coffee</item><item>Light Blue</item>
+        <item>Silver Gray</item><item>Medium Gray</item><item>Wine Red</item><item>Brick Red</item>
+        <item>Coral Red</item><item>Light Pink</item><item>Hot Pink</item><item>Light Orange</item>
+        <item>Dark Orange</item><item>Light Yellow</item><item>Dark Yellow</item><item>Mustard</item>
+        <item>Apple Green</item><item>Army Green</item><item>Dark Teal</item><item>Light Teal</item>
+        <item>Lake Blue</item><item>Dark Navy</item><item>Gray Blue</item><item>Dark Purple</item>
+        <item>Light Purple</item><item>Camel</item><item>Khaki</item><item>Pale Skin</item>
+        <item>Ivory</item><item>Charcoal</item><item>Warm Gray</item><item>Cool Gray</item>
+        <item>Tomato</item><item>Deep Wine</item><item>Lotus Pink</item><item>Apricot</item>
+        <item>Skin Orange</item><item>Earth Yellow</item><item>Golden Yellow</item><item>Yellow Green</item>
+        <item>Ink Green</item><item>Mint</item><item>Sage</item><item>Neon Green</item>
+        <item>Peacock Green</item><item>Pale Blue</item><item>Indigo</item><item>Bright Blue</item>
+        <item>Blue Violet</item><item>Grape</item><item>Mauve</item><item>Dark Brown</item>
+        <item>Chestnut</item><item>Red Brown</item><item>Deep Skin</item><item>Wheat</item>
+        <item>Silver</item><item>Gold</item><item>Neon Orange</item><item>Deep Sky Blue</item>
+        <item>Forest Green</item><item>Light Khaki</item><item>Terracotta</item><item>Misty Blue</item>
+        <item>Dusty Pink</item><item>Black Brown</item><item>Emerald</item><item>Olive Green</item>
+        <item>Deep Rose</item><item>Bronze</item>
+        <item>Light Brick</item><item>Rose Pink</item><item>Neon Pink</item><item>Cherry Red</item>
+        <item>Rust</item><item>Butter Yellow</item><item>Neon Yellow</item><item>Neon Blue</item>
+        <item>Jewel Green</item><item>Deep Lake Blue</item><item>Gray Purple</item><item>Deep Indigo</item>
+        <item>Coffee Camel</item><item>Midnight Navy</item><item>Bean Paste</item><item>Dark Gray Blue</item>
+        <item>Taro Purple</item><item>Deep Teal</item><item>Deep Olive</item><item>Coral Pink</item>
+        <item>Peach</item><item>Dark Sage</item><item>Light Gold</item><item>Blue Gray</item>
+        <item>Khaki Green</item><item>Bright Purple</item><item>Deep Coral</item><item>Lake Green</item>
+        <item>Magenta</item><item>Cream White</item>
+    </string-array>
+</resources>
