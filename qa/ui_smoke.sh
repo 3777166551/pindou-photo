@@ -26,9 +26,15 @@ snap() {
 }
 
 dump_ui() {
-  adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1
-  adb pull /sdcard/ui.xml ui.xml > /dev/null 2>&1
-  tr -d '\r' < ui.xml > ui2.xml && mv ui2.xml ui.xml
+  local n ok=1
+  for n in 1 2 3 4; do
+    adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1
+    adb pull /sdcard/ui.xml ui.xml > /dev/null 2>&1
+    tr -d '\r' < ui.xml > ui2.xml && mv ui2.xml ui.xml
+    if grep -q "com.pindou.app" ui.xml 2>/dev/null; then ok=0; break; fi
+    sleep 2
+  done
+  return $ok
 }
 
 # 从 ui.xml 取第一个匹配属性的 bounds 中心并点击
@@ -89,12 +95,15 @@ tap_text() {
 }
 
 check_text() {
-  local txt="$1" must="${2:-1}"
-  dump_ui
-  if grep -q "text=\"[^\"]*${txt}[^\"]*\"" ui.xml; then
-    log "found: $txt"
-    return 0
-  fi
+  local txt="$1" must="${2:-1}" n
+  for n in 1 2 3; do
+    dump_ui
+    if grep -q "text=\"[^\"]*${txt}[^\"]*\"" ui.xml; then
+      log "found: $txt"
+      return 0
+    fi
+    sleep 2
+  done
   if [ "$must" = "1" ]; then
     echo "[smoke] FAIL: expected text missing: $txt"
     snap fail
@@ -119,10 +128,20 @@ wait_boot
 adb shell settings put global window_animation_scale 0
 adb shell settings put global transition_animation_scale 0
 adb shell settings put global animator_duration_scale 0
-adb install -r ${APK:-apk/*.apk} > /dev/null
+log "installing APK..."
+if ! adb install -r ${APK:-apk/*.apk}; then
+  echo "[smoke] FAIL: adb install failed"
+  exit 1
+fi
 
 adb shell am start -n $PKG/.SplashActivity
-sleep 8
+sleep 4
+# 等到主界面就绪(最多再等 40s)
+for _ in $(seq 1 20); do
+  dump_ui && grep -q "text=\"[^\"]*Start a new pattern[^\"]*\"" ui.xml && break
+  sleep 2
+done
+sleep 2
 snap home
 check_text "Start a new pattern"
 log "home OK"
