@@ -19,7 +19,7 @@ jobs:
       - name: CIEDE2000 reference test (Sharma 2005, 34 pairs)
         run: |
           mkdir -p qa/out
-          javac -d qa/out qa/TestColorMath.java
+          javac -sourcepath app/src/main/java -d qa/out qa/TestColorMath.java
           java -cp qa/out TestColorMath
 
       - name: Set up Gradle
