@@ -74,10 +74,17 @@ jobs:
         run: |
           export ANDROID_HOME=/usr/local/lib/android/sdk
           export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
-          if [ -e /dev/kvm ]; then ACCEL="-accel on"; echo "KVM available"; else ACCEL="-no-accel"; echo "KVM missing, software emulation"; fi
+          if [ -e /dev/kvm ]; then
+            sudo chmod 666 /dev/kvm
+            ACCEL="-accel on"
+            echo "KVM available (permission granted)"
+          else
+            ACCEL="-no-accel"
+            echo "KVM missing, software emulation"
+          fi
           emulator -avd smoke -no-window -no-audio -no-boot-anim \
             -gpu swiftshader_indirect $ACCEL -camera-back none -camera-front none &
-          for i in $(seq 1 120); do
+          for i in $(seq 1 90); do
             BOOT=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
             if [ "$BOOT" = "1" ]; then echo "boot completed after ${i}0s"; break; fi
             sleep 10
