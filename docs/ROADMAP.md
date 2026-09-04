@@ -45,11 +45,14 @@ qa 纯 JVM 测试不受影响)。跟随系统语言,无应用内切换(如需 pe
 同样只含 arm64,与本地 bat 构建一致;商店侧按 64 位 APK 自动过滤 32 位设备,
 列表再标注"仅支持 64 位设备"。32 位老手机明确不支持(2019 年后设备几乎全 64 位)。
 
-### 4. ✅ 隐私政策网页(v2.35 已建)
+### 4. ✅ 隐私政策网页(v2.35 已上线)
 
 `docs/privacy.html`(中英双语,内容取自 DISCLAIMER + 数据安全说明)。
-仓库 Settings → Pages → 选 main 分支 /docs 目录启用后,
-URL 为 `https://3777166551.github.io/pindou-photo/privacy.html`,填进商店后台即可。
+GitHub Pages 已通过 API 开通(main 分支 /docs 目录,并加 `docs/.nojekyll`
+禁用 Jekyll——docs 里的 Markdown 代码示例会让 Jekyll 构建报错)。
+
+**商店后台填这个 URL**:
+`https://3777166551.github.io/pindou-photo/privacy.html`
 
 ### 5. 图纸社区模板仓库（零服务器飞轮）
 

@@ -33,6 +33,8 @@
 
 **无网络权限，不联网、不收集任何数据。** 所有处理都在你的手机上完成。
 
+完整隐私政策(中英双语): **https://3777166551.github.io/pindou-photo/privacy.html**
+
 ## 开源组件
 
 - 模板素材：[Kenney](https://kenney.nl)（CC0 公共领域）
