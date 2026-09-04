@@ -107,3 +107,33 @@ package 属性**，两者可以共存（AGP 8 下保留该属性只产生告警�
   需要支持则从 Gradle 依赖的 AAR 里补拷 `armeabi-v7a`（ort_aar 目前只有 arm64）。
 - 上架国内商店需软件著作权登记；Google Play 需隐私政策 URL
   （可用 GitHub Pages 承载 DISCLAIMER）。
+
+## 10. bat 批处理文件必须保持纯 ASCII（v2.34 教训）
+
+**现象**：`qa\run_tests.bat` 里写了 UTF-8 中文注释，cmd 按 ANSI（本机 GBK）
+逐行解析 bat，中文直接碎成乱码并被当成命令执行，报
+`'曞…Windows' 不是内部或外部命令`，但脚本居然还继续往下跑（rem 行的乱码
+把 rem 吞了），极难排查。
+
+**修法**：仓库里所有 bat（build_apk.bat / compile_check.bat / qa\run_tests.bat）
+注释只用英文 ASCII。UTF-8 中文注释请放进 sh 或 md 文件。
+
+## 11. 别用 PowerShell Set-Content 改 Java 源码（v2.34 教训）
+
+**现象**：`-Encoding UTF8` 在 Windows PowerShell 5 里默认带 BOM 写出，
+javac 报 `illegal character: '\ufeff'`。
+
+**修法**：改源码一律用编辑器/工具的精确替换；若已混入 BOM，用
+`[System.IO.File]::WriteAllText($p,$t,(New-Object System.Text.UTF8Encoding($false)))`
+剥掉。文件头三个字节是 `EF BB BF` 即为带 BOM。
+
+## 12. 色板体系的扩展点备忘（v2.34 起的形状）
+
+- 运行时自定义色板槽位：`BeadBrandCharts.customs`（List，可多套），
+  增删改只能走 `CustomPalettes`（带写盘 + `revision()` 自增 + 色板名缓存重置）。
+- 选择器下标：0~3 通用档，4~7 品牌表，`BeadPalettes.customSlotStart()` 起为
+  自定义；`getPalette` 对越界自动收拢到最后一套。
+- EditorActivity 在 `onResume` 对比 `CustomPalettes.revision()` 决定是否重建
+  色板下拉框；改过自定义色板内容才会清修格并重新生成。
+- 色板下拉框监听器加了"位置没变就跳过"守卫——`setAdapter` 会异步触发
+  onItemSelected，重入会把用户手动修格/空白画布涂色全清掉。

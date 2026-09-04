@@ -3,9 +3,7 @@
 这是 PindouPhoto 定义的**开放图纸交换格式**:自含色板、不依赖任何特定 APP、
 纯 JSON 可人工阅读。任何工具都可以按本文档导出/导入,欢迎其他拼豆软件支持。
 
-文件扩展名建议 `.json`,MIME 类型 `application/json`。
-
-## 顶层结构
+文件扩展名建议 `.json`,MIME 类型 `application/json`。## 顶层结构
 
 ```json
 {
@@ -69,3 +67,39 @@
 3. **向前兼容**:未知字段应忽略;`version` 大于导入方支持的版本时,
    导入方应明确拒绝而不是猜测。
 4. **透明/空格**:圆形板、异形板、抠图留空都用 `-1` 表示。
+
+---
+
+# 自定义色板分享格式 (pindou-palette) v1
+
+与图纸格式同族的**开放色板交换格式**(v2.34 起支持):只含颜色表,没有格子,
+用于分享"我的豆板"、自定义色系等。导入方也接受 `pindou-pattern` 文件,
+直接取它的 `colors` 当色板(两格式互通)。
+
+```json
+{
+  "format": "pindou-palette",
+  "version": 1,
+  "app": "PindouPhoto",
+  "name": "我的豆板(24色)",
+  "savedAt": 1725400000000,
+  "colors": [
+    { "code": 1, "name": "白色", "rgb": 16777215 },
+    { "code": 2, "name": "黑色", "rgb": 0, "tag": "S-13" }
+  ]
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `format` | string | ✔ | 固定 `"pindou-palette"` |
+| `version` | int | ✔ | 格式版本,当前为 `1` |
+| `app` | string | | 生成文件的应用名 |
+| `name` | string | | 色板名(展示用) |
+| `savedAt` | long | | 保存时间戳(毫秒) |
+| `colors` | array | ✔ | 与 `pindou-pattern` 的 `colors` 完全同构 |
+| `colors[].tag` | string | | 品牌官方色号(选填,色板格式的扩展字段) |
+
+约定:`rgb` 为 0xRRGGBB 的十进制值;同一 RGB 重复出现时导入方应去重;
+单个文件颜色数建议不超过 500。`colors[].tag` 在 `pindou-pattern` 里未定义,
+图纸格式导入方按"未知字段忽略"处理即可。

@@ -1,16 +1,18 @@
 # 路线图与交接文档 (ROADMAP & HANDOFF)
 
 > 本文档是项目的**持续交接入口**：当前状态、待办功能、开发约定、操作备忘。
-> 新会话/新开发者从这里开始读。最后更新：2026-09-04（v2.33 发布后）
+> 新会话/新开发者从这里开始读。最后更新：2026-09-04（v2.34 代码完成，待发布）
 
 ## 一、当前状态快照（2026-09-04）
 
-- 最新版本 **v2.33**（Releases 有签名 APK），主干 = v2.33 + 少量文档提交
+- 主干 = **v2.34 待发布**：自定义色板完整编辑器已实现（见下），
+  签名 APK 待用户用 build_apk.bat 构建（口令走 PINDOU_KS_PASS）
 - **CI 全绿**：每次 push 自动跑 qa 测试套件 + Gradle 编译 + 云端模拟器冒烟
   （安装 APK → 启动 → 空白画布手绘 → 崩溃检查，截图存为构建产物）
-- **测试**：`qa/` 三套 38 项断言全绿
-  （TestColorMath 17 / TestPatternEngine 8 / TestPatternPatch 13），
-  入口 `qa/run_tests.sh`（本地跑法见下）
+- **测试**：`qa/` 四套 66 项断言全绿
+  （TestColorMath 17 / TestPatternEngine 8 / TestPatternPatch 13 / TestCustomPalette 28），
+  入口 `qa/run_tests.sh`（CI/Linux）或 `qa/run_tests.bat`（Windows 本地）；
+  纯编译检查用根目录 `compile_check.bat`（aapt2+javac，不动 build_apk 产物）
 - **合规链**：AGPL-3.0(LICENSE) + THIRD_PARTY.md(全部第三方声明)
   + DISCLAIMER.md + docs/DEV-NOTES.md(踩坑记录) + docs/SHARE-FORMAT.md(开放图纸格式)
 - **权限底账**：全 APP 唯一权限 WRITE_EXTERNAL_STORAGE(maxSdkVersion=28)，
@@ -18,20 +20,14 @@
 
 ## 二、功能路线图（按优先级）
 
-### 1. 自定义色板完整编辑器（下一个大件）
+### 1. ✅ 自定义色板完整编辑器（v2.34 已完成）
 
-现状：「我的豆板」只能从豆仓库存**自动生成**
-（BeadPalettes.buildInventoryPalette → BeadBrandCharts.setCustom，
-启动时注册 + 豆仓对话框一键重建）。
-
-还缺：
-- 手动增删改单个颜色（RGB 取色器 + 色号/名称编辑）
-- 我的豆板的导出/导入（可直接复用 SHARE-FORMAT 的 colors 结构）
-- 多套自定义色板管理（现在只有 1 个槽位，BeadBrandCharts.custom）
-
-实现提示：色板选择器总数由 `BeadPalettes.selCount()/selNames()/getPalette()`
-动态计算，槽位扩展点在 `BeadBrandCharts.extraCount()/custom`；
-改完记得 `BeadPalettes.resetCache()` 并刷新 `paletteAdapter`（EditorActivity ~574）。
+「我的色板」管理页（PaletteActivity，编辑器豆豆清单页入口）：多套自定义色板
+增删改、单色编辑（RGB 滑杆/十六进制取色器 + 名称/色号）、按色相排序、
+导出/导入（开放色板格式 `pindou-palette`，兼容取 pindou-pattern 的颜色表）、
+豆仓一键重建"我的豆板"。数据存 `files/custom_palettes.json`（CustomPalettes），
+运行时槽位在 BeadBrandCharts.customs（可多套），EditorActivity 靠
+`CustomPalettes.revision()` 在 onResume 自动刷新色板下拉框。
 
 ### 2. 多语言（英/日）—— Google Play 出海的最大杠杆
 
@@ -104,3 +100,4 @@ Kenney 素材 + 社区精选开始。
 | v2.31 | 开放图纸格式 pindou-pattern + AnimeGANv3 离线风格化 |
 | v2.32 | 滑动刷选 + 打卡日历 + 镜像绘画 + 合并采购单 |
 | v2.33 | 我的豆板（豆仓生成色板）+ 色板数据官方级验证 + CI 模拟器冒烟 |
+| v2.34 | 自定义色板完整编辑器（多套色板/单色增删改/RGB取色器/导入导出） |
