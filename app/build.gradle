@@ -26,6 +26,8 @@ android {
     }
 }
 
-// 本工程零第三方依赖,纯 Android 框架 API
+// 唯一第三方依赖:ONNX Runtime(MIT 许可,用于 U²-Net 抠图与 AnimeGANv3 风格化,
+// 见 THIRD_PARTY.md)。本地原生构建(build_apk.bat)则使用 tools/ort_aar 等价物。
 dependencies {
+    implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.17.1'
 }
