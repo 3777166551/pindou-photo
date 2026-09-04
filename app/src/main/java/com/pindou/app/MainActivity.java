@@ -59,6 +59,9 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         com.pindou.app.util.Skin.apply(getWindow().getDecorView());
 
+        // 自定义色板仓库:「合并采购单」等后台重算会用到,提前惰性载入
+        com.pindou.app.bead.CustomPalettes.loadIfNeeded(this);
+
         // 按压缩放反馈:主页大按钮都是贴纸,按下去陷一下再弹回
         int[] pressIds = {R.id.btnGallery, R.id.btnCamera, R.id.btnText,
                 R.id.btnBlank, R.id.btnTemplates, R.id.btnProjects,

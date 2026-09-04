@@ -174,7 +174,9 @@ public final class PatternShare {
             opt.preciseColor = s.optBoolean("precise", false);
 
             List<BeadColor> palette = com.pindou.app.bead.BeadPalettes.getPalette(
-                    Math.max(0, Math.min(3, s.optInt("tierIdx", 2))));
+                    Math.max(0, Math.min(
+                            com.pindou.app.bead.BeadPalettes.selCount() - 1,
+                            s.optInt("tierIdx", 2))));
             BeadPattern raw = com.pindou.app.bead.PatternEngine.generate(src, palette, opt);
 
             JSONArray ed = o.optJSONArray("edits");

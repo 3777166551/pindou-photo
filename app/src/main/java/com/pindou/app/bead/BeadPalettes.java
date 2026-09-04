@@ -93,23 +93,29 @@ public final class BeadPalettes {
         }
     }
 
-    /** 色板选择器总数:通用 4 档 + 品牌色号表 + 我的豆板(若有) */
+    /** 色板选择器总数:通用 4 档 + 品牌色号表 + 自定义色板(可多套) */
     public static int selCount() {
-        return GENERIC_COUNT + BeadBrandCharts.ALL.length + BeadBrandCharts.extraCount();
+        return GENERIC_COUNT + BeadBrandCharts.ALL.length + BeadBrandCharts.customCount();
+    }
+
+    /** 自定义色板在选择列表里的起始下标(之前都是通用档+品牌表) */
+    public static int customSlotStart() {
+        return GENERIC_COUNT + BeadBrandCharts.ALL.length;
     }
 
     /** 色板选择器的全部名称(下拉框直接用) */
     public static String[] selNames() {
         if (selNamesCache != null) return selNamesCache;
+        int customCount = BeadBrandCharts.customCount();
         String[] n = new String[selCount()];
         System.arraycopy(TIER_NAMES, 0, n, 0, GENERIC_COUNT);
         for (int i = 0; i < BeadBrandCharts.ALL.length; i++) {
             BeadBrandCharts.Chart c = BeadBrandCharts.ALL[i];
             n[GENERIC_COUNT + i] = c.name + "(" + c.colors.size() + "色)";
         }
-        if (BeadBrandCharts.getCustom() != null) {
-            BeadBrandCharts.Chart c = BeadBrandCharts.getCustom();
-            n[GENERIC_COUNT + BeadBrandCharts.ALL.length] = c.name;
+        for (int i = 0; i < customCount; i++) {
+            BeadBrandCharts.Chart c = BeadBrandCharts.customAt(i);
+            n[GENERIC_COUNT + BeadBrandCharts.ALL.length + i] = c.name;
         }
         selNamesCache = n;
         return n;
@@ -118,28 +124,62 @@ public final class BeadPalettes {
     /**
      * 按选择序号取色板。0~3 = 通用 4 档;之后 = 品牌官方色号表
      * (里面的 BeadColor 带官方 tag,清单和图纸直接显示真实色号);
-     * 最后 = 我的豆板(从豆仓库存生成,若已注册)。
+     * 最后 = 用户自定义色板(可多套,越界自动收拢到最后一套)。
      */
     public static List<BeadColor> getPalette(int sel) {
         int brandCount = BeadBrandCharts.ALL.length;
-        if (sel >= GENERIC_COUNT + brandCount) {
-            if (BeadBrandCharts.extraCount() > 0) {
-                return new ArrayList<>(BeadBrandCharts.getCustom().colors);
+        int customCount = BeadBrandCharts.customCount();
+        int customStart = GENERIC_COUNT + brandCount;
+        if (sel >= customStart) {
+            if (customCount > 0) {
+                int j = Math.max(0, Math.min(customCount - 1, sel - customStart));
+                return new ArrayList<>(BeadBrandCharts.customAt(j).colors);
             }
-            sel = GENERIC_COUNT + brandCount - 1;
+            sel = customStart - 1;   // 没有自定义色板,回退最后一个品牌表
         }
         if (sel >= GENERIC_COUNT) {
-            int j = sel - GENERIC_COUNT;
-            if (j < brandCount) {
-                return new ArrayList<>(BeadBrandCharts.ALL[j].colors);
-            }
-            j = brandCount - 1;
-            return new ArrayList<>(BeadBrandCharts.ALL[Math.max(0, j)].colors);
+            int j = Math.max(0, Math.min(brandCount - 1, sel - GENERIC_COUNT));
+            return new ArrayList<>(BeadBrandCharts.ALL[j].colors);
         }
         int[] sizes = {24, 48, 90, 120};
         int n = sizes[Math.max(0, Math.min(3, sel))];
         if (n > MASTER.size()) n = MASTER.size();
         return new ArrayList<>(MASTER.subList(0, n));
+    }
+
+    /**
+     * 按色相(红→黄→绿→蓝→紫)排序并重新编号 code=1..n,
+     * 自定义色板和"我的豆板"都用这个顺序展示。原列表会被原地修改。
+     */
+    public static void sortByHue(List<BeadColor> colors) {
+        final double[][] labs = new double[colors.size()][];
+        for (int i = 0; i < colors.size(); i++) {
+            labs[i] = ColorMath.rgbToLab(0xFF000000 | colors.get(i).rgb);
+        }
+        List<Integer> order = new ArrayList<>();
+        for (int i = 0; i < colors.size(); i++) order.add(i);
+        java.util.Collections.sort(order, new java.util.Comparator<Integer>() {
+            @Override
+            public int compare(Integer a, Integer b) {
+                int c = Double.compare(hueOf(labs[a]), hueOf(labs[b]));
+                if (c != 0) return c;
+                // 同色相按明度从深到浅,相邻色不会跳来跳去
+                return Double.compare(labs[b][0], labs[a][0]);
+            }
+        });
+        List<BeadColor> out = new ArrayList<>(colors.size());
+        for (int i = 0; i < order.size(); i++) {
+            BeadColor src = colors.get(order.get(i));
+            out.add(new BeadColor(i + 1, src.name, src.rgb, src.tag));
+        }
+        colors.clear();
+        colors.addAll(out);
+    }
+
+    /** CIE L*a*b* -> 色相角(0~360) */
+    private static double hueOf(double[] lab) {
+        double h = Math.toDegrees(Math.atan2(lab[2], lab[1]));
+        return h < 0 ? h + 360 : h;
     }
 
     /**
@@ -150,27 +190,11 @@ public final class BeadPalettes {
     public static List<BeadColor> buildInventoryPalette(android.content.Context c) {
         List<Integer> rgbs = BeadInventory.ownedColors(c);
         if (rgbs.isEmpty()) return null;
-        final double[][] labs = new double[rgbs.size()][];
-        for (int i = 0; i < rgbs.size(); i++) {
-            labs[i] = ColorMath.rgbToLab(rgbs.get(i));
-        }
-        List<Integer> order = new ArrayList<>();
-        for (int i = 0; i < rgbs.size(); i++) order.add(i);
-        java.util.Collections.sort(order, new java.util.Comparator<Integer>() {
-            @Override
-            public int compare(Integer a, Integer b) {
-                double ha = Math.toDegrees(Math.atan2(labs[a][2], labs[a][1]));
-                double hb = Math.toDegrees(Math.atan2(labs[b][2], labs[b][1]));
-                if (ha < 0) ha += 360;
-                if (hb < 0) hb += 360;
-                return Double.compare(ha, hb);
-            }
-        });
         List<BeadColor> out = new ArrayList<>(rgbs.size());
-        for (int i = 0; i < order.size(); i++) {
-            int rgb = rgbs.get(order.get(i));
-            out.add(new BeadColor(i + 1, "我的色" + (i + 1), rgb));
+        for (int i = 0; i < rgbs.size(); i++) {
+            out.add(new BeadColor(i + 1, "我的色" + (i + 1), rgbs.get(i)));
         }
+        sortByHue(out);
         return out;
     }
 

@@ -726,20 +726,44 @@ public final class BeadBrandCharts {
             new Chart("Hama Midi·5mm", build(DATA_HAMA)),
     };
 
-    /** 可选的"我的豆板"(从豆仓库存生成),启动/重建时设置;null = 无 */
-    private static volatile Chart custom;
+    /**
+     * 用户自定义色板(可多套,含"我的豆板"),启动时从 CustomPalettes 载入;
+     * 全部增删改经 CustomPalettes(带持久化),这里只是运行时槽位。
+     */
+    private static final List<Chart> customs = new ArrayList<>();
 
-    public static void setCustom(Chart c) {
-        custom = c;
+    /** 整体替换(启动载入),传入的列表会被拷贝 */
+    public static synchronized void setCustoms(List<Chart> list) {
+        customs.clear();
+        if (list != null) customs.addAll(list);
     }
 
-    public static Chart getCustom() {
-        return custom;
+    public static synchronized int customCount() {
+        return customs.size();
     }
 
-    /** 自定义色板槽位数(0 或 1),BeadPalettes 的选择列表会追加 */
+    public static synchronized Chart customAt(int i) {
+        return customs.get(i);
+    }
+
+    /** 更新/追加:idx 在范围内则替换,否则追加;返回实际落位下标 */
+    public static synchronized int upsertCustom(int idx, Chart c) {
+        if (idx < 0 || idx > customs.size()) idx = customs.size();
+        if (idx == customs.size()) {
+            customs.add(c);
+        } else {
+            customs.set(idx, c);
+        }
+        return idx;
+    }
+
+    public static synchronized void removeCustom(int idx) {
+        if (idx >= 0 && idx < customs.size()) customs.remove(idx);
+    }
+
+    /** 自定义色板槽位数,BeadPalettes 的选择列表会追加在品牌表之后 */
     public static int extraCount() {
-        return custom != null ? 1 : 0;
+        return customCount();
     }
 
     /** 公开工厂:包外生成 Chart(自定义色板用) */

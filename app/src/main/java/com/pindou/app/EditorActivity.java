@@ -44,6 +44,7 @@ import com.pindou.app.bead.BeadInventory;
 import com.pindou.app.bead.BeadPalettes;
 import com.pindou.app.bead.BeadPattern;
 import com.pindou.app.bead.ColorMath;
+import com.pindou.app.bead.CustomPalettes;
 import com.pindou.app.bead.MlSegmenter;
 import com.pindou.app.bead.PatternEngine;
 import com.pindou.app.bead.PatternPatch;
@@ -253,6 +254,8 @@ public class EditorActivity extends Activity {
     private TextView tvLoading;
     private Spinner paletteSpinner, abstractColorSpinner;
     private ArrayAdapter<String> paletteAdapter;
+    /** 上次同步自定义色板时的变更序号;-1 = 尚未同步(onResume 首次进入) */
+    private long paletteRev = -1;
     private Switch swDither, swSymbols, swGrid, swSnap, swKmeans;
     private Switch swDominant, swPrecise;
     private SeekBar sbDenoise;
@@ -275,11 +278,12 @@ public class EditorActivity extends Activity {
 
         // 去背景小模型(U2NetP)预加载;失败自动回退颜色统计算法
         MlSegmenter.init(getApplicationContext());
-        // 我的豆板:启动时从豆仓库存生成(有登记才出现,排在色板列表最后)
-        List<BeadColor> mine = BeadPalettes.buildInventoryPalette(this);
-        if (mine != null) {
-            BeadBrandCharts.setCustom(BeadBrandCharts.make(
-                    "🎨 我的豆板(" + mine.size() + "色)", mine));
+        // 自定义色板:启动时从本地仓库载入(可多套,"我的豆板"是其中豆仓自动生成的一套);
+        // 一次都没生成过且豆仓有货,则自动生成一次(兼容 v2.33 及之前的行为)
+        CustomPalettes.load(this);
+        if (!CustomPalettes.hasInventoryPalette()
+                && BeadPalettes.buildInventoryPalette(this) != null) {
+            CustomPalettes.regenerateInventory(this);
         }
         PatternEngine.setMlProvider(new PatternEngine.MlProvider() {
             @Override
@@ -589,7 +593,8 @@ public class EditorActivity extends Activity {
         paletteSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (suppressSpinner) return;
+                // 位置没变不重建(setAdapter 触发的异步回调,重入会误清手动修格)
+                if (suppressSpinner || position == tierIdx) return;
                 tierIdx = position;
                 editMap.clear();   // 色板体系变了,修格下标失效
                 structureChanged();
@@ -1699,6 +1704,12 @@ public class EditorActivity extends Activity {
                 showInventoryDialog();
             }
         });
+        header.findViewById(R.id.btnPalettes).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(EditorActivity.this, PaletteActivity.class));
+            }
+        });
         Skin.apply(header);
         beadList.addHeaderView(header, null, false);
         beadList.setAdapter(adapter);
@@ -1977,31 +1988,19 @@ public class EditorActivity extends Activity {
                             } catch (NumberFormatException ignored) {
                             }
                         }
-                        List<BeadColor> mine = BeadPalettes.buildInventoryPalette(
-                                EditorActivity.this);
-                        if (mine == null) {
+                        int idx = CustomPalettes.regenerateInventory(EditorActivity.this);
+                        if (idx < 0) {
                             Toast.makeText(EditorActivity.this,
                                     "豆仓还没有有货的颜色,先给颜色填上数量",
                                     Toast.LENGTH_LONG).show();
                             return;
                         }
-                        BeadBrandCharts.setCustom(BeadBrandCharts.make(
-                                "🎨 我的豆板(" + mine.size() + "色)", mine));
-                        BeadPalettes.resetCache();
-                        paletteAdapter = new ArrayAdapter<>(EditorActivity.this,
-                                android.R.layout.simple_spinner_item,
-                                BeadPalettes.selNames());
-                        paletteAdapter.setDropDownViewResource(
-                                android.R.layout.simple_spinner_dropdown_item);
-                        paletteSpinner.setAdapter(paletteAdapter);
-                        suppressSpinner = true;
-                        paletteSpinner.setSelection(BeadPalettes.selCount() - 1, true);
-                        suppressSpinner = false;
-                        tierIdx = BeadPalettes.selCount() - 1;
+                        refreshPaletteUi(idx);
                         editMap.clear();
                         structureChanged();
                         Toast.makeText(EditorActivity.this,
-                                "🎨 我的豆板已生成并选用:" + mine.size() + " 种手头颜色",
+                                "🎨 我的豆板已生成并选用:" + BeadBrandCharts
+                                        .customAt(idx).colors.size() + " 种手头颜色",
                                 Toast.LENGTH_LONG).show();
                     }
                 })
@@ -2642,6 +2641,54 @@ public class EditorActivity extends Activity {
                 }
             }
         });
+    }
+
+    /**
+     * 自定义色板变化后重建色板下拉框。
+     * selectIdx >= 0 时选中 customSlotStart + selectIdx(豆仓重建/管理页返回后用)。
+     */
+    private void refreshPaletteUi(int selectIdx) {
+        paletteAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, BeadPalettes.selNames());
+        paletteAdapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item);
+        paletteSpinner.setAdapter(paletteAdapter);
+        if (selectIdx >= 0) {
+            int target = Math.min(BeadPalettes.selCount() - 1,
+                    BeadPalettes.customSlotStart() + selectIdx);
+            suppressSpinner = true;
+            paletteSpinner.setSelection(target, true);
+            suppressSpinner = false;
+            tierIdx = target;
+        }
+        paletteRev = CustomPalettes.revision();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (paletteRev == -1) {
+            // 首次进入:onCreate 已载入并建好下拉框,记录基准即可
+            paletteRev = CustomPalettes.revision();
+            return;
+        }
+        if (paletteRev == CustomPalettes.revision()) return;
+        // 色板管理页里改过:重建下拉框;若当前正选着被改的自定义色板,重建图纸
+        int customStart = BeadPalettes.customSlotStart();
+        int selectIdx = -1;
+        if (tierIdx >= customStart) {
+            if (tierIdx >= BeadPalettes.selCount()) {
+                tierIdx = 2;   // 正选的色板被删了,退回 90 色
+            } else {
+                selectIdx = tierIdx - customStart;
+            }
+        }
+        refreshPaletteUi(selectIdx);
+        if (selectIdx >= 0) {
+            editMap.clear();
+            structureChanged();
+        }
+        paletteRev = CustomPalettes.revision();
     }
 
     /** 导出图纸标题里显示的色板名 */
