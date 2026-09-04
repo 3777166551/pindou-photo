@@ -41,6 +41,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     timeout-minutes: 40
+    env:
+      ANDROID_AVD_HOME: ${{ github.workspace }}/.android-avd
     steps:
       - uses: actions/checkout@v4
 
@@ -60,11 +62,13 @@ jobs:
         run: |
           export ANDROID_HOME=/usr/local/lib/android/sdk
           export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+          mkdir -p "$ANDROID_AVD_HOME"
           yes | sdkmanager --licenses > /dev/null 2>&1 || true
           sdkmanager --install "platform-tools" "emulator" \
             "system-images;android-30;google_apis;x86_64" > /dev/null
           echo no | avdmanager create avd -n smoke \
             -k "system-images;android-30;google_apis;x86_64" --device pixel_4
+          ls -la "$ANDROID_AVD_HOME"
 
       - name: Start headless emulator
         run: |
