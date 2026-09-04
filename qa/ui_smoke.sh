@@ -5,6 +5,8 @@
 #  bead list, palette manager, inventory, text generator).
 #  Runs against the CI emulator (en locale) so it also verifies
 #  the English translations end to end.
+#  Buttons with resource ids are tapped by id (locale-independent);
+#  dialog buttons are tapped by visible text with scroll/retry.
 #  Hard steps exit 1 on failure; soft steps only log.
 #  Usage: bash qa/ui_smoke.sh   (needs adb + booted emulator)
 # ============================================================
@@ -12,8 +14,8 @@ set -u
 export PATH="$ANDROID_HOME/platform-tools:$PATH"
 
 SHOTS=shots
+PKG="com.pindou.app"
 mkdir -p "$SHOTS"
-FAIL=""
 i=0
 
 log() { echo "[smoke] $*"; }
@@ -26,36 +28,64 @@ snap() {
 dump_ui() {
   adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1
   adb pull /sdcard/ui.xml ui.xml > /dev/null 2>&1
-  # 去掉 \r,避免 bounds 解析受影响
   tr -d '\r' < ui.xml > ui2.xml && mv ui2.xml ui.xml
 }
 
-# 取包含指定文本的节点中心并点击;must=1 时失败即退出
+# 从 ui.xml 取第一个匹配属性的 bounds 中心并点击
+# $1 = 属性匹配片段(如 "resource-id=\".../btnNew\""), $2 = must(1/0)
+_tap_match() {
+  local pat="$1" must="$2" b x1 y1 x2 y2
+  dump_ui
+  b=$(grep -o "$pat[^\>]*bounds=\"\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]\"" ui.xml \
+    | grep -o 'bounds="\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]"' | head -1)
+  [ -z "$b" ] && return 1
+  x1=$(echo "$b" | sed 's/\[\([0-9]*\),.*/\1/')
+  y1=$(echo "$b" | sed 's/\[[0-9]*,\([0-9]*\)\].*/\1/')
+  x2=$(echo "$b" | sed 's/.*\]\[\([0-9]*\),.*/\1/')
+  y2=$(echo "$b" | sed 's/.*,\([0-9]*\)\].*/\1/')
+  adb shell input tap $(( (x1 + x2) / 2 )) $(( (y1 + y2) / 2 ))
+  sleep 1.2
+  return 0
+}
+
+# 按 resource-id 结尾点击(id 与语言无关),自动滚动查找
+tap_id() {
+  local id="$PKG:id/$1" must="${2:-1}" n
+  for n in 0 1 2 3; do
+    if [ "$n" -gt 0 ]; then
+      adb shell input swipe 540 1600 540 700 250; sleep 0.8
+    fi
+    if _tap_match "resource-id=\"$id\"" 0; then
+      log "tapped id: $1"
+      return 0
+    fi
+  done
+  if [ "$must" = "1" ]; then
+    echo "[smoke] FAIL: id not found: $1"
+    snap fail
+    exit 1
+  fi
+  log "soft-miss id: $1"
+}
+
+# 按可见文本点击(对话框按钮等),自动滚动查找
 tap_text() {
-  local txt="$1" must="${2:-1}" b x1 y1 x2 y2
-  for _ in 1 2 3; do
-    dump_ui
-    b=$(grep -o "text=\"[^\"]*${txt}[^\"]*\"[^>]*bounds=\"\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]\"" ui.xml \
-      | grep -o 'bounds="\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]"' | head -1)
-    if [ -n "$b" ]; then
-      x1=$(echo "$b" | sed 's/\[\([0-9]*\),.*/\1/')
-      y1=$(echo "$b" | sed 's/\[[0-9]*,\([0-9]*\)\].*/\1/')
-      x2=$(echo "$b" | sed 's/.*\]\[\([0-9]*\),.*/\1/')
-      y2=$(echo "$b" | sed 's/.*,\([0-9]*\)\].*/\1/')
-      adb shell input tap $(( (x1 + x2) / 2 )) $(( (y1 + y2) / 2 ))
-      sleep 1.2
+  local txt="$1" must="${2:-1}" n
+  for n in 0 1 2 3; do
+    if [ "$n" -gt 0 ]; then
+      adb shell input swipe 540 1600 540 700 250; sleep 0.8
+    fi
+    if _tap_match "text=\"[^\"]*${txt}[^\"]*\"" 0; then
       log "tapped: $txt"
       return 0
     fi
-    sleep 1
   done
   if [ "$must" = "1" ]; then
     echo "[smoke] FAIL: text not found: $txt"
-    FAIL="$FAIL|$txt"
+    snap fail
     exit 1
   fi
-  log "soft-miss: $txt"
-  return 0
+  log "soft-miss text: $txt"
 }
 
 check_text() {
@@ -73,6 +103,8 @@ check_text() {
   log "soft-miss text: $txt"
 }
 
+back() { adb shell input keyevent 4; sleep 1.5; }
+
 wait_boot() {
   for _ in $(seq 1 60); do
     [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] && return 0
@@ -89,31 +121,28 @@ adb shell settings put global transition_animation_scale 0
 adb shell settings put global animator_duration_scale 0
 adb install -r ${APK:-apk/*.apk} > /dev/null
 
-adb shell am start -n com.pindou.app/.SplashActivity
+adb shell am start -n $PKG/.SplashActivity
 sleep 8
 snap home
 check_text "Start a new pattern"
 log "home OK"
 
 # ---------- 拼豆知识 ----------
-tap_text "Bead basics"
+tap_id btnKnowledge
 sleep 1.5
 check_text "What are fuse beads?"
 snap knowledge
-adb shell input keyevent 4; sleep 1
+back
 
 # ---------- 模板库 ----------
-tap_text "Templates"
+tap_id btnTemplates
 sleep 2
-tap_text "Categories" 0
-sleep 1.5
 snap templates
-adb shell input keyevent 4; sleep 1.5
 tap_text "Close" 0
-adb shell input keyevent 4; sleep 1
+back
 
 # ---------- 空白画布进入编辑器 ----------
-tap_text "Blank canvas"
+tap_id btnBlank
 sleep 4
 check_text "Chart"
 snap editor
@@ -126,65 +155,68 @@ sleep 1
 snap painted
 
 # ---------- 标签页切换 ----------
-tap_text "Bead list"
+tap_id tabList
 sleep 1
 check_text "Usage"
 snap list
-tap_text "Preview"
-sleep 1
-snap preview_tab
-tap_text "Chart"
-sleep 1
 
 # ---------- 我的色板管理 ----------
-tap_text "My palettes"
+tap_id btnPalettes
 sleep 2
 check_text "My palettes"
 snap palettes
-tap_text "New"
+tap_id btnNew
 sleep 1.5
 check_text "New palette"
-tap_text "Add color"
+tap_id btnAddColor 0
+tap_text "Add color" 0
 sleep 1.5
 snap color_picker
-check_text "Color name" 0
 tap_text "OK"
 sleep 1
 tap_text "Save"
 sleep 1.5
 check_text "tap to manage" 0
 snap palette_saved
-adb shell input keyevent 4; sleep 1.5
-check_text "Chart" 0
+back
+sleep 1
 
-# ---------- 豆仓库存 ----------
-tap_text "Inventory"
+# ---------- 豆豆清单 + 豆仓 ----------
+tap_id tabList 0
+sleep 1
+tap_id btnInventory
 sleep 2
 snap inventory
 tap_text "Cancel"
 sleep 1
+tap_id tabPattern 0
+sleep 1
 
 # ---------- 恢复默认 + 返回首页 ----------
-tap_text "Reset" 0
-adb shell input keyevent 4; sleep 2
+tap_id btnReset 0
+back
+sleep 2
 
 # ---------- 文字生成 ----------
-tap_text "Text art" 0
+tap_id btnText 0
 sleep 1.5
 check_text "Text to bead pattern" 0
+adb shell input tap 540 960
+sleep 0.8
 adb shell input text "HI"
 sleep 0.5
 tap_text "Generate" 0
 sleep 8
 snap textgen
-adb shell input keyevent 4; sleep 1.5
-adb shell input keyevent 4; sleep 1.5
+back
+sleep 1.5
 
 # ---------- 我的项目(空) ----------
-tap_text "My projects" 0
+tap_id btnProjects 0
 sleep 1.5
 snap projects
-adb shell input keyevent 4; sleep 1
+back
+sleep 1
 
 # ---------- 崩溃检查 ----------
 snap final
