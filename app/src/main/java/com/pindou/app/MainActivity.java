@@ -804,6 +804,8 @@ public class MainActivity extends Activity {
             Toast.makeText(this, getString(R.string.err_image), Toast.LENGTH_SHORT).show();
             return;
         }
+        // 相机照的图基本都带 EXIF 旋转标记,不修正的话照片是横/歪的
+        bmp = com.pindou.app.util.ImageLoader.fixExif(getContentResolver(), uri, bmp);
         final android.graphics.Bitmap src = bmp;
         float dm = getResources().getDisplayMetrics().density;
         int maxW = Math.round(330 * dm);

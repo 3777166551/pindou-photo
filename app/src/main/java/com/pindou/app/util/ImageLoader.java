@@ -90,23 +90,54 @@ public final class ImageLoader {
         }
     }
 
+    /**
+     * 对"已解码"的 Bitmap 按 EXIF 方向修正。
+     * 供绕过 load() 直接 decodeStream 的路径使用(如识别图纸)。
+     */
+    public static Bitmap fixExif(ContentResolver cr, Uri uri, Bitmap bmp) {
+        try {
+            InputStream is = cr.openInputStream(uri);
+            if (is == null) return bmp;
+            ExifInterface e = new ExifInterface(is);
+            int orientation = e.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL);
+            is.close();
+            return rotate(bmp, orientation);
+        } catch (Exception e) {
+            return bmp;
+        }
+    }
+
+    /** 全部 8 种 EXIF 方向(含镜像/转置;此前只处理 3/6/8,部分照片仍是歪的) */
     private static Bitmap rotate(Bitmap bmp, int orientation) {
-        int deg;
+        Matrix m = new Matrix();
         switch (orientation) {
             case ExifInterface.ORIENTATION_ROTATE_90:
-                deg = 90;
+                m.postRotate(90);
                 break;
             case ExifInterface.ORIENTATION_ROTATE_180:
-                deg = 180;
+                m.postRotate(180);
                 break;
             case ExifInterface.ORIENTATION_ROTATE_270:
-                deg = 270;
+                m.postRotate(270);
+                break;
+            case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+                m.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+                m.postScale(1, -1);
+                break;
+            case ExifInterface.ORIENTATION_TRANSPOSE:
+                m.postRotate(90);
+                m.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_TRANSVERSE:
+                m.postRotate(270);
+                m.postScale(-1, 1);
                 break;
             default:
                 return bmp;
         }
-        Matrix m = new Matrix();
-        m.postRotate(deg);
         Bitmap nb = Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), m, true);
         if (nb != bmp) bmp.recycle();
         return nb;
