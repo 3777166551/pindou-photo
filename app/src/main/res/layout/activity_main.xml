@@ -177,7 +177,10 @@
 
                 <TextView style="@style/ToolCardIcon" android:text="🧩" />
                 <TextView style="@style/ToolCardTitle" android:text="@string/tool_templates" />
-                <TextView style="@style/ToolCardDesc" android:text="@string/tool_templates_desc" />
+                <TextView
+                    android:id="@+id/toolTemplatesDesc"
+                    style="@style/ToolCardDesc"
+                    android:text="@string/tool_templates_desc" />
             </LinearLayout>
         </LinearLayout>
 
@@ -222,6 +225,16 @@
                 <TextView style="@style/ToolCardIcon" android:text="📖" />
                 <TextView style="@style/ToolCardTitle" android:text="@string/tool_knowledge" />
                 <TextView style="@style/ToolCardDesc" android:text="@string/tool_knowledge_desc" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/btnInventoryHome"
+                style="@style/ToolCard"
+                android:layout_marginStart="6dp">
+
+                <TextView style="@style/ToolCardIcon" android:text="🎒" />
+                <TextView style="@style/ToolCardTitle" android:text="@string/tool_inventory" />
+                <TextView style="@style/ToolCardDesc" android:text="@string/tool_inventory_desc" />
             </LinearLayout>
         </LinearLayout>
 

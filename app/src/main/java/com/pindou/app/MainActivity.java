@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
+import android.widget.HorizontalScrollView;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -66,10 +67,25 @@ public class MainActivity extends Activity {
         // 按压缩放反馈:主页大按钮都是贴纸,按下去陷一下再弹回
         int[] pressIds = {R.id.btnGallery, R.id.btnCamera, R.id.btnText,
                 R.id.btnBlank, R.id.btnTemplates, R.id.btnProjects,
-                R.id.btnScanPattern, R.id.cardWatermark, R.id.btnKnowledge};
+                R.id.btnScanPattern, R.id.cardWatermark, R.id.btnKnowledge,
+                R.id.btnInventoryHome};
         for (int id : pressIds) {
             com.pindou.app.util.Anim.pressScale(findViewById(id));
         }
+        // 模板数量按实际打包数据实时显示(不再写死宣传数)
+        int tplTotal = 0;
+        for (Templates.Cat c : com.pindou.app.bead.TemplateAssets.allCategories()) {
+            tplTotal += c.items.length;
+        }
+        ((TextView) findViewById(R.id.toolTemplatesDesc))
+                .setText(getString(R.string.tool_templates_desc_n, tplTotal));
+        findViewById(R.id.btnInventoryHome).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new android.content.Intent(MainActivity.this,
+                        InventoryActivity.class));
+            }
+        });
         findViewById(R.id.btnScanPattern).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -209,123 +225,96 @@ public class MainActivity extends Activity {
 
     // ---------------- 图案模板库 ----------------
 
-    /** 模板库两级导航:先选分类,再进该分类的缩略图网格 */
+    /**
+     * 模板库:单屏完成"选分类 + 选图案"(旧的二级小弹窗层级深、格子小,
+     * 已替换为顶部分类标签 + 大缩略图网格)。
+     */
     private void showTemplateGallery() {
-        List<Templates.Cat> cats = TemplateAssets.allCategories();
+        final List<Templates.Cat> cats = TemplateAssets.allCategories();
+        int total = 0;
+        for (Templates.Cat c : cats) total += c.items.length;
 
-        GridView gv = new GridView(this);
-        gv.setNumColumns(2);
-        gv.setVerticalSpacing(dp(8));
-        gv.setHorizontalSpacing(dp(8));
-        gv.setPadding(dp(6), dp(10), dp(6), dp(10));
-        gv.setAdapter(new CategoryAdapter(cats));
-        gv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                showCategoryGrid(cats.get(position));
-            }
-        });
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
 
-        new AlertDialog.Builder(this)
-                .setTitle(getString(R.string.templates_title))
-                .setView(wrapScroll(gv))
-                .setPositiveButton(getString(R.string.btn_close), null)
-                .show();
-    }
+        // 顶部分类标签
+        final HorizontalScrollView hs = new HorizontalScrollView(this);
+        hs.setHorizontalScrollBarEnabled(false);
+        final LinearLayout chips = new LinearLayout(this);
+        chips.setOrientation(LinearLayout.HORIZONTAL);
+        chips.setPadding(dp(10), dp(8), dp(10), dp(4));
+        hs.addView(chips);
+        box.addView(hs, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
 
-    /** 某个分类的缩略图网格 */
-    private void showCategoryGrid(final Templates.Cat cat) {
-        GridView gv = new GridView(this);
+        final GridView gv = new GridView(this);
         gv.setNumColumns(4);
-        gv.setVerticalSpacing(dp(10));
-        gv.setPadding(dp(8), dp(12), dp(8), dp(12));
-        gv.setAdapter(new ThumbAdapter(cat));
+        gv.setVerticalSpacing(dp(12));
+        gv.setHorizontalSpacing(dp(6));
+        gv.setPadding(dp(10), dp(10), dp(10), dp(14));
+        final ThumbAdapter adapter = new ThumbAdapter(cats.get(0));
+        gv.setAdapter(adapter);
         gv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                openTemplate(cat.items[position]);
+            public void onItemClick(AdapterView<?> parent, View view,
+                                    int position, long id) {
+                openTemplate(adapter.cat.items[position]);
             }
         });
+        box.addView(gv, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
 
-        new AlertDialog.Builder(this)
-                .setTitle(cat.name)
-                .setView(wrapScroll(gv))
-                .setPositiveButton(getString(R.string.btn_categories), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface d, int w) {
-                        showTemplateGallery();
+        for (int i = 0; i < cats.size(); i++) {
+            final int idx = i;
+            TextView chip = new TextView(this);
+            chip.setText(cats.get(i).name);
+            chip.setTextSize(13);
+            chip.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            chip.setTextColor(0xFF22B57F);
+            chip.setBackgroundResource(R.drawable.bg_chip);
+            chip.setElevation(dp(2));
+            chip.setPadding(dp(14), dp(8), dp(14), dp(8));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            lp.rightMargin = dp(8);
+            chip.setLayoutParams(lp);
+            chip.setAlpha(i == 0 ? 1f : 0.55f);
+            chip.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    adapter.setCat(cats.get(idx));
+                    for (int j = 0; j < chips.getChildCount(); j++) {
+                        chips.getChildAt(j).setAlpha(j == idx ? 1f : 0.55f);
                     }
-                })
-                .show();
+                }
+            });
+            chips.addView(chip);
+        }
+
+        android.app.AlertDialog d = new android.app.AlertDialog.Builder(this)
+                .setTitle(getString(R.string.templates_title)
+                        + " · " + getString(R.string.tool_templates_desc_n, total))
+                .setView(box)
+                .setPositiveButton(getString(R.string.btn_close), null)
+                .create();
+        d.show();
+        d.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,
+                (int) (getResources().getDisplayMetrics().heightPixels * 0.8f));
     }
 
-    private ScrollView wrapScroll(View v) {
-        ScrollView sc = new ScrollView(this);
-        sc.addView(v);
-        com.pindou.app.util.Skin.apply(sc);
-        return sc;
-    }
-
-    /** 分类选择适配器:emoji 名 + 数量 */
-    private class CategoryAdapter extends BaseAdapter {
-        final List<Templates.Cat> cats;
-
-        CategoryAdapter(List<Templates.Cat> cats) {
-            this.cats = cats;
-        }
-
-        @Override
-        public int getCount() {
-            return cats.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return cats.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            LinearLayout cell = new LinearLayout(MainActivity.this);
-            cell.setOrientation(LinearLayout.VERTICAL);
-            cell.setGravity(Gravity.CENTER);
-            int pad = dp(10);
-            cell.setPadding(pad, pad, pad, pad);
-            cell.setBackgroundResource(R.drawable.bg_card_sketch);
-
-            Templates.Cat cat = cats.get(position);
-            int sp = cat.name.indexOf(' ');
-            TextView icon = new TextView(MainActivity.this);
-            icon.setText(sp > 0 ? cat.name.substring(0, sp) : "🧩");
-            icon.setTextSize(26);
-            cell.addView(icon);
-
-            TextView name = new TextView(MainActivity.this);
-            name.setText(sp > 0 ? cat.name.substring(sp + 1) : cat.name);
-            name.setTextColor(0xFF1F2430);
-            name.setTextSize(14);
-            cell.addView(name);
-
-            TextView count = new TextView(MainActivity.this);
-            count.setText(getString(R.string.fmt_cat_count, cat.items.length));
-            count.setTextColor(0xFF8A8F98);
-            count.setTextSize(11);
-            cell.addView(count);
-            return cell;
-        }
-    }
-
-    /** 缩略图网格适配器 */
+    /** 缩略图网格适配器(64dp 大图,随分类标签切换) */
     private class ThumbAdapter extends BaseAdapter {
-        final Templates.Cat cat;
+        Templates.Cat cat;
 
         ThumbAdapter(Templates.Cat cat) {
             this.cat = cat;
+        }
+
+        void setCat(Templates.Cat cat) {
+            this.cat = cat;
+            notifyDataSetChanged();
         }
 
         @Override
@@ -351,13 +340,13 @@ public class MainActivity extends Activity {
 
             ImageView iv = new ImageView(MainActivity.this);
             iv.setImageBitmap(Templates.buildThumb(cat.items[position]));
-            int side = dp(56);
+            int side = dp(64);
             cell.addView(iv, new LinearLayout.LayoutParams(side, side));
 
             TextView t = new TextView(MainActivity.this);
             t.setText(cat.items[position].name);
             t.setTextColor(0xFF444444);
-            t.setTextSize(10);
+            t.setTextSize(11);
             t.setMaxLines(1);
             cell.addView(t);
             return cell;
