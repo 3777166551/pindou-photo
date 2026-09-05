@@ -28,7 +28,7 @@
 
 | 素材 | 许可证 | 来源 |
 |---|---|---|
-| 内置模板库中的 176 个流行表情图案(流行表情 / 萌宠动物 / 美食饮料 / 花草节日) | MIT | https://github.com/microsoft/fluentui-emoji |
+| 内置模板库中的 277 个流行图案(流行表情 / 萌宠动物 / 美食饮料 / 花草节日 / 游戏音乐 / 运动奖牌 / 出行工具 / 潮流符号) | MIT | https://github.com/microsoft/fluentui-emoji |
 
 - 内置模板库基于 **Microsoft Fluent Emoji**(3D 风格位图)生成:缩放至 32×32
   后逐像素量化映射到本 APP 的 120 色通用色板,以像素网格数据形式随 APP 分发。

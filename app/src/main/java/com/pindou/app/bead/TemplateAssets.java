@@ -22,6 +22,14 @@ public final class TemplateAssets {
                 TemplateEmojiData.EMOJI_FOOD_SPECS, TemplateEmojiData.EMOJI_FOOD_NAMES));
         cats.add(cuteCategory("🌸 花草节日",
                 TemplateEmojiData.EMOJI_NATURE_SPECS, TemplateEmojiData.EMOJI_NATURE_NAMES));
+        cats.add(cuteCategory("🎮 游戏音乐",
+                TemplateEmojiData.EMOJI_GAME_SPECS, TemplateEmojiData.EMOJI_GAME_NAMES));
+        cats.add(cuteCategory("⚽ 运动奖牌",
+                TemplateEmojiData.EMOJI_SPORT_SPECS, TemplateEmojiData.EMOJI_SPORT_NAMES));
+        cats.add(cuteCategory("🚗 出行工具",
+                TemplateEmojiData.EMOJI_TRAVEL_SPECS, TemplateEmojiData.EMOJI_TRAVEL_NAMES));
+        cats.add(cuteCategory("💎 潮流符号",
+                TemplateEmojiData.EMOJI_SYMBOL_SPECS, TemplateEmojiData.EMOJI_SYMBOL_NAMES));
         return cats;
     }
 
