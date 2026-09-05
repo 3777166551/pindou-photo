@@ -554,11 +554,14 @@ public class PatternView extends View {
                 getResources().getDisplayMetrics());
     }
 
-    /** 画幅正好放进控件时每格的像素 */
+    /** 画幅正好放进控件时每格的像素(效果图模式额外预留板底边距,避免 zoom=1 两侧被裁) */
     private float fitCell() {
         if (pattern == null || pattern.cols == 0 || pattern.rows == 0) return 0f;
         float pad = dp(10);
-        return Math.min((getWidth() - 2 * pad) / pattern.cols, (getHeight() - 2 * pad) / pattern.rows);
+        float m = marginRatio();
+        return Math.min(
+                (getWidth() - 2 * pad) / (pattern.cols + 2 * m),
+                (getHeight() - 2 * pad) / (pattern.rows + 2 * m));
     }
 
     private float marginRatio() {

@@ -246,6 +246,7 @@ public class EditorActivity extends Activity {
     private View btnAiRestore;
     private View btnRemoveWatermark;
     private View btnStyleGhibli;
+    private View btnCrop;
     private View btnAssistLocate, btnAssistCalendar, btnBrushMirror;
     private View assistToolsRow;
     private boolean paintMirror = false;
@@ -419,6 +420,7 @@ public class EditorActivity extends Activity {
         btnAiRestore = findViewById(R.id.btnAiRestore);
         btnRemoveWatermark = findViewById(R.id.btnRemoveWatermark);
         btnStyleGhibli = findViewById(R.id.btnStyleGhibli);
+        btnCrop = findViewById(R.id.btnCrop);
         btnAssistLocate = findViewById(R.id.btnAssistLocate);
         btnAssistCalendar = findViewById(R.id.btnAssistCalendar);
         btnBrushMirror = findViewById(R.id.btnBrushMirror);
@@ -1231,6 +1233,56 @@ public class EditorActivity extends Activity {
                 showStyleDialog();
             }
         });
+        btnCrop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showCropDialog();
+            }
+        });
+    }
+
+    // ---------------- 取景裁剪 ----------------
+
+    /** 拖动/缩放选区,确定后按选区重新生成(解决居中裁剪不可调的问题) */
+    private void showCropDialog() {
+        if (source == null) {
+            Toast.makeText(this, getString(R.string.err_no_photo), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        com.pindou.app.view.CropView cv = new com.pindou.app.view.CropView(this);
+        cv.setup(source, (float) cols / rows);
+        int h = getResources().getDisplayMetrics().heightPixels;
+
+        AlertDialog cd = new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.crop_title))
+                .setMessage(getString(R.string.crop_hint))
+                .setView(cv)
+                .setPositiveButton(getString(R.string.btn_ok), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int w) {
+                        Bitmap cropped = cv.apply();
+                        if (cropped == null) {
+                            Toast.makeText(EditorActivity.this,
+                                    getString(R.string.err_infer), Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        if (cropped != source) {
+                            if (source != null && source != originalSource) {
+                                source.recycle();
+                            }
+                            source = cropped;
+                        }
+                        invalidateEdits();
+                        regenerate();
+                        Toast.makeText(EditorActivity.this,
+                                getString(R.string.crop_done), Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton(getString(R.string.btn_cancel), null)
+                .create();
+        cd.show();
+        cd.getWindow().setLayout(
+                ViewGroup.LayoutParams.MATCH_PARENT, (int) (h * 0.85f));
     }
 
     // ---------------- AI 风格化(AnimeGANv3,离线) ----------------

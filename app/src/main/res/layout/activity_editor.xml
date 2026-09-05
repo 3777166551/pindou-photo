@@ -1185,6 +1185,20 @@
                         android:text="@string/transform_hint"
                         android:textColor="@color/textSub"
                         android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/btnCrop"
+                        android:layout_width="match_parent"
+                        android:layout_height="34dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_chip"
+                        android:clickable="true"
+                        android:elevation="2dp"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:text="@string/btn_crop"
+                        android:textColor="@color/text_chip"
+                        android:textSize="11sp" />
                 </LinearLayout>
 
                 <TextView
