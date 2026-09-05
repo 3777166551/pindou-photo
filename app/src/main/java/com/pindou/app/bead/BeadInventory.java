@@ -79,6 +79,23 @@ public final class BeadInventory {
         return out;
     }
 
+    /** 登记过的全部颜色 RGB(含数量 0 的);HashMap 无序,调用方自行排序 */
+    public static synchronized List<Integer> allColors(Context c) {
+        load(c);
+        List<Integer> out = new ArrayList<>();
+        for (Integer k : COUNTS.keySet()) {
+            out.add(0xFF000000 | k);
+        }
+        return out;
+    }
+
+    /** 从豆仓删除一种颜色(下次 get 恢复"未登记"状态) */
+    public static synchronized void remove(Context c, int rgb) {
+        load(c);
+        COUNTS.remove(rgb & 0xFFFFFF);
+        save(c);
+    }
+
     private static synchronized void save(Context c) {
         try {
             JSONObject d = new JSONObject();
