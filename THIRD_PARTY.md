@@ -28,7 +28,14 @@
 
 | 素材 | 许可证 | 来源 |
 |---|---|---|
-| 内置模板库中的 96 个专业像素素材(萌宠动物 / 情绪气泡 / 迷你地牢) | CC0 1.0 (Public Domain) | https://kenney.nl |
+| 内置模板库中的 176 个流行表情图案(流行表情 / 萌宠动物 / 美食饮料 / 花草节日) | MIT | https://github.com/microsoft/fluentui-emoji |
+
+- 内置模板库基于 **Microsoft Fluent Emoji**(3D 风格位图)生成:缩放至 32×32
+  后逐像素量化映射到本 APP 的 120 色通用色板,以像素网格数据形式随 APP 分发。
+  Fluent Emoji 以 MIT 许可证发布,版权归 Microsoft 所有;按 MIT 要求在此保留
+  许可声明。量化与生成脚本见 `tools/emoji_src/`(仓库不分发原始位图)。
+- 历史版本(v2.26~v2.35)的模板基于 Kenney 素材(CC0 公共领域,https://kenney.nl),
+  v2.36 起已替换为上述 Fluent Emoji 版本。
 
 ## 色板数据
 
