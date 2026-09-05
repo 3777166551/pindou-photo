@@ -72,13 +72,20 @@ public class MainActivity extends Activity {
         for (int id : pressIds) {
             com.pindou.app.util.Anim.pressScale(findViewById(id));
         }
-        // 模板数量按实际打包数据实时显示(不再写死宣传数)
+        // 模板数量按实际打包数据实时显示(不再写死宣传数)。
+        // 模板数据解析包在 try 里:数据异常时降级显示,绝不阻塞启动
         int tplTotal = 0;
-        for (Templates.Cat c : com.pindou.app.bead.TemplateAssets.allCategories()) {
-            tplTotal += c.items.length;
+        try {
+            for (Templates.Cat c : com.pindou.app.bead.TemplateAssets.allCategories()) {
+                tplTotal += c.items.length;
+            }
+        } catch (Throwable t) {
+            tplTotal = 0;
         }
         ((TextView) findViewById(R.id.toolTemplatesDesc))
-                .setText(getString(R.string.tool_templates_desc_n, tplTotal));
+                .setText(tplTotal > 0
+                        ? getString(R.string.tool_templates_desc_n, tplTotal)
+                        : getString(R.string.tool_templates_desc));
         findViewById(R.id.btnInventoryHome).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
