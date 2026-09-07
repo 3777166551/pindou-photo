@@ -123,6 +123,19 @@ Kenney 素材 + 社区精选开始。
   SSRF 拦（网络请求用 curl + 固定域名，或先 DNS 校验公网 IP）。
 - **android-emulator MCP**：插件已装但本机无 SDK/模拟器，MCP 工具未连接；
   真机验证走 CI 云端模拟器（已建成）或用户提供 USB 设备。
+- **★ UI 测试 = 推 git 走 CI 云端模拟器**（2026-09-07 实战验证，标准流程）：
+  本机缺 hypervisor（装 AEHD/WHPX 要管理员+重启，打扰用户），且模拟器 37.x
+  拒绝在 x86 主机跑 arm64 镜像，**本地模拟器路线不可行**。标准做法：
+  ①改完 UI → 本地 `compile_check.bat` + `qa\run_tests.bat` 全绿 →
+  ②push main（github 直连间歇抽风，重试 5~15 次，每次间隔 30~45s 可过；
+  `git -c http.version=HTTP/1.1 push` 用一次性 token URL，不落盘）→
+  ③CI 自动跑 test（qa 69 项）+ `emulator-smoke`（API30 x86_64 + KVM，
+  `qa/ui_smoke.sh` 全点击走查约 7 分钟）→
+  ④拉截图验收：`GET /repos/3777166551/pindou-photo/actions/runs/{id}/artifacts`
+  （公开仓库匿名也可读）→ 下载 `smoke-screens` zip 解压，
+  13 张截图（首页/知识/模板/编辑/涂画/清单/色板/取色器/豆仓/文字/项目）逐张人眼审。
+  实测存档：`qa\ci_shots\`（v2.39 修复前）、`qa\ci_shots_38\`(修复后)。
+  坑：CI 截图是 en 环境 + 模拟器 emoji 字体缺字（🧰 渲染成怪块），别当 bug。
 - **Firecrawl**：插件已装，`firecrawl` CLI 需用户设置 FIRECRAWL_API_KEY
   后才可用（本机 IP 无 key 会被拒）。
 - **本机编码**：cmd 控制台是 GBK，UTF-8 中文输出会乱码但不影响实际数据；

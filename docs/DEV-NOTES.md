@@ -187,3 +187,19 @@ GenPastelBg 老代码没踩坑是因为它用 hasAlpha(rgb,0f) 保住了 RGB。
 - 公共类文件名必须与类名一致(SelectionPainter 差点以 SelectionStyle.java
   入库,javac 直接拒);PowerShell -replace 批量改色后用
   `[IO.File]::WriteAllText(路径, 内容, UTF8Encoding($false))` 落盘防 BOM。
+
+## 17. 按钮 drawable 别用 `<ripple>` 壳(v2.39 教训,CI 截图验收发现)
+
+layer-list 里包 `<ripple><shape>…</shape></ripple>` 的按钮背景
+(bg_btn_primary/bg_btn_secondary),在 API 30 x86_64 模拟器(swiftshader)
+上整层内容(糖果粉渐变+墨描边)渲染成磨砂半透明灰,像旧玻璃拟态;
+同结构的纯 shape 版本(bg_card/bg_tab_track/bg_chip)全部正常。
+修复=去掉 ripple 壳;按压反馈由 Anim.pressScale 缩放承担,无损失。
+静态审代码看不出来,是 CI 云端模拟器截图验收(见 ROADMAP 四)抓出来的——
+UI 改动必须过一遍 CI 截图,别只跑 qa。
+
+## 18. UI 测试走"推 git → CI 云端模拟器"(2026-09-07 定型)
+
+本机不可行路线:x86_64 镜像要 hypervisor(AEHD/WHPX 需管理员+重启);
+模拟器 37.x 直接拒绝 x86 主机跑 arm64 镜像。标准流程、拉截图产物步骤、
+en 环境与 emoji 字体的坑,见 ROADMAP.md「四」的 ★ 条目,不赘述。
