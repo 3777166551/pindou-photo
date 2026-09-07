@@ -106,5 +106,8 @@ public class TestPatternEngine {
                         && PatternEngine.symbolFor(52).equals("0")
                         && PatternEngine.symbolFor(61).equals("9")
                         && PatternEngine.symbolFor(62).equals("AA"));
+
+        System.out.println("TestPatternEngine: " + passed + " passed, " + failed + " failed");
+        if (failed > 0) System.exit(1);
     }
 }
