@@ -3,48 +3,48 @@ package com.pindou.app;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Canvas;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Shader;
 import android.os.Bundle;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.BounceInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 
 import java.util.Random;
 
 /**
- * 开屏拼豆动画(纯 Canvas,零依赖):
- * 1. 一颗拼豆从天上弹跳落下(3D 感:高光 + 渐变厚度描边),砸在拼板上;
- * 2. 弹起的一瞬把周围的豆一颗颗"弹"进各自的孔(依次翻滚落位,类瀑布流);
- * 3. 豆全部落位后整板轻微果冻抖动,logo 以 pop 贴纸感登场;
- * 4. 停留半秒进主界面。全程约 1.6 秒,可点任意处跳过。
- * 二次元/3D 感来自:overshoot 弹性曲线、豆子的厚度描边+镜面高光、落位时的
- * squash & stretch(压扁回弹),这是动画十二法则里最出"3D 感"的三件套。
+ * 开屏动画 v2.39「贴纸拍击」(纯 Canvas,零依赖,约 1.6s,点任意处跳过):
+ * 1. 豆雨从四面八方飞入拼板(每颗独立起角/延迟/弧线,落位 squash 回弹);
+ * 2. 白色墨描边贴纸 logo 卡"啪"地拍下(大→小过冲 + 微旋转,与贴纸卡同语言);
+ * 3. 拍击瞬间冲击环扩散 + 糖果纸屑迸开;
+ * 4. 高光斜扫贴纸,停留后淡入主界面。
+ * 节奏:飞入 620ms → 拍击 340ms → 高光 340ms(与冲击特效并行)→ 停 360ms。
+ * 改花样:行列在 COLS/ROWS,节奏在 startShow 的时长,贴纸样式在 drawSticker。
  */
 public class SplashActivity extends Activity {
 
-    /** 落下的拼豆颜色(粉彩系:薄荷/薰衣草/蜜桃/天蓝/柠黄/樱粉) */
+    /** 拼豆颜色(糖果贴纸风点缀色) */
     private static final int[] BEAD_COLORS = {
-            0xFF34C08B, 0xFF9B8CF2, 0xFFFF9A62, 0xFF4FA8F5, 0xFFFFD166, 0xFFFF7B9C
+            0xFF35C98E, 0xFFA78BFA, 0xFFFF9F6E, 0xFF56C2F7, 0xFFFFCF56, 0xFFFF6E9C
     };
 
     private static final int COLS = 7;
     private static final int ROWS = 5;
 
-    private PegBoardView board;
+    private SplashView board;
     private boolean skipped = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        board = new PegBoardView();
+        board = new SplashView();
         setContentView(board);
 
         // 点任意处跳过
@@ -60,45 +60,52 @@ public class SplashActivity extends Activity {
     }
 
     private void startShow() {
-        // 阶段1:领头豆落下(bounce)
-        ValueAnimator drop = ValueAnimator.ofFloat(0f, 1f);
-        drop.setDuration(520);
-        drop.setInterpolator(new BounceInterpolator());
-        drop.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+        DecelerateInterpolator decel = new DecelerateInterpolator(1.4f);
+
+        // 阶段1:豆从四面八方飞入落位
+        ValueAnimator fly = ValueAnimator.ofFloat(0f, 1f);
+        fly.setDuration(620);
+        fly.setInterpolator(decel);
+        fly.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator a) {
-                board.leaderT = (Float) a.getAnimatedValue();
+                board.flyT = (Float) a.getAnimatedValue();
                 board.invalidate();
             }
         });
 
-        // 阶段2:其余豆依次落位(交错启动 + overshoot)
-        ValueAnimator fill = ValueAnimator.ofFloat(0f, 1f);
-        fill.setDuration(760);
-        fill.setInterpolator(new DecelerateInterpolator(1.6f));
-        fill.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+        // 阶段2:贴纸 logo 拍下(overshoot = 拍击的"啪"感)
+        ValueAnimator slap = ValueAnimator.ofFloat(0f, 1f);
+        slap.setDuration(340);
+        slap.setInterpolator(new OvershootInterpolator(2.2f));
+        slap.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator a) {
-                board.fillT = (Float) a.getAnimatedValue();
+                board.slapT = (Float) a.getAnimatedValue();
                 board.invalidate();
             }
         });
 
-        // 阶段3:果冻抖动 + logo 弹出
-        ValueAnimator jelly = ValueAnimator.ofFloat(0f, 1f);
-        jelly.setDuration(360);
-        jelly.setInterpolator(new OvershootInterpolator(2.2f));
-        jelly.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+        // 阶段3:高光扫过 + 冲击环/纸屑(冲击特效在阶段3开头一次性放出)
+        ValueAnimator shine = ValueAnimator.ofFloat(0f, 1f);
+        shine.setDuration(340);
+        shine.setInterpolator(decel);
+        shine.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator a) {
-                board.jellyT = (Float) a.getAnimatedValue();
+                board.fxT = (Float) a.getAnimatedValue(); // 与高光同进度,保证走满 0→1
+                board.shineT = (Float) a.getAnimatedValue();
                 board.invalidate();
             }
         });
 
         AnimatorSet set = new AnimatorSet();
-        set.playSequentially(drop, fill, jelly);
+        set.playSequentially(fly, slap, shine);
         set.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+            }
+
             @Override
             public void onAnimationEnd(Animator animation) {
                 board.postDelayed(new Runnable() {
@@ -106,7 +113,7 @@ public class SplashActivity extends Activity {
                     public void run() {
                         if (!skipped) goMain();
                     }
-                }, 520);
+                }, 360);
             }
         });
         set.start();
@@ -119,33 +126,49 @@ public class SplashActivity extends Activity {
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
-    /** 拼板动画画布 */
-    private class PegBoardView extends View {
+    /** 开屏画布 */
+    private class SplashView extends View {
 
-        float leaderT;   // 领头豆下落进度 0..1
-        float fillT;     // 其余豆落位进度 0..1
-        float jellyT;    // 果冻抖动进度 0..1
+        float flyT;    // 豆飞入进度 0..1
+        float slapT;   // 贴纸拍击进度 0..1
+        float fxT;     // 冲击环/纸屑进度 0..1
+        float shineT;  // 高光扫过进度 0..1
 
-        final Paint pegPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         final Paint boardPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        final Paint pegPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         final Paint beadPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         final Paint ringPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         final Paint glossPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        final Paint stickerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        final Paint strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        final Paint confettiPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         final Random rnd = new Random(42);
-        /** 每格的固定随机延迟与颜色(保证每次进 APP 摆设一致) */
+        /** 每格固定的飞行起点角/距离/延迟与颜色(保证每次进 APP 摆设一致) */
+        final float[] angles = new float[COLS * ROWS];
+        final float[] dists = new float[COLS * ROWS];
         final float[] delays = new float[COLS * ROWS];
         final int[] colors = new int[COLS * ROWS];
+        /** 纸屑:角度/距离/色 */
+        final float[] confAngle = new float[14];
+        final float[] confDist = new float[14];
+        final int[] confColor = new int[14];
 
-        PegBoardView() {
+        SplashView() {
             super(SplashActivity.this);
             setBackgroundColor(0xFFFFF6ED);
             setClickable(true);
-            for (int i = 0; i < delays.length; i++) {
+            for (int i = 0; i < COLS * ROWS; i++) {
+                angles[i] = rnd.nextFloat() * 2f * (float) Math.PI;
+                dists[i] = 0.55f + rnd.nextFloat() * 0.7f;
                 delays[i] = rnd.nextFloat();
                 colors[i] = BEAD_COLORS[rnd.nextInt(BEAD_COLORS.length)];
             }
-            // 领头豆固定是主题珊瑚橘
-            colors[(ROWS / 2) * COLS + COLS / 2] = BEAD_COLORS[0];
+            for (int i = 0; i < confAngle.length; i++) {
+                confAngle[i] = rnd.nextFloat() * 2f * (float) Math.PI;
+                confDist[i] = 0.5f + rnd.nextFloat();
+                confColor[i] = BEAD_COLORS[rnd.nextInt(BEAD_COLORS.length)];
+            }
         }
 
         @Override
@@ -157,14 +180,14 @@ public class SplashActivity extends Activity {
             float boardW = COLS * cell;
             float boardH = ROWS * cell;
             float ox = (w - boardW) / 2f;
-            float oy = (h - boardH) / 2f - h * 0.04f;
+            float oy = (h - boardH) / 2f - h * 0.06f;
+            float diag = (float) Math.sqrt(w * w + h * h);
 
-            // 拼板底
+            // 拼板底 + 孔
             boardPaint.setColor(0xFFFFFFFF);
             float r = cell * 0.5f;
             canvas.drawRoundRect(ox - r, oy - r, ox + boardW + r, oy + boardH + r,
                     r * 1.6f, r * 1.6f, boardPaint);
-            // 孔
             pegPaint.setColor(0xFFF2DFD2);
             for (int y = 0; y < ROWS; y++) {
                 for (int x = 0; x < COLS; x++) {
@@ -173,102 +196,153 @@ public class SplashActivity extends Activity {
                 }
             }
 
-            // 果冻抖动:整体轻微 squash & stretch
-            float sx = 1f + jellyT * 0.05f * (float) Math.sin(jellyT * Math.PI * 3);
-            float sy = 1f - jellyT * 0.05f * (float) Math.sin(jellyT * Math.PI * 3);
-            canvas.save();
-            canvas.translate(ox + boardW / 2f, oy + boardH / 2f);
-            canvas.scale(sx, sy);
-            canvas.translate(-(ox + boardW / 2f), -(oy + boardH / 2f));
-
-            boolean leader = leaderT < 1f;
-            int mid = (ROWS / 2) * COLS + COLS / 2;
+            // 豆雨:每颗从自己的随机方向飞入,落位压扁回弹
+            float maxDelay = 0.55f;
             for (int y = 0; y < ROWS; y++) {
                 for (int x = 0; x < COLS; x++) {
                     int i = y * COLS + x;
+                    float delay = delays[i] * maxDelay;
+                    float t = (flyT - delay) / (1f - maxDelay);
+                    if (t <= 0f) continue;
+                    t = Math.min(1f, t);
                     float cx = ox + (x + 0.5f) * cell;
                     float cy = oy + (y + 0.5f) * cell;
-                    float radius = cell * 0.46f;
-
-                    if (i == mid) {
-                        // 领头豆:bounce 下落
-                        if (leaderT <= 0f) continue;
-                        float bounce = bounceCurve(leaderT);
-                        float dy = (1f - bounce) * -h * 0.75f;
-                        drawBead(canvas, cx, cy + dy, radius, colors[i],
-                                leader ? 1f : 1f, 1f);
-                    } else {
-                        // 其余豆:按随机延迟依次落位,带压扁回弹
-                        float delay = delays[i] * 0.55f;
-                        float t = (fillT - delay) / 0.45f;
-                        if (t <= 0f) continue;
-                        t = Math.min(1f, t);
-                        float dy = (1f - t) * -h * 0.5f;
-                        // 落位瞬间的 squash & stretch:落地压扁再回弹
-                        float squash = (float) Math.sin(t * Math.PI);
-                        drawBead(canvas, cx, cy + dy, radius, colors[i],
-                                1f + squash * 0.12f, 1f - squash * 0.12f);
-                    }
+                    // 起点 = 终点沿随机方向推出去,飞入时收拢 + 微弧线
+                    float off = (1f - t) * diag * dists[i] * 0.35f;
+                    float sx = cx + (float) Math.cos(angles[i]) * off;
+                    float sy = cy + (float) Math.sin(angles[i]) * off
+                            - (float) Math.sin(t * Math.PI) * h * 0.04f;
+                    // 落位瞬间 squash & stretch
+                    float q = t > 0.82f
+                            ? (float) Math.sin((t - 0.82f) / 0.18f * Math.PI) : 0f;
+                    drawBead(canvas, sx, sy, cell * 0.46f, colors[i],
+                            1f + q * 0.16f, 1f - q * 0.16f,
+                            Math.min(1f, t * 5f));
                 }
             }
-            canvas.restore();
 
-            // 标题贴纸弹出(jelly 阶段)
-            if (jellyT > 0f) {
-                Paint tp = new Paint(Paint.ANTI_ALIAS_FLAG);
-                tp.setColor(0xFF40354E);
-                tp.setTextAlign(Paint.Align.CENTER);
-                tp.setTextSize(w * 0.085f);
-                tp.setFakeBoldText(true);
-                float pop = overshoot(jellyT);
-                canvas.save();
-                canvas.translate(w / 2f, oy + boardH + h * 0.1f);
-                canvas.scale(pop, pop);
-                canvas.drawText(getString(R.string.app_name), 0, 0, tp);
-                tp.setTextSize(w * 0.036f);
-                tp.setColor(0xFF9A8FA6);
-                canvas.drawText(getString(R.string.main_footer), 0, w * 0.06f, tp);
-                canvas.restore();
+            // 贴纸拍击之后才有冲击特效
+            if (slapT > 0f) {
+                float stickerCx = w / 2f;
+                float stickerCy = oy + boardH + h * 0.1f;
+
+                // 冲击环:拍实的一瞬扩散
+                if (fxT > 0f && fxT < 1f) {
+                    ringPaint.setStyle(Paint.Style.STROKE);
+                    ringPaint.setStrokeWidth(dp(3f) * (1f - fxT) + dp(1f));
+                    ringPaint.setColor(0x66FFCF56);
+                    float rr = stickerW() * (0.5f + fxT * 0.55f);
+                    canvas.drawCircle(stickerCx, stickerCy, rr, ringPaint);
+                }
+
+                // 糖果纸屑:小方片飞散 + 旋转感(用长短轴模拟)
+                if (fxT > 0f) {
+                    float ct = Math.min(1f, fxT);
+                    for (int i = 0; i < confAngle.length; i++) {
+                        float d = stickerW() * (0.55f + confDist[i] * 0.75f)
+                                * (float) Math.sqrt(ct);
+                        float px = stickerCx + (float) Math.cos(confAngle[i]) * d;
+                        float py = stickerCy + (float) Math.sin(confAngle[i]) * d
+                                + ct * ct * dp(26f);   // 微下坠
+                        confettiPaint.setColor(confColor[i]);
+                        confettiPaint.setAlpha(Math.round(255 * (1f - ct)));
+                        float cw = dp(4.5f) * (1f - ct * 0.5f);
+                        canvas.drawCircle(px, py, cw, confettiPaint);
+                    }
+                    confettiPaint.setAlpha(255);
+                }
+
+                drawSticker(canvas, stickerCx, stickerCy, w);
             }
         }
 
-        /** 3D 感拼豆:底色 + 厚度描边 + 镜面高光 */
+        /** 贴纸宽度(拍击环/纸屑的尺度基准) */
+        float stickerW() {
+            float tw = textPaint.measureText(getString(R.string.app_name));
+            return tw + dp(44f);
+        }
+
+        /** 白色墨描边贴纸:大→小过冲拍下 + 微旋转,拍定后高光斜扫 */
+        private void drawSticker(Canvas c, float cx, float cy, float w) {
+            String name = getString(R.string.app_name);
+            textPaint.setColor(0xFF40354E);
+            textPaint.setTextAlign(Paint.Align.CENTER);
+            textPaint.setTextSize(w * 0.085f);
+            textPaint.setFakeBoldText(true);
+            float tw = textPaint.measureText(name);
+            float th = textPaint.getTextSize();
+            float sw = tw + dp(44f);
+            float sh = th + dp(30f);
+
+            // 拍击:scale 1.9→1(overshoot 会短暂压到 0.9x 再回弹),旋转 -14°→-4°
+            float e = slapT;
+            float scale = 1.9f - 0.9f * e;
+            float rot = -14f + 10f * e;
+            float alpha = Math.min(1f, slapT * 4f);
+
+            RectF card = new RectF(cx - sw / 2f, cy - sh / 2f,
+                    cx + sw / 2f, cy + sh / 2f);
+
+            c.save();
+            c.translate(cx, cy);
+            c.rotate(rot);
+            c.scale(scale, scale);
+            // 墨色硬投影(贴纸语言)
+            stickerPaint.setColor(0x6640354E);
+            c.drawRoundRect(card.left - cx + dp(3f), card.top - cy + dp(4f),
+                    card.right - cx + dp(3f), card.bottom - cy + dp(4f),
+                    dp(16f), dp(16f), stickerPaint);
+            // 卡身
+            stickerPaint.setColor(0xFFFFFFFF);
+            stickerPaint.setAlpha(Math.round(255 * alpha));
+            c.drawRoundRect(card.left - cx, card.top - cy,
+                    card.right - cx, card.bottom - cy, dp(16f), dp(16f), stickerPaint);
+            // 2dp 墨描边
+            strokePaint.setStyle(Paint.Style.STROKE);
+            strokePaint.setStrokeWidth(dp(2f));
+            strokePaint.setColor(0xFF40354E);
+            strokePaint.setAlpha(Math.round(255 * alpha));
+            c.drawRoundRect(card.left - cx, card.top - cy,
+                    card.right - cx, card.bottom - cy, dp(16f), dp(16f), strokePaint);
+            // 高光斜扫(裁进卡身)
+            if (shineT > 0f && shineT < 1f) {
+                float bandW = sw * 0.45f;
+                float x0 = card.left - cx - bandW + (sw + bandW * 2f) * shineT;
+                shinePaint.setShader(new LinearGradient(x0, cy - sh, x0 + bandW, cy + sh,
+                        0x00FFFFFF, 0x99FFFFFF, Shader.TileMode.CLAMP));
+                c.drawRect(card.left - cx, card.top - cy,
+                        card.right - cx, card.bottom - cy, shinePaint);
+                shinePaint.setShader(null);
+            }
+            // 文字
+            textPaint.setAlpha(Math.round(255 * alpha));
+            c.drawText(name, 0, th * 0.34f, textPaint);
+            c.restore();
+        }
+
+        final Paint shinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+        /** 糖果拼豆:底色 + 墨调细描边 + 镜面高光 */
         private void drawBead(Canvas c, float cx, float cy, float r,
-                              int color, float sx, float sy) {
+                              int color, float sx, float sy, float alpha) {
             c.save();
             c.translate(cx, cy);
             c.scale(sx, sy);
             beadPaint.setColor(color);
+            beadPaint.setAlpha(Math.round(255 * alpha));
             c.drawCircle(0, 0, r, beadPaint);
             ringPaint.setStyle(Paint.Style.STROKE);
             ringPaint.setStrokeWidth(r * 0.16f);
-            ringPaint.setColor(0x2940354E);   // 极淡墨描边,贴纸感
+            ringPaint.setColor(0x2940354E);
             c.drawCircle(0, 0, r - ringPaint.getStrokeWidth() / 2f, ringPaint);
             if (r > dp(6)) {
                 glossPaint.setColor(0x66FFFFFF);
+                glossPaint.setAlpha(Math.round(0x66 * alpha));
                 c.drawCircle(-r * 0.32f, -r * 0.34f, r * 0.26f, glossPaint);
             }
             c.restore();
-        }
-
-        /** 标准弹跳曲线(与 BounceInterpolator 观感一致) */
-        private float bounceCurve(float t) {
-            t = Math.min(1f, Math.max(0f, t));
-            if (t < 0.364f) return 7.5625f * t * t;
-            if (t < 0.727f) {
-                t -= 0.546f;
-                return 7.5625f * t * t + 0.75f;
-            }
-            t -= 0.8636f;
-            return 7.5625f * t * t + 0.9375f;
-        }
-
-        /** overshoot 弹出曲线 */
-        private float overshoot(float t) {
-            t = Math.min(1f, Math.max(0f, t));
-            float s = 1.70158f * 1.5f;
-            t -= 1f;
-            return t * t * ((s + 1) * t + s) + 1f;
+            beadPaint.setAlpha(255);
+            glossPaint.setAlpha(255);
         }
 
         private float dp(float v) {
