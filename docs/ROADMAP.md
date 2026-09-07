@@ -1,12 +1,16 @@
 # 路线图与交接文档 (ROADMAP & HANDOFF)
 
 > 本文档是项目的**持续交接入口**：当前状态、待办功能、开发约定、操作备忘。
-> 新会话/新开发者从这里开始读。最后更新：2026-09-04（v2.35 代码完成，待发布）
+> 新会话/新开发者从这里开始读。最后更新：2026-09-05（v2.38 已发布,等用户装机验收）
 
-## 一、当前状态快照（2026-09-04）
+## 一、当前状态快照（2026-09-05）
 
-- 主干 = **v2.35 待发布**：多语言(英/日) + 强化 UI 冒烟 + 64 位声明 + 隐私政策页;
-  签名 APK 待用户用 build_apk.bat 构建（口令走 PINDOU_KS_PASS）
+- 最新发布 = **v2.38**（Release 含签名 APK,versionCode 49）:模板库扩到
+  **8 大类 277 款**(Fluent Emoji 3D,MIT,由 tools/emoji_src 管线生成);
+  同时包含 v2.36/v2.37 的全部反馈修复(取景裁剪/吉卜力强度滑杆/首页豆仓/
+  照片 EXIF 8 方向修复/模板库单屏改版)。**等用户装机验收**,有反馈继续修。
+- 发布流程已跑顺:改代码 → qa + compile_check → build_apk.bat(PINDOU_KS_PASS,
+  新口令在 HANDOFF.md)→ GitHub API 发 Release 传 APK(用户 PAT 命令行临时用)。
 - **CI 全绿**：每次 push 自动跑 qa 测试套件 + Gradle 编译 + 云端模拟器 UI 冒烟
   （qa/ui_smoke.sh:首页/知识/模板/空白画布/清单/色板管理/豆仓/文字生成 全点击走查,
   英文环境运行顺带验证 i18n,截图存为构建产物）
@@ -14,10 +18,13 @@
   （TestColorMath 17 / TestPatternEngine 8 / TestPatternPatch 13 / TestCustomPalette 28），
   入口 `qa/run_tests.sh`（CI/Linux）或 `qa/run_tests.bat`（Windows 本地）；
   纯编译检查用根目录 `compile_check.bat`（aapt2+javac，不动 build_apk 产物）
-- **合规链**：AGPL-3.0(LICENSE) + THIRD_PARTY.md(全部第三方声明)
-  + DISCLAIMER.md + docs/DEV-NOTES.md(踩坑记录) + docs/SHARE-FORMAT.md(开放图纸格式)
+- **合规链**：AGPL-3.0(LICENSE) + THIRD_PARTY.md(全部第三方声明,含 Fluent Emoji MIT)
+  + DISCLAIMER.md + docs/DEV-NOTES.md(踩坑记录) + docs/SHARE-FORMAT.md(开放图纸/色板格式)
+  + 隐私政策页 https://3777166551.github.io/pindou-photo/privacy.html(已上线)
 - **权限底账**：全 APP 唯一权限 WRITE_EXTERNAL_STORAGE(maxSdkVersion=28)，
   Android 10+ 零权限、零网络
+- **本机注意**：git 后台维护偶尔报 multi-pack-index 权限错(无害,推送成功即可);
+  github.com 连接间歇性抽风,推送/下载用重试循环即可
 
 ## 二、功能路线图（按优先级）
 
@@ -59,6 +66,22 @@ GitHub Pages 已通过 API 开通(main 分支 /docs 目录,并加 `docs/.nojekyl
 仓库开 `templates/` 目录收社区投稿（SHARE-FORMAT v1 的 .json 文件），
 随版本打包进 APP 模板库；配 Issue 模板收稿。种子内容可以从
 Kenney 素材 + 社区精选开始。
+
+### 5. ✅ 用户反馈修复 + 模板库大扩充(v2.36~v2.38 已完成)
+
+- v2.36:吉卜力风强度滑杆(默认 65%)+模型输出色系统一(治黄绿偏色);
+  模板库单屏改版+真实数量;取景裁剪(CropView,拖动/缩放选区);
+  效果图 zoom=1 板底完整显示;首页豆仓独立管理页(InventoryActivity)
+- v2.37:**照片 EXIF 8 方向全支持**(治"照片歪斜只显示一部分"——旧代码只处理
+  3/6/8 且识别图纸完全没修);模板库换 Fluent Emoji 176 款
+- v2.38:模板扩到 **8 大类 277 款**(新增游戏音乐/运动奖牌/出行工具/潮流符号,
+  动物+16)。生成管线在 tools/emoji_src(本地,不入库):
+  entries_data.py 策划清单 → resolve.py 出下载清单 → curl 走
+  api.github.com contents(base64;raw CDN 被墙)→ quantize_data3.py
+  Lab 最近邻量化到 120 色板(安全字母表 SAFE_ALPHABET,见 DEV-NOTES 14)→
+  emit_java.py 发射 TemplateEmojiData(spec 带 0:32:32: 前缀,
+  发射前逐条模拟解析,防启动崩溃复发)
+- 首页豆仓卡片/模板卡片数字均为运行时统计,加素材自动变
 
 ### 6. 明确不做（红线）
 
@@ -110,3 +133,4 @@ Kenney 素材 + 社区精选开始。
 | v2.35 | 多语言（英/日）+ 强化 UI 点击冒烟 + 64 位 ABI 声明 + 隐私政策页 |
 | v2.36 | 首批用户反馈修复：吉卜力风强度滑杆+色系统一、模板库单屏改版+真实数量、取景裁剪、效果图板底完整显示、首页豆仓管理页 |
 | v2.37 | 照片方向修复（EXIF 8 方向全支持，歪斜/显示不全根治）+ 模板库全面换成 176 款 Fluent Emoji 流行模板（MIT） |
+| v2.38 | 模板扩充至 8 大类 277 款（新增游戏音乐/运动奖牌/出行工具/潮流符号 + 动物扩充） |
