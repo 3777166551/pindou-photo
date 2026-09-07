@@ -111,6 +111,7 @@ public class EditorActivity extends Activity {
 
     private static final int REQ_STORAGE = 100;
     private static final int REQ_IMPORT = 101;
+    private static final int REQ_TRACE = 102;
     private static final int MIN_SIZE = 8;
     private static final int MAX_SIZE = 160;
     private static final int[] ABSTRACT_CHOICES = {4, 6, 8, 10, 12, 16};
@@ -142,6 +143,10 @@ public class EditorActivity extends Activity {
     private int bgTolerance = 45;
     /** 圆形拼板 */
     private boolean roundBoard = false;
+    /** 豆子规格:false=标准豆 5mm,true=迷你豆 2.6mm(只影响尺寸/克重估算,不改格数) */
+    private boolean miniBead = false;
+    /** 描摹底图:画笔模式下垫在格子下面的半透明照片(随项目存档) */
+    private Bitmap traceBitmap;
     /** 空白画布模式:没有源照片,直接在格子上作画 */
     private boolean blankCanvas = false;
     private boolean editCell = false;   // 点格修改开关
@@ -251,6 +256,15 @@ public class EditorActivity extends Activity {
     private View btnCrop;
     private View btnAssistLocate, btnAssistCalendar, btnBrushMirror;
     private View assistToolsRow;
+    private TextView btnAssistBoard, tvAssistBoard, btnAssistNextBoard;
+    private View assistBoardRow;
+    /** 按板引导:true=按 29×29 板分区走,false=按颜色走 */
+    private boolean assistBoardMode = false;
+    /** 按板引导:当前板下标(0-based) */
+    private int assistBoard = 0;
+    private TextView chipBeadStd, chipBeadMini;
+    private TextView btnTracePick, btnTraceToggle, btnTraceClear;
+    private boolean traceOn = true;
     private boolean paintMirror = false;
     private boolean dragDirty = false;
     private AlertDialog calendarDialog;
@@ -427,6 +441,15 @@ public class EditorActivity extends Activity {
         btnAssistCalendar = findViewById(R.id.btnAssistCalendar);
         btnBrushMirror = findViewById(R.id.btnBrushMirror);
         assistToolsRow = findViewById(R.id.assistToolsRow);
+        btnAssistBoard = findViewById(R.id.btnAssistBoard);
+        assistBoardRow = findViewById(R.id.assistBoardRow);
+        tvAssistBoard = findViewById(R.id.tvAssistBoard);
+        btnAssistNextBoard = findViewById(R.id.btnAssistNextBoard);
+        chipBeadStd = findViewById(R.id.chipBeadStd);
+        chipBeadMini = findViewById(R.id.chipBeadMini);
+        btnTracePick = findViewById(R.id.btnTracePick);
+        btnTraceToggle = findViewById(R.id.btnTraceToggle);
+        btnTraceClear = findViewById(R.id.btnTraceClear);
         tvLoading = findViewById(R.id.tvLoading);
         chipBrickLight = findViewById(R.id.chipBrickLight);
         chipBrickMid = findViewById(R.id.chipBrickMid);
@@ -580,6 +603,70 @@ public class EditorActivity extends Activity {
         chipShapeRect.setOnClickListener(shapeClick);
         chipShapeRound.setOnClickListener(shapeClick);
 
+        // 豆子规格:标准豆 5mm / 迷你豆 2.6mm(只改尺寸与克重估算)
+        View.OnClickListener beadSpecClick = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean mini = v.getId() == R.id.chipBeadMini;
+                if (miniBead == mini) return;
+                miniBead = mini;
+                syncBeadSpecUi();
+                syncSizeUi();
+                updateSummary();
+            }
+        };
+        chipBeadStd.setOnClickListener(beadSpecClick);
+        chipBeadMini.setOnClickListener(beadSpecClick);
+
+        // 描摹底图:画笔模式垫一张半透明照片照着描
+        btnTracePick.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pickTraceImage();
+            }
+        });
+        btnTraceToggle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                traceOn = !traceOn;
+                syncTraceUi();
+            }
+        });
+        btnTraceClear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (traceBitmap != null) {
+                    traceBitmap.recycle();
+                    traceBitmap = null;
+                }
+                traceOn = true;
+                patternView.setTraceBitmap(null);
+                syncTraceUi();
+            }
+        });
+
+        // 按板引导:一次只点亮一块 29×29 板
+        btnAssistBoard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                assistBoardMode = !assistBoardMode;
+                assistBoard = 0;
+                syncAssistBoardUi();
+            }
+        });
+        btnAssistNextBoard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (pattern == null) return;
+                if (assistBoard < pattern.boardsNeeded() - 1) {
+                    assistBoard++;
+                    syncAssistBoardUi();
+                }
+            }
+        });
+        syncBeadSpecUi();
+        syncTraceUi();
+
         // 宽高步进
         findViewById(R.id.btnWMinus).setOnClickListener(stepper(false, true));
         findViewById(R.id.btnWPlus).setOnClickListener(stepper(true, true));
@@ -704,6 +791,7 @@ public class EditorActivity extends Activity {
                     updateSummary();
                     adapter.notifyDataSetChanged();
                     patternView.invalidate();
+                    maybeAutoAdvanceBoard();
                     return;
                 }
                 if (!editCell) return;
@@ -742,6 +830,7 @@ public class EditorActivity extends Activity {
                     updateAssistUi();
                     updateSummary();
                     adapter.notifyDataSetChanged();
+                    maybeAutoAdvanceBoard();
                 }
             }
         });
@@ -1115,13 +1204,65 @@ public class EditorActivity extends Activity {
         if (roundBoard) {
             tvBoardHint.setText(String.format(Locale.CHINA,
                     getString(R.string.fmt_board_round),
-                    cols, cols * 0.5));
+                    cols, cols * cmPerBead()));
         } else {
             int boards = (int) (Math.ceil(cols / 29.0) * Math.ceil(rows / 29.0));
             tvBoardHint.setText(String.format(Locale.CHINA,
                     getString(R.string.fmt_board_rect),
-                    boards, cols * 0.5, rows * 0.5));
+                    boards, cols * cmPerBead(), rows * cmPerBead()));
         }
+    }
+
+    /** 每格边长(cm):标准豆 5mm / 迷你豆 2.6mm */
+    private float cmPerBead() {
+        return miniBead ? 0.26f : 0.5f;
+    }
+
+    /** 每颗豆约重(g):按体积折算,迷你豆 ≈ 0.024 × (2.6/5)³ */
+    private float gPerBead() {
+        return miniBead ? 0.0067f : 0.024f;
+    }
+
+    /** 豆子规格 chips 选中态 */
+    private void syncBeadSpecUi() {
+        chipBeadStd.setSelected(!miniBead);
+        chipBeadMini.setSelected(miniBead);
+    }
+
+    /** 描摹底图按钮态:开关钮文字随显隐切换,清除钮仅有底图时可用 */
+    private void syncTraceUi() {
+        btnTraceToggle.setText(traceOn
+                ? getString(R.string.trace_hide) : getString(R.string.trace_show));
+        btnTraceToggle.setSelected(traceOn);
+        btnTraceClear.setEnabled(traceBitmap != null);
+        btnTraceClear.setAlpha(traceBitmap != null ? 1f : 0.45f);
+        patternView.setTraceVisible(traceOn);
+    }
+
+    /** 从相册选一张照片当描摹底图 */
+    private void pickTraceImage() {
+        try {
+            android.content.Intent it =
+                    new android.content.Intent(android.content.Intent.ACTION_GET_CONTENT);
+            it.addCategory(android.content.Intent.CATEGORY_OPENABLE);
+            it.setType("image/*");
+            startActivityForResult(it, REQ_TRACE);
+        } catch (Throwable t) {
+            Toast.makeText(this, getString(R.string.err_no_picker), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void applyTraceImage(final Bitmap bmp) {
+        if (isFinishing()) return;
+        if (traceBitmap != null && traceBitmap != bmp) traceBitmap.recycle();
+        traceBitmap = bmp;
+        traceOn = bmp != null;
+        patternView.setTraceBitmap(bmp);
+        syncTraceUi();
+        Toast.makeText(this, bmp != null
+                        ? getString(R.string.trace_on_toast)
+                        : getString(R.string.trace_cleared_toast),
+                Toast.LENGTH_SHORT).show();
     }
 
     private void bindSeek(int seekId, final TextView valueLabel) {
@@ -1662,7 +1803,7 @@ public class EditorActivity extends Activity {
                             assistFocus = pattern.usedColors.isEmpty()
                                     ? -1 : pattern.usedColors.get(0).index;
                             updateAssistUi();
-                            patternView.setAssist(true, assistFocus, beadDone);
+                            applyAssistToView();
                         }
                         // 首页工具卡片带入的自动动作:图纸就绪后执行一次
                         if (pendingAction != PENDING_NONE && !blankCanvas) {
@@ -1706,10 +1847,75 @@ public class EditorActivity extends Activity {
             beadAssistPanel.setVisibility(View.GONE);
             tvAssistProgress.setVisibility(View.GONE);
             if (assistToolsRow != null) assistToolsRow.setVisibility(View.GONE);
+            if (assistBoardRow != null) assistBoardRow.setVisibility(View.GONE);
             getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
+        if (assistBoard != 0) assistBoard = 0;
+        if (on) {
+            // 处理逐色/按板两行的互斥显隐 + 视图套用 + 文本刷新
+            syncAssistBoardUi();
+        } else {
+            updateAssistUi();
+            applyAssistToView();
+        }
+    }
+
+    /** 把当前辅助状态(逐色/按板)套到 PatternView 上 */
+    private void applyAssistToView() {
+        patternView.setAssist(beadAssist,
+                assistBoardMode ? -1 : assistFocus, beadDone,
+                assistBoardMode, assistBoard);
+    }
+
+    /** 按板引导 UI:工具行 chip 选中态 + 板进度行显隐 + 视图重绘 */
+    private void syncAssistBoardUi() {
+        if (btnAssistBoard != null) btnAssistBoard.setSelected(assistBoardMode);
+        if (beadAssistPanel != null && beadAssist) {
+            // 逐色行与按板行互斥显示
+            int colorRowVis = assistBoardMode ? View.GONE : View.VISIBLE;
+            assistSwatch.setVisibility(colorRowVis);
+            tvAssistColor.setVisibility(colorRowVis);
+            btnAssistNext.setVisibility(colorRowVis);
+            if (assistBoardRow != null) {
+                assistBoardRow.setVisibility(assistBoardMode
+                        ? View.VISIBLE : View.GONE);
+            }
+        }
+        applyAssistToView();
         updateAssistUi();
-        patternView.setAssist(on, assistFocus, beadDone);
+    }
+
+    /** 当前板的已拼/可拼格数(板外与空格不计) */
+    private int[] boardDoneStats() {
+        android.graphics.Rect r = PatternView.boardRect(pattern, assistBoard);
+        int done = 0, total = 0;
+        for (int y = r.top; y < r.bottom; y++) {
+            for (int x = r.left; x < r.right; x++) {
+                if (pattern.outsideShape(x, y)) continue;
+                if (pattern.cellAt(x, y) < 0) continue;
+                total++;
+                if (beadDone.contains(y * pattern.cols + x)) done++;
+            }
+        }
+        return new int[]{done, total};
+    }
+
+    /** 当前板拼满时自动跳下一块(最后一块只提示) */
+    private void maybeAutoAdvanceBoard() {
+        if (!beadAssist || !assistBoardMode || pattern == null) return;
+        int[] st = boardDoneStats();
+        if (st[1] == 0 || st[0] < st[1]) return;
+        if (assistBoard < pattern.boardsNeeded() - 1) {
+            int finished = assistBoard + 1;
+            assistBoard++;
+            Toast.makeText(this, String.format(Locale.CHINA,
+                    getString(R.string.fmt_assist_board_next),
+                    finished, pattern.boardsNeeded()), Toast.LENGTH_SHORT).show();
+            syncAssistBoardUi();
+        } else {
+            Toast.makeText(this, getString(R.string.assist_board_all),
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     /** 切到下一种颜色(按用量从多到少循环) */
@@ -1741,6 +1947,7 @@ public class EditorActivity extends Activity {
     }
 
     private void cycleAssistColor() {
+        if (assistBoardMode) return;   // 按板模式不按色轮转
         if (pattern == null || pattern.usedColors.isEmpty()) return;
         int pos = -1;
         for (int i = 0; i < pattern.usedColors.size(); i++) {
@@ -1762,7 +1969,7 @@ public class EditorActivity extends Activity {
         }
         assistFocus = pattern.usedColors.get(next).index;
         updateAssistUi();
-        patternView.setAssist(true, assistFocus, beadDone);
+        applyAssistToView();
     }
 
     private void updateAssistUi() {
@@ -1803,6 +2010,12 @@ public class EditorActivity extends Activity {
         tvAssistProgress.setText(String.format(Locale.CHINA,
                 getString(R.string.fmt_assist_head),
                 done, total, pct, beadDone.size(), pattern.totalBeads, todayCount()));
+        if (assistBoardMode && tvAssistBoard != null) {
+            int[] st = boardDoneStats();
+            tvAssistBoard.setText(String.format(Locale.CHINA,
+                    getString(R.string.fmt_assist_board),
+                    assistBoard + 1, pattern.boardsNeeded(), st[0], st[1]));
+        }
     }
 
     // ---------------- 豆豆清单 ----------------
@@ -1890,13 +2103,13 @@ public class EditorActivity extends Activity {
         sb.append(String.format(Locale.CHINA, getString(R.string.fmt_sum_colors),
                 pattern.usedColors.size(), pattern.boardsNeeded()));
         sb.append(String.format(Locale.CHINA, getString(R.string.fmt_sum_size),
-                pattern.cols * 0.5, pattern.rows * 0.5));
+                pattern.cols * cmPerBead(), pattern.rows * cmPerBead()));
         if (pattern.emptyCount > 0) {
             sb.append(String.format(Locale.CHINA, getString(R.string.fmt_sum_empty), pattern.emptyCount));
         }
         // 克重与成本估算(标准 5mm 豆约 0.024g/颗;单价可在设置里改)
         sb.append(String.format(Locale.CHINA, getString(R.string.fmt_sum_weight),
-                Math.round(pattern.totalBeads * 0.024f),
+                Math.round(pattern.totalBeads * gPerBead()),
                 pattern.totalBeads * beadUnitPrice()));
         // 豆仓缺口:只在登记过至少一种颜色时显示
         int registered = 0;
@@ -2463,6 +2676,36 @@ public class EditorActivity extends Activity {
                 && data != null && data.getData() != null) {
             importFromUri(data.getData());
         }
+        if (requestCode == REQ_TRACE && resultCode == RESULT_OK
+                && data != null && data.getData() != null) {
+            final Uri uri = data.getData();
+            showLoading(true);
+            exec.execute(new Runnable() {
+                @Override
+                public void run() {
+                    Bitmap bmp = null;
+                    try {
+                        bmp = ImageLoader.load(getContentResolver(), uri, 1024);
+                        bmp = ImageLoader.fixExif(getContentResolver(), uri, bmp);
+                    } catch (Exception ignored) {
+                    }
+                    final Bitmap out = bmp;
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showLoading(false);
+                            if (out == null) {
+                                Toast.makeText(EditorActivity.this,
+                                        getString(R.string.err_photo_read),
+                                        Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+                            applyTraceImage(out);
+                        }
+                    });
+                }
+            });
+        }
     }
 
     private void importFromUri(final Uri uri) {
@@ -2530,10 +2773,16 @@ public class EditorActivity extends Activity {
 
     /** 定位本色第一颗未拼的格子:居中显示并闪烁提示(拼豆模式) */
     private void locateAssistUndone() {
-        if (pattern == null || assistFocus < 0) return;
-        for (int y = 0; y < pattern.rows; y++) {
-            for (int x = 0; x < pattern.cols; x++) {
-                if (pattern.cellAt(x, y) != assistFocus) continue;
+        if (pattern == null) return;
+        // 按板模式:在本板范围内找第一颗未拼(任意色)
+        android.graphics.Rect r = assistBoardMode
+                ? PatternView.boardRect(pattern, assistBoard) : null;
+        for (int y = r == null ? 0 : r.top;
+                y < (r == null ? pattern.rows : r.bottom); y++) {
+            for (int x = r == null ? 0 : r.left;
+                    x < (r == null ? pattern.cols : r.right); x++) {
+                if (r == null && pattern.cellAt(x, y) != assistFocus) continue;
+                if (pattern.outsideShape(x, y) || pattern.cellAt(x, y) < 0) continue;
                 if (!beadDone.contains(y * pattern.cols + x)) {
                     patternView.centerOn(x, y);
                     patternView.flashCell(x, y);
@@ -2541,7 +2790,10 @@ public class EditorActivity extends Activity {
                 }
             }
         }
-        Toast.makeText(this, getString(R.string.assist_all_done), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, assistBoardMode
+                        ? getString(R.string.assist_board_clear)
+                        : getString(R.string.assist_all_done),
+                Toast.LENGTH_SHORT).show();
     }
 
     /** 打卡日历:按月查看每天完成的颗数(全局记录,纯本地) */
@@ -2739,14 +2991,14 @@ public class EditorActivity extends Activity {
             public void run() {
                 try {
                     Bitmap sheet = PatternSheetRenderer.render(EditorActivity.this,
-                            pattern, currentPaletteName());
+                            pattern, currentPaletteName(), miniBead);
                     String stamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA)
                             .format(new Date());
                     String name = getString(R.string.file_pattern_prefix)
                 + pattern.cols + "x" + pattern.rows
                             + "_" + stamp + ".pdf";
                     final Uri uri = PdfExporter.export(EditorActivity.this, sheet,
-                            pattern, currentPaletteName(), name);
+                            pattern, currentPaletteName(), name, miniBead);
                     sheet.recycle();
                     runOnUiThread(new Runnable() {
                         @Override
@@ -2844,7 +3096,7 @@ public class EditorActivity extends Activity {
                         bmp = EffectRenderer.render(pattern);
                     } else {
                         bmp = PatternSheetRenderer.render(EditorActivity.this, pattern,
-                            currentPaletteName());
+                            currentPaletteName(), miniBead);
                     }
                     String stamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA)
                             .format(new Date());
@@ -3365,6 +3617,7 @@ public class EditorActivity extends Activity {
                     s.put("dominant", dominant);
                     s.put("denoise", denoise);
                     s.put("precise", preciseColor);
+                    s.put("mini", miniBead);
                     o.put("settings", s);
 
                     JSONArray ed = new JSONArray();
@@ -3389,6 +3642,10 @@ public class EditorActivity extends Activity {
                     if (!blankCanvas && source != null && !source.isRecycled()) {
                         o.put("photo", Jsons.encodeBitmap(source, 1024, 85));
                         o.put("thumb", Jsons.encodeBitmap(source, 160, 65));
+                    }
+                    // 描摹底图跟着项目存档,下次打开继续描
+                    if (traceBitmap != null && !traceBitmap.isRecycled()) {
+                        o.put("trace", Jsons.encodeBitmap(traceBitmap, 1024, 80));
                     }
 
                     File f = ProjectStore.create(EditorActivity.this, name, savedAt);
@@ -3443,6 +3700,7 @@ public class EditorActivity extends Activity {
                     ? clampInt(s.optInt("bgTol", 45), 0, 100)
                     : LEGACY_BG_TOL[Math.max(0, Math.min(2, s.optInt("bgIdx", 1)))];
             roundBoard = s.optBoolean("round", false);
+            miniBead = s.optBoolean("mini", false);
             blankCanvas = o.optBoolean("blank", false);
             aiRunning = false;
 
@@ -3483,6 +3741,8 @@ public class EditorActivity extends Activity {
             beadDoneDay = o.optString("beadDoneDay", "");
             beadDoneToday = Math.max(0, o.optInt("beadDoneToday", 0));
             rollBeadDay();
+            assistBoardMode = o.optBoolean("assistBoardMode", false);
+            assistBoard = Math.max(0, o.optInt("assistBoard", 0));
 
             String photo = o.optString("photo", "");
             if (!photo.isEmpty()) {
@@ -3492,6 +3752,28 @@ public class EditorActivity extends Activity {
                 source = null;
             }
             originalSource = source;
+
+            // 描摹底图还原
+            String tr = o.optString("trace", "");
+            if (traceBitmap != null) {
+                traceBitmap.recycle();
+                traceBitmap = null;
+            }
+            if (!tr.isEmpty()) {
+                try {
+                    byte[] raw = android.util.Base64.decode(tr, android.util.Base64.NO_WRAP);
+                    Bitmap tb = BitmapFactory.decodeByteArray(raw, 0, raw.length);
+                    if (tb != null) {
+                        traceBitmap = tb;
+                        traceOn = true;
+                        patternView.setTraceBitmap(tb);
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+            syncTraceUi();
+            syncBeadSpecUi();
+            syncSizeUi();
 
             btnAiRestore.setVisibility(View.GONE);
             syncLoadedWidgets();

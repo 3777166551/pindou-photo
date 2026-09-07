@@ -23,6 +23,13 @@ import java.util.Locale;
 public final class PatternSheetRenderer {
 
     public static Bitmap render(android.content.Context ctx, BeadPattern p, String paletteName) {
+        return render(ctx, p, paletteName, false);
+    }
+
+    /** mini=true 时尺寸按迷你豆 2.6mm 折算(标题信息行) */
+    public static Bitmap render(android.content.Context ctx, BeadPattern p,
+                                String paletteName, boolean mini) {
+        float cm = mini ? 0.26f : 0.5f;
         int cols = p.cols;
         int rows = p.rows;
         int cell = (int) Math.max(20, Math.min(48, 2800.0 / Math.max(cols, rows)));
@@ -66,7 +73,7 @@ public final class PatternSheetRenderer {
                 paletteName, p.totalBeads,
                 p.round
                         ? String.format(Locale.CHINA, ctx.getString(R.string.fmt_sheet_dia),
-                        cols * 0.5)
+                        cols * cm)
                         : String.format(Locale.CHINA,
                         ctx.getString(R.string.fmt_sheet_boards), p.boardsNeeded()))
                 + " · " + date;

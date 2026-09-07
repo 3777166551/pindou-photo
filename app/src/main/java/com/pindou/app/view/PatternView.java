@@ -1,6 +1,7 @@
 package com.pindou.app.view;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -228,10 +229,53 @@ public class PatternView extends View {
     /** 已拼好的格子(y*cols+x) */
     private java.util.Set<Integer> assistDone;
 
+    // 拼豆模式:非当前颜色蒙上纸色,已完成的格子描薄荷绿边;
+    // 按板引导时只点亮当前 29×29 板,其余板蒙灰
+    private boolean assistBoardMode;
+    private int assistBoard;
+    private android.graphics.Rect assistBoardRect;
+    private final Paint boardFramePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    // 描摹底图:画笔模式下垫在格子下面的半透明照片
+    private Bitmap traceBitmap;
+    private boolean traceVisible = true;
+    private final Paint tracePaint = new Paint(Paint.FILTER_BITMAP_FLAG | Paint.ANTI_ALIAS_FLAG);
+    private final android.graphics.RectF traceDst = new android.graphics.RectF();
+
     public void setAssist(boolean on, int focusColor, java.util.Set<Integer> done) {
+        setAssist(on, focusColor, done, false, 0);
+    }
+
+    /** 按板引导:boardIndex 指定当前 29×29 板(focusColor<0 = 板内全色可见) */
+    public void setAssist(boolean on, int focusColor, java.util.Set<Integer> done,
+                          boolean boardMode, int boardIndex) {
         assistOn = on;
         assistFocus = focusColor;
         assistDone = done;
+        assistBoardMode = on && boardMode && pattern != null;
+        assistBoard = boardIndex;
+        assistBoardRect = assistBoardMode ? boardRect(pattern, boardIndex) : null;
+        invalidate();
+    }
+
+    /** 第 b 块 29×29 板的格子范围(边缘板不足 29 按实际格子裁) */
+    public static android.graphics.Rect boardRect(BeadPattern p, int b) {
+        int bc = (int) Math.ceil(p.cols / 29.0);
+        int br = (int) Math.ceil(p.rows / 29.0);
+        int idx = Math.max(0, Math.min(b, bc * br - 1));
+        int x0 = (idx % bc) * 29;
+        int y0 = (idx / bc) * 29;
+        return new android.graphics.Rect(x0, y0,
+                Math.min(x0 + 29, p.cols), Math.min(y0 + 29, p.rows));
+    }
+
+    /** 设置描摹底图(传 null 清除);显示开关用 setTraceVisible */
+    public void setTraceBitmap(Bitmap b) {
+        traceBitmap = b;
+        invalidate();
+    }
+
+    public void setTraceVisible(boolean v) {
+        traceVisible = v;
         invalidate();
     }
 
@@ -697,6 +741,13 @@ public class PatternView extends View {
             canvas.drawRect(-1, -1, w + 1, h + 1, cellPaint);
         }
 
+        // 描摹底图:半透明照片垫在格子下面,照着描轮廓用
+        if (traceBitmap != null && !traceBitmap.isRecycled() && traceVisible) {
+            traceDst.set(0, 0, w, h);
+            tracePaint.setAlpha(95);
+            canvas.drawBitmap(traceBitmap, null, traceDst, tracePaint);
+        }
+
         // 颜色格子
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < cols; x++) {
@@ -814,13 +865,22 @@ public class PatternView extends View {
             }
         }
 
-        // 拼豆模式:非当前颜色蒙上纸色,已完成的格子描薄荷绿边
+        // 拼豆模式:非当前颜色蒙上纸色,已完成的格子描薄荷绿边;
+        // 按板引导时,当前板以外的格子整片蒙灰
         if (assistOn) {
             for (int y = 0; y < rows; y++) {
                 for (int x = 0; x < cols; x++) {
                     if (round && pattern.outsideShape(x, y)) continue;
                     int idx = pattern.cellAt(x, y);
                     if (idx < 0) continue;
+                    if (assistBoardMode && assistBoardRect != null
+                            && (x < assistBoardRect.left || x >= assistBoardRect.right
+                            || y < assistBoardRect.top || y >= assistBoardRect.bottom)) {
+                        cellPaint.setColor(0xB8EFE9DC);
+                        canvas.drawRect(x * cell, y * cell,
+                                (x + 1) * cell, (y + 1) * cell, cellPaint);
+                        continue;
+                    }
                     if (assistFocus >= 0 && idx != assistFocus) {
                         cellPaint.setColor(0xE6FDF8EF);
                         canvas.drawRect(x * cell, y * cell,
@@ -835,6 +895,15 @@ public class PatternView extends View {
                                 (x + 1) * cell - inset, (y + 1) * cell - inset, emptyPaint);
                     }
                 }
+            }
+            // 当前板的糖果墨描边外框
+            if (assistBoardMode && assistBoardRect != null) {
+                boardFramePaint.setStyle(Paint.Style.STROKE);
+                boardFramePaint.setColor(0xFF40354E);
+                boardFramePaint.setStrokeWidth(Math.max(3f, cell * 0.16f));
+                canvas.drawRect(assistBoardRect.left * cell, assistBoardRect.top * cell,
+                        assistBoardRect.right * cell, assistBoardRect.bottom * cell,
+                        boardFramePaint);
             }
         }
     }

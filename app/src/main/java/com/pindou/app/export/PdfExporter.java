@@ -39,15 +39,22 @@ public final class PdfExporter {
     /** 材料清单页每页行数 */
     private static final int BOM_ROWS_PER_PAGE = 30;
 
+    public static Uri export(Context ctx, Bitmap sheet, BeadPattern p,
+                             String paletteName, String fileName) throws Exception {
+        return export(ctx, sheet, p, paletteName, fileName, false);
+    }
+
     /**
      * @param sheet       PatternSheetRenderer 渲染的大图
      * @param p           图纸数据(封面统计与材料清单用)
      * @param paletteName 色板名(封面展示)
      * @param fileName    形如 拼豆图纸_58x58_202608271030.pdf
+     * @param mini        true = 按迷你豆 2.6mm 折算封面尺寸/克重
      * @return 可用于 ACTION_SEND 的 content:// Uri
      */
     public static Uri export(Context ctx, Bitmap sheet, BeadPattern p,
-                             String paletteName, String fileName) throws Exception {
+                             String paletteName, String fileName,
+                             boolean mini) throws Exception {
         if (sheet == null || sheet.getWidth() <= 0 || sheet.getHeight() <= 0) {
             throw new Exception(ctx.getString(R.string.err_no_pattern));
         }
@@ -63,7 +70,7 @@ public final class PdfExporter {
             int total = 1 + bomPages + sheetPages;
             int[] counter = {1};
 
-            coverPage(ctx, doc, sheet, p, paletteName, counter, total);
+            coverPage(ctx, doc, sheet, p, paletteName, counter, total, mini);
             for (int start = 0; start < bomPages * BOM_ROWS_PER_PAGE;
                  start += BOM_ROWS_PER_PAGE) {
                 bomPage(ctx, doc, p, start, counter, total);
@@ -96,7 +103,7 @@ public final class PdfExporter {
 
     /** 封面页:标题 + 统计 + 整图缩略预览 */
     private static void coverPage(Context ctx, PdfDocument doc, Bitmap sheet, BeadPattern p,
-                                  String paletteName, int[] counter, int total) {
+                                  String paletteName, int[] counter, int total, boolean mini) {
         PdfDocument.PageInfo info =
                 new PdfDocument.PageInfo.Builder(PAGE_W, PAGE_H, counter[0]).create();
         PdfDocument.Page page = doc.startPage(info);
@@ -110,6 +117,7 @@ public final class PdfExporter {
         c.drawLine(MARGIN, MARGIN + 60, PAGE_W - MARGIN, MARGIN + 60, linePaint());
 
         Paint label = textPaint(12, 0xFF444444, false);
+        float cm = mini ? 0.26f : 0.5f;
         float y = MARGIN + 92;
         if (p != null) {
             String[] lines = {
@@ -118,9 +126,9 @@ public final class PdfExporter {
                     String.format(Locale.CHINA, ctx.getString(R.string.fmt_pdf_total),
                             p.totalBeads, p.usedColors.size()),
                     String.format(Locale.CHINA, ctx.getString(R.string.fmt_pdf_boards),
-                            p.boardsNeeded(), p.cols * 0.5, p.rows * 0.5),
+                            p.boardsNeeded(), p.cols * cm, p.rows * cm),
                     String.format(Locale.CHINA, ctx.getString(R.string.fmt_pdf_weight),
-                            Math.round(p.totalBeads * 0.024f)),
+                            Math.round(p.totalBeads * (mini ? 0.0067f : 0.024f))),
                     ctx.getString(R.string.pdf_palette_prefix)
                             + (paletteName == null || paletteName.isEmpty() ? "-" : paletteName),
                     ctx.getString(R.string.pdf_date_prefix)
