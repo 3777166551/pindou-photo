@@ -25,8 +25,8 @@
 - **CI 全绿**：每次 push 自动跑 qa 测试套件 + Gradle 编译 + 云端模拟器 UI 冒烟
   （qa/ui_smoke.sh:首页/知识/模板/空白画布/清单/色板管理/豆仓/文字生成 全点击走查,
   英文环境运行顺带验证 i18n,截图存为构建产物）
-- **测试**：`qa/` 四套 66 项断言全绿
-  （TestColorMath 17 / TestPatternEngine 8 / TestPatternPatch 13 / TestCustomPalette 28），
+- **测试**：`qa/` 四套 69 项断言全绿
+  （TestColorMath 17 / TestPatternEngine 11 / TestPatternPatch 13 / TestCustomPalette 28），
   入口 `qa/run_tests.sh`（CI/Linux）或 `qa/run_tests.bat`（Windows 本地）；
   纯编译检查用根目录 `compile_check.bat`（aapt2+javac，不动 build_apk 产物）
 - **合规链**：AGPL-3.0(LICENSE) + THIRD_PARTY.md(全部第三方声明,含 Fluent Emoji MIT)

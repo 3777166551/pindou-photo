@@ -1922,7 +1922,7 @@ public class EditorActivity extends Activity {
                     getString(R.string.fmt_sum_done),
                     beadDone.size(), pattern.totalBeads, todayCount()));
         }
-        tvSummary.setText(sb.toString());
+        tvSummary.setText(sb.toString().trim());
     }
 
     /** 全局替换:长按豆单某一行,把该色所有格子一键换成另一个已用色 */

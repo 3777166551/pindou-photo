@@ -320,7 +320,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="宽"
+                        android:text="@string/w_label"
                         android:textColor="@color/textSub"
                         android:textSize="13sp" />
 
@@ -371,7 +371,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="高"
+                        android:text="@string/h_label"
                         android:textColor="@color/textSub"
                         android:textSize="13sp" />
 
@@ -914,7 +914,7 @@
                                 android:layout_height="wrap_content"
                                 android:minWidth="40dp"
                                 android:gravity="end"
-                                android:text="关"
+                                android:text="@string/dn_off"
                                 android:textColor="@color/primary"
                                 android:textSize="13sp"
                                 android:textStyle="bold" />

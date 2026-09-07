@@ -207,9 +207,9 @@
     <string name="fmt_assist_done">Color %1$d/%2$d · %3$d beads · ✅done</string>
     <string name="fmt_sum_total">Total beads: %,d\n</string>
     <string name="fmt_sum_colors">Colors: %1$d · 29×29 boards: %2$d\n</string>
-    <string name="fmt_sum_size">Size: about %1$.0f × %2$.0f cm (5mm beads)</string>
-    <string name="fmt_sum_empty">Empty cells: %,d (no bead)</string>
-    <string name="fmt_sum_weight">About %1$,d g · est. cost ¥%2$.2f (tap to change price)</string>
+    <string name="fmt_sum_size">Size: about %1$.0f × %2$.0f cm (5mm beads)\n</string>
+    <string name="fmt_sum_empty">Empty cells: %,d (no bead)\n</string>
+    <string name="fmt_sum_weight">About %1$,d g · est. cost ¥%2$.2f (tap to change price)\n</string>
     <string name="fmt_sum_inv">🎒 Inventory: %1$d/%2$d colors enough · need %3$,d more beads</string>
     <string name="fmt_sum_done">🧩 Placed %1$,d/%2$,d · %3$d today</string>
     <string name="fmt_assist_head">✅ Placed %1$d/%2$d · %3$.0f%%(%4$d/%5$d) · 🔥%6$d today</string>

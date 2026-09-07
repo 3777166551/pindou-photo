@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 主操作按钮:糖果粉药丸 + 2dp 墨描边 + 硬投影,按下整颗"陷"下去 -->
+<!-- 主操作按钮:糖果粉药丸 + 2dp 墨描边 + 硬投影,按下整颗"陷"下去。
+     注意:不要包 ripple 壳(API 30 模拟器上 ripple 会把内容渲染成磨砂半透明),
+     按压反馈由 util/Anim.pressScale 的缩放动画承担。 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:top="1.5dp">
         <shape android:shape="rectangle">
@@ -8,15 +10,13 @@
         </shape>
     </item>
     <item android:bottom="4dp">
-        <ripple android:color="#40FFFFFF">
-            <shape android:shape="rectangle">
-                <gradient
-                    android:angle="270"
-                    android:startColor="@color/gradStart"
-                    android:endColor="@color/gradEnd" />
-                <stroke android:width="2dp" android:color="@color/ink" />
-                <corners android:radius="30dp" />
-            </shape>
-        </ripple>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="@color/gradStart"
+                android:endColor="@color/gradEnd" />
+            <stroke android:width="2dp" android:color="@color/ink" />
+            <corners android:radius="30dp" />
+        </shape>
     </item>
 </layer-list>
