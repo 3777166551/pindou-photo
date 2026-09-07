@@ -85,7 +85,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="@string/main_new_desc"
-                        android:textColor="#6B7280"
+                        android:textColor="#9940354E"
                         android:textSize="11sp" />
                 </LinearLayout>
             </LinearLayout>
@@ -148,7 +148,7 @@
                 style="@style/ToolCard"
                 android:layout_marginEnd="6dp">
 
-                <TextView style="@style/ToolCardIcon" android:text="🩹" />
+                <TextView style="@style/ToolCardIcon" android:text="🩹" android:background="@drawable/bg_icon_mint" />
                 <TextView style="@style/ToolCardTitle" android:text="@string/tool_watermark" />
                 <TextView style="@style/ToolCardDesc" android:text="@string/tool_watermark_desc" />
             </LinearLayout>
@@ -165,7 +165,7 @@
                 style="@style/ToolCard"
                 android:layout_marginEnd="6dp">
 
-                <TextView style="@style/ToolCardIcon" android:text="📷" />
+                <TextView style="@style/ToolCardIcon" android:text="📷" android:background="@drawable/bg_icon_sky" />
                 <TextView style="@style/ToolCardTitle" android:text="@string/tool_scan" />
                 <TextView style="@style/ToolCardDesc" android:text="@string/tool_scan_desc" />
             </LinearLayout>
@@ -175,7 +175,7 @@
                 style="@style/ToolCard"
                 android:layout_marginStart="6dp">
 
-                <TextView style="@style/ToolCardIcon" android:text="🧩" />
+                <TextView style="@style/ToolCardIcon" android:text="🧩" android:background="@drawable/bg_icon_lilac" />
                 <TextView style="@style/ToolCardTitle" android:text="@string/tool_templates" />
                 <TextView
                     android:id="@+id/toolTemplatesDesc"
@@ -195,7 +195,7 @@
                 style="@style/ToolCard"
                 android:layout_marginEnd="6dp">
 
-                <TextView style="@style/ToolCardIcon" android:text="🔤" />
+                <TextView style="@style/ToolCardIcon" android:text="🔤" android:background="@drawable/bg_icon_butter" />
                 <TextView style="@style/ToolCardTitle" android:text="@string/tool_text" />
                 <TextView style="@style/ToolCardDesc" android:text="@string/tool_text_desc" />
             </LinearLayout>
@@ -205,7 +205,7 @@
                 style="@style/ToolCard"
                 android:layout_marginStart="6dp">
 
-                <TextView style="@style/ToolCardIcon" android:text="✏️" />
+                <TextView style="@style/ToolCardIcon" android:text="✏️" android:background="@drawable/bg_icon_peach" />
                 <TextView style="@style/ToolCardTitle" android:text="@string/tool_blank" />
                 <TextView style="@style/ToolCardDesc" android:text="@string/tool_blank_desc" />
             </LinearLayout>
@@ -222,7 +222,7 @@
                 style="@style/ToolCard"
                 android:layout_marginEnd="6dp">
 
-                <TextView style="@style/ToolCardIcon" android:text="📖" />
+                <TextView style="@style/ToolCardIcon" android:text="📖" android:background="@drawable/bg_icon_pink" />
                 <TextView style="@style/ToolCardTitle" android:text="@string/tool_knowledge" />
                 <TextView style="@style/ToolCardDesc" android:text="@string/tool_knowledge_desc" />
             </LinearLayout>
@@ -232,7 +232,7 @@
                 style="@style/ToolCard"
                 android:layout_marginStart="6dp">
 
-                <TextView style="@style/ToolCardIcon" android:text="🎒" />
+                <TextView style="@style/ToolCardIcon" android:text="🎒" android:background="@drawable/bg_icon_mint" />
                 <TextView style="@style/ToolCardTitle" android:text="@string/tool_inventory" />
                 <TextView style="@style/ToolCardDesc" android:text="@string/tool_inventory_desc" />
             </LinearLayout>
@@ -268,7 +268,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <TextView style="@style/ToolCardIcon" android:text="🗂" />
+            <TextView style="@style/ToolCardIcon" android:text="🗂" android:background="@drawable/bg_icon_sky" />
 
             <LinearLayout
                 android:layout_width="0dp"

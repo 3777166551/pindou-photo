@@ -8,6 +8,17 @@
         <item name="android:navigationBarColor">@color/bg</item>
         <item name="android:windowBackground">@drawable/bg_pegboard</item>
         <item name="android:windowLightStatusBar">true</item>
+        <!-- 全局弹窗壳:白圆角贴纸卡 + 糖果粉按钮(所有 AlertDialog 自动生效) -->
+        <item name="android:alertDialogTheme">@style/CandyAlertDialog</item>
+    </style>
+
+    <!-- 弹窗:贴纸圆角壳 + 墨字 + 糖果粉按钮 -->
+    <style name="CandyAlertDialog" parent="android:Theme.Material.Light.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/bg_dialog</item>
+        <item name="android:colorAccent">@color/primary</item>
+        <item name="android:textColorPrimary">@color/textMain</item>
+        <item name="android:textColorSecondary">@color/textSub</item>
+        <item name="android:windowMinWidthMinor">85%</item>
     </style>
 
     <!-- 开屏:与动画画布同底色,避免闪屏 -->
@@ -17,7 +28,7 @@
         <item name="android:navigationBarColor">@color/bg</item>
     </style>
 
-    <!-- 区块标题:橙色圆点 + 加粗 -->
+    <!-- 区块标题:糖果粉圆点 + 加粗 -->
     <style name="SecTitle">
         <item name="android:textSize">13sp</item>
         <item name="android:textStyle">bold</item>
@@ -36,7 +47,7 @@
         <item name="android:focusable">true</item>
     </style>
 
-    <!-- 首页手绘工具卡片 -->
+    <!-- 首页工具贴纸卡 -->
     <style name="ToolCard">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
@@ -44,7 +55,7 @@
         <item name="android:background">@drawable/bg_card_sketch</item>
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
-        <item name="android:elevation">2dp</item>
+        <item name="android:elevation">0dp</item>
         <item name="android:gravity">center_horizontal</item>
         <item name="android:orientation">vertical</item>
         <item name="android:paddingTop">14dp</item>

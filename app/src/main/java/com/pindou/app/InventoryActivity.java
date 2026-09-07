@@ -176,7 +176,7 @@ public class InventoryActivity extends Activity {
             if (colors.isEmpty()) {
                 TextView empty = new TextView(InventoryActivity.this);
                 empty.setText(getString(R.string.inv_empty_home));
-                empty.setTextColor(0xFF4E4A46);
+                empty.setTextColor(0xFF3A3050);
                 empty.setTextSize(14);
                 empty.setLineSpacing(dp(3), 1f);
                 LinearLayout row = new LinearLayout(InventoryActivity.this);
@@ -211,7 +211,7 @@ public class InventoryActivity extends Activity {
 
             TextView label = new TextView(InventoryActivity.this);
             label.setText(PaletteShare.toHex(rgb));
-            label.setTextColor(0xFF1F2430);
+            label.setTextColor(0xFF3A3050);
             label.setTextSize(14);
             label.setTypeface(Typeface.DEFAULT_BOLD);
             LinearLayout.LayoutParams llp = new LinearLayout.LayoutParams(
@@ -221,7 +221,7 @@ public class InventoryActivity extends Activity {
 
             TextView cntLabel = new TextView(InventoryActivity.this);
             cntLabel.setText(getString(R.string.inv_count_hint));
-            cntLabel.setTextColor(0xFF8A857F);
+            cntLabel.setTextColor(0xFF9A8FA6);
             cntLabel.setTextSize(11);
             row.addView(cntLabel);
 
@@ -295,7 +295,7 @@ public class InventoryActivity extends Activity {
             r.setGravity(Gravity.CENTER_VERTICAL);
             TextView lab = new TextView(this);
             lab.setText(String.valueOf(ch[i]));
-            lab.setTextColor(0xFF4E4A46);
+            lab.setTextColor(0xFF3A3050);
             lab.setTextSize(13);
             lab.setTypeface(Typeface.DEFAULT_BOLD);
             r.addView(lab, new LinearLayout.LayoutParams(dp(24),
@@ -307,7 +307,7 @@ public class InventoryActivity extends Activity {
                     0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
             vals[i] = new TextView(this);
             vals[i].setText(String.valueOf(bars[i].getProgress()));
-            vals[i].setTextColor(0xFF8A857F);
+            vals[i].setTextColor(0xFF9A8FA6);
             vals[i].setTextSize(12);
             vals[i].setGravity(Gravity.CENTER);
             r.addView(vals[i], new LinearLayout.LayoutParams(dp(34),

@@ -72,6 +72,18 @@ public class MainActivity extends Activity {
         for (int id : pressIds) {
             com.pindou.app.util.Anim.pressScale(findViewById(id));
         }
+        // 贴纸微旋转:每张工具卡的图标盘(第一个子 View)歪一点,
+        // 像手工贴上去的 —— 糖果贴纸风语言,角度压在 ±6° 内不碍阅读
+        int[] cardIds = {R.id.cardWatermark, R.id.btnScanPattern, R.id.btnTemplates,
+                R.id.btnText, R.id.btnBlank, R.id.btnKnowledge, R.id.btnInventoryHome,
+                R.id.btnProjects};
+        float[] tilts = {-5f, 4f, -3f, 6f, -6f, 3f, -4f, 5f};
+        for (int i = 0; i < cardIds.length; i++) {
+            View card = findViewById(cardIds[i]);
+            if (card instanceof ViewGroup && ((ViewGroup) card).getChildCount() > 0) {
+                ((ViewGroup) card).getChildAt(0).setRotation(tilts[i]);
+            }
+        }
         // 模板数量按实际打包数据实时显示(不再写死宣传数)。
         // 模板数据解析包在 try 里:数据异常时降级显示,绝不阻塞启动
         int tplTotal = 0;
@@ -278,7 +290,7 @@ public class MainActivity extends Activity {
             chip.setText(cats.get(i).name);
             chip.setTextSize(13);
             chip.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
-            chip.setTextColor(0xFF22B57F);
+            chip.setTextColor(0xFFFF6E9C);
             chip.setBackgroundResource(R.drawable.bg_chip);
             chip.setElevation(dp(2));
             chip.setPadding(dp(14), dp(8), dp(14), dp(8));
@@ -352,7 +364,7 @@ public class MainActivity extends Activity {
 
             TextView t = new TextView(MainActivity.this);
             t.setText(cat.items[position].name);
-            t.setTextColor(0xFF444444);
+            t.setTextColor(0xFF3A3050);
             t.setTextSize(11);
             t.setMaxLines(1);
             cell.addView(t);
@@ -933,10 +945,10 @@ public class MainActivity extends Activity {
         ScanRectView(android.content.Context c) {
             super(c);
             fill.setStyle(android.graphics.Paint.Style.FILL);
-            fill.setColor(0x3322B57F);
+            fill.setColor(0x3335C98E);
             stroke.setStyle(android.graphics.Paint.Style.STROKE);
             stroke.setStrokeWidth(3);
-            stroke.setColor(0xFF22B57F);
+            stroke.setColor(0xFF35C98E);
         }
 
         @Override

@@ -43,7 +43,7 @@ public class KnowledgeActivity extends Activity {
 
         TextView t = new TextView(this);
         t.setText(title);
-        t.setTextColor(0xFF22B57F);
+        t.setTextColor(0xFF35C98E);
         t.setTextSize(17);
         t.setTypeface(Typeface.DEFAULT_BOLD);
         t.setLayoutParams(new LinearLayout.LayoutParams(
@@ -52,7 +52,7 @@ public class KnowledgeActivity extends Activity {
 
         TextView b = new TextView(this);
         b.setText(body);
-        b.setTextColor(0xFF4E4A46);
+        b.setTextColor(0xFF3A3050);
         b.setTextSize(14);
         b.setLineSpacing(dp(3), 1f);
         LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(

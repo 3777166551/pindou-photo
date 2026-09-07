@@ -43,6 +43,8 @@
     <string name="btn_crop">✂️ 取景裁剪(拖动/缩放选区)</string>
     <string name="crop_title">取景裁剪</string>
     <string name="crop_hint">拖动移动选区,双指缩放;确定后按选区重新生成图纸</string>
+    <string name="crop_hint_touch">拖角调大小 · 框内拖动移位置</string>
+    <string name="crop_keep">清晰度 %1$d%%</string>
     <string name="crop_done">已按取景重新生成</string>
     <string name="tool_text">文字生成</string>
     <string name="tool_text_desc">名字变挂件图纸</string>

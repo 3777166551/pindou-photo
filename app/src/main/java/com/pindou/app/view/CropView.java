@@ -14,9 +14,12 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 
 /**
- * 取景裁剪控件:照片按适配显示,上面浮一个可拖动/双指缩放的裁剪框,
- * 比例锁定为画幅(cols:rows)。确定后用 apply() 取出裁剪后的 Bitmap。
- * 用于解决"居中裁剪不可调 -> 主体被切/不在中心"的问题。
+ * 取景裁剪控件(v2.39 糖果贴纸风重绘):
+ *  - 选区外圆角挖孔压暗,选区 = 白细框 + 黄油色 L 角标(SelectionPainter);
+ *  - 角点拖拽改大小(锁画幅比例、对角锚定),框内拖动移位置,双指缩放,双击复位;
+ *  - 交互时显示三分构图线;顶部提示药丸首次触摸后淡出;
+ *  - 右下角"清晰度"徽章 = 选区像素占整图百分比,提醒别裁太小。
+ * 确定后用 apply() 取出裁剪后的 Bitmap。
  */
 public class CropView extends View {
 
@@ -32,21 +35,47 @@ public class CropView extends View {
 
     private final Paint dimPaint = new Paint();
     private final Paint framePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint gridPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final SelectionPainter sel;
+    private final RectF viewRect = new RectF();
+    private final Path dimPath = new Path();
+    private final RectF tmpR = new RectF();
+
+    /** 提示药丸 */
+    private final Paint pillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint pillText = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint badgeText = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private String hint;
+    private float hintAlpha = 1f;
+    private boolean touched;
+    private boolean interacting;
+
+    private static final int CORNER_NONE = -1;
+    /** 正在拖拽的角标索引:0 左上 1 右上 2 左下 3 右下,-1 = 无 */
+    private int activeCorner = CORNER_NONE;
 
     private final ScaleGestureDetector scaleDetector;
     private final GestureDetector dragDetector;
+    private float lastX, lastY;
 
     public CropView(Context context) {
         super(context);
+        float dm = getResources().getDisplayMetrics().density;
         dimPaint.setStyle(Paint.Style.FILL);
-        dimPaint.setColor(0x99000000);
+        dimPaint.setColor(0xA6000000);
         framePaint.setStyle(Paint.Style.STROKE);
-        framePaint.setColor(0xFFFF8C00);
-        framePaint.setStrokeWidth(3f);
-        gridPaint.setStyle(Paint.Style.STROKE);
-        gridPaint.setColor(0x66FFFFFF);
-        gridPaint.setStrokeWidth(1f);
+        framePaint.setColor(SelectionPainter.WHITE);
+        framePaint.setStrokeWidth(1.5f * dm);
+        sel = new SelectionPainter(dm);
+
+        pillPaint.setStyle(Paint.Style.FILL);
+        pillPaint.setColor(0xE640354E);
+        pillText.setColor(Color.WHITE);
+        pillText.setTextSize(12.5f * dm);
+        pillText.setFakeBoldText(true);
+        badgeText.setColor(Color.WHITE);
+        badgeText.setTextSize(11.5f * dm);
+        badgeText.setFakeBoldText(true);
+        hint = context.getString(com.pindou.app.R.string.crop_hint_touch);
 
         scaleDetector = new ScaleGestureDetector(context,
                 new ScaleGestureDetector.SimpleOnScaleGestureListener() {
@@ -66,7 +95,14 @@ public class CropView extends View {
                     @Override
                     public boolean onScroll(MotionEvent e1, MotionEvent e2,
                                             float dx, float dy) {
+                        if (activeCorner != CORNER_NONE) return true; // 角点拖拽单独处理
                         moveBy(-dx, -dy);
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onDoubleTap(MotionEvent e) {
+                        resetCrop();
                         return true;
                     }
                 });
@@ -77,6 +113,8 @@ public class CropView extends View {
         bmp = bitmap;
         aspect = aspectRatio <= 0 ? 1f : aspectRatio;
         ready = bmp != null && bmp.getWidth() > 0;
+        touched = false;
+        hintAlpha = 1f;
         requestLayout();
         invalidate();
     }
@@ -175,30 +213,168 @@ public class CropView extends View {
         m.preScale(fitScale, fitScale);
         canvas.drawBitmap(bmp, m, null);
 
-        RectF v = new RectF(
+        viewRect.set(
                 imgLeft + crop.left * fitScale,
                 imgTop + crop.top * fitScale,
                 imgLeft + crop.right * fitScale,
                 imgTop + crop.bottom * fitScale);
-        // 选区外压暗
-        Path p = new Path();
-        p.addRect(0, 0, getWidth(), getHeight(), Path.Direction.CW);
-        p.addRect(v, Path.Direction.CCW);
-        canvas.drawPath(p, dimPaint);
-        canvas.drawRect(v, framePaint);
-        // 三分线
-        canvas.drawLine(v.left, v.centerY(), v.right, v.centerY(), gridPaint);
-        canvas.drawLine(v.centerX(), v.top, v.centerX(), v.bottom, gridPaint);
+
+        // 选区外圆角挖孔压暗
+        dimPath.reset();
+        dimPath.addRect(0, 0, getWidth(), getHeight(), Path.Direction.CW);
+        tmpR.set(viewRect);
+        dimPath.addRoundRect(tmpR, dp(14), dp(14), Path.Direction.CCW);
+        canvas.drawPath(dimPath, dimPaint);
+
+        // 细白框 + 三分线 + 角标
+        canvas.drawRect(viewRect, framePaint);
+        sel.drawThirds(canvas, viewRect);
+        sel.drawBrackets(canvas, viewRect);
+
+        // 清晰度徽章(右下,空间不够放选区上方)
+        int pct = Math.round(crop.width() * crop.height()
+                / ((float) bmp.getWidth() * bmp.getHeight()) * 100f);
+        String badge = getContext().getString(com.pindou.app.R.string.crop_keep, pct);
+        float tw = badgeText.measureText(badge);
+        float padH = dp(9), padV = dp(5);
+        float bw = tw + padH * 2, bh = badgeText.getTextSize() + padV * 2;
+        float bx = Math.min(viewRect.right - bw, getWidth() - bw - dp(6));
+        float by = viewRect.bottom + dp(10);
+        if (by + bh > getHeight()) by = viewRect.top - bh - dp(10);
+        tmpR.set(bx, by, bx + bw, by + bh);
+        canvas.drawRoundRect(tmpR, bh / 2f, bh / 2f, pillPaint);
+        canvas.drawText(badge, bx + padH, by + padV - badgeText.ascent(), badgeText);
+
+        // 顶部提示药丸,首次触摸后淡出
+        if (hintAlpha > 0.02f && !interacting) {
+            float hw = pillText.measureText(hint) + dp(24);
+            float hh = pillText.getTextSize() + dp(12);
+            float hx = (getWidth() - hw) / 2f;
+            float hy = Math.max(dp(10), viewRect.top - hh - dp(14));
+            tmpR.set(hx, hy, hx + hw, hy + hh);
+            pillPaint.setAlpha(Math.round(230 * hintAlpha));
+            canvas.drawRoundRect(tmpR, hh / 2f, hh / 2f, pillPaint);
+            pillText.setAlpha(Math.round(255 * hintAlpha));
+            canvas.drawText(hint, hx + dp(12),
+                    hy + (hh - pillText.getTextSize()) / 2f - pillText.ascent(),
+                    pillText);
+            pillPaint.setAlpha(230);
+            pillText.setAlpha(255);
+        }
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (!ready) return true;
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                if (!touched) {
+                    touched = true;
+                    animateHintOut();
+                }
+                lastX = event.getX();
+                lastY = event.getY();
+                activeCorner = hitCorner(lastX, lastY);
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (activeCorner != CORNER_NONE) {
+                    dragCorner(event.getX(), event.getY());
+                    return true;
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                activeCorner = CORNER_NONE;
+                interacting = false;
+                invalidate();
+                break;
+            default:
+                break;
+        }
         scaleDetector.onTouchEvent(event);
         if (!scaleDetector.isInProgress()) {
             dragDetector.onTouchEvent(event);
         }
         return true;
+    }
+
+    /** 命中测试:触摸点距哪个角标足够近(dp(26) 内) */
+    private int hitCorner(float x, float y) {
+        float slop = dp(26);
+        for (int i = 0; i < 4; i++) {
+            float cx = (i & 1) == 0 ? viewRect.left : viewRect.right;
+            float cy = (i & 2) == 0 ? viewRect.top : viewRect.bottom;
+            if (Math.abs(x - cx) <= slop && Math.abs(y - cy) <= slop) {
+                interacting = true;
+                return i;
+            }
+        }
+        return CORNER_NONE;
+    }
+
+    /**
+     * 角点拖拽改大小:对角固定为锚点,按触摸点算新宽高(锁画幅比例),
+     * 越界自动收住 —— 与主流图片编辑器的角点手势一致。
+     */
+    private void dragCorner(float x, float y) {
+        boolean right = (activeCorner & 1) != 0;
+        boolean bottom = (activeCorner & 2) != 0;
+        float iw = bmp.getWidth(), ih = bmp.getHeight();
+        float minSide = Math.min(iw, ih) * MIN_CROP_FRACTION;
+
+        // 锚点 = 对角(图像坐标)
+        float ax = right ? crop.left : crop.right;
+        float ay = bottom ? crop.top : crop.bottom;
+        float dirX = right ? 1f : -1f;
+        float dirY = bottom ? 1f : -1f;
+
+        // 该方向上锚点到图像边缘的最大可用宽高
+        float maxW = right ? iw - ax : ax;
+        float maxH = bottom ? ih - ay : ay;
+
+        // 由触摸点得出期望宽高,取长边保证"贴手"
+        float fw = Math.max(0, (x - imgLeft) / fitScale - ax) * dirX;
+        float fh = Math.max(0, (y - imgTop) / fitScale - ay) * dirY;
+        float cw = Math.max(fw, fh * aspect);
+        float ch = cw / aspect;
+        if (ch > maxH) {
+            ch = maxH;
+            cw = ch * aspect;
+        }
+        if (cw > maxW) {
+            cw = maxW;
+            ch = cw / aspect;
+        }
+        if (cw < minSide || ch < minSide) {
+            // 空间放得下最小选区才起步,否则保持原状
+            if (Math.min(maxW, maxH * aspect) < minSide) return;
+            cw = minSide;
+            ch = cw / aspect;
+            if (ch < minSide) {
+                ch = minSide;
+                cw = ch * aspect;
+            }
+        }
+        if (right) {
+            crop.set(ax, bottom ? ay : ay - ch, ax + cw, bottom ? ay + ch : ay);
+        } else {
+            crop.set(ax - cw, bottom ? ay : ay - ch, ax, bottom ? ay + ch : ay);
+        }
+        invalidate();
+    }
+
+    private void animateHintOut() {
+        android.animation.ValueAnimator an =
+                android.animation.ValueAnimator.ofFloat(hintAlpha, 0f);
+        an.setDuration(260);
+        an.addUpdateListener(new android.animation.ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(android.animation.ValueAnimator a) {
+                hintAlpha = (float) a.getAnimatedValue();
+                invalidate();
+            }
+        });
+        an.start();
     }
 
     private float dp(float v) {

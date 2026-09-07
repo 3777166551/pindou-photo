@@ -43,6 +43,8 @@
     <string name="btn_crop">✂️ Frame crop (drag / pinch)</string>
     <string name="crop_title">Crop</string>
     <string name="crop_hint">Drag to move, pinch to zoom; the chart regenerates from the selection</string>
+    <string name="crop_hint_touch">Drag corners to resize · drag inside to move</string>
+    <string name="crop_keep">Detail %1$d%%</string>
     <string name="crop_done">Re-framed and regenerated</string>
     <string name="tool_text">Text art</string>
     <string name="tool_text_desc">Names to keychain charts</string>

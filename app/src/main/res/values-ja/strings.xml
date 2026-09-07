@@ -43,6 +43,8 @@
     <string name="btn_crop">✂️ 枠取り(ドラッグ/ピンチ)</string>
     <string name="crop_title">枠取り</string>
     <string name="crop_hint">ドラッグで移動、ピンチで拡大縮小。確定後この範囲で再生成します</string>
+    <string name="crop_hint_touch">隅をドラッグで調整・内側で移動</string>
+    <string name="crop_keep">解像度 %1$d%%</string>
     <string name="crop_done">枠どおりに再生成しました</string>
     <string name="tool_text">文字図案</string>
     <string name="tool_text_desc">名前がチャームに</string>

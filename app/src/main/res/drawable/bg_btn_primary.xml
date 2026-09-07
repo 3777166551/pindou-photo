@@ -1,14 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 主操作按钮:薄荷渐变药丸,柔和现代 -->
-<ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#40FFFFFF">
-    <item>
+<!-- 主操作按钮:糖果粉药丸 + 2dp 墨描边 + 硬投影,按下整颗"陷"下去 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:top="1.5dp">
         <shape android:shape="rectangle">
-            <gradient
-                android:angle="270"
-                android:startColor="@color/gradStart"
-                android:endColor="@color/gradEnd" />
+            <solid android:color="@color/stickerShadow" />
             <corners android:radius="30dp" />
         </shape>
     </item>
-</ripple>
+    <item android:bottom="4dp">
+        <ripple android:color="#40FFFFFF">
+            <shape android:shape="rectangle">
+                <gradient
+                    android:angle="270"
+                    android:startColor="@color/gradStart"
+                    android:endColor="@color/gradEnd" />
+                <stroke android:width="2dp" android:color="@color/ink" />
+                <corners android:radius="30dp" />
+            </shape>
+        </ripple>
+    </item>
+</layer-list>

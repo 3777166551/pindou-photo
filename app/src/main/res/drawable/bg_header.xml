@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 顶栏:融入渐变底的半透明白,不再用橙色大渐变 -->
+<!-- 顶栏:奶油底同色的浅奶白,与贴纸卡拉开层次 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="#B3FFFFFF" />
+    <solid android:color="#F2FFF6ED" />
 </shape>

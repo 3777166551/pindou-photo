@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 图标盘默认(兜底):粉彩圆 + 墨描边,各卡片在布局里指定糖果色变体 -->
+<!-- 图标盘·糖果粉 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:top="1dp">
         <shape android:shape="oval">

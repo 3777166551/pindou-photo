@@ -11,7 +11,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
@@ -1255,7 +1257,6 @@ public class EditorActivity extends Activity {
 
         AlertDialog cd = new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.crop_title))
-                .setMessage(getString(R.string.crop_hint))
                 .setView(cv)
                 .setPositiveButton(getString(R.string.btn_ok), new DialogInterface.OnClickListener() {
                     @Override
@@ -1300,7 +1301,7 @@ public class EditorActivity extends Activity {
         box.setPadding(pad, dp4(8), pad, 0);
         final TextView lab = new TextView(this);
         lab.setText(getString(R.string.style_strength) + ": " + strength[0] + "%");
-        lab.setTextColor(0xFF4E4A46);
+        lab.setTextColor(0xFF3A3050);
         lab.setTextSize(14);
         box.addView(lab);
         SeekBar sb = new SeekBar(this);
@@ -1502,28 +1503,64 @@ public class EditorActivity extends Activity {
         }).start();
     }
 
-    /** 框选覆盖层:手指拖动画一个半透明橙色选框,再拖重新选 */
+    /**
+     * 框选覆盖层(v2.39 贴纸风重绘):拖一个薄荷色角标选框盖住水印,
+     * 选区外圆角挖孔压暗,顶部提示药丸;再拖重新选。
+     */
     private class WatermarkRectView extends View {
         final Rect rect = new Rect();
         boolean dragging = false;
+        final com.pindou.app.view.SelectionPainter sel =
+                new com.pindou.app.view.SelectionPainter(
+                        getResources().getDisplayMetrics().density);
+        final Paint dimPaint = new Paint();
+        final Paint framePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        final Paint pillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        final Paint pillText = new Paint(Paint.ANTI_ALIAS_FLAG);
+        final Path dimPath = new Path();
+        final RectF tmp = new RectF();
+        float density = getResources().getDisplayMetrics().density;
 
         WatermarkRectView(android.content.Context c) {
             super(c);
+            dimPaint.setStyle(Paint.Style.FILL);
+            dimPaint.setColor(0xA6000000);
+            framePaint.setStyle(Paint.Style.STROKE);
+            framePaint.setColor(0xFF35C98E);
+            framePaint.setStrokeWidth(1.5f * density);
+            pillPaint.setStyle(Paint.Style.FILL);
+            pillPaint.setColor(0xE640354E);
+            pillText.setColor(0xFFFFFFFF);
+            pillText.setTextSize(12.5f * density);
+            pillText.setFakeBoldText(true);
+            pillText.setTextAlign(Paint.Align.CENTER);
         }
 
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
-            if (!rect.isEmpty()) {
-                Paint p = new Paint();
-                p.setStyle(Paint.Style.FILL);
-                p.setColor(0x3322B57F);
-                canvas.drawRect(rect, p);
-                p.setStyle(Paint.Style.STROKE);
-                p.setStrokeWidth(2);
-                p.setColor(0xFF22B57F);
-                canvas.drawRect(rect, p);
-            }
+            // 顶部提示药丸(始终显示,框住后也不碍事)
+            String hint = getString(R.string.wm_need_box);
+            float hh = pillText.getTextSize() + 12 * density;
+            float hw = pillText.measureText(hint) + 24 * density;
+            float hx = (getWidth() - hw) / 2f;
+            float hy = 12 * density;
+            tmp.set(hx, hy, hx + hw, hy + hh);
+            canvas.drawRoundRect(tmp, hh / 2f, hh / 2f, pillPaint);
+            canvas.drawText(hint, getWidth() / 2f,
+                    hy + (hh - pillText.getTextSize()) / 2f - pillText.ascent(),
+                    pillText);
+
+            if (rect.isEmpty()) return;
+            tmp.set(rect);
+            // 选区外圆角挖孔压暗
+            dimPath.reset();
+            dimPath.addRect(0, 0, getWidth(), getHeight(), Path.Direction.CW);
+            dimPath.addRoundRect(tmp, 10 * density, 10 * density, Path.Direction.CCW);
+            canvas.drawPath(dimPath, dimPaint);
+            // 细薄荷框 + 同语言角标
+            canvas.drawRect(tmp, framePaint);
+            sel.drawBrackets(canvas, tmp);
         }
 
         @Override
@@ -1997,7 +2034,7 @@ public class EditorActivity extends Activity {
 
                 TextView name = new TextView(EditorActivity.this);
                 name.setText(r.color.fullLabel());
-                name.setTextColor(0xFF1F2430);
+                name.setTextColor(0xFF3A3050);
                 name.setTextSize(13);
                 LinearLayout.LayoutParams nlp = new LinearLayout.LayoutParams(
                         0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
@@ -2205,10 +2242,10 @@ public class EditorActivity extends Activity {
             int have = BeadInventory.get(EditorActivity.this, uc.color.rgb);
             if (have < 0) {
                 inv.setText(getString(R.string.inv_unregistered));
-                inv.setTextColor(0xFF8A8F98);
+                inv.setTextColor(0xFF9A8FA6);
             } else if (have >= uc.count) {
                 inv.setText(getString(R.string.fmt_inv_enough, have - uc.count));
-                inv.setTextColor(0xFF22B57F);
+                inv.setTextColor(0xFF35C98E);
             } else {
                 inv.setText(getString(R.string.inv_short_fmt, uc.count - have));
                 inv.setTextColor(0xFFF0654E);
@@ -2315,7 +2352,7 @@ public class EditorActivity extends Activity {
             void addHeader(String title) {
                 TextView h = new TextView(EditorActivity.this);
                 h.setText(title);
-                h.setTextColor(0xFF1F2430);
+                h.setTextColor(0xFF3A3050);
                 h.setTextSize(12);
                 h.setTypeface(null, android.graphics.Typeface.BOLD);
                 h.setPadding(densityPad / 2, densityPad, densityPad / 2, densityPad / 4);
@@ -2530,7 +2567,7 @@ public class EditorActivity extends Activity {
         title.setPadding(Math.round(14 * dm), 0, Math.round(14 * dm), 0);
         title.setText(String.format(Locale.CHINA, getString(R.string.fmt_cal_title),
                 year, month + 1));
-        title.setTextColor(0xFF232323);
+        title.setTextColor(0xFF3A3050);
         title.setTextSize(16);
         title.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         head.addView(prev);
@@ -2546,7 +2583,7 @@ public class EditorActivity extends Activity {
             TextView tv = new TextView(this);
             tv.setText(w);
             tv.setTextSize(11);
-            tv.setTextColor(0xFF8A8F98);
+            tv.setTextColor(0xFF9A8FA6);
             tv.setGravity(android.view.Gravity.CENTER);
             tv.setLayoutParams(new LinearLayout.LayoutParams(0,
                     LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
@@ -2588,7 +2625,7 @@ public class EditorActivity extends Activity {
             cell.setText(cnt > 0 ? d + "\n🔥" + cnt : String.valueOf(d));
             cell.setTextSize(10);
             if (thisMonth && d == today) {
-                cell.setTextColor(0xFF1E88E5);
+                cell.setTextColor(0xFFFF6E9C);
                 cell.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
             } else {
                 cell.setTextColor(cnt > 0 ? 0xFFE65100 : 0xFFB9BEC5);
@@ -2638,7 +2675,7 @@ public class EditorActivity extends Activity {
         tv.setTextSize(14);
         int cp = Math.round(12 * getResources().getDisplayMetrics().density);
         tv.setPadding(cp, 0, cp, 0);
-        tv.setTextColor(0xFF444444);
+        tv.setTextColor(0xFF3A3050);
         tv.setClickable(true);
         return tv;
     }
@@ -3118,7 +3155,7 @@ public class EditorActivity extends Activity {
 
         TextView tip = new TextView(this);
         tip.setText(getString(R.string.pick_brush_hint));
-        tip.setTextColor(0xFF22B57F);
+        tip.setTextColor(0xFF35C98E);
         tip.setTextSize(12);
         int pad = Math.round(12 * getResources().getDisplayMetrics().density);
         tip.setPadding(pad, pad, pad, pad / 4);

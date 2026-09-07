@@ -138,7 +138,7 @@ public class SplashActivity extends Activity {
 
         PegBoardView() {
             super(SplashActivity.this);
-            setBackgroundColor(0xFFF6F3EE);
+            setBackgroundColor(0xFFFFF6ED);
             setClickable(true);
             for (int i = 0; i < delays.length; i++) {
                 delays[i] = rnd.nextFloat();
@@ -165,7 +165,7 @@ public class SplashActivity extends Activity {
             canvas.drawRoundRect(ox - r, oy - r, ox + boardW + r, oy + boardH + r,
                     r * 1.6f, r * 1.6f, boardPaint);
             // 孔
-            pegPaint.setColor(0xFFE8E6E1);
+            pegPaint.setColor(0xFFF2DFD2);
             for (int y = 0; y < ROWS; y++) {
                 for (int x = 0; x < COLS; x++) {
                     canvas.drawCircle(ox + (x + 0.5f) * cell, oy + (y + 0.5f) * cell,
@@ -216,7 +216,7 @@ public class SplashActivity extends Activity {
             // 标题贴纸弹出(jelly 阶段)
             if (jellyT > 0f) {
                 Paint tp = new Paint(Paint.ANTI_ALIAS_FLAG);
-                tp.setColor(0xFF1F2430);
+                tp.setColor(0xFF40354E);
                 tp.setTextAlign(Paint.Align.CENTER);
                 tp.setTextSize(w * 0.085f);
                 tp.setFakeBoldText(true);
@@ -226,7 +226,7 @@ public class SplashActivity extends Activity {
                 canvas.scale(pop, pop);
                 canvas.drawText(getString(R.string.app_name), 0, 0, tp);
                 tp.setTextSize(w * 0.036f);
-                tp.setColor(0xFF8A8F98);
+                tp.setColor(0xFF9A8FA6);
                 canvas.drawText(getString(R.string.main_footer), 0, w * 0.06f, tp);
                 canvas.restore();
             }
@@ -242,7 +242,7 @@ public class SplashActivity extends Activity {
             c.drawCircle(0, 0, r, beadPaint);
             ringPaint.setStyle(Paint.Style.STROKE);
             ringPaint.setStrokeWidth(r * 0.16f);
-            ringPaint.setColor(0x29000000);   // 极淡描边,柔和现代
+            ringPaint.setColor(0x2940354E);   // 极淡墨描边,贴纸感
             c.drawCircle(0, 0, r - ringPaint.getStrokeWidth() / 2f, ringPaint);
             if (r > dp(6)) {
                 glossPaint.setColor(0x66FFFFFF);

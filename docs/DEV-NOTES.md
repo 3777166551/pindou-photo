@@ -161,3 +161,29 @@ javac 报 `illegal character: '\ufeff'`。
   在 Activity onCreate 套到静态字段上;不调用时保持中文默认,qa 不受影响。
 - CI 模拟器是英文环境,qa/ui_smoke.sh 的文本锚点全部用英文串,
   顺带把英文翻译也端到端验了。新增 UI 时记得三语一起补键。
+
+## 15. Java2D 径向渐变的"透明黑"灰边(v2.39 教训)
+
+**现象**:GenCandyHero 用 RadialGradientPaint 生成柔光斑,边缘发灰发暗,
+整张英雄卡像蒙了层土。
+
+**原因**:渐变终点色写成 `new Color(0, true)`(纯透明黑)。插值发生在
+**非预乘 RGBA 空间**,alpha 衰减过程中 RGB 一路向 (0,0,0) 靠,光斑边缘
+等于叠了层半透明黑。
+
+**修法**:终点色 = 同 RGB + alpha 0:
+`new Color((rgb>>16)&0xFF,(rgb>>8)&0xFF,rgb&0xFF,0)`。
+GenPastelBg 老代码没踩坑是因为它用 hasAlpha(rgb,0f) 保住了 RGB。
+
+## 16. 贴纸风 UI 资产的再生成入口(v2.39 起)
+
+- `tools\gen_candy_assets.bat`:重生成 tile_pegboard.png(拼板孔点阵底)
+  + bg_hero_pastel.png(英雄卡)。改糖果色先改 GenPegboardTile/GenCandyHero
+  的色值再跑 bat(Bash 里直接 javac .java 会被 Mimosa 钩子拦)。
+- 框选视觉集中在 `view/SelectionPainter.java`(墨衬底+黄油角标+三分线),
+  CropView 与去水印框共用;全 APP 框选改色只动这一个文件。
+- 弹窗壳走 `CandyAlertDialog` 主题(bg_dialog.xml),新增 AlertDialog 零成本;
+  但自定义 View 的弹窗(setView)不吃壳的内边距,内容自己留边。
+- 公共类文件名必须与类名一致(SelectionPainter 差点以 SelectionStyle.java
+  入库,javac 直接拒);PowerShell -replace 批量改色后用
+  `[IO.File]::WriteAllText(路径, 内容, UTF8Encoding($false))` 落盘防 BOM。
