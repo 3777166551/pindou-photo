@@ -54,6 +54,7 @@ import com.pindou.app.bead.StyleTransfer;
 import com.pindou.app.export.EffectRenderer;
 import com.pindou.app.export.PatternSheetRenderer;
 import com.pindou.app.export.PdfExporter;
+import com.pindou.app.export.ShareCardRenderer;
 import com.pindou.app.provider.AppFileProvider;
 import com.pindou.app.util.PatternShare;
 import com.pindou.app.util.Anim;
@@ -119,6 +120,7 @@ public class EditorActivity extends Activity {
     // 导出菜单项
     private static final int EXP_SHEET = 1;
     private static final int EXP_EFFECT = 2;
+    private static final int EXP_CARD = 8;
     private static final int EXP_SHARE = 3;
     private static final int EXP_PDF = 4;
     private static final int EXP_FILE = 6;
@@ -145,6 +147,10 @@ public class EditorActivity extends Activity {
     private boolean roundBoard = false;
     /** 豆子规格:false=标准豆 5mm,true=迷你豆 2.6mm(只影响尺寸/克重估算,不改格数) */
     private boolean miniBead = false;
+    /** 夜间图纸:画布转暗 + 屏幕亮度降档,晚上拼豆不刺眼 */
+    private boolean nightMode = false;
+    /** 本次会话是否已经为这个图纸庆祝过(拆掉重拼可再触发) */
+    private boolean celebrated = false;
     /** 描摹底图:画笔模式下垫在格子下面的半透明照片(随项目存档) */
     private Bitmap traceBitmap;
     /** 空白画布模式:没有源照片,直接在格子上作画 */
@@ -264,6 +270,7 @@ public class EditorActivity extends Activity {
     private int assistBoard = 0;
     private TextView chipBeadStd, chipBeadMini;
     private TextView btnTracePick, btnTraceToggle, btnTraceClear;
+    private com.pindou.app.view.CelebrationView celebration;
     private boolean traceOn = true;
     private boolean paintMirror = false;
     private boolean dragDirty = false;
@@ -447,6 +454,7 @@ public class EditorActivity extends Activity {
         btnAssistNextBoard = findViewById(R.id.btnAssistNextBoard);
         chipBeadStd = findViewById(R.id.chipBeadStd);
         chipBeadMini = findViewById(R.id.chipBeadMini);
+        celebration = findViewById(R.id.celebration);
         btnTracePick = findViewById(R.id.btnTracePick);
         btnTraceToggle = findViewById(R.id.btnTraceToggle);
         btnTraceClear = findViewById(R.id.btnTraceClear);
@@ -666,6 +674,15 @@ public class EditorActivity extends Activity {
         });
         syncBeadSpecUi();
         syncTraceUi();
+        nightMode = getSharedPreferences("pindou", MODE_PRIVATE)
+                .getBoolean("night", false);
+        applyNight();
+        celebration.setOnFinishedListener(new com.pindou.app.view.CelebrationView.OnFinished() {
+            @Override
+            public void onFinished() {
+                // 视图自己 GONE,这里无需额外处理
+            }
+        });
 
         // 宽高步进
         findViewById(R.id.btnWMinus).setOnClickListener(stepper(false, true));
@@ -792,6 +809,7 @@ public class EditorActivity extends Activity {
                     adapter.notifyDataSetChanged();
                     patternView.invalidate();
                     maybeAutoAdvanceBoard();
+                    maybeCelebrate();
                     return;
                 }
                 if (!editCell) return;
@@ -831,6 +849,7 @@ public class EditorActivity extends Activity {
                     updateSummary();
                     adapter.notifyDataSetChanged();
                     maybeAutoAdvanceBoard();
+                    maybeCelebrate();
                 }
             }
         });
@@ -1221,6 +1240,58 @@ public class EditorActivity extends Activity {
     /** 每颗豆约重(g):按体积折算,迷你豆 ≈ 0.024 × (2.6/5)³ */
     private float gPerBead() {
         return miniBead ? 0.0067f : 0.024f;
+    }
+
+    /** 预计拼豆时长(小时):摆放速度 + 每板熨烫 + 备料,半小时取整 */
+    private float estimateHours() {
+        if (pattern == null || pattern.totalBeads <= 0) return 0f;
+        float pace = miniBead ? 80f : 150f;                  // 每小时摆放颗数,迷你豆更费眼
+        float hours = pattern.totalBeads / pace
+                + pattern.boardsNeeded() * 3f / 60f           // 每块板熨烫约 3 分钟
+                + 10f / 60f;                                  // 备料准备 10 分钟
+        return Math.round(hours * 2f) / 2f;
+    }
+
+    /** 难度档:入门/进阶/挑战(按颗数与色数) */
+    private String difficultyLabel() {
+        if (pattern == null) return "";
+        int colors = pattern.usedColors.size();
+        int beads = pattern.totalBeads;
+        if (beads <= 600 && colors <= 10) return getString(R.string.diff_easy);
+        if (beads <= 2500 && colors <= 22) return getString(R.string.diff_mid);
+        return getString(R.string.diff_hard);
+    }
+
+    /** 夜间图纸:画布转暗 + 屏幕亮度降档(只在编辑页窗口生效,退出自动恢复) */
+    private void applyNight() {
+        patternView.setNight(nightMode);
+        android.view.WindowManager.LayoutParams lp = getWindow().getAttributes();
+        lp.screenBrightness = nightMode
+                ? 0.42f : android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE;
+        getWindow().setAttributes(lp);
+    }
+
+    private void toggleNight() {
+        nightMode = !nightMode;
+        getSharedPreferences("pindou", MODE_PRIVATE)
+                .edit().putBoolean("night", nightMode).apply();
+        applyNight();
+        Toast.makeText(this, getString(nightMode
+                        ? R.string.night_on_toast : R.string.night_off_toast),
+                Toast.LENGTH_SHORT).show();
+    }
+
+    /** 全部拼完且还没庆祝过 -> 播放庆祝动画(拆掉重拼可再触发) */
+    private void maybeCelebrate() {
+        if (!beadAssist || pattern == null) return;
+        boolean complete = pattern.totalBeads > 0
+                && beadDone.size() >= pattern.totalBeads;
+        if (complete && !celebrated) {
+            celebrated = true;
+            celebration.start(getString(R.string.celebrate_done));
+        } else if (!complete) {
+            celebrated = false;
+        }
     }
 
     /** 豆子规格 chips 选中态 */
@@ -2113,6 +2184,10 @@ public class EditorActivity extends Activity {
         sb.append(String.format(Locale.CHINA, getString(R.string.fmt_sum_weight),
                 Math.round(pattern.totalBeads * gPerBead()),
                 pattern.totalBeads * beadUnitPrice()));
+        if (pattern.totalBeads > 0) {
+            sb.append(String.format(Locale.CHINA, getString(R.string.fmt_sum_time),
+                    estimateHours(), difficultyLabel()));
+        }
         // 豆仓缺口:只在登记过至少一种颜色时显示
         int registered = 0;
         int enough = 0;
@@ -2938,11 +3013,16 @@ public class EditorActivity extends Activity {
         PopupMenu menu = new PopupMenu(this, anchor);
         menu.getMenu().add(0, EXP_SHEET, 1, getString(R.string.menu_sheet));
         menu.getMenu().add(0, EXP_EFFECT, 2, getString(R.string.menu_effect));
-        menu.getMenu().add(0, EXP_SHARE, 3, getString(R.string.menu_share));
-        menu.getMenu().add(0, EXP_PDF, 4, getString(R.string.menu_pdf));
-        menu.getMenu().add(0, EXP_FILE, 5, getString(R.string.menu_file));
-        menu.getMenu().add(0, 7, 6, "📂 导入图纸文件(.json)");
-        menu.getMenu().add(1, 5, 7, getString(R.string.save_proj_title));
+        menu.getMenu().add(0, EXP_CARD, 3, getString(R.string.menu_card));
+        menu.getMenu().add(0, EXP_SHARE, 4, getString(R.string.menu_share));
+        menu.getMenu().add(0, EXP_PDF, 5, getString(R.string.menu_pdf));
+        menu.getMenu().add(0, EXP_FILE, 6, getString(R.string.menu_file));
+        menu.getMenu().add(0, 7, 7, "📂 导入图纸文件(.json)");
+        menu.getMenu().add(1, 5, 8, getString(R.string.save_proj_title));
+        android.view.MenuItem night = menu.getMenu().add(0, 9, 9,
+                nightMode ? R.string.menu_night_off : R.string.menu_night_on);
+        night.setChecked(nightMode);
+        night.setCheckable(true);
         menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(android.view.MenuItem item) {
@@ -2950,6 +3030,8 @@ public class EditorActivity extends Activity {
                     saveProjectDialog();
                 } else if (item.getItemId() == 7) {
                     importFile();
+                } else if (item.getItemId() == 9) {
+                    toggleNight();
                 } else {
                     export(item.getItemId());
                 }
@@ -3096,6 +3178,10 @@ public class EditorActivity extends Activity {
                     Bitmap bmp;
                     if (what == 2) {
                         bmp = EffectRenderer.render(pattern);
+                    } else if (what == EXP_CARD) {
+                        bmp = ShareCardRenderer.render(EditorActivity.this, pattern,
+                                currentPaletteName(), miniBead,
+                                estimateHours(), difficultyLabel());
                     } else {
                         bmp = PatternSheetRenderer.render(EditorActivity.this, pattern,
                             currentPaletteName(), miniBead);
@@ -3103,6 +3189,7 @@ public class EditorActivity extends Activity {
                     String stamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA)
                             .format(new Date());
                     String name = (what == 2 ? getString(R.string.file_effect_prefix)
+                    : what == EXP_CARD ? getString(R.string.file_card_prefix)
                     : getString(R.string.file_pattern_prefix))
                             + pattern.cols + "x" + pattern.rows + "_" + stamp + ".png";
                     final Uri uri = GallerySaver.save(EditorActivity.this, bmp, name);
@@ -3111,7 +3198,7 @@ public class EditorActivity extends Activity {
                         @Override
                         public void run() {
                             showLoading(false);
-                            if (what == EXP_SHARE) {
+                            if (what == EXP_SHARE || what == EXP_CARD) {
                                 share(uri, "image/png");
                             } else {
                                 Toast.makeText(EditorActivity.this,

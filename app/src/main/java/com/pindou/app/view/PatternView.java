@@ -235,6 +235,14 @@ public class PatternView extends View {
     private int assistBoard;
     private android.graphics.Rect assistBoardRect;
     private final Paint boardFramePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    /** 夜间图纸:纸面转暗、网格线转亮,豆子颜色保持原样 */
+    private boolean night;
+
+    /** 夜间图纸模式开关(只影响画布渲染,不改豆子颜色) */
+    public void setNight(boolean on) {
+        night = on;
+        invalidate();
+    }
     // 描摹底图:画笔模式下垫在格子下面的半透明照片
     private Bitmap traceBitmap;
     private boolean traceVisible = true;
@@ -687,7 +695,7 @@ public class PatternView extends View {
         int rows = pattern.rows;
         float m = marginRatio() * cell;
 
-        boardPaint.setColor(0xFFEFEAE3);
+        boardPaint.setColor(night ? 0xFF3A3346 : 0xFFEFEAE3);
         if (pattern.round) {
             float r = cols * cell / 2f;
             canvas.drawCircle(cols * cell / 2f, rows * cell / 2f, r + m * 0.9f, boardPaint);
@@ -696,7 +704,7 @@ public class PatternView extends View {
                     Math.max(6f, m * 0.8f), Math.max(6f, m * 0.8f), boardPaint);
         }
 
-        pegPaint.setColor(0xFFD8D2C9);
+        pegPaint.setColor(night ? 0x55FFFFFF : 0xFFD8D2C9);
         beadPaint.setStyle(Paint.Style.FILL);
         float ringW = Math.max(1f, cell * 0.06f);
         ringPaint.setStrokeWidth(ringW);
@@ -732,8 +740,8 @@ public class PatternView extends View {
         float h = rows * cell;
         boolean round = pattern.round;
 
-        // 白底(圆形板为圆面)
-        cellPaint.setColor(Color.WHITE);
+        // 白底(圆形板为圆面);夜间图纸纸面转暗
+        cellPaint.setColor(night ? 0xFF2E2938 : Color.WHITE);
         if (round) {
             float r = Math.min(w, h) / 2f;
             canvas.drawCircle(w / 2f, h / 2f, r, cellPaint);
@@ -761,7 +769,7 @@ public class PatternView extends View {
 
         // 空格画小叉(板外格不画)
         if (pattern.emptyCount > 0) {
-            emptyPaint.setColor(0xFFCFCFCF);
+            emptyPaint.setColor(night ? 0x59FFFFFF : 0xFFCFCFCF);
             emptyPaint.setStrokeWidth(Math.max(1f, cell * 0.06f));
             for (int y = 0; y < rows; y++) {
                 for (int x = 0; x < cols; x++) {
@@ -779,7 +787,7 @@ public class PatternView extends View {
 
         // 细网格线(圆形板只画弦段);开关开就画,不再按缩放自动隐藏
         if (showGrid) {
-            gridPaint.setColor(0x33888888);
+            gridPaint.setColor(night ? 0x2EFFFFFF : 0x33888888);
             gridPaint.setStrokeWidth(1f);
             for (int x = 1; x < cols; x++) {
                 if (round) {
@@ -801,7 +809,7 @@ public class PatternView extends View {
 
         // 每 29 格一条拼板分隔线
         float boardW = Math.max(2f, cell * 0.1f);
-        boardLinePaint.setColor(0xFF9A9086);
+        boardLinePaint.setColor(night ? 0x8CC9BFD6 : 0xFF9A9086);
         boardLinePaint.setStrokeWidth(boardW);
         for (int x = 29; x < cols; x += 29) {
             if (round) {
@@ -821,7 +829,7 @@ public class PatternView extends View {
         }
 
         // 外框
-        borderPaint.setColor(0xFF6E655C);
+        borderPaint.setColor(night ? 0xFFB9AFC6 : 0xFF6E655C);
         borderPaint.setStrokeWidth(2f);
         if (round) {
             canvas.drawCircle(w / 2f, h / 2f, Math.min(w, h) / 2f - 1f, borderPaint);
@@ -849,7 +857,7 @@ public class PatternView extends View {
         // 坐标编号
         if (cell >= dp(16)) {
             int step = cell >= dp(22) ? 1 : 5;
-            labelPaint.setColor(0xFF9A938C);
+            labelPaint.setColor(night ? 0xFF9A93A8 : 0xFF9A938C);
             labelPaint.setTextSize(cell * 0.3f);
             labelPaint.setTextAlign(Paint.Align.CENTER);
             Paint.FontMetrics fm = labelPaint.getFontMetrics();
@@ -876,13 +884,13 @@ public class PatternView extends View {
                     if (assistBoardMode && assistBoardRect != null
                             && (x < assistBoardRect.left || x >= assistBoardRect.right
                             || y < assistBoardRect.top || y >= assistBoardRect.bottom)) {
-                        cellPaint.setColor(0xB8EFE9DC);
+                        cellPaint.setColor(night ? 0xB8332C40 : 0xB8EFE9DC);
                         canvas.drawRect(x * cell, y * cell,
                                 (x + 1) * cell, (y + 1) * cell, cellPaint);
                         continue;
                     }
                     if (assistFocus >= 0 && idx != assistFocus) {
-                        cellPaint.setColor(0xE6FDF8EF);
+                        cellPaint.setColor(night ? 0xE6332C40 : 0xE6FDF8EF);
                         canvas.drawRect(x * cell, y * cell,
                                 (x + 1) * cell, (y + 1) * cell, cellPaint);
                     }
