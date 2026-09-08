@@ -195,8 +195,8 @@
     <string name="err_photo_read">この写真は読み込めません。別の写真をお試しください</string>
     <string name="err_no_undo">戻す操作がありません</string>
     <string name="err_no_redo">やり直す操作がありません</string>
-    <string name="fmt_board_round">丸ボード 直径 %1$d マス · 約 %2$.0f cm(5mm ビーズ)</string>
-    <string name="fmt_board_rect">29×29 ボード %1$d 枚 · 約 %2$.0f × %3$.0f cm(5mm ビーズ)</string>
+    <string name="fmt_board_round">丸ボード 直径 %1$d マス · 約 %2$.0f cm</string>
+    <string name="fmt_board_rect">29×29 ボード %1$d 枚 · 約 %2$.0f × %3$.0f cm</string>
     <string name="err_ghibli_blank">白紙キャンバスはスタイル化不要です。先に写真を読み込んでください</string>
     <string name="ghibli_title">🎨 ジブリ風(オフラインAI)</string>
     <string name="style_strength">スタイル強度</string>
@@ -222,7 +222,7 @@
     <string name="fmt_assist_done">色 %1$d/%2$d · この色 %3$d 個 · ✅完了</string>
     <string name="fmt_sum_total">総ビーズ数: %,d\n</string>
     <string name="fmt_sum_colors">色数: %1$d · 29×29 ボード: %2$d 枚\n</string>
-    <string name="fmt_sum_size">サイズ: 約 %1$.0f × %2$.0f cm(5mm ビーズ)\n</string>
+    <string name="fmt_sum_size">サイズ: 約 %1$.0f × %2$.0f cm\n</string>
     <string name="fmt_sum_empty">空きマス: %,d(ビーズなし)\n</string>
     <string name="fmt_sum_weight">約 %1$,d g · 参考価格 ¥%2$.2f(タップで単価変更)\n</string>
     <string name="fmt_sum_inv">🎒 在庫: %1$d/%2$d 色が足りています · あと %3$,d 個必要</string>
@@ -374,7 +374,7 @@
     <string name="fmt_qty_done">%1$,d 個 · ✅完了</string>
     <string name="fmt_pdf_size">図案サイズ:%1$d × %2$d マス</string>
     <string name="fmt_pdf_total">総ビーズ数: %1$,d · %2$d 色</string>
-    <string name="fmt_pdf_weight">約 %1$,d g(5mm ビーズ)</string>
+    <string name="fmt_pdf_weight">約 %1$,d g(%2$s)</string>
     <string name="pdf_palette_prefix">パレット: </string>
     <string name="pdf_date_prefix">作成日: </string>
     <string name="fmt_pdf_empty">空きマス %,d</string>

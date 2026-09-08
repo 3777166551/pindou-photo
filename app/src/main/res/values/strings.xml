@@ -195,8 +195,8 @@
     <string name="err_photo_read">这张照片读取失败,换一张试试吧</string>
     <string name="err_no_undo">没有可撤销的操作了</string>
     <string name="err_no_redo">没有可重做的操作了</string>
-    <string name="fmt_board_round">圆形板直径 %1$d 格 · 成品约 %2$.0f cm(标准 5mm 豆)</string>
-    <string name="fmt_board_rect">需要 29×29 拼板 %1$d 块 · 成品约 %2$.0f × %3$.0f cm(标准 5mm 豆)</string>
+    <string name="fmt_board_round">圆形板直径 %1$d 格 · 成品约 %2$.0f cm</string>
+    <string name="fmt_board_rect">需要 29×29 拼板 %1$d 块 · 成品约 %2$.0f × %3$.0f cm</string>
     <string name="err_ghibli_blank">空白画布不需要风格化,先导入照片</string>
     <string name="ghibli_title">🎨 吉卜力风(AI 风格化)</string>
     <string name="style_strength">风格强度</string>
@@ -222,7 +222,7 @@
     <string name="fmt_assist_done">颜色 %1$d/%2$d · 本色 %3$d 颗 · ✅拼完</string>
     <string name="fmt_sum_total">总用豆:%,d 颗\n</string>
     <string name="fmt_sum_colors">颜色:%1$d 种 · 29×29 拼板:%2$d 块\n</string>
-    <string name="fmt_sum_size">成品约:%1$.0f × %2$.0f cm(标准 5mm 豆)\n</string>
+    <string name="fmt_sum_size">成品约:%1$.0f × %2$.0f cm\n</string>
     <string name="fmt_sum_empty">空格:%,d 格(不放置)\n</string>
     <string name="fmt_sum_weight">约重 %1$,d g · 参考成本 ¥%2$.2f(点此改单价)\n</string>
     <string name="fmt_sum_inv">🎒 豆仓:%1$d/%2$d 色够用 · 还需补 %3$,d 颗</string>
@@ -374,7 +374,7 @@
     <string name="fmt_qty_done">%,d 颗 · ✅拼完</string>
     <string name="fmt_pdf_size">图纸尺寸:%1$d × %2$d 格</string>
     <string name="fmt_pdf_total">总用豆:%1$,d 颗 · 颜色 %2$d 种</string>
-    <string name="fmt_pdf_weight">约重 %,d g(标准 5mm 豆)</string>
+    <string name="fmt_pdf_weight">约重 %1$,d g(%2$s)</string>
     <string name="pdf_palette_prefix">色板:</string>
     <string name="pdf_date_prefix">生成日期:</string>
     <string name="fmt_pdf_empty">空格 %,d 格(不摆放)</string>

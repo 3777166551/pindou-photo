@@ -195,8 +195,8 @@
     <string name="err_photo_read">Couldn\'t read this photo, try another one</string>
     <string name="err_no_undo">Nothing to undo</string>
     <string name="err_no_redo">Nothing to redo</string>
-    <string name="fmt_board_round">Round board %1$d pegs across · about %2$.0f cm (5mm beads)</string>
-    <string name="fmt_board_rect">Uses %1$d 29×29 boards · about %2$.0f × %3$.0f cm (5mm beads)</string>
+    <string name="fmt_board_round">Round board %1$d pegs across · about %2$.0f cm</string>
+    <string name="fmt_board_rect">Uses %1$d 29×29 boards · about %2$.0f × %3$.0f cm</string>
     <string name="err_ghibli_blank">Blank canvas needs no stylizing, import a photo first</string>
     <string name="ghibli_title">🎨 Ghibli style (AI)</string>
     <string name="style_strength">Style strength</string>
@@ -222,7 +222,7 @@
     <string name="fmt_assist_done">Color %1$d/%2$d · %3$d beads · ✅done</string>
     <string name="fmt_sum_total">Total beads: %,d\n</string>
     <string name="fmt_sum_colors">Colors: %1$d · 29×29 boards: %2$d\n</string>
-    <string name="fmt_sum_size">Size: about %1$.0f × %2$.0f cm (5mm beads)\n</string>
+    <string name="fmt_sum_size">Size: about %1$.0f × %2$.0f cm\n</string>
     <string name="fmt_sum_empty">Empty cells: %,d (no bead)\n</string>
     <string name="fmt_sum_weight">About %1$,d g · est. cost ¥%2$.2f (tap to change price)\n</string>
     <string name="fmt_sum_inv">🎒 Inventory: %1$d/%2$d colors enough · need %3$,d more beads</string>
@@ -374,7 +374,7 @@
     <string name="fmt_qty_done">%1$,d · ✅done</string>
     <string name="fmt_pdf_size">Chart size: %1$d × %2$d cells</string>
     <string name="fmt_pdf_total">Total beads: %1$,d · %2$d colors</string>
-    <string name="fmt_pdf_weight">About %1$,d g (5mm beads)</string>
+    <string name="fmt_pdf_weight">About %1$,d g (%2$s)</string>
     <string name="pdf_palette_prefix">Palette: </string>
     <string name="pdf_date_prefix">Created: </string>
     <string name="fmt_pdf_empty">Empty cells: %,d</string>

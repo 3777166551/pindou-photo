@@ -128,7 +128,8 @@ public final class PdfExporter {
                     String.format(Locale.CHINA, ctx.getString(R.string.fmt_pdf_boards),
                             p.boardsNeeded(), p.cols * cm, p.rows * cm),
                     String.format(Locale.CHINA, ctx.getString(R.string.fmt_pdf_weight),
-                            Math.round(p.totalBeads * (mini ? 0.0067f : 0.024f))),
+                            Math.round(p.totalBeads * (mini ? 0.0067f : 0.024f)),
+                            ctx.getString(mini ? R.string.bead_mini : R.string.bead_std)),
                     ctx.getString(R.string.pdf_palette_prefix)
                             + (paletteName == null || paletteName.isEmpty() ? "-" : paletteName),
                     ctx.getString(R.string.pdf_date_prefix)

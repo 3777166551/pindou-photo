@@ -202,20 +202,28 @@ sleep 0.5
 # 切 58×58(4 块板),开拼豆辅助 + 按板引导
 tap_id chip58 0
 sleep 1.5
+# 拼豆模式卡在页面更下方,tap_id 的单向滚动够不到,先手动滚两屏
+adb shell input swipe 540 1700 540 500 300; sleep 0.8
+adb shell input swipe 540 1700 540 500 300; sleep 0.8
 tap_id swBeadAssist 0
 sleep 1.5
 tap_id btnAssistBoard 0
 sleep 1
-snap assist_board
 tap_id btnAssistNextBoard 0
 sleep 0.8
-snap assist_board2
+# 滚回网格:应看到第 2 块板外墨框、其余板蒙灰、板进度行
+adb shell input swipe 540 600 540 1900 300; sleep 0.8
+snap assist_board
 tap_id btnAssistBoard 0
 sleep 0.5
 tap_id swBeadAssist 0
 sleep 1
 # 描摹行存在性(不真选图,避免文件选择器挂住流程)
+adb shell input swipe 540 1500 540 900 300; sleep 0.6
 tap_id btnTraceToggle 0
+# 滚回页顶,别影响后续 tabList 等步骤
+adb shell input swipe 540 600 540 2100 300; sleep 0.6
+adb shell input swipe 540 600 540 2100 300; sleep 0.6
 
 # ---------- 标签页切换 ----------
 tap_id tabList
