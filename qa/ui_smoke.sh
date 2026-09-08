@@ -192,6 +192,31 @@ adb shell input swipe 500 650 700 850 300
 sleep 1
 snap painted
 
+# ---------- v2.40 新功能走查:豆子规格 / 按板引导 / 描摹行(全部 soft) ----------
+# 迷你豆 2.6mm:切换后看板提示与摘要是否跟随(截图人眼审)
+tap_id chipBeadMini 0
+sleep 0.8
+snap bead_mini
+tap_id chipBeadStd 0
+sleep 0.5
+# 切 58×58(4 块板),开拼豆辅助 + 按板引导
+tap_id chip58 0
+sleep 1.5
+tap_id swBeadAssist 0
+sleep 1.5
+tap_id btnAssistBoard 0
+sleep 1
+snap assist_board
+tap_id btnAssistNextBoard 0
+sleep 0.8
+snap assist_board2
+tap_id btnAssistBoard 0
+sleep 0.5
+tap_id swBeadAssist 0
+sleep 1
+# 描摹行存在性(不真选图,避免文件选择器挂住流程)
+tap_id btnTraceToggle 0
+
 # ---------- 标签页切换 ----------
 tap_id tabList
 sleep 1
