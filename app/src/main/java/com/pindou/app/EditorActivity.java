@@ -1973,7 +1973,15 @@ public class EditorActivity extends Activity {
     }
 
     private void updateAssistUi() {
-        if (pattern == null || tvAssistColor == null) return;        if (assistFocus < 0 || assistFocus >= pattern.palette.size()) {
+        if (pattern == null || tvAssistColor == null) return;
+        // 按板引导:先刷板进度(空白菜布 assistFocus=-1 会提前返回,不能放在后面)
+        if (assistBoardMode && tvAssistBoard != null) {
+            int[] st = boardDoneStats();
+            tvAssistBoard.setText(String.format(Locale.CHINA,
+                    getString(R.string.fmt_assist_board),
+                    assistBoard + 1, pattern.boardsNeeded(), st[0], st[1]));
+        }
+        if (assistFocus < 0 || assistFocus >= pattern.palette.size()) {
             tvAssistColor.setText(getString(R.string.gen_first_short));
             return;
         }
@@ -2010,12 +2018,6 @@ public class EditorActivity extends Activity {
         tvAssistProgress.setText(String.format(Locale.CHINA,
                 getString(R.string.fmt_assist_head),
                 done, total, pct, beadDone.size(), pattern.totalBeads, todayCount()));
-        if (assistBoardMode && tvAssistBoard != null) {
-            int[] st = boardDoneStats();
-            tvAssistBoard.setText(String.format(Locale.CHINA,
-                    getString(R.string.fmt_assist_board),
-                    assistBoard + 1, pattern.boardsNeeded(), st[0], st[1]));
-        }
     }
 
     // ---------------- 豆豆清单 ----------------

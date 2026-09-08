@@ -896,11 +896,17 @@ public class PatternView extends View {
                     }
                 }
             }
-            // 当前板的糖果墨描边外框
+            // 当前板外框:墨衬底 + 黄油主线(和拼板分隔线区分开)
             if (assistBoardMode && assistBoardRect != null) {
                 boardFramePaint.setStyle(Paint.Style.STROKE);
+                float fr = Math.max(3f, cell * 0.14f);
                 boardFramePaint.setColor(0xFF40354E);
-                boardFramePaint.setStrokeWidth(Math.max(3f, cell * 0.16f));
+                boardFramePaint.setStrokeWidth(fr * 2.2f);
+                canvas.drawRect(assistBoardRect.left * cell, assistBoardRect.top * cell,
+                        assistBoardRect.right * cell, assistBoardRect.bottom * cell,
+                        boardFramePaint);
+                boardFramePaint.setColor(0xFFFFCF56);
+                boardFramePaint.setStrokeWidth(fr);
                 canvas.drawRect(assistBoardRect.left * cell, assistBoardRect.top * cell,
                         assistBoardRect.right * cell, assistBoardRect.bottom * cell,
                         boardFramePaint);
