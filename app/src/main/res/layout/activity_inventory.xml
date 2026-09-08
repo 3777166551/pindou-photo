@@ -86,6 +86,7 @@
             android:id="@+id/btnInvAdd"
             android:layout_width="0dp"
             android:layout_height="40dp"
+            android:layout_marginEnd="5dp"
             android:layout_weight="1"
             android:background="@drawable/bg_chip"
             android:clickable="true"
@@ -93,6 +94,21 @@
             android:focusable="true"
             android:gravity="center"
             android:text="@string/btn_add_color"
+            android:textColor="@color/text_chip"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btnInvMatch"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_chip"
+            android:clickable="true"
+            android:elevation="2dp"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/match_btn"
             android:textColor="@color/text_chip"
             android:textSize="13sp"
             android:textStyle="bold" />

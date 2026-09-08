@@ -3,6 +3,7 @@ package com.pindou.app;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -95,6 +96,14 @@ public class InventoryActivity extends Activity {
             @Override
             public void onClick(View v) {
                 showAddDialog();
+            }
+        });
+        // 拍照对色:拍豆子照片找色号,登记直通豆仓
+        findViewById(R.id.btnInvMatch).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(InventoryActivity.this,
+                        ColorMatchActivity.class));
             }
         });
         Anim.pressScale(btnSave);

@@ -50,6 +50,7 @@ import com.pindou.app.bead.CustomPalettes;
 import com.pindou.app.bead.MlSegmenter;
 import com.pindou.app.bead.PatternEngine;
 import com.pindou.app.bead.PatternPatch;
+import com.pindou.app.bead.Symmetry;
 import com.pindou.app.bead.StyleTransfer;
 import com.pindou.app.export.EffectRenderer;
 import com.pindou.app.export.PatternSheetRenderer;
@@ -273,6 +274,9 @@ public class EditorActivity extends Activity {
     private com.pindou.app.view.CelebrationView celebration;
     private boolean traceOn = true;
     private boolean paintMirror = false;
+    /** 万花筒对称:0=关(用⇋),2=四象限,3=万花筒(优先于⇋) */
+    private int symMode = 0;
+    private TextView btnSym;
     private boolean dragDirty = false;
     private AlertDialog calendarDialog;
     private TextView tvLoading;
@@ -458,6 +462,7 @@ public class EditorActivity extends Activity {
         btnTracePick = findViewById(R.id.btnTracePick);
         btnTraceToggle = findViewById(R.id.btnTraceToggle);
         btnTraceClear = findViewById(R.id.btnTraceClear);
+        btnSym = findViewById(R.id.btnSym);
         tvLoading = findViewById(R.id.tvLoading);
         chipBrickLight = findViewById(R.id.chipBrickLight);
         chipBrickMid = findViewById(R.id.chipBrickMid);
@@ -674,6 +679,15 @@ public class EditorActivity extends Activity {
         });
         syncBeadSpecUi();
         syncTraceUi();
+        // 万花筒对称:关 -> 四象限 -> 万花筒 循环
+        btnSym.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                symMode = symMode == Symmetry.KALEIDO ? Symmetry.OFF : symMode + 1;
+                syncSymUi();
+            }
+        });
+        syncSymUi();
         nightMode = getSharedPreferences("pindou", MODE_PRIVATE)
                 .getBoolean("night", false);
         applyNight();
@@ -1308,6 +1322,15 @@ public class EditorActivity extends Activity {
         btnTraceClear.setEnabled(traceBitmap != null);
         btnTraceClear.setAlpha(traceBitmap != null ? 1f : 0.45f);
         patternView.setTraceVisible(traceOn);
+    }
+
+    /** 万花筒对称 chip 文案与选中态 */
+    private void syncSymUi() {
+        if (btnSym == null) return;
+        btnSym.setText(symMode == Symmetry.QUAD ? getString(R.string.sym_quad)
+                : symMode == Symmetry.KALEIDO ? getString(R.string.sym_kaleido)
+                : getString(R.string.sym_off));
+        btnSym.setSelected(symMode != Symmetry.OFF);
     }
 
     /** 从相册选一张照片当描摹底图 */
@@ -3384,10 +3407,17 @@ public class EditorActivity extends Activity {
         int target = eraseOn ? -1 : brushPalIdx;
         if (target < -1) return;
         boolean changed = applyBrush(x, y, target);
-        if (paintMirror) {
-            int mx = cols - 1 - x;
-            if (mx != x && mx >= 0 && !pattern.outsideShape(mx, y)) {
-                changed |= applyBrush(mx, y, target);
+        // 对称模式:⇋=左右镜像;✳ chip 选四象限/万花筒(优先生效)
+        int mode = symMode > 0 ? symMode
+                : (paintMirror ? Symmetry.LR : Symmetry.OFF);
+        if (mode != Symmetry.OFF) {
+            int[] sib = new int[16];
+            int n = Symmetry.siblings(mode, x, y, cols, rows, sib);
+            for (int i = 0; i < n; i++) {
+                int sx = sib[i * 2], sy = sib[i * 2 + 1];
+                if (!pattern.outsideShape(sx, sy)) {
+                    changed |= applyBrush(sx, sy, target);
+                }
             }
         }
         if (changed) queuePaintFlush();

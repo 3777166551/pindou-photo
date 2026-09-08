@@ -171,6 +171,22 @@
     <string name="diff_hard">Advanced</string>
     <string name="fmt_sum_time">Est. %1$.1f h · %2$s\n</string>
     <string name="celebrate_done">All done! 🎉</string>
+    <string name="sym_off">✳ Symmetry off</string>
+    <string name="sym_quad">✳ Quad</string>
+    <string name="sym_kaleido">✳ Kaleido</string>
+    <string name="daily_fmt">📅 Daily pick: %1$s</string>
+    <string name="match_title">Color match</string>
+    <string name="match_btn">🎨 Match</string>
+    <string name="match_pick">📷 Pick a bead photo</string>
+    <string name="match_hint">Pick a photo of your beads and tap one - the closest official color codes are calculated offline.</string>
+    <string name="match_hint_tap">Tap any bead to try it</string>
+    <string name="match_loading">Processing photo…</string>
+    <string name="match_retry">Couldn\'t sample there - tap the middle of a bead</string>
+    <string name="match_picked_fmt">Picked color: %1$s</string>
+    <string name="match_de_fmt">ΔE %.1f (lower = closer)</string>
+    <string name="match_register">Log</string>
+    <string name="match_register_title">Register %1$s %2$s%3$s to inventory</string>
+    <string name="match_registered">Saved to inventory</string>
     <string name="denoise_hint">Merges similar neighbors and removes lonely speckles; too strong loses detail</string>
     <string name="symbols">Show symbols</string>
     <string name="grid_lines">Show grid lines</string>

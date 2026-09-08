@@ -256,6 +256,31 @@ public class MainActivity extends Activity {
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
 
+        // 每日一拼:按"年+当年第几天"稳定挑一张,同一天大家看到的都一样
+        final Templates.Tpl daily = pickDaily(cats);
+        if (daily != null) {
+            TextView dailyBtn = new TextView(this);
+            dailyBtn.setText(String.format(java.util.Locale.getDefault(),
+                    getString(R.string.daily_fmt), daily.name));
+            dailyBtn.setTextSize(14);
+            dailyBtn.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            dailyBtn.setTextColor(android.graphics.Color.WHITE);
+            dailyBtn.setGravity(android.view.Gravity.CENTER);
+            dailyBtn.setBackgroundResource(R.drawable.bg_btn_primary);
+            dailyBtn.setElevation(dp(3));
+            LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, dp(44));
+            dlp.setMargins(dp(12), dp(12), dp(12), dp(2));
+            dailyBtn.setLayoutParams(dlp);
+            dailyBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openTemplate(daily);
+                }
+            });
+            box.addView(dailyBtn);
+        }
+
         // 顶部分类标签
         final HorizontalScrollView hs = new HorizontalScrollView(this);
         hs.setHorizontalScrollBarEnabled(false);
@@ -381,6 +406,21 @@ public class MainActivity extends Activity {
         EditorActivity.pendingSuggestedSize = tpl.suggestedSize;
         startActivity(new Intent(MainActivity.this, EditorActivity.class));
         overridePendingTransition(R.anim.enter_up, R.anim.exit_dim);
+    }
+
+    /** 每日一拼:按"年+当年第几天"的稳定散列挑一张,全设备同一天一致 */
+    private Templates.Tpl pickDaily(List<Templates.Cat> cats) {
+        List<Templates.Tpl> all = new ArrayList<>();
+        for (Templates.Cat c : cats) {
+            for (Templates.Tpl t : c.items) all.add(t);
+        }
+        if (all.isEmpty()) return null;
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        long seed = cal.get(java.util.Calendar.YEAR) * 1000L
+                + cal.get(java.util.Calendar.DAY_OF_YEAR);
+        long hashed = seed * 2654435761L;
+        if (hashed < 0) hashed = -hashed;
+        return all.get((int) (hashed % all.size()));
     }
 
     // ---------------- 我的项目 ----------------

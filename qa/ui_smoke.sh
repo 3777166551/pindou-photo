@@ -163,6 +163,7 @@ log "home OK"
 tap_id btnKnowledge
 sleep 1.5
 check_text "What are fuse beads?"
+check_text "Project ideas" 0
 snap knowledge
 back
 ensure_home
@@ -171,6 +172,7 @@ ensure_home
 tap_id btnTemplates
 sleep 2.5
 check_text "Design templates" 0
+check_text "Daily pick" 0
 snap templates
 tap_text "Close" 0
 back
@@ -218,6 +220,18 @@ sleep 1
 # 描摹行存在性(不真选图,避免文件选择器挂住流程)
 adb shell input swipe 540 1500 540 900 300; sleep 0.6
 tap_id btnTraceToggle 0
+# ---------- v2.42:对称绘画(四象限 -> 万花筒,各画一笔) ----------
+adb shell input swipe 540 1700 540 900 300; sleep 0.6
+tap_id btnSym 0
+adb shell input swipe 540 600 540 1900 300; sleep 0.6
+adb shell input swipe 300 700 600 900 300; sleep 0.5
+snap sym_quad
+adb shell input swipe 540 1700 540 900 300; sleep 0.6
+tap_id btnSym 0
+adb shell input swipe 540 600 540 1900 300; sleep 0.6
+adb shell input swipe 400 650 700 900 300; sleep 0.5
+snap sym_kaleido
+tap_id btnSym 0
 # 滚回页顶,别影响后续 tabList 等步骤
 adb shell input swipe 540 600 540 2100 300; sleep 0.6
 adb shell input swipe 540 600 540 2100 300; sleep 0.6
@@ -285,6 +299,18 @@ tap_id btnProjects 0
 sleep 1.5
 snap projects
 back
+ensure_home
+
+# ---------- v2.42:拍照对色入口(空态截图,不真选图) ----------
+tap_id btnInventoryHome 0
+sleep 1.5
+tap_id btnInvMatch 0
+sleep 1.5
+snap color_match
+back
+sleep 0.8
+back
+sleep 0.8
 ensure_home
 
 # ---------- 崩溃检查 ----------
