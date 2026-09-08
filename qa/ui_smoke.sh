@@ -222,30 +222,29 @@ sleep 0.5
 # 切 58×58(4 块板),开拼豆辅助 + 按板引导
 tap_id chip58 0
 sleep 1.5
-# 拼豆模式卡在页面更下方,tap_id 的单向滚动够不到,先手动滚两屏
+# 拼豆模式卡在页面更下方,先手动滚两屏再确认卡名可见(tap_id 半屏点击会打空)
 adb shell input swipe 540 1700 540 500 300; sleep 0.8
 adb shell input swipe 540 1700 540 500 300; sleep 0.8
+check_text "Bead-along" 0
 tap_id swBeadAssist 0
 sleep 1.5
+check_text "Find undone" 0
 tap_id btnAssistBoard 0
 sleep 1
 tap_id btnAssistNextBoard 0
 sleep 0.8
-# 滚回网格:应看到第 2 块板外墨框、其余板蒙灰、板进度行
-adb shell input swipe 540 600 540 1900 300; sleep 0.8
+# 顶部网格不随设置区滚动,直接截:应看到第 2 块板外墨框 + 板进度行
 snap assist_board
-# v2.44:逐行引导(板模式直接切行模式,下一行,滚回截图)
+# v2.44:逐行引导(板模式直接切行模式,下一行,截图带面板)
 tap_id btnAssistRow 0
 sleep 0.8
 tap_id btnAssistNextBoard 0
 sleep 0.5
-adb shell input swipe 540 600 540 1900 300; sleep 0.8
 snap assist_row
 tap_id btnAssistRow 0
 sleep 0.5
-tap_id btnAssistBoard 0
-sleep 0.5
 tap_id swBeadAssist 0
+sleep 1
 sleep 1
 # 描摹行存在性(不真选图,避免文件选择器挂住流程)
 adb shell input swipe 540 1500 540 900 300; sleep 0.6
@@ -318,6 +317,9 @@ tap_id chip3d 0
 sleep 0.5
 
 # ---------- v2.44:取景裁剪拖拽回归(拖动选区后截图,验证手势) ----------
+# 裁剪行在滚动区深处,先硬滚两屏防半屏点空
+adb shell input swipe 540 1700 540 500 300; sleep 0.6
+adb shell input swipe 540 1700 540 500 300; sleep 0.6
 tap_id btnCrop 0
 sleep 2.5
 adb shell input swipe 540 800 320 640 400
