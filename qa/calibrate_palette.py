@@ -14,6 +14,7 @@ CSV = {
     'DATA_MARD': 'mard.csv',
     'DATA_PERLER': 'perler.csv',
     'DATA_HAMA': 'hama.csv',
+    'DATA_NABBI': 'nabbi.csv',
 }
 
 def lab(rgb):

@@ -48,6 +48,7 @@ public class PatternView extends View {
     private final Paint glossPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint boardPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint pegPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint shadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint cellPaint = new Paint();
     private final Paint gridPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint boardLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -230,10 +231,13 @@ public class PatternView extends View {
     private java.util.Set<Integer> assistDone;
 
     // 拼豆模式:非当前颜色蒙上纸色,已完成的格子描薄荷绿边;
-    // 按板引导时只点亮当前 29×29 板,其余板蒙灰
+    // 按板引导时只点亮当前 29×29 板,逐行引导时只点亮当前行,其余蒙灰
     private boolean assistBoardMode;
     private int assistBoard;
     private android.graphics.Rect assistBoardRect;
+    /** 逐行引导:只点亮 assistRow 这一行 */
+    private boolean assistRowMode;
+    private int assistRow;
     private final Paint boardFramePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     /** 夜间图纸:纸面转暗、网格线转亮,豆子颜色保持原样 */
     private boolean night;
@@ -250,18 +254,27 @@ public class PatternView extends View {
     private final android.graphics.RectF traceDst = new android.graphics.RectF();
 
     public void setAssist(boolean on, int focusColor, java.util.Set<Integer> done) {
-        setAssist(on, focusColor, done, false, 0);
+        setAssist(on, focusColor, done, false, 0, false, 0);
     }
 
-    /** 按板引导:boardIndex 指定当前 29×29 板(focusColor<0 = 板内全色可见) */
+    /** 兼容旧签名:按板引导(无逐行) */
     public void setAssist(boolean on, int focusColor, java.util.Set<Integer> done,
                           boolean boardMode, int boardIndex) {
+        setAssist(on, focusColor, done, boardMode, boardIndex, false, 0);
+    }
+
+    /** 按板/逐行引导:boardIndex 指定当前板,rowIndex 指定当前行(focusColor<0 = 带内全色可见) */
+    public void setAssist(boolean on, int focusColor, java.util.Set<Integer> done,
+                          boolean boardMode, int boardIndex,
+                          boolean rowMode, int rowIndex) {
         assistOn = on;
         assistFocus = focusColor;
         assistDone = done;
-        assistBoardMode = on && boardMode && pattern != null;
+        assistBoardMode = on && boardMode && !rowMode && pattern != null;
         assistBoard = boardIndex;
         assistBoardRect = assistBoardMode ? boardRect(pattern, boardIndex) : null;
+        assistRowMode = on && rowMode && pattern != null;
+        assistRow = Math.max(0, Math.min(rowIndex, pattern == null ? 0 : pattern.rows - 1));
         invalidate();
     }
 
@@ -650,7 +663,11 @@ public class PatternView extends View {
         canvas.save();
         canvas.translate(offX + m, offY + m);
         if (mode == MODE_EFFECT) {
-            drawEffect(canvas, cell);
+            if (effect3d) {
+                drawEffect3D(canvas, cell);
+            } else {
+                drawEffect(canvas, cell);
+            }
         } else {
             drawPatternGrid(canvas, cell);
             if (flashCell != null && SystemClock.uptimeMillis() < flashUntil) {
@@ -730,6 +747,94 @@ public class PatternView extends View {
                 }
             }
         }
+    }
+
+    /** 效果图 3D 预览:俯视 3/4 透视 + 圆豆圆柱光影(纯 Canvas 伪 3D,v2.44) */
+    private boolean effect3d;
+
+    /** 切换效果图 3D 预览 */
+    public void setEffect3D(boolean on) {
+        effect3d = on;
+        invalidate();
+    }
+
+    /**
+     * 3D 预览:整面纵向压缩成俯视 3/4 视角;每颗豆画成有厚度的圆柱
+     * (底部深色侧壁 + 顶面原色 + 中孔 + 高光),并带右下投影;
+     * 底板加厚一块深色边,营造"板立在桌上"的感觉。逐行扫描顺序绘制,
+     * 无需深度排序。
+     */
+    private void drawEffect3D(Canvas canvas, float cell) {
+        int cols = pattern.cols;
+        int rows = pattern.rows;
+        float m = marginRatio() * cell + cell * 0.5f;
+
+        canvas.save();
+        canvas.scale(1f, 0.8f);
+
+        // 底板厚度(深色) + 顶面
+        float thick = Math.max(3f, cell * 0.22f);
+        boardPaint.setColor(night ? 0xFF2A2534 : 0xFFCFC6BA);
+        if (pattern.round) {
+            float r = cols * cell / 2f;
+            canvas.drawCircle(cols * cell / 2f, rows * cell / 2f + thick,
+                    r + m * 0.9f, boardPaint);
+            boardPaint.setColor(night ? 0xFF3A3346 : 0xFFEFEAE3);
+            canvas.drawCircle(cols * cell / 2f, rows * cell / 2f,
+                    r + m * 0.9f, boardPaint);
+        } else {
+            float rr = Math.max(6f, m * 0.8f);
+            canvas.drawRoundRect(-m, -m + thick, cols * cell + m, rows * cell + m + thick,
+                    rr, rr, boardPaint);
+            boardPaint.setColor(night ? 0xFF3A3346 : 0xFFEFEAE3);
+            canvas.drawRoundRect(-m, -m, cols * cell + m, rows * cell + m, rr, rr, boardPaint);
+        }
+
+        pegPaint.setColor(night ? 0x55FFFFFF : 0xFFD8D2C9);
+        beadPaint.setStyle(Paint.Style.FILL);
+        float ringW = Math.max(1f, cell * 0.06f);
+        ringPaint.setStrokeWidth(ringW);
+        float lift = cell * 0.08f;          // 豆顶面相对格心的抬升
+        float shx = cell * 0.10f, shy = cell * 0.14f;
+
+        for (int y = 0; y < rows; y++) {
+            for (int x = 0; x < cols; x++) {
+                if (pattern.outsideShape(x, y)) continue;
+                int idx = pattern.cellAt(x, y);
+                float cx = (x + 0.5f) * cell;
+                float cy = (y + 0.5f) * cell;
+                if (idx < 0) {
+                    canvas.drawCircle(cx, cy, cell * 0.15f, pegPaint);
+                    continue;
+                }
+                int rgb = pattern.palette.get(idx).rgb;
+
+                // 投影
+                shadowPaint.setColor(night ? 0x66000000 : 0x3C40354E);
+                canvas.drawCircle(cx + shx, cy + shy, cell * 0.46f, shadowPaint);
+                // 侧壁(加深):先画下移的圆柱底
+                beadPaint.setColor(0xFF000000 | ColorMath.darken(rgb, 0.62f));
+                canvas.drawCircle(cx, cy + lift * 0.9f, cell * 0.46f, beadPaint);
+                // 顶面
+                beadPaint.setColor(0xFF000000 | rgb);
+                canvas.drawCircle(cx, cy - lift, cell * 0.46f, beadPaint);
+                // 内孔
+                beadPaint.setColor(0xFF000000 | ColorMath.darken(rgb, 0.55f));
+                canvas.drawCircle(cx, cy - lift, cell * 0.13f, beadPaint);
+                // 高光
+                glossPaint.setColor(0x66FFFFFF);
+                canvas.drawCircle(cx - cell * 0.15f, cy - lift - cell * 0.17f,
+                        cell * 0.12f, glossPaint);
+                if (cell > dp(14)) {
+                    ringPaint.setColor(0x8CFFFFFF);
+                    ringPaint.setStrokeWidth(cell * 0.05f);
+                    canvas.drawArc(cx - cell * 0.30f, cy - lift - cell * 0.30f,
+                            cx + cell * 0.30f, cy - lift + cell * 0.30f,
+                            -160f, 70f, false, ringPaint);
+                }
+            }
+        }
+        canvas.restore();
     }
 
     /** 图纸:格子 + 网格线 + 29 格拼板分隔线 + 符号 + 坐标(圆形板画圆) */
@@ -874,16 +979,19 @@ public class PatternView extends View {
         }
 
         // 拼豆模式:非当前颜色蒙上纸色,已完成的格子描薄荷绿边;
-        // 按板引导时,当前板以外的格子整片蒙灰
+        // 按板引导时当前板以外的格子整片蒙灰,逐行引导时当前行以外的格子整片蒙灰
         if (assistOn) {
             for (int y = 0; y < rows; y++) {
                 for (int x = 0; x < cols; x++) {
                     if (round && pattern.outsideShape(x, y)) continue;
                     int idx = pattern.cellAt(x, y);
                     if (idx < 0) continue;
-                    if (assistBoardMode && assistBoardRect != null
-                            && (x < assistBoardRect.left || x >= assistBoardRect.right
-                            || y < assistBoardRect.top || y >= assistBoardRect.bottom)) {
+                    boolean outsideBand =
+                            (assistBoardMode && assistBoardRect != null
+                                    && (x < assistBoardRect.left || x >= assistBoardRect.right
+                                    || y < assistBoardRect.top || y >= assistBoardRect.bottom))
+                            || (assistRowMode && y != assistRow);
+                    if (outsideBand) {
                         cellPaint.setColor(night ? 0xB8332C40 : 0xB8EFE9DC);
                         canvas.drawRect(x * cell, y * cell,
                                 (x + 1) * cell, (y + 1) * cell, cellPaint);
@@ -903,6 +1011,19 @@ public class PatternView extends View {
                                 (x + 1) * cell - inset, (y + 1) * cell - inset, emptyPaint);
                     }
                 }
+            }
+            // 当前行高亮框:墨衬底 + 黄油主线(与按板外框同语言)
+            if (assistRowMode) {
+                boardFramePaint.setStyle(Paint.Style.STROKE);
+                float fr = Math.max(3f, cell * 0.14f);
+                boardFramePaint.setColor(0xFF40354E);
+                boardFramePaint.setStrokeWidth(fr * 2.2f);
+                canvas.drawRect(0, assistRow * cell, cols * cell,
+                        (assistRow + 1) * cell, boardFramePaint);
+                boardFramePaint.setColor(0xFFFFCF56);
+                boardFramePaint.setStrokeWidth(fr);
+                canvas.drawRect(0, assistRow * cell, cols * cell,
+                        (assistRow + 1) * cell, boardFramePaint);
             }
             // 当前板外框:墨衬底 + 黄油主线(和拼板分隔线区分开)
             if (assistBoardMode && assistBoardRect != null) {

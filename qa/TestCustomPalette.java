@@ -37,10 +37,11 @@ public class TestCustomPalette {
         BeadBrandCharts.setCustoms(new ArrayList<BeadBrandCharts.Chart>());
         BeadPalettes.resetCache();
         int baseCount = BeadPalettes.selCount();
-        check("baseline selCount = generic + brands(8)",
+        // v2.44 起品牌表 5 套(含 Nabbi 30 色)
+        check("baseline selCount = generic + brands(9)",
                 baseCount == BeadPalettes.GENERIC_COUNT + BeadBrandCharts.ALL.length
-                        && baseCount == 8);
-        check("baseline customSlotStart = 8", BeadPalettes.customSlotStart() == 8);
+                        && baseCount == 9);
+        check("baseline customSlotStart = 9", BeadPalettes.customSlotStart() == 9);
 
         // ---- 两套自定义色板 ----
         List<BeadColor> p1 = new ArrayList<>(Arrays.asList(

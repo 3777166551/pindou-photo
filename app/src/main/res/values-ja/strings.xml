@@ -151,6 +151,13 @@
     <string name="fmt_assist_board_next">ボード %1$d/%2$d 完了!</string>
     <string name="assist_board_all">全ボード完成 🎉</string>
     <string name="assist_board_clear">このボードは完成しています</string>
+    <string name="assist_row_btn">行ごと</string>
+    <string name="fmt_assist_row">%1$d/%2$d 行目 · %3$d/%4$d 完了</string>
+    <string name="assist_row_next">次の行 ▶</string>
+    <string name="fmt_assist_row_next">%1$d 行目完了!</string>
+    <string name="assist_row_all">全行完成 🎉</string>
+    <string name="assist_row_clear">この行は完成しています</string>
+    <string name="chip_3d">3D プレビュー</string>
     <string name="menu_card">🎊 シェア画像</string>
     <string name="menu_night_on">🌙 ナイト図案 ON</string>
     <string name="menu_night_off">☀️ ナイト図案 OFF</string>
@@ -412,6 +419,7 @@
     <string name="pdf_tagline">PindouPhoto · 完全無料 · 広告なし · AGPL-3.0 オープンソース</string>
     <string name="fmt_pdf_boards">29×29 ボード:%1$d 枚 · 約 %2$.0f × %3$.0f cm</string>
     <string name="fmt_qty_beads">%,d 個</string>
+    <string name="fmt_qty_bags">≈%1$d袋(1000個/袋)</string>
     <string name="fmt_qty_left">%1$,d 個 · 残り %2$d</string>
     <string name="fmt_qty_done">%1$,d 個 · ✅完了</string>
     <string name="fmt_pdf_size">図案サイズ:%1$d × %2$d マス</string>

@@ -151,6 +151,13 @@
     <string name="fmt_assist_board_next">第 %1$d/%2$d 块板拼完!</string>
     <string name="assist_board_all">全部板拼完啦 🎉</string>
     <string name="assist_board_clear">这块板已全部拼好</string>
+    <string name="assist_row_btn">逐行</string>
+    <string name="fmt_assist_row">第 %1$d/%2$d 行 · 已拼 %3$d/%4$d</string>
+    <string name="assist_row_next">下一行 ▶</string>
+    <string name="fmt_assist_row_next">第 %1$d 行拼完!</string>
+    <string name="assist_row_all">全部行拼完啦 🎉</string>
+    <string name="assist_row_clear">这一行已全部拼好</string>
+    <string name="chip_3d">3D 预览</string>
     <string name="menu_card">🎊 分享长图</string>
     <string name="menu_night_on">🌙 开启夜间图纸</string>
     <string name="menu_night_off">☀️ 关闭夜间图纸</string>
@@ -412,6 +419,7 @@
     <string name="pdf_tagline">PindouPhoto · 完全免费 · 无广告 · AGPL-3.0 开源</string>
     <string name="fmt_pdf_boards">29×29 拼板:%1$d 块 · 成品约 %2$.0f × %3$.0f cm</string>
     <string name="fmt_qty_beads">%,d 颗</string>
+    <string name="fmt_qty_bags">≈%1$d包(1000颗/包)</string>
     <string name="fmt_qty_left">%1$,d 颗 · 剩 %2$d</string>
     <string name="fmt_qty_done">%,d 颗 · ✅拼完</string>
     <string name="fmt_pdf_size">图纸尺寸:%1$d × %2$d 格</string>

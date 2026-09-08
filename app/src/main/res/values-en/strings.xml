@@ -151,6 +151,13 @@
     <string name="fmt_assist_board_next">Board %1$d of %2$d done!</string>
     <string name="assist_board_all">All boards complete 🎉</string>
     <string name="assist_board_clear">This board is fully placed</string>
+    <string name="assist_row_btn">By row</string>
+    <string name="fmt_assist_row">Row %1$d/%2$d · %3$d/%4$d placed</string>
+    <string name="assist_row_next">Next row ▶</string>
+    <string name="fmt_assist_row_next">Row %1$d done!</string>
+    <string name="assist_row_all">All rows complete 🎉</string>
+    <string name="assist_row_clear">This row is fully placed</string>
+    <string name="chip_3d">3D preview</string>
     <string name="menu_card">🎊 Share card</string>
     <string name="menu_night_on">🌙 Night chart on</string>
     <string name="menu_night_off">☀️ Night chart off</string>
@@ -412,6 +419,7 @@
     <string name="pdf_tagline">PindouPhoto · free · no ads · AGPL-3.0 open source</string>
     <string name="fmt_pdf_boards">29×29 boards: %1$d · about %2$.0f × %3$.0f cm</string>
     <string name="fmt_qty_beads">%,d pcs</string>
+    <string name="fmt_qty_bags">≈%1$d pack(s) of 1000</string>
     <string name="fmt_qty_left">%1$,d · %2$d left</string>
     <string name="fmt_qty_done">%1$,d · ✅done</string>
     <string name="fmt_pdf_size">Chart size: %1$d × %2$d cells</string>

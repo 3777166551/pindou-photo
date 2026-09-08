@@ -719,21 +719,52 @@ public final class BeadBrandCharts {
             "H119|Sky Blue|4167B4",
     };
 
+    private static final String[] DATA_NABBI = {
+            "N01|Black|3A3D41",
+            "N02|Dark Brown|50443B",
+            "N03|Brown Medium|5A3E36",
+            "N04|Maroon|813547",
+            "N05|Caramel|A76224",
+            "N06|Tan|AD967E",
+            "N07|Sand|EEB182",
+            "N08|Ash|8D8B7F",
+            "N09|Hunter Green|2F4A39",
+            "N10|Light Grey|D3CBCB",
+            "N11|Purple|644591",
+            "N12|Ivory|E2D0BF",
+            "N13|Orange|F3601B",
+            "N14|Yellow|F9CA00",
+            "N15|White|F4F4F3",
+            "N16|Green|297A3B",
+            "N17|Bright Blue|3B75CB",
+            "N18|Light Rose|E1B4AB",
+            "N19|Red|DF2638",
+            "N20|Light Brown|B58B69",
+            "N21|Light Yellow|F5EC8D",
+            "N22|Lime|48AF4F",
+            "N23|Medium Blue|71A3E6",
+            "N24|Lavender|B6A0DB",
+            "N25|Pink|EE6A97",
+            "N26|Peach|FCA879",
+            "N27|Chocolate|875F52",
+            "N28|Sky|A7C6F1",
+            "N29|Gold|EE9527",
+            "N30|Kiwi|C7BF5E",
+    };
+
     public static final Chart[] ALL = {
             new Chart("Artkal S·5mm", build(DATA_ARTKAL_S)),
             new Chart("漫德 Mard·5mm", build(DATA_MARD)),
             new Chart("Perler·5mm", build(DATA_PERLER)),
             new Chart("Hama Midi·5mm", build(DATA_HAMA)),
+            new Chart("Nabbi Midi·5mm", build(DATA_NABBI)),
     };
 
-    /**
-     * 用户自定义色板(可多套,含"我的豆板"),启动时从 CustomPalettes 载入;
-     * 全部增删改经 CustomPalettes(带持久化),这里只是运行时槽位。
-     */
-    private static final List<Chart> customs = new ArrayList<>();
+    /** user custom palettes (multi-slot, persisted via CustomPalettes) */
+    private static final java.util.List<Chart> customs = new ArrayList<>();
 
-    /** 整体替换(启动载入),传入的列表会被拷贝 */
-    public static synchronized void setCustoms(List<Chart> list) {
+    /** replace all slots (startup load); the list is copied */
+    public static synchronized void setCustoms(java.util.List<Chart> list) {
         customs.clear();
         if (list != null) customs.addAll(list);
     }
@@ -746,7 +777,7 @@ public final class BeadBrandCharts {
         return customs.get(i);
     }
 
-    /** 更新/追加:idx 在范围内则替换,否则追加;返回实际落位下标 */
+    /** update or append; returns the actual slot index */
     public static synchronized int upsertCustom(int idx, Chart c) {
         if (idx < 0 || idx > customs.size()) idx = customs.size();
         if (idx == customs.size()) {
@@ -761,13 +792,13 @@ public final class BeadBrandCharts {
         if (idx >= 0 && idx < customs.size()) customs.remove(idx);
     }
 
-    /** 自定义色板槽位数,BeadPalettes 的选择列表会追加在品牌表之后 */
+    /** custom palette slot count, appended after brand charts */
     public static int extraCount() {
         return customCount();
     }
 
-    /** 公开工厂:包外生成 Chart(自定义色板用) */
-    public static Chart make(String name, List<BeadColor> colors) {
+    /** factory: build a Chart (for custom palettes) */
+    public static Chart make(String name, java.util.List<BeadColor> colors) {
         return new Chart(name, colors);
     }
 

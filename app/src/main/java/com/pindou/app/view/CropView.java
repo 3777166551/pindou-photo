@@ -8,7 +8,6 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
-import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -54,8 +53,10 @@ public class CropView extends View {
     private int activeCorner = CORNER_NONE;
 
     private final ScaleGestureDetector scaleDetector;
-    private final GestureDetector dragDetector;
     private float lastX, lastY;
+    /** 手写双击判定:上一次 ACTION_DOWN 的时间与位置 */
+    private long lastDownTime;
+    private float lastDownX, lastDownY;
 
     public CropView(Context context) {
         super(context);
@@ -85,27 +86,8 @@ public class CropView extends View {
                         return true;
                     }
                 });
-        dragDetector = new GestureDetector(context,
-                new GestureDetector.SimpleOnGestureListener() {
-                    @Override
-                    public boolean onDown(MotionEvent e) {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean onScroll(MotionEvent e1, MotionEvent e2,
-                                            float dx, float dy) {
-                        if (activeCorner != CORNER_NONE) return true; // 角点拖拽单独处理
-                        moveBy(-dx, -dy);
-                        return true;
-                    }
-
-                    @Override
-                    public boolean onDoubleTap(MotionEvent e) {
-                        resetCrop();
-                        return true;
-                    }
-                });
+        // v2.44:拖动不再走 GestureDetector(部分机型/父容器组合下手势死),
+        // 全部触摸自己算;双击复位也手写判定
     }
 
     /** @param aspect 目标画幅宽高比(cols / rows) */
@@ -266,34 +248,64 @@ public class CropView extends View {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (!ready) return true;
+        scaleDetector.onTouchEvent(event);
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
                 if (!touched) {
                     touched = true;
                     animateHintOut();
                 }
+                // 万一将来被放进可滚动容器,不让父层抢走手势
+                if (getParent() != null) {
+                    getParent().requestDisallowInterceptTouchEvent(true);
+                }
+                // 手写双击:300ms 内同一位置二次按下 → 复位
+                long now = event.getEventTime();
+                if (now - lastDownTime < 300
+                        && Math.abs(event.getX() - lastDownX) <= dp(40)
+                        && Math.abs(event.getY() - lastDownY) <= dp(40)) {
+                    resetCrop();
+                    lastDownTime = 0;
+                    break;
+                }
+                lastDownTime = now;
+                lastDownX = event.getX();
+                lastDownY = event.getY();
                 lastX = event.getX();
                 lastY = event.getY();
                 activeCorner = hitCorner(lastX, lastY);
                 break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                // 第二根手指按下:角点/单指拖拽让位给双指缩放
+                activeCorner = CORNER_NONE;
+                break;
             case MotionEvent.ACTION_MOVE:
+                if (scaleDetector.isInProgress()) {
+                    lastX = event.getX();
+                    lastY = event.getY();
+                    break;
+                }
+                if (event.getPointerCount() > 1) break;
                 if (activeCorner != CORNER_NONE) {
                     dragCorner(event.getX(), event.getY());
-                    return true;
+                } else {
+                    // 选框跟着手指走
+                    moveBy(event.getX() - lastX, event.getY() - lastY);
                 }
+                lastX = event.getX();
+                lastY = event.getY();
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 activeCorner = CORNER_NONE;
                 interacting = false;
+                if (getParent() != null) {
+                    getParent().requestDisallowInterceptTouchEvent(false);
+                }
                 invalidate();
                 break;
             default:
                 break;
-        }
-        scaleDetector.onTouchEvent(event);
-        if (!scaleDetector.isInProgress()) {
-            dragDetector.onTouchEvent(event);
         }
         return true;
     }

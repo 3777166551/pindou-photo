@@ -203,3 +203,27 @@ UI 改动必须过一遍 CI 截图,别只跑 qa。
 本机不可行路线:x86_64 镜像要 hypervisor(AEHD/WHPX 需管理员+重启);
 模拟器 37.x 直接拒绝 x86 主机跑 arm64 镜像。标准流程、拉截图产物步骤、
 en 环境与 emoji 字体的坑,见 ROADMAP.md「四」的 ★ 条目,不赘述。
+
+## 19. 生成脚本必须"拥有"生成文件的全部内容(v2.44 教训)
+
+**现象**:`tools\gen_charts.ps1` 重新生成 BeadBrandCharts.java(加 Nabbi)
+后,整包编译炸 29 个"找不到符号"——customCount/customAt/make 等
+自定义色板方法全没了。
+
+**原因**:这些方法是 v2.33 之后**手写进生成文件的**,生成脚本里没有;
+重生成等于整文件覆盖,手写部分静默蒸发。此前每次加品牌必然踩。
+
+**修法**:把 customs 成员组补进 gen_charts.ps1 的输出(生成文件里
+手写成员清零,全部归生成器所有),重跑一次生成即恢复。
+**教训**:凡是"脚本生成 + 后期手改"的文件,要么把改动搬回脚本,
+要么在脚本头写警告——二选一,不能放着不管。
+
+## 20. 自定义 View 手势别依赖 GestureDetector 的默认接力(v2.44 教训)
+
+真机反馈取景裁剪选框拖不动/缩放不了(CI 模拟器无此问题,纯 JVM 读码
+也复现不了)。修法是把 CropView 的拖动从 GestureDetector.onScroll 改为
+ACTION_MOVE 里自己算 `x-lastX`(双指缩放保留 ScaleGestureDetector,
+双击复位手写判定),并补 `requestDisallowInterceptTouchEvent`——
+消除对检测器内部接力时序和父容器拦截策略的依赖。
+**教训**:全屏触摸画布类自定义 View,手势自己算最稳;检测器适合
+标准列表/卡片场景。改完务必真机过一遍(CI 模拟器测不出这类机型差异)。

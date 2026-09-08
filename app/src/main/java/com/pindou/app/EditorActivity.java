@@ -266,14 +266,19 @@ public class EditorActivity extends Activity {
     private View btnRemoveWatermark;
     private View btnStyleGhibli;
     private View btnCrop;
+    private View chip3d;
+    private boolean effect3d = false;
     private View btnAssistLocate, btnAssistCalendar, btnBrushMirror;
     private View assistToolsRow;
-    private TextView btnAssistBoard, tvAssistBoard, btnAssistNextBoard;
+    private TextView btnAssistBoard, tvAssistBoard, btnAssistNextBoard, btnAssistRow;
     private View assistBoardRow;
-    /** 按板引导:true=按 29×29 板分区走,false=按颜色走 */
-    private boolean assistBoardMode = false;
+    /** 拼豆辅助模式:0 逐色 / 1 按板 / 2 逐行 */
+    private static final int ASSIST_COLOR = 0, ASSIST_BOARD = 1, ASSIST_ROW = 2;
+    private int assistMode = ASSIST_COLOR;
     /** 按板引导:当前板下标(0-based) */
     private int assistBoard = 0;
+    /** 逐行引导:当前行(0-based) */
+    private int assistRow = 0;
     private TextView chipBeadStd, chipBeadMini;
     private TextView btnTracePick, btnTraceToggle, btnTraceClear;
     private com.pindou.app.view.CelebrationView celebration;
@@ -457,11 +462,13 @@ public class EditorActivity extends Activity {
         btnRemoveWatermark = findViewById(R.id.btnRemoveWatermark);
         btnStyleGhibli = findViewById(R.id.btnStyleGhibli);
         btnCrop = findViewById(R.id.btnCrop);
+        chip3d = findViewById(R.id.chip3d);
         btnAssistLocate = findViewById(R.id.btnAssistLocate);
         btnAssistCalendar = findViewById(R.id.btnAssistCalendar);
         btnBrushMirror = findViewById(R.id.btnBrushMirror);
         assistToolsRow = findViewById(R.id.assistToolsRow);
         btnAssistBoard = findViewById(R.id.btnAssistBoard);
+        btnAssistRow = findViewById(R.id.btnAssistRow);
         assistBoardRow = findViewById(R.id.assistBoardRow);
         tvAssistBoard = findViewById(R.id.tvAssistBoard);
         btnAssistNextBoard = findViewById(R.id.btnAssistNextBoard);
@@ -536,7 +543,8 @@ public class EditorActivity extends Activity {
     private void applyPressFeedback() {
         int[] ids = {
                 R.id.tabEffect, R.id.tabPattern, R.id.tabList,
-                R.id.chipStyleReal, R.id.chipStyleAbs, R.id.chipStyleLine,
+                R.id.chipStyleReal, R.id.chipStyleAbs, R.id.chipStyleLine, R.id.chip3d,
+                R.id.btnAssistRow,
                 R.id.chipBrickLight, R.id.chipBrickMid, R.id.chipBrickStrong, R.id.chipBrickSuper,
                 R.id.chipShapeRect, R.id.chipShapeRound,
                 R.id.chipLimit0, R.id.chipLimit1, R.id.chipLimit2, R.id.chipLimit3, R.id.chipLimit4,
@@ -667,12 +675,20 @@ public class EditorActivity extends Activity {
             }
         });
 
-        // 按板引导:一次只点亮一块 29×29 板
+        // 按板引导:一次只点亮一块 29×29 板;逐行引导:一次只点亮一行
         btnAssistBoard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                assistBoardMode = !assistBoardMode;
+                assistMode = assistMode == ASSIST_BOARD ? ASSIST_COLOR : ASSIST_BOARD;
                 assistBoard = 0;
+                syncAssistBoardUi();
+            }
+        });
+        btnAssistRow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                assistMode = assistMode == ASSIST_ROW ? ASSIST_COLOR : ASSIST_ROW;
+                assistRow = 0;
                 syncAssistBoardUi();
             }
         });
@@ -680,7 +696,12 @@ public class EditorActivity extends Activity {
             @Override
             public void onClick(View v) {
                 if (pattern == null) return;
-                if (assistBoard < pattern.boardsNeeded() - 1) {
+                if (assistMode == ASSIST_ROW) {
+                    if (assistRow < pattern.rows - 1) {
+                        assistRow++;
+                        syncAssistBoardUi();
+                    }
+                } else if (assistBoard < pattern.boardsNeeded() - 1) {
                     assistBoard++;
                     syncAssistBoardUi();
                 }
@@ -856,7 +877,7 @@ public class EditorActivity extends Activity {
                     updateSummary();
                     adapter.notifyDataSetChanged();
                     patternView.invalidate();
-                    maybeAutoAdvanceBoard();
+                    maybeAutoAdvanceBand();
                     maybeCelebrate();
                     return;
                 }
@@ -896,7 +917,7 @@ public class EditorActivity extends Activity {
                     updateAssistUi();
                     updateSummary();
                     adapter.notifyDataSetChanged();
-                    maybeAutoAdvanceBoard();
+                    maybeAutoAdvanceBand();
                     maybeCelebrate();
                 }
             }
@@ -1517,6 +1538,15 @@ public class EditorActivity extends Activity {
                 showStyleDialog();
             }
         });
+        // 效果图 3D 预览(伪 3D 光影,只影响预览不影响导出)
+        chip3d.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                effect3d = !effect3d;
+                chip3d.setSelected(effect3d);
+                patternView.setEffect3D(effect3d);
+            }
+        });
         btnCrop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -2002,37 +2032,60 @@ public class EditorActivity extends Activity {
         }
     }
 
-    /** 把当前辅助状态(逐色/按板)套到 PatternView 上 */
+    /** 把当前辅助状态(逐色/按板/逐行)套到 PatternView 上 */
     private void applyAssistToView() {
         patternView.setAssist(beadAssist,
-                assistBoardMode ? -1 : assistFocus, beadDone,
-                assistBoardMode, assistBoard);
+                assistMode == ASSIST_COLOR ? assistFocus : -1, beadDone,
+                assistMode == ASSIST_BOARD, assistBoard,
+                assistMode == ASSIST_ROW, assistRow);
     }
 
-    /** 按板引导 UI:工具行 chip 选中态 + 板进度行显隐 + 视图重绘 */
+    /** 按板/逐行引导 UI:工具行 chip 选中态 + 进度行显隐/文案 + 视图重绘 */
     private void syncAssistBoardUi() {
-        if (btnAssistBoard != null) btnAssistBoard.setSelected(assistBoardMode);
+        if (btnAssistBoard != null) {
+            btnAssistBoard.setSelected(assistMode == ASSIST_BOARD);
+        }
+        if (btnAssistRow != null) {
+            btnAssistRow.setSelected(assistMode == ASSIST_ROW);
+        }
         if (beadAssistPanel != null && beadAssist) {
-            // 逐色行与按板行互斥显示
-            int colorRowVis = assistBoardMode ? View.GONE : View.VISIBLE;
+            // 逐色行与按板/逐行进度行互斥显示
+            int colorRowVis = assistMode == ASSIST_COLOR ? View.VISIBLE : View.GONE;
             assistSwatch.setVisibility(colorRowVis);
             tvAssistColor.setVisibility(colorRowVis);
             btnAssistNext.setVisibility(colorRowVis);
             if (assistBoardRow != null) {
-                assistBoardRow.setVisibility(assistBoardMode
-                        ? View.VISIBLE : View.GONE);
+                assistBoardRow.setVisibility(assistMode == ASSIST_COLOR
+                        ? View.GONE : View.VISIBLE);
+            }
+            if (btnAssistNextBoard != null) {
+                btnAssistNextBoard.setText(assistMode == ASSIST_ROW
+                        ? getString(R.string.assist_row_next)
+                        : getString(R.string.assist_board_next));
             }
         }
         applyAssistToView();
         updateAssistUi();
     }
 
-    /** 当前板的已拼/可拼格数(板外与空格不计) */
-    private int[] boardDoneStats() {
-        android.graphics.Rect r = PatternView.boardRect(pattern, assistBoard);
+    /** 当前行/当前板的已拼/可拼格数(板外与空格不计) */
+    private int[] bandDoneStats() {
+        int y0, y1, x0, x1;
+        if (assistMode == ASSIST_ROW) {
+            y0 = Math.max(0, Math.min(assistRow, pattern.rows - 1));
+            y1 = y0 + 1;
+            x0 = 0;
+            x1 = pattern.cols;
+        } else {
+            android.graphics.Rect r = PatternView.boardRect(pattern, assistBoard);
+            y0 = r.top;
+            y1 = r.bottom;
+            x0 = r.left;
+            x1 = r.right;
+        }
         int done = 0, total = 0;
-        for (int y = r.top; y < r.bottom; y++) {
-            for (int x = r.left; x < r.right; x++) {
+        for (int y = y0; y < y1; y++) {
+            for (int x = x0; x < x1; x++) {
                 if (pattern.outsideShape(x, y)) continue;
                 if (pattern.cellAt(x, y) < 0) continue;
                 total++;
@@ -2042,21 +2095,35 @@ public class EditorActivity extends Activity {
         return new int[]{done, total};
     }
 
-    /** 当前板拼满时自动跳下一块(最后一块只提示) */
-    private void maybeAutoAdvanceBoard() {
-        if (!beadAssist || !assistBoardMode || pattern == null) return;
-        int[] st = boardDoneStats();
+    /** 当前行/板拼满时自动跳下一个(最后一条只提示) */
+    private void maybeAutoAdvanceBand() {
+        if (!beadAssist || assistMode == ASSIST_COLOR || pattern == null) return;
+        int[] st = bandDoneStats();
         if (st[1] == 0 || st[0] < st[1]) return;
-        if (assistBoard < pattern.boardsNeeded() - 1) {
-            int finished = assistBoard + 1;
-            assistBoard++;
-            Toast.makeText(this, String.format(Locale.CHINA,
-                    getString(R.string.fmt_assist_board_next),
-                    finished, pattern.boardsNeeded()), Toast.LENGTH_SHORT).show();
-            syncAssistBoardUi();
+        if (assistMode == ASSIST_ROW) {
+            if (assistRow < pattern.rows - 1) {
+                int finished = assistRow + 1;
+                assistRow++;
+                Toast.makeText(this, String.format(Locale.CHINA,
+                        getString(R.string.fmt_assist_row_next), finished),
+                        Toast.LENGTH_SHORT).show();
+                syncAssistBoardUi();
+            } else {
+                Toast.makeText(this, getString(R.string.assist_row_all),
+                        Toast.LENGTH_SHORT).show();
+            }
         } else {
-            Toast.makeText(this, getString(R.string.assist_board_all),
-                    Toast.LENGTH_SHORT).show();
+            if (assistBoard < pattern.boardsNeeded() - 1) {
+                int finished = assistBoard + 1;
+                assistBoard++;
+                Toast.makeText(this, String.format(Locale.CHINA,
+                        getString(R.string.fmt_assist_board_next),
+                        finished, pattern.boardsNeeded()), Toast.LENGTH_SHORT).show();
+                syncAssistBoardUi();
+            } else {
+                Toast.makeText(this, getString(R.string.assist_board_all),
+                        Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -2089,7 +2156,7 @@ public class EditorActivity extends Activity {
     }
 
     private void cycleAssistColor() {
-        if (assistBoardMode) return;   // 按板模式不按色轮转
+        if (assistMode != ASSIST_COLOR) return;   // 按板/逐行模式不按色轮转
         if (pattern == null || pattern.usedColors.isEmpty()) return;
         int pos = -1;
         for (int i = 0; i < pattern.usedColors.size(); i++) {
@@ -2116,12 +2183,15 @@ public class EditorActivity extends Activity {
 
     private void updateAssistUi() {
         if (pattern == null || tvAssistColor == null) return;
-        // 按板引导:先刷板进度(空白菜布 assistFocus=-1 会提前返回,不能放在后面)
-        if (assistBoardMode && tvAssistBoard != null) {
-            int[] st = boardDoneStats();
+        // 按板/逐行引导:先刷进度(空白菜布 assistFocus=-1 会提前返回,不能放在后面)
+        if (assistMode != ASSIST_COLOR && tvAssistBoard != null) {
+            int[] st = bandDoneStats();
             tvAssistBoard.setText(String.format(Locale.CHINA,
-                    getString(R.string.fmt_assist_board),
-                    assistBoard + 1, pattern.boardsNeeded(), st[0], st[1]));
+                    getString(assistMode == ASSIST_ROW
+                            ? R.string.fmt_assist_row : R.string.fmt_assist_board),
+                    assistMode == ASSIST_ROW ? assistRow + 1 : assistBoard + 1,
+                    assistMode == ASSIST_ROW ? pattern.rows : pattern.boardsNeeded(),
+                    st[0], st[1]));
         }
         if (assistFocus < 0 || assistFocus >= pattern.palette.size()) {
             tvAssistColor.setText(getString(R.string.gen_first_short));
@@ -2521,6 +2591,13 @@ public class EditorActivity extends Activity {
                 .show();
     }
 
+    /** 单色 ≥500 颗(半包)时提示按整包(1000 颗/包)买几包 */
+    private String bagsSuffix(int n) {
+        if (n < 500) return "";
+        return " " + String.format(Locale.CHINA,
+                getString(R.string.fmt_qty_bags), (n + 999) / 1000);
+    }
+
     private class BeadAdapter extends BaseAdapter {
 
         private final LayoutInflater inflater;
@@ -2590,7 +2667,8 @@ public class EditorActivity extends Activity {
                         : getString(R.string.fmt_qty_done), uc.count, left));
             } else {
                 count.setText(String.format(Locale.CHINA,
-                        getString(R.string.fmt_qty_beads), uc.count));
+                        getString(R.string.fmt_qty_beads), uc.count)
+                        + bagsSuffix(uc.count));
             }
 
             TextView percent = v.findViewById(R.id.tvPercent);
@@ -2919,12 +2997,17 @@ public class EditorActivity extends Activity {
                 Toast.LENGTH_SHORT).show();
     }
 
-    /** 定位本色第一颗未拼的格子:居中显示并闪烁提示(拼豆模式) */
+    /** 定位本色/本行/本板第一颗未拼的格子:居中显示并闪烁提示(拼豆模式) */
     private void locateAssistUndone() {
         if (pattern == null) return;
-        // 按板模式:在本板范围内找第一颗未拼(任意色)
-        android.graphics.Rect r = assistBoardMode
-                ? PatternView.boardRect(pattern, assistBoard) : null;
+        // 按板/逐行模式:在当前带内找第一颗未拼(任意色)
+        android.graphics.Rect r = null;
+        if (assistMode == ASSIST_BOARD) {
+            r = PatternView.boardRect(pattern, assistBoard);
+        } else if (assistMode == ASSIST_ROW) {
+            int y0 = Math.max(0, Math.min(assistRow, pattern.rows - 1));
+            r = new android.graphics.Rect(0, y0, pattern.cols, y0 + 1);
+        }
         for (int y = r == null ? 0 : r.top;
                 y < (r == null ? pattern.rows : r.bottom); y++) {
             for (int x = r == null ? 0 : r.left;
@@ -2938,9 +3021,10 @@ public class EditorActivity extends Activity {
                 }
             }
         }
-        Toast.makeText(this, assistBoardMode
-                        ? getString(R.string.assist_board_clear)
-                        : getString(R.string.assist_all_done),
+        Toast.makeText(this, assistMode == ASSIST_COLOR
+                        ? getString(R.string.assist_all_done)
+                        : getString(assistMode == ASSIST_ROW
+                        ? R.string.assist_row_clear : R.string.assist_board_clear),
                 Toast.LENGTH_SHORT).show();
     }
 
@@ -3942,7 +4026,9 @@ public class EditorActivity extends Activity {
             beadDoneDay = o.optString("beadDoneDay", "");
             beadDoneToday = Math.max(0, o.optInt("beadDoneToday", 0));
             rollBeadDay();
-            assistBoardMode = o.optBoolean("assistBoardMode", false);
+            // 旧版存档只记按板布尔;逐行模式不持久化,打开回逐色
+            assistMode = o.optBoolean("assistBoardMode", false)
+                    ? ASSIST_BOARD : ASSIST_COLOR;
             assistBoard = Math.max(0, o.optInt("assistBoard", 0));
 
             String photo = o.optString("photo", "");

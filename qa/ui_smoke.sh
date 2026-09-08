@@ -234,6 +234,15 @@ sleep 0.8
 # 滚回网格:应看到第 2 块板外墨框、其余板蒙灰、板进度行
 adb shell input swipe 540 600 540 1900 300; sleep 0.8
 snap assist_board
+# v2.44:逐行引导(板模式直接切行模式,下一行,滚回截图)
+tap_id btnAssistRow 0
+sleep 0.8
+tap_id btnAssistNextBoard 0
+sleep 0.5
+adb shell input swipe 540 600 540 1900 300; sleep 0.8
+snap assist_row
+tap_id btnAssistRow 0
+sleep 0.5
 tap_id btnAssistBoard 0
 sleep 0.5
 tap_id swBeadAssist 0
@@ -301,7 +310,34 @@ tap_text "Generate" 0
 sleep 8
 snap textgen
 
+# ---------- v2.44:3D 效果预览(预览页右上角 chip) ----------
+tap_id chip3d 0
+sleep 1.5
+snap effect3d
+tap_id chip3d 0
+sleep 0.5
+
+# ---------- v2.44:取景裁剪拖拽回归(拖动选区后截图,验证手势) ----------
+tap_id btnCrop 0
+sleep 2.5
+adb shell input swipe 540 800 320 640 400
+sleep 0.8
+snap crop_drag
+tap_text "Cancel" 0
+sleep 1
+back
+ensure_home
+
 # ---------- v2.43:线稿模式(文字位图切风格,出黑豆描线图纸) ----------
+tap_id btnText 0
+sleep 1.5
+check_text "Text to bead pattern" 0
+adb shell input tap 540 960
+sleep 0.8
+adb shell input text "HI"
+sleep 0.5
+tap_text "Generate" 0
+sleep 8
 tap_id chipStyleLine 0
 sleep 3
 adb shell input swipe 540 600 540 2100 300; sleep 0.6
