@@ -191,6 +191,27 @@ adb shell input swipe 500 650 700 850 300
 sleep 1
 snap painted
 
+# ---------- v2.42:对称绘画(趁画笔状态可靠,紧跟 painted) ----------
+# 下滚一屏找 ✳ chip,切四象限;滚回顶部画一笔 -> 应出现 4 组对称
+adb shell input swipe 540 1700 540 700 300; sleep 0.6
+tap_id btnSym 0
+sleep 0.5
+check_text "Quad" 0
+adb shell input swipe 540 600 540 2100 300; sleep 0.6
+adb shell input swipe 540 600 540 2100 300; sleep 0.6
+adb shell input swipe 300 700 600 900 300; sleep 0.5
+snap sym_quad
+# 切万花筒,再画一笔 -> 8 向对称
+adb shell input swipe 540 1700 540 700 300; sleep 0.6
+tap_id btnSym 0
+sleep 0.5
+adb shell input swipe 540 600 540 2100 300; sleep 0.6
+adb shell input swipe 540 600 540 2100 300; sleep 0.6
+adb shell input swipe 400 650 700 900 300; sleep 0.5
+snap sym_kaleido
+tap_id btnSym 0
+sleep 0.4
+
 # ---------- v2.40 新功能走查:豆子规格 / 按板引导 / 描摹行(全部 soft) ----------
 # 迷你豆 2.6mm:切换后看板提示与摘要是否跟随(截图人眼审)
 tap_id chipBeadMini 0
@@ -220,18 +241,6 @@ sleep 1
 # 描摹行存在性(不真选图,避免文件选择器挂住流程)
 adb shell input swipe 540 1500 540 900 300; sleep 0.6
 tap_id btnTraceToggle 0
-# ---------- v2.42:对称绘画(四象限 -> 万花筒,各画一笔) ----------
-adb shell input swipe 540 1700 540 900 300; sleep 0.6
-tap_id btnSym 0
-adb shell input swipe 540 600 540 1900 300; sleep 0.6
-adb shell input swipe 300 700 600 900 300; sleep 0.5
-snap sym_quad
-adb shell input swipe 540 1700 540 900 300; sleep 0.6
-tap_id btnSym 0
-adb shell input swipe 540 600 540 1900 300; sleep 0.6
-adb shell input swipe 400 650 700 900 300; sleep 0.5
-snap sym_kaleido
-tap_id btnSym 0
 # 滚回页顶,别影响后续 tabList 等步骤
 adb shell input swipe 540 600 540 2100 300; sleep 0.6
 adb shell input swipe 540 600 540 2100 300; sleep 0.6
