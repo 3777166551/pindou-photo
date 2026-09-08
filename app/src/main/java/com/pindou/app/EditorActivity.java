@@ -148,6 +148,8 @@ public class EditorActivity extends Activity {
     private boolean roundBoard = false;
     /** 豆子规格:false=标准豆 5mm,true=迷你豆 2.6mm(只影响尺寸/克重估算,不改格数) */
     private boolean miniBead = false;
+    /** 线稿模式:描线灵敏度 0~100(黑豆描线 + 空格自己填色) */
+    private int lineSensitivity = 50;
     /** 夜间图纸:画布转暗 + 屏幕亮度降档,晚上拼豆不刺眼 */
     private boolean nightMode = false;
     /** 本次会话是否已经为这个图纸庆祝过(拆掉重拼可再触发) */
@@ -215,8 +217,11 @@ public class EditorActivity extends Activity {
     private TextView tvBoardHint, tvW, tvH, tvSummary;
     private TextView tvBright, tvContrast, tvSat;
     private View chip29, chip58, chip87, chip116;
-    private View chipStyleReal, chipStyleAbs;
+    private View chipStyleReal, chipStyleAbs, chipStyleLine;
     private View abstractPanel;
+    private View linePanel;
+    private SeekBar sbLineSens;
+    private TextView tvLineSens;
     private View preprocessCardWrap, manualEditCardWrap;
     private View chipBrickLight, chipBrickMid, chipBrickStrong, chipBrickSuper;
     private View colorRow, snapRow;
@@ -411,7 +416,11 @@ public class EditorActivity extends Activity {
         chip116 = findViewById(R.id.chip116);
         chipStyleReal = findViewById(R.id.chipStyleReal);
         chipStyleAbs = findViewById(R.id.chipStyleAbs);
+        chipStyleLine = findViewById(R.id.chipStyleLine);
         abstractPanel = findViewById(R.id.abstractPanel);
+        linePanel = findViewById(R.id.linePanel);
+        sbLineSens = findViewById(R.id.sbLineSens);
+        tvLineSens = findViewById(R.id.tvLineSens);
         preprocessCardWrap = findViewById(R.id.preprocessCardWrap);
         manualEditCardWrap = findViewById(R.id.manualEditCardWrap);
         abstractColorSpinner = findViewById(R.id.abstractColorSpinner);
@@ -527,7 +536,7 @@ public class EditorActivity extends Activity {
     private void applyPressFeedback() {
         int[] ids = {
                 R.id.tabEffect, R.id.tabPattern, R.id.tabList,
-                R.id.chipStyleReal, R.id.chipStyleAbs,
+                R.id.chipStyleReal, R.id.chipStyleAbs, R.id.chipStyleLine,
                 R.id.chipBrickLight, R.id.chipBrickMid, R.id.chipBrickStrong, R.id.chipBrickSuper,
                 R.id.chipShapeRect, R.id.chipShapeRound,
                 R.id.chipLimit0, R.id.chipLimit1, R.id.chipLimit2, R.id.chipLimit3, R.id.chipLimit4,
@@ -728,16 +737,20 @@ public class EditorActivity extends Activity {
             }
         });
 
-        // 风格:写实 / 抽象(卡通、动漫效果请用 AI 图像风格转图)
+        // 风格:写实 / 抽象 / 线稿(卡通、动漫效果请用 AI 图像风格转图)
         View.OnClickListener styleClick = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                setStyle(v.getId() == R.id.chipStyleAbs
-                        ? PatternEngine.STYLE_ABSTRACT : PatternEngine.STYLE_REALISTIC);
+                int id = v.getId();
+                int s = id == R.id.chipStyleAbs ? PatternEngine.STYLE_ABSTRACT
+                        : id == R.id.chipStyleLine ? PatternEngine.STYLE_LINEART
+                        : PatternEngine.STYLE_REALISTIC;
+                setStyle(s);
             }
         };
         chipStyleReal.setOnClickListener(styleClick);
         chipStyleAbs.setOnClickListener(styleClick);
+        chipStyleLine.setOnClickListener(styleClick);
         setStyle(PatternEngine.STYLE_REALISTIC);
 
         // 一键去背景
@@ -773,6 +786,27 @@ public class EditorActivity extends Activity {
             }
         });
         syncBgUi();
+
+        // 线稿灵敏度(120ms 防抖在 scheduleRegen 里,拖动实时出图)
+        sbLineSens.setMax(100);
+        sbLineSens.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (!fromUser) return;
+                lineSensitivity = progress;
+                tvLineSens.setText(progress + "%");
+                scheduleRegen();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+        tvLineSens.setText(lineSensitivity + "%");
 
         // 手动修格(点格弹选色)与画笔模式互斥
         swEditCell.setOnCheckedChangeListener(new Switch.OnCheckedChangeListener() {
@@ -1105,16 +1139,24 @@ public class EditorActivity extends Activity {
         if (changed) editMap.clear();
         chipStyleReal.setSelected(s == PatternEngine.STYLE_REALISTIC);
         chipStyleAbs.setSelected(s == PatternEngine.STYLE_ABSTRACT);
+        chipStyleLine.setSelected(s == PatternEngine.STYLE_LINEART);
         if (s == PatternEngine.STYLE_ABSTRACT) {
             Anim.expand(abstractPanel);
         } else {
             abstractPanel.setVisibility(View.GONE);
         }
+        if (s == PatternEngine.STYLE_LINEART) {
+            Anim.expand(linePanel);
+        } else {
+            linePanel.setVisibility(View.GONE);
+        }
         if (changed && blankCanvas) {
             style = PatternEngine.STYLE_REALISTIC;   // 空白画布不参与风格
             chipStyleReal.setSelected(true);
             chipStyleAbs.setSelected(false);
+            chipStyleLine.setSelected(false);
             abstractPanel.setVisibility(View.GONE);
+            linePanel.setVisibility(View.GONE);
             return;
         }
         if (changed) scheduleRegen();
@@ -1438,7 +1480,12 @@ public class EditorActivity extends Activity {
         style = PatternEngine.STYLE_REALISTIC;
         chipStyleReal.setSelected(true);
         chipStyleAbs.setSelected(false);
+        chipStyleLine.setSelected(false);
         abstractPanel.setVisibility(View.GONE);
+        linePanel.setVisibility(View.GONE);
+        lineSensitivity = 50;
+        sbLineSens.setProgress(50);
+        tvLineSens.setText("50%");
         setSeek(R.id.sbBright, 100);
         setSeek(R.id.sbContrast, 100);
         setSeek(R.id.sbSat, 100);
@@ -1873,6 +1920,7 @@ public class EditorActivity extends Activity {
         opt.dominant = dominant;
         opt.denoise = denoise;
         opt.preciseColor = preciseColor;
+        opt.lineSensitivity = lineSensitivity;
         final List<BeadColor> beadPalette = BeadPalettes.getPalette(tierIdx);
         exec.execute(new Runnable() {
             @Override
@@ -3755,6 +3803,7 @@ public class EditorActivity extends Activity {
                     s.put("contrast", contrast);
                     s.put("saturation", saturation);
                     s.put("style", style);
+                    s.put("lineSens", lineSensitivity);
                     s.put("brickIdx", brickIdx);
                     s.put("absUse", abstractUsePalette);
                     s.put("absColors", abstractColors);
@@ -3838,8 +3887,11 @@ public class EditorActivity extends Activity {
             brightness = clampInt(s.optInt("brightness"), -100, 100);
             contrast = clampInt(s.optInt("contrast"), -100, 100);
             saturation = clampInt(s.optInt("saturation"), -100, 100);
-            style = s.optInt("style") == PatternEngine.STYLE_ABSTRACT
-                    ? PatternEngine.STYLE_ABSTRACT : PatternEngine.STYLE_REALISTIC;
+            int savedStyle = s.optInt("style");
+            style = savedStyle == PatternEngine.STYLE_ABSTRACT
+                    || savedStyle == PatternEngine.STYLE_LINEART
+                    ? savedStyle : PatternEngine.STYLE_REALISTIC;
+            lineSensitivity = clampInt(s.optInt("lineSens", 50), 0, 100);
             brickIdx = Math.max(0, Math.min(3, s.optInt("brickIdx", 1)));
             abstractUsePalette = s.optBoolean("absUse", true);
             abstractColors = Math.max(4, Math.min(16, s.optInt("absColors", 8)));
@@ -3997,8 +4049,13 @@ public class EditorActivity extends Activity {
         swBricklessSync();
         chipStyleReal.setSelected(style == PatternEngine.STYLE_REALISTIC);
         chipStyleAbs.setSelected(style == PatternEngine.STYLE_ABSTRACT);
+        chipStyleLine.setSelected(style == PatternEngine.STYLE_LINEART);
         abstractPanel.setVisibility(
                 style == PatternEngine.STYLE_ABSTRACT ? View.VISIBLE : View.GONE);
+        linePanel.setVisibility(
+                style == PatternEngine.STYLE_LINEART ? View.VISIBLE : View.GONE);
+        sbLineSens.setProgress(lineSensitivity);
+        tvLineSens.setText(lineSensitivity + "%");
 
         editCell = false;
         swEditCell.setOnCheckedChangeListener(null);

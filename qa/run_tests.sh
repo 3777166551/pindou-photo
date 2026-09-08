@@ -27,10 +27,10 @@ rm -rf qa/out
 mkdir -p qa/out
 javac -encoding UTF-8 -cp "$AJ" -sourcepath app/src/main/java -d qa/out \
   qa/TestColorMath.java qa/TestPatternEngine.java qa/TestPatternPatch.java \
-  qa/TestCustomPalette.java qa/TestSymmetry.java
+  qa/TestCustomPalette.java qa/TestSymmetry.java qa/TestLineArt.java
 
 FAIL=0
-for T in TestColorMath TestPatternEngine TestPatternPatch TestCustomPalette TestSymmetry; do
+for T in TestColorMath TestPatternEngine TestPatternPatch TestCustomPalette TestSymmetry TestLineArt; do
   echo "===== running $T ====="
   java -cp "qa/out:$AJ" "$T" || FAIL=1
 done

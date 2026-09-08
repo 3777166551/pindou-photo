@@ -172,6 +172,7 @@ public final class PatternShare {
             opt.dominant = s.optBoolean("dominant", false);
             opt.denoise = Math.max(0, Math.min(3, s.optInt("denoise", 0)));
             opt.preciseColor = s.optBoolean("precise", false);
+            opt.lineSensitivity = Math.max(0, Math.min(100, s.optInt("lineSens", 50)));
 
             List<BeadColor> palette = com.pindou.app.bead.BeadPalettes.getPalette(
                     Math.max(0, Math.min(

@@ -300,6 +300,13 @@ sleep 0.5
 tap_text "Generate" 0
 sleep 8
 snap textgen
+
+# ---------- v2.43:线稿模式(文字位图切风格,出黑豆描线图纸) ----------
+tap_id chipStyleLine 0
+sleep 3
+adb shell input swipe 540 600 540 2100 300; sleep 0.6
+adb shell input swipe 540 600 540 2100 300; sleep 0.6
+snap lineart
 back
 ensure_home
 

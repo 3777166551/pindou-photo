@@ -113,6 +113,9 @@
     <string name="limit_hint">Color limit: merges the closest colors so you buy fewer bead colors (realistic mode)</string>
     <string name="style_real">Realistic</string>
     <string name="style_abs">Abstract</string>
+    <string name="style_line">Line art</string>
+    <string name="line_sens">Line sensitivity</string>
+    <string name="line_hint">Trace photo outlines into a black-bead line chart; fill the empty cells yourself. Right = denser, left = sparser</string>
     <string name="abs_degree">Abstraction (brick size)</string>
     <string name="abs_degree_hint">Pixel patches merge into one color; bigger = more blocky</string>
     <string name="brick0">Light 2×2</string>

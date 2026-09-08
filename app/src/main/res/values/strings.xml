@@ -113,6 +113,9 @@
     <string name="limit_hint">色数上限:自动合并最接近的颜色,少买几种豆(写实模式生效)</string>
     <string name="style_real">写实</string>
     <string name="style_abs">抽象</string>
+    <string name="style_line">线稿</string>
+    <string name="line_sens">描线灵敏度</string>
+    <string name="line_hint">提取照片轮廓生成黑豆描线图纸,其余格子留空自己填色;往右更密,往左更疏</string>
     <string name="abs_degree">抽象程度(砖块大小)</string>
     <string name="abs_degree_hint">一小片像素合并成同一种颜色,越大越像积木</string>
     <string name="brick0">轻 2×2</string>

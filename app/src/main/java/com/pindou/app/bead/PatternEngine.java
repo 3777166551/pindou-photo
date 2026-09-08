@@ -12,12 +12,14 @@ import java.util.Set;
 /**
  * 核心:把一张照片变成拼豆图纸。
  *
- * 两种风格:
+ * 三种风格:
  *  - 写实(STYLE_REALISTIC):逐像素匹配固定拼豆色板,尽量贴合照片
  *  - 抽象(STYLE_ABSTRACT):乐高积木风。先把图像缩小到"砖块"粒度
  *    (每块 = brickSize × brickSize 颗豆,双线性缩放即完成邻域平均),
  *    一整块共用一颗豆的颜色;抽象程度由块大小控制。
  *    可再用 k 均值把全图限定到少数几种主色(海报感),并可吸附到真实豆色。
+ *  - 线稿(STYLE_LINEART,v2.43):索贝尔梯度提取轮廓,描线格上墨色豆,
+ *    其余格子留空——"黑豆描边 + 自己填色"的涂色本玩法。
  *
  * 全程在 CIELAB 空间做最近色匹配,符合人眼感知。
  */
@@ -25,6 +27,7 @@ public final class PatternEngine {
 
     public static final int STYLE_REALISTIC = 0;
     public static final int STYLE_ABSTRACT = 1;
+    public static final int STYLE_LINEART = 2;
 
     private static final String SYMBOLS =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -60,6 +63,8 @@ public final class PatternEngine {
         public int denoise = 0;
         /** 精准配色:用 CIEDE2000 色差选豆色,更贴人眼但大图稍慢 */
         public boolean preciseColor = false;
+        /** 线稿模式:描线灵敏度 0~100,越高描线越密(阈值占最大梯度 0.55→0.10) */
+        public int lineSensitivity = 50;
     }
 
     public static BeadPattern generate(Bitmap source, List<BeadColor> beadPalette, Options o) {
@@ -67,6 +72,7 @@ public final class PatternEngine {
         int rows = Math.max(4, Math.min(200, o.rows));
 
         boolean abs = o.style == STYLE_ABSTRACT;
+        boolean lineArt = o.style == STYLE_LINEART;
         int b = abs ? Math.max(1, Math.min(8, o.brickSize)) : 1;
         int gw = (cols + b - 1) / b;   // 工作网格宽(块数)
         int gh = (rows + b - 1) / b;
@@ -146,10 +152,25 @@ public final class PatternEngine {
         }
         int n = palette.size();
 
-        // 5. 工作网格逐块匹配最近豆色(可选 FS 抖动在块层面扩散)
-        int[] workCells = new int[gw * gh];
+        // 5. 工作网格逐块匹配最近豆色(可选 FS 抖动在块层面扩散);
+        //    线稿模式不走最近色匹配,直接由梯度描线得出格子
+        int[] workCells;
         int[] counts = new int[Math.max(1, n)];
-        if (n > 0) {
+        if (lineArt) {
+            // 亮度/对比度/饱和度先作用于全分辨率像素(对比度直接影响梯度强度)
+            int[] src = srcPx;
+            if (o.brightness != 0 || o.contrast != 0 || o.saturation != 0) {
+                src = new int[srcPx.length];
+                for (int i = 0; i < srcPx.length; i++) {
+                    src[i] = ColorMath.adjust(srcPx[i], o.brightness, o.contrast, o.saturation);
+                }
+            }
+            workCells = lineArtCells(src, pw, ph, gw, gh,
+                    o.lineSensitivity, darkestBeadIndex(beadPalette));
+        } else {
+            workCells = new int[gw * gh];
+        }
+        if (!lineArt && n > 0) {
             double[][] labs = new double[n][];
             for (int i = 0; i < n; i++) labs[i] = ColorMath.rgbToLab(palette.get(i).rgb);
 
@@ -199,7 +220,7 @@ public final class PatternEngine {
                     }
                 }
             }
-        } else {
+        } else if (!lineArt) {
             Arrays.fill(workCells, -1);
         }
 
@@ -267,6 +288,112 @@ public final class PatternEngine {
                 fine[rowBase + x] = coarse[srcBase + Math.min(x / b, gw - 1)];
             }
         }
+    }
+
+    /**
+     * 线稿模式(v2.43):把照片变成"黑豆描线 + 空格填色"的图纸格子。
+     * 透明像素按白底合成亮度(黑字透明底/抠图 PNG 也能正确描边),
+     * 全分辨率上算索贝尔梯度再盒式平均到网格(线更细更稳、天然抗噪点),
+     * 阈值随灵敏度取最大梯度的 0.55~0.10;不透明覆盖率过低的格子强制
+     * 留空,描边渐变不污染透明区。返回 cols×rows 数组:描线格 = inkIndex,
+     * 其余 = -1。源图全平(纯色/纯白)时全部留空。
+     */
+    public static int[] lineArtCells(int[] srcPx, int sw, int sh,
+                                     int cols, int rows, int sensitivity, int inkIndex) {
+        int[] cells = new int[Math.max(0, cols) * Math.max(0, rows)];
+        Arrays.fill(cells, -1);
+        if (sw < 2 || sh < 2 || cols < 1 || rows < 1 || inkIndex < 0
+                || srcPx == null || srcPx.length != sw * sh) {
+            return cells;
+        }
+
+        // 1. 亮度平面:透明像素合成到白底
+        float[] lum = new float[sw * sh];
+        for (int i = 0; i < srcPx.length; i++) {
+            int p = srcPx[i];
+            float a = ((p >>> 24) & 0xFF) / 255f;
+            float t = 255f * (1f - a);
+            float r = ((p >> 16) & 0xFF) * a + t;
+            float g = ((p >> 8) & 0xFF) * a + t;
+            float b = (p & 0xFF) * a + t;
+            lum[i] = 0.299f * r + 0.587f * g + 0.114f * b;
+        }
+
+        // 2. 逐像素索贝尔梯度模长(边界一圈置 0)
+        float[] grad = new float[sw * sh];
+        for (int y = 1; y < sh - 1; y++) {
+            for (int x = 1; x < sw - 1; x++) {
+                int i = y * sw + x;
+                float gx = (lum[i - sw + 1] + 2f * lum[i + 1] + lum[i + sw + 1])
+                        - (lum[i - sw - 1] + 2f * lum[i - 1] + lum[i + sw - 1]);
+                float gy = (lum[i + sw - 1] + 2f * lum[i + sw] + lum[i + sw + 1])
+                        - (lum[i - sw - 1] + 2f * lum[i - sw] + lum[i - sw + 1]);
+                grad[i] = (float) Math.sqrt(gx * gx + gy * gy);
+            }
+        }
+
+        // 3. 盒式平均降到网格:每格的梯度强度 + 不透明覆盖率
+        float[] gridG = new float[cols * rows];
+        float[] gridC = new float[cols * rows];
+        for (int gy = 0; gy < rows; gy++) {
+            int y0 = gy * sh / rows;
+            int y1 = Math.max(y0 + 1, (gy + 1) * sh / rows);
+            for (int gx = 0; gx < cols; gx++) {
+                int x0 = gx * sw / cols;
+                int x1 = Math.max(x0 + 1, (gx + 1) * sw / cols);
+                float sg = 0, sc = 0;
+                int cnt = 0;
+                for (int y = y0; y < y1 && y < sh; y++) {
+                    for (int x = x0; x < x1 && x < sw; x++) {
+                        int i = y * sw + x;
+                        sg += grad[i];
+                        sc += ((srcPx[i] >>> 24) & 0xFF) / 255f;
+                        cnt++;
+                    }
+                }
+                int ci = gy * cols + gx;
+                if (cnt > 0) {
+                    gridG[ci] = sg / cnt;
+                    gridC[ci] = sc / cnt;
+                } else {
+                    // 源比网格还小(放大场景):采最近像素兜底
+                    int i = Math.min(sh - 1, y0) * sw + Math.min(sw - 1, x0);
+                    gridG[ci] = grad[i];
+                    gridC[ci] = ((srcPx[i] >>> 24) & 0xFF) / 255f;
+                }
+            }
+        }
+
+        // 4. 阈值化:灵敏度 0~100 → 最大梯度的 0.55→0.10;覆盖率 <5% 的格子
+        //    (描边平均渗进纯透明区的部分)强制留空
+        float max = 0;
+        for (float v : gridG) {
+            if (v > max) max = v;
+        }
+        if (max <= 0f) return cells;
+        int sens = Math.max(0, Math.min(100, sensitivity));
+        float t = max * (0.55f - 0.0045f * sens);
+        for (int i = 0; i < cells.length; i++) {
+            if (gridG[i] >= t && gridC[i] >= 0.05f) {
+                cells[i] = inkIndex;
+            }
+        }
+        return cells;
+    }
+
+    /** 线稿描线用的"墨色":色板里 L* 最深的豆;空色板返回 -1 */
+    public static int darkestBeadIndex(List<BeadColor> palette) {
+        int best = -1;
+        double bestL = Double.MAX_VALUE;
+        if (palette == null) return best;
+        for (int i = 0; i < palette.size(); i++) {
+            double l = ColorMath.rgbToLab(0xFF000000 | palette.get(i).rgb)[0];
+            if (l < bestL) {
+                bestL = l;
+                best = i;
+            }
+        }
+        return best;
     }
 
     /**

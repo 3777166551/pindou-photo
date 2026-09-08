@@ -113,6 +113,9 @@
     <string name="limit_hint">色数上限: 近い色を自動でまとめ、買う色数を減らします(リアルモード)</string>
     <string name="style_real">リアル</string>
     <string name="style_abs">アブストラクト</string>
+    <string name="style_line">線画</string>
+    <string name="line_sens">線の感度</string>
+    <string name="line_hint">写真の輪郭を黒豆の線図に変換。空きマスは自分で色を埋めます。右=細かい、左=粗め</string>
     <string name="abs_degree">抽象度(ブロックサイズ)</string>
     <string name="abs_degree_hint">ピクセルのかたまりを同色に。大きいほどブロック風</string>
     <string name="brick0">軽 2×2</string>
