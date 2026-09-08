@@ -322,8 +322,11 @@ adb shell input swipe 540 1700 540 500 300; sleep 0.6
 adb shell input swipe 540 1700 540 500 300; sleep 0.6
 tap_id btnCrop 0
 sleep 2.5
-adb shell input swipe 540 800 320 640 400
-sleep 0.8
+# 默认选区=全图最大(拖不动是设计使然):先拖角缩小,再拖中间移动
+adb shell input swipe 880 1410 620 1180 400
+sleep 0.6
+adb shell input swipe 540 900 400 780 400
+sleep 0.6
 snap crop_drag
 tap_text "Cancel" 0
 sleep 1
