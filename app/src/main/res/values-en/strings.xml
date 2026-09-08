@@ -197,6 +197,8 @@
     <string name="match_register">Log</string>
     <string name="match_register_title">Register %1$s %2$s%3$s to inventory</string>
     <string name="match_registered">Saved to inventory</string>
+    <string name="spec_switch_mini">That palette is the mini spec — switched automatically</string>
+    <string name="spec_switch_std">That palette is the standard spec — switched automatically</string>
     <string name="denoise_hint">Merges similar neighbors and removes lonely speckles; too strong loses detail</string>
     <string name="symbols">Show symbols</string>
     <string name="grid_lines">Show grid lines</string>

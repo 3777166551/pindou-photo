@@ -42,6 +42,9 @@
 - Artkal / 漫德 MARD / Perler / Hama / Nabbi 等品牌色号的 RGB 参考值,基于公开资料与
   开源社区实测数据整理(含 Lospec 等开放色板与 beadcolors 数据集),仅供配色参考;
   实物豆颜色请以各品牌官方色卡为准。
+- 迷你规格色号表(Artkal C·2.6mm / Perler Mini·2.6mm / Hama Mini·2.5mm)取自
+  **[maxcleme/beadcolors](https://github.com/maxcleme/beadcolors)** 数据集(gen/v2 CSV,
+  MIT License,Copyright (c) 2020 maxcleme),按 MIT 要求保留本声明。
 - 各品牌名称与色号体系归各自品牌方所有,本项目仅作兼容性引用。
 
 ## 构建期工具(不随 APP 分发)

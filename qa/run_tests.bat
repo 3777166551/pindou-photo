@@ -25,14 +25,14 @@ if exist qa\out rmdir /s /q qa\out
 mkdir qa\out
 
 "%JAVA_HOME%\bin\javac.exe" -encoding UTF-8 -cp "%AJ%" -sourcepath app\src\main\java -d qa\out ^
-  qa\TestColorMath.java qa\TestPatternEngine.java qa\TestPatternPatch.java qa\TestCustomPalette.java qa\TestSymmetry.java qa\TestLineArt.java
+  qa\TestColorMath.java qa\TestPatternEngine.java qa\TestPatternPatch.java qa\TestCustomPalette.java qa\TestSymmetry.java qa\TestLineArt.java qa\TestBrandCharts.java
 if errorlevel 1 (
     echo [COMPILE FAILED]
     exit /b 1
 )
 
 set FAIL=0
-for %%T in (TestColorMath TestPatternEngine TestPatternPatch TestCustomPalette TestSymmetry TestLineArt) do (
+for %%T in (TestColorMath TestPatternEngine TestPatternPatch TestCustomPalette TestSymmetry TestLineArt TestBrandCharts) do (
     echo ===== running %%T =====
     "%JAVA_HOME%\bin\java.exe" -cp "qa\out;%AJ%" %%T
     if errorlevel 1 set FAIL=1

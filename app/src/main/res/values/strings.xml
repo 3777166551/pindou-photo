@@ -197,6 +197,8 @@
     <string name="match_register">登记</string>
     <string name="match_register_title">登记 %1$s %2$s%3$s 到豆仓</string>
     <string name="match_registered">已登记到豆仓</string>
+    <string name="spec_switch_mini">该色号表为迷你豆规格,已自动切换</string>
+    <string name="spec_switch_std">该色号表为标准豆规格,已自动切换</string>
     <string name="denoise_hint">把相邻的相近色连成片,清掉孤立的杂色颗粒;调太强会丢细节</string>
     <string name="symbols">图纸显示符号</string>
     <string name="grid_lines">显示网格线</string>

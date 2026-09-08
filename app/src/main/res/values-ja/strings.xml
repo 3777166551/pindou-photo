@@ -197,6 +197,8 @@
     <string name="match_register">登録</string>
     <string name="match_register_title">%1$s %2$s%3$s を在庫に登録</string>
     <string name="match_registered">在庫に登録しました</string>
+    <string name="spec_switch_mini">このパレットはミニ規格です。自動で切り替えました</string>
+    <string name="spec_switch_std">このパレットは標準規格です。自動で切り替えました</string>
     <string name="denoise_hint">近くの類似色をまとめ、孤立した点を除去。強すぎると細部が失われます</string>
     <string name="symbols">記号を表示</string>
     <string name="grid_lines">グリッド線を表示</string>

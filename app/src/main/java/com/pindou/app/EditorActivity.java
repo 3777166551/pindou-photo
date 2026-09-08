@@ -750,6 +750,23 @@ public class EditorActivity extends Activity {
                 if (suppressSpinner || position == tierIdx) return;
                 tierIdx = position;
                 editMap.clear();   // 色板体系变了,修格下标失效
+                // 品牌色号表自带规格(如 Artkal C·2.6mm),选它就自动切豆子规格
+                if (position >= BeadPalettes.GENERIC_COUNT
+                        && position < BeadPalettes.customSlotStart()) {
+                    boolean mini = BeadBrandCharts.isMiniChart(
+                            BeadBrandCharts.ALL[position
+                                    - BeadPalettes.GENERIC_COUNT].name);
+                    if (mini != miniBead) {
+                        miniBead = mini;
+                        syncBeadSpecUi();
+                        syncSizeUi();
+                        updateSummary();
+                        Toast.makeText(EditorActivity.this,
+                                getString(mini ? R.string.spec_switch_mini
+                                        : R.string.spec_switch_std),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
                 structureChanged();
             }
 
