@@ -152,12 +152,9 @@ fi
 
 adb shell am start -n $PKG/.SplashActivity
 sleep 4
-# 等到主界面就绪(最多再等 40s)
-for _ in $(seq 1 20); do
-  dump_ui && grep -q "text=\"[^\"]*Start a new pattern[^\"]*\"" ui.xml && break
-  sleep 2
-done
-sleep 2
+# 等主界面就绪;模拟器冷启动偶尔抽风(app 没起来停在桌面),
+# 用 ensure_home 的重试 + monkey 兜底再拉两次
+ensure_home
 snap home
 check_text "Start a new pattern"
 log "home OK"
