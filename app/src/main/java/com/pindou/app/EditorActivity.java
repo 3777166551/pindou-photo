@@ -3227,10 +3227,40 @@ public class EditorActivity extends Activity {
         send.setType(mime);
         send.putExtra(Intent.EXTRA_STREAM, uri);
         send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        // 微信/QQ 提到分享面板最前(包名定向,拉起它们自己的分享页);
+        // 不接任何 SDK:零依赖、零注册、零新增权限;没装则自动跳过
+        List<Intent> prefer = new ArrayList<>();
+        addPreferredTarget(prefer, "com.tencent.mm", uri, mime);
+        addPreferredTarget(prefer, "com.tencent.mobileqq", uri, mime);
+        Intent chooser = Intent.createChooser(send, getString(R.string.share_title));
+        if (!prefer.isEmpty()) {
+            chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS,
+                    prefer.toArray(new Intent[0]));
+        }
         try {
-            startActivity(Intent.createChooser(send, getString(R.string.share_title)));
+            startActivity(chooser);
         } catch (Exception e) {
             Toast.makeText(this, getString(R.string.share_failed), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /** 把某个包能接 ACTION_SEND 图片的入口做成面板顶部的"直达"项 */
+    private void addPreferredTarget(List<Intent> out, String pkg, Uri uri, String mime) {
+        try {
+            Intent probe = new Intent(Intent.ACTION_SEND);
+            probe.setType(mime);
+            probe.setPackage(pkg);
+            android.content.pm.ResolveInfo ri =
+                    getPackageManager().resolveActivity(probe, 0);
+            if (ri == null || ri.activityInfo == null) return;
+            Intent it = new Intent(Intent.ACTION_SEND);
+            it.setType(mime);
+            it.setClassName(pkg, ri.activityInfo.name);
+            it.putExtra(Intent.EXTRA_STREAM, uri);
+            it.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            out.add(it);
+        } catch (Throwable ignored) {
+            // 目标未安装或解析失败就少一个直达项,不影响普通分享
         }
     }
 
