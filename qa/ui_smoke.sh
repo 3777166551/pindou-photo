@@ -67,10 +67,10 @@ _tap_match() {
   return 0
 }
 
-# 按 resource-id 结尾点击(id 与语言无关),自动滚动查找
+# 按 resource-id 结尾点击(id 与语言无关),自动滚动查找(最多下滑 6 屏)
 tap_id() {
   local id="$PKG:id/$1" must="${2:-1}" n
-  for n in 0 1 2 3; do
+  for n in 0 1 2 3 4 5 6; do
     if [ "$n" -gt 0 ]; then
       adb shell input swipe 540 1600 540 700 250; sleep 0.8
     fi
@@ -87,10 +87,10 @@ tap_id() {
   log "soft-miss id: $1"
 }
 
-# 按可见文本点击(对话框按钮等),自动滚动查找
+# 按可见文本点击(对话框按钮等),自动滚动查找(最多下滑 6 屏)
 tap_text() {
   local txt="$1" must="${2:-1}" n
-  for n in 0 1 2 3; do
+  for n in 0 1 2 3 4 5 6; do
     if [ "$n" -gt 0 ]; then
       adb shell input swipe 540 1600 540 700 250; sleep 0.8
     fi
