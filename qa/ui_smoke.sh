@@ -459,12 +459,10 @@ sleep 5
 snap merge_csv
 back
 sleep 1.5
-tap_text_still "Close" 0
-sleep 1.5
-
-# 14) 重开存档:状态还原(照片+设置重建图纸)。
-#     用原地重试点项目行,滑动重试会碰出对话框(touch-outside 取消)
-tap_text_still "$PROJ_NAME" 0
+# 注意:D3 在点「Export CSV」时已自行 dismiss(按钮点击默认关对话框),
+# 此时前方就是 D1(我的项目)。别再点 Close —— 那是 D1 的关闭键,
+# 会把要用的对话框关掉(第九轮教训)
+tap_text_still "$PROJ_NAME"
 sleep 12
 check_text "Bead list"
 tap_id tabPattern 0
