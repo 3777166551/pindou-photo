@@ -162,13 +162,26 @@ for i in $(seq 1 $ACTS); do
     if grep -q "com.pindou.app" w.xml 2>/dev/null; then ok=0; break; fi
     sleep 1.5
   done
+  if [ $i = 1 ] || [ $i = 5 ] || [ $i = 20 ]; then
+    SZ=$(wc -c < w.xml 2>/dev/null | tr -d ' \r')
+    OP=$(grep -c "com.pindou.app" w.xml 2>/dev/null)
+    RID=$(grep -c 'resource-id="com.pindou.app:id/' w.xml 2>/dev/null)
+    cp w.xml "$SHOTS/w_act$i.xml" 2>/dev/null
+    log "walker act $i debug: xml=${SZ}B ourpkg_lines=$OP rid_lines=$RID dumpok=$ok"
+  fi
   # 主通道(复用冒烟脚本被 CI 验证过的 resource-id 点击路径):
-  # 随机挑一个本包/对话框按钮 id,交给 _tap_match 点击
+  # 随机挑一个本包/对话框按钮 id,交给 _walker_match 点击
   IDS=""
   if [ "$ok" = "0" ]; then
     IDS=$(grep -o 'resource-id="[^"]*:[a-zA-Z0-9_]*"' w.xml 2>/dev/null \
       | sed 's/resource-id="//; s/"$//' \
       | grep -E "^(com\.pindou\.app|android):id/" | sort -u)
+  fi
+  if [ $i = 5 ]; then
+    S0=$(grep -o 'resource-id="[^"]*"' w.xml 2>/dev/null | grep -c .)
+    S1=$(printf '%s\n' "$IDS" | grep -c .)
+    S2=$(grep -o 'resource-id="[^"]*"' w.xml 2>/dev/null | sed 's/resource-id="//; s/"$//' | grep -E "^(com\.pindou\.app|android):id/" | grep -c .)
+    log "walker act 5 stages: raw=$S0 final=$S1 filtered_direct=$S2 ids=[$(printf '%s' "$IDS" | head -c 120)]"
   fi
   N=$(printf '%s\n' "$IDS" | grep -c .)
   if [ "$N" = "0" ]; then
