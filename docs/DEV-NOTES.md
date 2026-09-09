@@ -227,3 +227,25 @@ ACTION_MOVE 里自己算 `x-lastX`(双指缩放保留 ScaleGestureDetector,
 消除对检测器内部接力时序和父容器拦截策略的依赖。
 **教训**:全屏触摸画布类自定义 View,手势自己算最稳;检测器适合
 标准列表/卡片场景。改完务必真机过一遍(CI 模拟器测不出这类机型差异)。
+
+## 21. 样式里的 0dp+weight 别带进纵向列(v2.45 教训,CI 完整流程冒烟抓出)
+
+**现象**:首页「我的项目」卡(btnProjects)在任何设备上都**看不见、点不到**,
+a11y 树里也没这个节点;「Keep going」标题和页脚之间留一大段空白。
+v2.39 糖果贴纸风改版引入,靠人肉点查永远发现不了(看不见的东西没法点),
+直到 qa/ui_smoke.sh 扩展完整拼豆流程(存档→首页→我的项目→重开)才在
+第六轮 CI 咬住:FAIL: id not found: btnProjects。
+
+**原因**:btnProjects 直接用了 `@style/ToolCard`——该样式是给 2 列网格
+半宽卡设计的:`layout_width=0dp + layout_weight=1`。它又是纵向列的
+直接子 View,还覆写 orientation=horizontal:纵向 LinearLayout 里
+weight 分配的是**剩余高度**,于是这张卡 = 宽度 0dp(什么都不画)
++ 高度吃光整列剩余空间(空白段) + 零尺寸视图不进 a11y 树
+(自动化找不到)。其他卡片都包在横排 wrapper 行里所以没事。
+
+**修法**:btnProjects 显式声明 `layout_width=match_parent +
+layout_height=wrap_content`(XML 属性优先于 style),渲染为
+全宽横排行卡(图标在左文案在右,本来就是设计意图)。
+**教训**:复用带 0dp/weight 的样式时先问一句"父容器方向对不对";
+UI 冒烟别只走查"能看见的东西",要覆盖跨页面的状态链路(存档→回
+首页→再进),隐形入口只有靠链路断点才现形。
