@@ -127,6 +127,25 @@ tap_text_exact() {
   log "soft-miss exact text: $txt"
 }
 
+# 原地重试点击(不滚动):短内容对话框里慎用滑动 —— 起点落在对话框
+# 之外会把非模态 AlertDialog 按 touch-outside 取消掉(第七轮教训)
+tap_text_still() {
+  local txt="$1" must="${2:-1}" n
+  for n in 1 2 3; do
+    if _tap_match "text=\"[^\"]*${txt}[^\"]*\"" 0; then
+      log "tapped(still): $txt"
+      return 0
+    fi
+    sleep 2
+  done
+  if [ "$must" = "1" ]; then
+    echo "[smoke] FAIL: still text not found: $txt"
+    snap fail
+    exit 1
+  fi
+  log "soft-miss(still) text: $txt"
+}
+
 check_text() {
   local txt="$1" must="${2:-1}" n
   for n in 1 2 3; do
@@ -439,12 +458,13 @@ tap_text "Export CSV" 0
 sleep 5
 snap merge_csv
 back
-sleep 1
-tap_text "Close" 0
-sleep 1
+sleep 1.5
+tap_text_still "Close" 0
+sleep 1.5
 
-# 14) 重开存档:状态还原(照片+设置重建图纸)
-tap_text "$PROJ_NAME" 0
+# 14) 重开存档:状态还原(照片+设置重建图纸)。
+#     用原地重试点项目行,滑动重试会碰出对话框(touch-outside 取消)
+tap_text_still "$PROJ_NAME" 0
 sleep 12
 check_text "Bead list"
 tap_id tabPattern 0
