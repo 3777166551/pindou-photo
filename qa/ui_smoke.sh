@@ -304,17 +304,15 @@ sleep 1
 tap_id chipLimit0 0
 sleep 5
 
-# 5) 品牌色号表联动:Nabbi 表 → 色号列 + 自动切迷你规格
+# 5) 品牌色号表联动:Nabbi 表 → 色号列 + 自动切迷你规格。
+#    之后整条管线保持 Nabbi 跑(导出/PDF/存档顺带覆盖品牌色号);
+#    不切回通用表 —— 再开一次下拉再选中是纯状态卫生,还容易把
+#    下拉列表滚乱引发后续控件连锁找不到(2026-09-09 第三轮教训)
 tap_id paletteSpinner 0
 sleep 1.5
 tap_text "Nabbi" 0
 sleep 1.2
 snap photo_brand_nabbi
-sleep 5
-# 切回通用 24 色(5mm → 自动切回标准规格)
-tap_id paletteSpinner 0
-sleep 1.5
-tap_text "Classic" 0
 sleep 6
 
 # 6) 抽象风格 + 砖块纹理 → 回写实
@@ -441,7 +439,7 @@ sleep 1
 
 # 14) 重开存档:状态还原(照片+设置重建图纸)
 tap_text "$PROJ_NAME" 0
-sleep 9
+sleep 12
 check_text "Bead list"
 tap_id tabPattern 0
 sleep 1
