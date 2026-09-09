@@ -1,14 +1,26 @@
 #!/usr/bin/env bash
 # ============================================================
-#  Extended UI smoke test: black-box click-through of the main
-#  flows (home cards, knowledge, templates, blank canvas editor,
-#  bead list, palette manager, inventory, text generator).
+#  Full-flow UI smoke test: black-box click-through.
+#  A) COMPLETE fuse-bead pipeline: inject test photo into the
+#     app dir (debug pkg + run-as) -> editor auto-generates ->
+#     params (limit / brand palette / style / shape / bead size)
+#     -> bead list stats (pack conversion) -> night mode ->
+#     exports (PNG sheet / PDF / JSON / share card) -> save
+#     project -> reopen from My projects -> merged shopping
+#     list + CSV export.
+#  B) Coverage walk: home cards, camera/scan entries (soft),
+#     knowledge, template gallery + Daily pick full open,
+#     blank-canvas editor (paint / symmetry / bead-size /
+#     assist board+row / trace), palette manager, inventory,
+#     text generator, 3D preview, line art, color-match entry,
+#     projects dialog, crash check.
 #  Runs against the CI emulator (en locale) so it also verifies
 #  the English translations end to end.
 #  Buttons with resource ids are tapped by id (locale-independent);
 #  dialog buttons are tapped by visible text with scroll/retry.
 #  Hard steps exit 1 on failure; soft steps only log.
-#  Usage: bash qa/ui_smoke.sh   (needs adb + booted emulator)
+#  Usage: bash qa/ui_smoke.sh   (needs adb + booted emulator,
+#         run from repo root; APK path via APK= env or apk/)
 # ============================================================
 set -u
 export PATH="$ANDROID_HOME/platform-tools:$PATH"
@@ -95,6 +107,26 @@ tap_text() {
   log "soft-miss text: $txt"
 }
 
+# 按完全相等的可见文本点击(标题里含同词时避免误中,如「Save project」vs「Save」)
+tap_text_exact() {
+  local txt="$1" must="${2:-1}" n
+  for n in 0 1 2 3; do
+    if [ "$n" -gt 0 ]; then
+      adb shell input swipe 540 1600 540 700 250; sleep 0.8
+    fi
+    if _tap_match "text=\"$txt\"" 0; then
+      log "tapped exact: $txt"
+      return 0
+    fi
+  done
+  if [ "$must" = "1" ]; then
+    echo "[smoke] FAIL: exact text not found: $txt"
+    snap fail
+    exit 1
+  fi
+  log "soft-miss exact text: $txt"
+}
+
 check_text() {
   local txt="$1" must="${2:-1}" n
   for n in 1 2 3; do
@@ -111,6 +143,38 @@ check_text() {
     exit 1
   fi
   log "soft-miss text: $txt"
+}
+
+# 点当前屏幕上第一个输入框(存档命名等对话框)
+tap_edittext() {
+  local b x1 y1 x2 y2
+  dump_ui || return 1
+  b=$(grep -oi 'class="android.widget.EditText"[^\>]*bounds="\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]"' ui.xml \
+    | grep -o 'bounds="\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]"' | head -1)
+  [ -z "$b" ] && return 1
+  b=${b#bounds=\"}; b=${b%\"}
+  x1=${b%%,*};       x1=${x1#[}
+  y1=${b#*,};        y1=${y1%%]*}
+  y2=${b##*,};       y2=${y2%]}
+  x2=${b#*][};       x2=${x2%%,*}
+  adb shell input tap $(( (x1 + x2) / 2 )) $(( (y1 + y2) / 2 ))
+  sleep 1
+  return 0
+}
+
+# 等图纸生成完成:豆单摘要出现 "Total beads"(list tab 激活时可见)
+gen_wait() {
+  local n
+  for n in 1 2 3 4 5 6 7 8; do
+    dump_ui
+    if grep -qi "text=\"[^\"]*Total beads[^\"]*\"" ui.xml; then
+      log "pattern generated"
+      return 0
+    fi
+    sleep 4
+    tap_id tabList 0 > /dev/null 2>&1
+  done
+  return 1
 }
 
 back() { adb shell input keyevent 4; sleep 1.5; }
@@ -159,6 +223,234 @@ snap home
 check_text "Start a new pattern"
 log "home OK"
 
+# ============================================================
+# ★ 完整拼豆流程:照片 → 图纸 → 参数 → 豆单 → 导出 → 存档 →
+#   重开 → 合并采购单(CI 硬流程,失败即退出)
+# ============================================================
+log "=== FULL PIPELINE: photo -> chart -> export -> save -> reopen ==="
+
+# 0) 测试照片注入应用私有 files/(debug 包 run-as;file:// 与拍照流程同路径)
+if [ ! -f qa/test_data/ci_photo.png ]; then
+  echo "[smoke] FAIL: qa/test_data/ci_photo.png missing"
+  exit 1
+fi
+adb push qa/test_data/ci_photo.png /data/local/tmp/ci_photo.png > /dev/null
+adb shell chmod 644 /data/local/tmp/ci_photo.png
+adb shell run-as $PKG mkdir -p files > /dev/null 2>&1
+adb shell run-as $PKG cp /data/local/tmp/ci_photo.png files/ci_photo.png \
+  || adb shell run-as $PKG sh -c 'cp /data/local/tmp/ci_photo.png files/ci_photo.png'
+
+# 1) 首页「相册选图」入口(soft):选图器能拉起即算过,
+#    不依赖系统选图器内部 UI(CI 上标签/布局不稳定)
+tap_id btnGallery 0
+sleep 2
+snap gallery_resolver
+back
+sleep 1
+
+# 2) 直接带照片 URI 进编辑器(与 onActivityResult→openEditor 同参数);
+#    EditorActivity 未导出,shell 无权限时退回 run-as(同 uid 可启自身组件)
+PHOTO_URI="file:///data/data/com.pindou.app/files/ci_photo.png"
+adb shell am start -n $PKG/.EditorActivity --es photo_uri "$PHOTO_URI"
+sleep 4
+dump_ui
+if ! grep -qi "text=\"[^\"]*Bead list[^\"]*\"" ui.xml; then
+  log "plain am start rejected, retry via run-as"
+  adb shell run-as $PKG am start -n $PKG/.EditorActivity --es photo_uri "$PHOTO_URI"
+  sleep 4
+fi
+check_text "Bead list"
+log "editor opened with photo"
+
+# 3) 生成完成 → 三个 tab 各截一张(58×58 默认档)
+tap_id tabList
+gen_wait || { echo "[smoke] FAIL: pattern not generated"; snap fail; exit 1; }
+snap photo_list
+# 奶油底占大头 → 单色 ≥500 颗 → 「≈N pack(s) of 1000」按包换算必须出现;
+# 摘要行含 Est. 时长 + 难度(v2.41)
+check_text "pack(s)" 0
+check_text "Est." 0
+tap_id tabPattern
+sleep 1
+snap photo_chart
+tap_id tabEffect
+sleep 1
+snap photo_effect
+
+# 4) 参数联动(切 29×29 提速后续重生成)
+tap_id chip29 0
+sleep 5
+# 限色 12 → 豆单颜色数变化(人眼审截图)
+tap_id chipLimit1 0
+sleep 6
+tap_id tabList 0
+sleep 1
+snap photo_limit12
+check_text "Colors" 0
+tap_id chipLimit0 0
+sleep 5
+
+# 5) 品牌色号表联动:Nabbi 表 → 色号列 + 自动切迷你规格
+tap_id paletteSpinner 0
+sleep 1.5
+tap_text "Nabbi" 0
+sleep 1.2
+snap photo_brand_nabbi
+sleep 5
+# 切回通用 24 色(5mm → 自动切回标准规格)
+tap_id paletteSpinner 0
+sleep 1.5
+tap_text "Classic" 0
+sleep 6
+
+# 6) 抽象风格 + 砖块纹理 → 回写实
+tap_id chipStyleAbs 0
+sleep 1.5
+tap_id chipBrickMid 0
+sleep 6
+snap photo_abstract
+tap_id chipStyleReal 0
+sleep 6
+
+# 7) 圆形板 → 效果图/图纸按圆渲染
+tap_id chipShapeRound 0
+sleep 5
+snap photo_round
+tap_id chipShapeRect 0
+sleep 4
+
+# 8) 真照片裁剪:拖角缩小选区 → 拖中间移动 → OK 应用(重新生成)
+tap_id btnCrop 0
+sleep 2.5
+adb shell input swipe 880 1410 620 1180 400; sleep 0.8
+adb shell input swipe 540 900 400 780 400; sleep 0.8
+snap photo_crop
+tap_text "OK"
+sleep 10
+
+# 9) 夜间图纸(画布转暗,弹窗项即开即关)
+tap_id btnMenu
+sleep 1.5
+tap_text "Night chart on" 0
+sleep 1.5
+snap photo_night
+tap_id btnMenu
+sleep 1.5
+tap_text "Night chart off" 0
+sleep 1.5
+
+# 10) 导出四件套:PNG 图纸(存相册+toast)/ PDF / JSON / 分享长图
+tap_id btnMenu
+sleep 1.5
+tap_text "Save chart image"
+sleep 9
+snap photo_export_png
+check_text "Saved to Pictures" 0
+
+tap_id btnMenu
+sleep 1.5
+tap_text "Export PDF" 0
+sleep 14
+snap photo_share_pdf
+back
+sleep 1.5
+
+tap_id btnMenu
+sleep 1.5
+tap_text ".json" 0
+sleep 9
+snap photo_share_json
+back
+sleep 1.5
+
+tap_id btnMenu
+sleep 1.5
+tap_text "Share card" 0
+sleep 11
+snap photo_share_card
+back
+sleep 1.5
+
+# 11) 真图纸上的拼豆辅助:打卡日历
+adb shell input swipe 540 1700 540 500 300; sleep 0.8
+tap_id swBeadAssist 0
+sleep 1.5
+check_text "Find undone" 0
+tap_id btnAssistCalendar 0
+sleep 1.5
+snap photo_calendar
+tap_text "Close" 0
+sleep 1
+tap_id swBeadAssist 0
+sleep 1
+adb shell input swipe 540 600 540 2100 300; sleep 0.6
+
+# 12) 存档项目:默认名(Beads_MMDD_HHMM)直接存,后面靠它重开。
+#     标题含 Save 字样,按钮必须精确匹配防误点标题
+tap_id btnMenu
+sleep 1.5
+tap_text "Save project"
+sleep 1.5
+dump_ui
+PROJ_NAME=$(grep -o 'text="Beads_[0-9_]*"' ui.xml | head -1 | cut -d'"' -f2)
+if [ -z "$PROJ_NAME" ]; then
+  tap_edittext
+  adb shell input text "CI_Flow_1"
+  PROJ_NAME="CI_Flow_1"
+fi
+log "project name: $PROJ_NAME"
+tap_text_exact "Save"
+sleep 7
+snap photo_saved
+
+# 13) 我的项目 → 合并采购单(首项目默认勾选)→ Export CSV
+back
+ensure_home
+tap_id btnProjects
+sleep 2
+check_text "$PROJ_NAME"
+snap projects_list
+tap_text "Merge shopping" 0
+sleep 1.5
+snap merge_pick
+tap_text "Generate" 0
+sleep 7
+check_text "Merged shopping"
+snap merge_bom
+tap_text "Export CSV" 0
+sleep 5
+snap merge_csv
+back
+sleep 1
+tap_text "Close" 0
+sleep 1
+
+# 14) 重开存档:状态还原(照片+设置重建图纸)
+tap_text "$PROJ_NAME" 0
+sleep 9
+check_text "Bead list"
+tap_id tabPattern 0
+sleep 1
+snap project_reopened
+log "project reopened OK"
+back
+ensure_home
+
+# ============================================================
+# 覆盖走查(与历史版本一致的其余入口)
+# ============================================================
+
+# ---------- 相机 / 识别图纸入口(CI 模拟器无相机/选图,soft) ----------
+tap_id btnCamera 0
+sleep 1.5
+snap camera_entry
+tap_id btnScanPattern 0
+sleep 2
+snap scan_entry
+back
+sleep 1
+ensure_home
+
 # ---------- 拼豆知识 ----------
 tap_id btnKnowledge
 sleep 1.5
@@ -168,14 +460,21 @@ snap knowledge
 back
 ensure_home
 
-# ---------- 模板库 ----------
+# ---------- 模板库 + 每日一拼直达出图 ----------
 tap_id btnTemplates
 sleep 2.5
 check_text "Design templates" 0
 check_text "Daily pick" 0
 snap templates
-tap_text "Close" 0
+tap_text "Daily pick"
+sleep 9
+check_text "Bead list"
+tap_id tabList 0
+sleep 1
+check_text "Usage" 0
+snap template_editor
 back
+sleep 1
 ensure_home
 
 # ---------- 空白画布进入编辑器 ----------
@@ -315,21 +614,6 @@ sleep 1.5
 snap effect3d
 tap_id chip3d 0
 sleep 0.5
-
-# ---------- v2.44:取景裁剪拖拽回归(拖动选区后截图,验证手势) ----------
-# 裁剪行在滚动区深处,先硬滚两屏防半屏点空
-adb shell input swipe 540 1700 540 500 300; sleep 0.6
-adb shell input swipe 540 1700 540 500 300; sleep 0.6
-tap_id btnCrop 0
-sleep 2.5
-# 默认选区=全图最大(拖不动是设计使然):先拖角缩小,再拖中间移动
-adb shell input swipe 880 1410 620 1180 400
-sleep 0.6
-adb shell input swipe 540 900 400 780 400
-sleep 0.6
-snap crop_drag
-tap_text "Cancel" 0
-sleep 1
 back
 ensure_home
 
@@ -351,11 +635,12 @@ snap lineart
 back
 ensure_home
 
-# ---------- 我的项目(空) ----------
+# ---------- 我的项目(含完整流程存档) ----------
 tap_id btnProjects 0
 sleep 1.5
 snap projects
 back
+sleep 1
 ensure_home
 
 # ---------- v2.42:拍照对色入口(空态截图,不真选图) ----------
