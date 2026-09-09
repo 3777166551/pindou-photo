@@ -67,4 +67,4 @@ HarmonyOS 移植工程见 [harmony/](harmony/PORTING.md)。
 
 ---
 
-v2.39 · 完全免费 · 无广告
+v2.46 · 第一个正式版 · 完全免费 · 无广告
