@@ -440,4 +440,14 @@
     <string name="btn_share">共有</string>
     <string name="adv_section">詳細設定（形状・ビーズサイズ・品質）</string>
     <string name="img_section">画像加工（背景・ウォーターマーク・スタイル・調整）</string>
+    <string name="dropper_label">スポイト</string>
+    <string name="dropper_ready">スポイトON:マスをタップして色を取る</string>
+    <string name="fmt_drop_pick">取得:%s</string>
+    <string name="btn_exclude_short">⊘ この色を除外</string>
+    <string name="fmt_excluded_toast">除外しました。近い色に自動振り替え</string>
+    <string name="excluded_bar">除外 %1$d 色(タップで復元):</string>
+    <string name="cell_info_title">マスの色</string>
+    <string name="fmt_cell_symbol">記号:%s</string>
+    <string name="fmt_cell_rgb">RGB:#%06X</string>
+    <string name="fmt_cell_count">使用:%1$,d 個 · %2$.1f%%</string>
 </resources>

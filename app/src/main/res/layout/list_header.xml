@@ -59,6 +59,21 @@
         android:textSize="12sp"
         android:textStyle="bold" />
 
+    <HorizontalScrollView
+        android:id="@+id/excludedScroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:scrollbars="none"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/excludedRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

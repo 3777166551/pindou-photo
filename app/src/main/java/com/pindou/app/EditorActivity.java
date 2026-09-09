@@ -256,6 +256,12 @@ public class EditorActivity extends Activity {
     private TextView tvBgTol;
     private View btnClearEdits, brushPanel;
     private View brushSwatch, btnPickBrush, btnBrushEraser, brushName;
+    private View btnDropper;
+    private boolean dropper = false;
+    /** 豆单排除色:生成时从色板剔除,格子自动改配最近替代色(随存档) */
+    final java.util.LinkedHashSet<Integer> excludedRgb = new java.util.LinkedHashSet<>();
+    private View excludedScroll;
+    private LinearLayout excludedRow;
     /** 板子形状 */
     private View chipShapeRect, chipShapeRound, customSizeRow;
     /** 撤销/重做 */
@@ -473,6 +479,7 @@ public class EditorActivity extends Activity {
         brushName = findViewById(R.id.tvBrushName);
         btnPickBrush = findViewById(R.id.btnPickBrush);
         btnBrushEraser = findViewById(R.id.btnBrushEraser);
+        btnDropper = findViewById(R.id.btnDropper);
         btnMirrorH = findViewById(R.id.btnMirrorH);
         btnMirrorV = findViewById(R.id.btnMirrorV);
         btnRotate90 = findViewById(R.id.btnRotate90);
@@ -921,7 +928,10 @@ public class EditorActivity extends Activity {
                     maybeCelebrate();
                     return;
                 }
-                if (!editCell) return;
+                if (!editCell) {
+                    showCellInfo(cellX, cellY);   // 轻点查看色号(手机版"悬停")
+                    return;
+                }
                 showColorPicker(cellY * pattern.cols + cellX);
             }
         });
@@ -1037,7 +1047,60 @@ public class EditorActivity extends Activity {
             @Override
             public void onClick(View v) {
                 eraseOn = !eraseOn;
+                if (eraseOn && dropper) {
+                    dropper = false;
+                    patternView.setDropper(false);
+                    btnDropper.setSelected(false);
+                }
                 syncBrushUi();
+            }
+        });
+        // 吸管:画笔模式下点一格,把该格颜色取来当笔色
+        btnDropper.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dropper = !dropper;
+                if (dropper) {
+                    if (eraseOn) {
+                        eraseOn = false;
+                        syncBrushUi();
+                    }
+                    if (!paintMode) {
+                        setPaintMode(true, true);
+                        selectTab(1);
+                    }
+                    Toast.makeText(EditorActivity.this,
+                            getString(R.string.dropper_ready), Toast.LENGTH_SHORT).show();
+                }
+                patternView.setDropper(dropper);
+                btnDropper.setSelected(dropper);
+            }
+        });
+        patternView.setOnDropListener(new PatternView.OnDropListener() {
+            @Override
+            public void onDropCell(int cx, int cy) {
+                if (pattern == null || pattern.outsideShape(cx, cy)) return;
+                int idx = pattern.cellAt(cx, cy);
+                if (idx < 0 || idx >= pattern.palette.size()) return;
+                int rgb = pattern.palette.get(idx).rgb;
+                List<BeadColor> pal = currentPatternPalette();
+                for (int i = 0; i < pal.size(); i++) {
+                    if (pal.get(i).rgb == rgb) {
+                        brushPalIdx = i;
+                        break;
+                    }
+                }
+                eraseOn = false;
+                dropper = false;
+                patternView.setDropper(false);
+                btnDropper.setSelected(false);
+                syncBrushUi();
+                BeadColor picked = currentPatternPalette().get(
+                        Math.min(brushPalIdx, currentPatternPalette().size() - 1));
+                Toast.makeText(EditorActivity.this,
+                        String.format(Locale.CHINA,
+                                getString(R.string.fmt_drop_pick), picked.fullLabel()),
+                        Toast.LENGTH_SHORT).show();
             }
         });
         patternView.setOnPaintListener(new PatternView.OnPaintListener() {
@@ -1991,7 +2054,20 @@ public class EditorActivity extends Activity {
         opt.denoise = denoise;
         opt.preciseColor = preciseColor;
         opt.lineSensitivity = lineSensitivity;
-        final List<BeadColor> beadPalette = BeadPalettes.getPalette(tierIdx);
+        final List<BeadColor> beadPalette0 = BeadPalettes.getPalette(tierIdx);
+        // 颜色排除:被排除的色直接不参与最近色匹配,
+        // 原本会落到它们的格子自动改配次近的替代色(智能重映射)
+        final List<BeadColor> beadPalette;
+        if (excludedRgb.isEmpty()) {
+            beadPalette = beadPalette0;
+        } else {
+            List<BeadColor> kept = new ArrayList<>();
+            for (BeadColor c : beadPalette0) {
+                if (!excludedRgb.contains(c.rgb)) kept.add(c);
+            }
+            // 保底:全部被排除时当作用户没排除,避免生成空图
+            beadPalette = kept.isEmpty() ? beadPalette0 : kept;
+        }
         exec.execute(new Runnable() {
             @Override
             public void run() {
@@ -2200,6 +2276,120 @@ public class EditorActivity extends Activity {
         return out;
     }
 
+    /** ⊘ 排除/恢复一个颜色:排除后重生成,该色格子自动改配最近替代色 */
+    private void toggleExclude(int rgb) {
+        if (!excludedRgb.remove(rgb)) {
+            excludedRgb.add(rgb);
+            Toast.makeText(this, getString(R.string.fmt_excluded_toast),
+                    Toast.LENGTH_SHORT).show();
+        }
+        syncExcludedRow();
+        scheduleRegen();
+    }
+
+    /** 豆单头部的"已排除色"条:点色块恢复参与配色 */
+    private void syncExcludedRow() {
+        if (excludedScroll == null || excludedRow == null) return;
+        excludedRow.removeAllViews();
+        if (excludedRgb.isEmpty()) {
+            excludedScroll.setVisibility(View.GONE);
+            return;
+        }
+        TextView label = new TextView(this);
+        label.setText(getString(R.string.excluded_bar, excludedRgb.size()));
+        label.setTextColor(0xFF666666);
+        label.setTextSize(12);
+        label.setGravity(Gravity.CENTER_VERTICAL);
+        label.setPadding(0, 0, 12, 0);
+        excludedRow.addView(label);
+        int pad = Math.round(8 * getResources().getDisplayMetrics().density);
+        for (final int rgb : excludedRgb) {
+            TextView chip = new TextView(this);
+            android.text.SpannableString sp = new android.text.SpannableString(
+                    "● #" + String.format(Locale.CHINA, "%06X", rgb & 0xFFFFFF) + " ✕");
+            sp.setSpan(new android.text.style.ForegroundColorSpan(0xFF000000 | rgb), 0, 1, 0);
+            sp.setSpan(new android.text.style.ForegroundColorSpan(0xFF888888), 1, sp.length(), 0);
+            chip.setText(sp);
+            chip.setBackgroundResource(R.drawable.bg_chip);
+            chip.setPadding(pad, pad / 2, pad, pad / 2);
+            chip.setClickable(true);
+            chip.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    excludedRgb.remove(rgb);
+                    syncExcludedRow();
+                    scheduleRegen();
+                }
+            });
+            excludedRow.addView(chip);
+        }
+    }
+
+    /** 轻点格子 = 查看色号(手机版"悬停");顺手提供排除入口 */
+    private void showCellInfo(int x, int y) {
+        if (pattern == null || pattern.outsideShape(x, y)) return;
+        int idx = pattern.cellAt(x, y);
+        if (idx < 0 || idx >= pattern.palette.size()) {
+            Toast.makeText(this, getString(R.string.cell_empty), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final BeadColor c = pattern.palette.get(idx);
+        BeadPattern.UsedColor uc = null;
+        for (BeadPattern.UsedColor u : pattern.usedColors) {
+            if (u.index == idx) { uc = u; break; }
+        }
+        float pct = 0f;
+        int cnt = 0;
+        if (uc != null) {
+            cnt = uc.count;
+            pct = pattern.totalBeads > 0 ? cnt * 100f / pattern.totalBeads : 0f;
+        }
+        int pad = Math.round(10 * getResources().getDisplayMetrics().density);
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        View sw = new View(this);
+        GradientDrawable gd = new GradientDrawable();
+        gd.setShape(GradientDrawable.OVAL);
+        gd.setColor(0xFF000000 | c.rgb);
+        sw.setBackground(gd);
+        LinearLayout.LayoutParams swLp = new LinearLayout.LayoutParams(
+                Math.round(42 * getResources().getDisplayMetrics().density),
+                Math.round(42 * getResources().getDisplayMetrics().density));
+        swLp.gravity = Gravity.CENTER_HORIZONTAL;
+        box.addView(sw, swLp);
+        String[] rows = {
+                c.fullLabel(),
+                getString(R.string.fmt_cell_symbol,
+                        uc != null ? uc.symbol
+                                : PatternEngine.symbolFor(idx)),
+                getString(R.string.fmt_cell_rgb, c.rgb & 0xFFFFFF),
+                (uc != null ? String.format(Locale.CHINA,
+                        getString(R.string.fmt_cell_count), cnt, pct) : "")
+        };
+        for (String s : rows) {
+            if (s.isEmpty()) continue;
+            TextView tv = new TextView(this);
+            tv.setText(s);
+            tv.setTextColor(0xFF333333);
+            tv.setTextSize(13);
+            tv.setGravity(Gravity.CENTER);
+            tv.setPadding(0, pad / 2, 0, pad / 2);
+            box.addView(tv);
+        }
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.cell_info_title))
+                .setView(box)
+                .setPositiveButton(getString(R.string.btn_ok), null)
+                .setNeutralButton(getString(R.string.btn_exclude_short),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface d, int w) {
+                                toggleExclude(c.rgb);
+                            }
+                        })
+                .show();
+    }
+
     private void cycleAssistColor() {
         if (assistMode != ASSIST_COLOR) return;   // 按板/逐行模式不按色轮转
         if (pattern == null || pattern.usedColors.isEmpty()) return;
@@ -2283,6 +2473,8 @@ public class EditorActivity extends Activity {
         adapter = new BeadAdapter();
         View header = getLayoutInflater().inflate(R.layout.list_header, beadList, false);
         tvSummary = header.findViewById(R.id.tvSummary);
+        excludedScroll = header.findViewById(R.id.excludedScroll);
+        excludedRow = header.findViewById(R.id.excludedRow);
         tvSummary.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -2357,6 +2549,7 @@ public class EditorActivity extends Activity {
     private void updateSummary() {
         if (pattern == null) return;
         computeSubstitutes();
+        syncExcludedRow();
         StringBuilder sb = new StringBuilder();
         sb.append(String.format(Locale.CHINA, getString(R.string.fmt_sum_total), pattern.totalBeads));
         sb.append(String.format(Locale.CHINA, getString(R.string.fmt_sum_colors),
@@ -2751,6 +2944,15 @@ public class EditorActivity extends Activity {
             pb.setProgress((int) pct);
             pb.setProgressTintList(
                     ColorStateList.valueOf(0xFF000000 | uc.color.rgb));
+
+            // ⊘ 排除此色:该色不再参与配色,格子智能改配最近替代色
+            View ex = v.findViewById(R.id.btnExclude);
+            ex.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View vv) {
+                    toggleExclude(uc.color.rgb);
+                }
+            });
             return v;
         }
     }
@@ -3689,9 +3891,10 @@ public class EditorActivity extends Activity {
         });
     }
 
-    /** 刷新画笔行的颜色块 / 名称 / 橡皮选中态 */
+    /** 刷新画笔行的颜色块 / 名称 / 橡皮·吸管选中态 */
     private void syncBrushUi() {
         btnBrushEraser.setSelected(eraseOn);
+        if (btnDropper != null) btnDropper.setSelected(dropper);
         if (btnBrushMirror != null) btnBrushMirror.setSelected(paintMirror);
         GradientDrawable gd = new GradientDrawable();
         gd.setShape(GradientDrawable.OVAL);
@@ -3966,6 +4169,11 @@ public class EditorActivity extends Activity {
                     o.put("beadDoneDay", beadDoneDay);
                     o.put("beadDoneToday", beadDoneToday);
 
+                    // 排除色:重开项目后继续生效
+                    JSONArray ex = new JSONArray();
+                    for (int rgb : excludedRgb) ex.put(rgb);
+                    o.put("excl", ex);
+
                     if (!blankCanvas && source != null && !source.isRecycled()) {
                         o.put("photo", Jsons.encodeBitmap(source, 1024, 85));
                         o.put("thumb", Jsons.encodeBitmap(source, 160, 65));
@@ -4060,14 +4268,23 @@ public class EditorActivity extends Activity {
             } else {
                 imported = false;
             }
-            beadDone.clear();
-            JSONArray bd = o.optJSONArray("beadDone");
-            if (bd != null) {
-                for (int i = 0; i < bd.length(); i++) {
-                    int k = bd.optInt(i, -1);
-                    if (k >= 0 && k < cols * rows) beadDone.add(k);
-                }
-            }
+                    beadDone.clear();
+                    JSONArray bd = o.optJSONArray("beadDone");
+                    if (bd != null) {
+                        for (int k = 0; k < bd.length(); k++) {
+                            int v = bd.optInt(k, -1);
+                            if (v >= 0 && v < cols * rows) beadDone.add(v);
+                        }
+                    }
+                    // 排除色:格式兼容旧存档(没有该字段就当没有排除)
+                    excludedRgb.clear();
+                    JSONArray exa = o.optJSONArray("excl");
+                    if (exa != null) {
+                        for (int k = 0; k < exa.length(); k++) {
+                            int rgb = exa.optInt(k, -1);
+                            if (rgb >= 0) excludedRgb.add(rgb);
+                        }
+                    }
             beadDoneDay = o.optString("beadDoneDay", "");
             beadDoneToday = Math.max(0, o.optInt("beadDoneToday", 0));
             rollBeadDay();

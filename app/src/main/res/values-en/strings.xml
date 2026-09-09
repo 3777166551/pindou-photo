@@ -440,4 +440,14 @@
     <string name="btn_share">Share</string>
     <string name="adv_section">Advanced (shape / bead size / quality)</string>
     <string name="img_section">Photo tools (background / watermark / style / adjust)</string>
+    <string name="dropper_label">Pick</string>
+    <string name="dropper_ready">Eyedropper on: tap a cell to use its color as brush</string>
+    <string name="fmt_drop_pick">Picked: %s</string>
+    <string name="btn_exclude_short">⊘ Exclude</string>
+    <string name="fmt_excluded_toast">Excluded - its cells remapped to nearest colors</string>
+    <string name="excluded_bar">Excluded %1$d (tap to restore):</string>
+    <string name="cell_info_title">Cell color</string>
+    <string name="fmt_cell_symbol">Symbol: %s</string>
+    <string name="fmt_cell_rgb">RGB: #%06X</string>
+    <string name="fmt_cell_count">Usage: %1$,d beads / %2$.1f%%</string>
 </resources>

@@ -101,4 +101,19 @@
             android:textSize="10sp"
             android:textStyle="bold" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/btnExclude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:background="@drawable/bg_chip"
+        android:clickable="true"
+        android:elevation="1dp"
+        android:focusable="true"
+        android:gravity="center"
+        android:padding="6dp"
+        android:text="⊘"
+        android:textColor="@color/textSub"
+        android:textSize="14sp" />
 </LinearLayout>

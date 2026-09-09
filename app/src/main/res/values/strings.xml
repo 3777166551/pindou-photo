@@ -440,4 +440,14 @@
     <string name="btn_share">分享</string>
     <string name="adv_section">高级设置（形状 · 豆子规格 · 生成质量）</string>
     <string name="img_section">图片处理（去背景 · 去水印 · 风格化 · 调节）</string>
+    <string name="dropper_label">吸管</string>
+    <string name="dropper_ready">吸管已选:点图纸上的格子取色当笔色</string>
+    <string name="fmt_drop_pick">已取色:%s</string>
+    <string name="btn_exclude_short">⊘ 排除此色</string>
+    <string name="fmt_excluded_toast">已排除,该色格子自动改配最近的替代色</string>
+    <string name="excluded_bar">已排除 %1$d 色(点色块恢复):</string>
+    <string name="cell_info_title">格子颜色</string>
+    <string name="fmt_cell_symbol">符号:%s</string>
+    <string name="fmt_cell_rgb">RGB:#%06X</string>
+    <string name="fmt_cell_count">用量:%1$,d 颗 · %2$.1f%%</string>
 </resources>

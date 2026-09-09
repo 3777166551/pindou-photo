@@ -170,6 +170,22 @@ public class PatternView extends View {
         void onPaintCell(int cellX, int cellY);
     }
 
+    /** 吸管模式:单点一格 = 取该格颜色当笔色 */
+    public interface OnDropListener {
+        void onDropCell(int cellX, int cellY);
+    }
+
+    private boolean dropper = false;
+    private OnDropListener dropListener;
+
+    public void setDropper(boolean on) {
+        dropper = on;
+    }
+
+    public void setOnDropListener(OnDropListener l) {
+        dropListener = l;
+    }
+
     private OnCellTapListener tapListener;
 
     public void setOnCellTapListener(OnCellTapListener l) {
@@ -512,10 +528,11 @@ public class PatternView extends View {
                 downX = event.getX();
                 downY = event.getY();
                 downCell = cellAt(downX, downY);
-                armLongPress();
+                if (!dropper) armLongPress();   // 吸管模式不需要长按填充
                 return true;
             case MotionEvent.ACTION_MOVE:
                 if (paintStroke && event.getPointerCount() == 1) {
+                    if (dropper) return true;   // 吸管只取色不涂色
                     if (longPressFired) return true;   // 填充后吞掉剩余滑动
                     if (!strokeMoved) {
                         if (!isBeyondSlop(event)) return true;   // 未出阈值,继续等长按
@@ -533,7 +550,13 @@ public class PatternView extends View {
             case MotionEvent.ACTION_CANCEL:
                 cancelLongPressCheck();
                 if (!longPressFired && !strokeMoved && downCell != null) {
-                    paintAt(downX, downY);   // 单点即涂一格
+                    if (dropper) {
+                        if (dropListener != null) {
+                            dropListener.onDropCell(downCell[0], downCell[1]);
+                        }
+                    } else {
+                        paintAt(downX, downY);   // 单点即涂一格
+                    }
                 }
                 longPressFired = false;
                 strokeMoved = false;
