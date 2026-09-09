@@ -249,3 +249,22 @@ layout_height=wrap_content`(XML 属性优先于 style),渲染为
 **教训**:复用带 0dp/weight 的样式时先问一句"父容器方向对不对";
 UI 冒烟别只走查"能看见的东西",要覆盖跨页面的状态链路(存档→回
 首页→再进),隐形入口只有靠链路断点才现形。
+## 22. 重新生成图纸后,先清完成度标记再刷豆单(v2.45 教训,CI 模糊测试抓出)
+
+**现象**:monkey fuzz(种子 424242)稳定砸出
+`ArrayIndexOutOfBoundsException: length=3364; index=7329`,
+崩在 countDonePerColor → BeadPattern.cellAt。真实用户路径:拼豆辅助
+模式下点格标记(如 116×116 图,index 可达 13455)→ 切换板子尺寸
+重新生成 → 新图只有 3364 格 → 豆单刷新统计时拿旧索引访问新图纸。
+
+**原因**:regenerate() 的 UI 回调里,`beadDone.clear()`(注释明确写着
+"重新生成后格子变了,完成度标记失效,清空重来")被放在
+`adapter.notifyDataSetChanged()` **之后**——刷新时遍历的还是没清的
+旧集合。顺序错误;clear 本身一直都在,只是晚了三行。
+
+**修法**:①clear/rollBeadDay 提前到 notifyDataSetChanged 之前;
+②countDonePerColor 加 `k < 0 || k >= cols*rows` 防御过滤
+(loadProject 读取路径本就有同款防护,4040 行)。
+**教训**:①"清状态"和"触发重算"的先后顺序,重算链路越长越容易在
+中间读到脏数据,改 UI 回调时先看依赖;②monkey fuzz 对这类"状态残留
++ 参数切换"崩溃是原子弹级的,人类手测很难凑齐时序。
