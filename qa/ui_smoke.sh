@@ -325,10 +325,12 @@ tap_id chipStyleReal 0
 sleep 6
 
 # 7) 圆形板 → 效果图/图纸按圆渲染。
-#    上一步把面板停在样式卡,形状卡在上方:tap_id 只往下扫,
-#    先滚回页顶再找(2026-09-09 第四轮教训:位置型连锁)
-adb shell input swipe 540 600 540 2100 300; sleep 0.6
-adb shell input swipe 540 600 540 2100 300; sleep 0.8
+#    上一步把面板停在样式卡,形状卡在上方:tap_id 只往下扫,先滚回顶。
+#    注意上滚手势起点必须在设置区内(y>=1200),起点在 y=600 会被
+#    PatternView 吃掉变成平移图纸(2026-09-09 第五轮教训)
+adb shell input swipe 540 1600 540 2250 300; sleep 0.6
+adb shell input swipe 540 1600 540 2250 300; sleep 0.6
+adb shell input swipe 540 1600 540 2250 300; sleep 0.8
 tap_id chipShapeRound 0
 sleep 5
 snap photo_round
