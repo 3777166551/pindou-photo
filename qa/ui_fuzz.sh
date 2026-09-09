@@ -135,16 +135,34 @@ for i in $(seq 1 $ACTS); do
     adb shell uiautomator dump /sdcard/w.xml > /dev/null 2>&1
     adb pull /sdcard/w.xml w.xml > /dev/null 2>&1
     tr -d '\r' < w.xml > w2.xml && mv w2.xml w.xml
-    if grep -q "package=\"$PKG\"" w.xml 2>/dev/null; then ok=0; break; fi
+    if grep -q "com.pindou.app" w.xml 2>/dev/null; then ok=0; break; fi
     sleep 1.5
   done
-  centers=""
+  if [ $i = 1 ] || [ $i = 5 ] || [ $i = 20 ]; then
+    SZ=$(wc -c < w.xml 2>/dev/null | tr -d ' \r')
+    CL=$(grep -c 'clickable="true"' w.xml 2>/dev/null)
+    OP=$(grep -c "package=\"$PKG\"" w.xml 2>/dev/null)
+    FOC=$(adb shell dumpsys window 2>/dev/null | grep mCurrentFocus | head -1 | tr -d '\r')
+    log "walker act $i debug: xml=${SZ}B clickable=$CL ourpkg=$OP dumpok=$ok focus=$FOC"
+  fi
+  tags=""
   if [ "$ok" = "0" ]; then
-    centers=$(grep -o '<node[^>]*>' w.xml \
-      | grep 'clickable="true"' | grep "package=\"$PKG\"" \
+    tags=$(grep -o '<node[^>]*>' w.xml 2>/dev/null | grep 'clickable="true"')
+  fi
+  centers=$(printf '%s\n' "$tags" | grep "package=\"$PKG\"" \
+    | grep -o 'bounds="\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]"' \
+    | sed 's/bounds="//; s/"$//' \
+    | awk -F'[],[],' '{ if ($2 < $4 && $3 < $5) print int(($2+$4)/2), int(($3+$5)/2) }')
+  if [ -z "$(printf '%s\n' "$centers" | grep .)" ]; then
+    # 两级回退:本包无可点控件时,点任意包的可点控件(对话框/选图器也算,
+    # 和真人一样会点到系统 UI;排除桌面防误开别的 APP);仍为空才算 miss
+    centers=$(printf '%s\n' "$tags" | grep -v 'package="com.google.android.apps.nexuslauncher"' \
       | grep -o 'bounds="\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]"' \
       | sed 's/bounds="//; s/"$//' \
       | awk -F'[],[],' '{ if ($2 < $4 && $3 < $5) print int(($2+$4)/2), int(($3+$5)/2) }')
+  fi
+  if [ $i = 5 ]; then
+    log "walker act 5 sample tags: $(printf '%s\n' "$tags" | head -c 260)"
   fi
   N=$(printf '%s\n' "$centers" | grep -c .)
   if [ "$N" = "0" ]; then
