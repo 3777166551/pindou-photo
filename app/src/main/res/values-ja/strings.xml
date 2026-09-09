@@ -437,4 +437,7 @@
     <string name="fmt_pdf_page">%1$d / %2$d ページ</string>
     <string name="err_gallery_write">ギャラリーへの書き込みに失敗しました</string>
     <string name="err_mkdir">フォルダの作成に失敗しました</string>
+    <string name="btn_share">共有</string>
+    <string name="adv_section">詳細設定（形状・ビーズサイズ・品質）</string>
+    <string name="img_section">画像加工（背景・ウォーターマーク・スタイル・調整）</string>
 </resources>

@@ -437,4 +437,7 @@
     <string name="fmt_pdf_page">Page %1$d of %2$d</string>
     <string name="err_gallery_write">Failed to write to gallery</string>
     <string name="err_mkdir">Failed to create folder</string>
+    <string name="btn_share">Share</string>
+    <string name="adv_section">Advanced (shape / bead size / quality)</string>
+    <string name="img_section">Photo tools (background / watermark / style / adjust)</string>
 </resources>

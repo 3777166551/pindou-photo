@@ -344,9 +344,11 @@ tap_id chipStyleReal 0
 sleep 6
 
 # 7) 圆形板 → 效果图/图纸按圆渲染。
-#    上一步把面板停在样式卡,形状卡在上方:tap_id 只往下扫,先滚回顶。
-#    注意上滚手势起点必须在设置区内(y>=1200),起点在 y=600 会被
+#    形状/豆子规格在「高级设置」折叠区(默认收起),先点开再找;
+#    上滚手势起点必须在设置区内(y>=1200),起点在 y=600 会被
 #    PatternView 吃掉变成平移图纸(2026-09-09 第五轮教训)
+tap_id btnAdvHeader 0
+sleep 1
 adb shell input swipe 540 1600 540 2250 300; sleep 0.6
 adb shell input swipe 540 1600 540 2250 300; sleep 0.6
 adb shell input swipe 540 1600 540 2250 300; sleep 0.8
@@ -553,6 +555,9 @@ adb shell input swipe 540 1600 540 2250 300; sleep 0.5
 adb shell input swipe 540 1600 540 2250 300; sleep 0.6
 
 # ---------- v2.40 新功能走查:豆子规格 / 按板引导 / 描摹行(全部 soft) ----------
+# 豆子规格在「高级设置」折叠区,先展开
+tap_id btnAdvHeader 0
+sleep 0.5
 # 迷你豆 2.6mm:切换后看板提示与摘要是否跟随(截图人眼审)
 tap_id chipBeadMini 0
 sleep 0.8

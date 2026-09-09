@@ -437,4 +437,7 @@
     <string name="fmt_pdf_page">第 %1$d 页 / 共 %2$d 页</string>
     <string name="err_gallery_write">相册写入失败</string>
     <string name="err_mkdir">创建目录失败</string>
+    <string name="btn_share">分享</string>
+    <string name="adv_section">高级设置（形状 · 豆子规格 · 生成质量）</string>
+    <string name="img_section">图片处理（去背景 · 去水印 · 风格化 · 调节）</string>
 </resources>

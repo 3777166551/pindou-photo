@@ -314,6 +314,9 @@ public class EditorActivity extends Activity {
         setupList();
         setupAiControls();
         applyPressFeedback();
+        // 折叠区:高级设置 / 图片处理默认收起,常用参数前置,面板对小白更干净
+        setupCollapse(R.id.btnAdvHeader, R.id.tvAdvArrow, R.id.advBody);
+        setupCollapse(R.id.btnImgHeader, R.id.tvImgArrow, R.id.imgBody);
 
         // 去背景小模型(U2NetP)预加载;失败自动回退颜色统计算法
         MlSegmenter.init(getApplicationContext());
@@ -398,6 +401,26 @@ public class EditorActivity extends Activity {
         } else {
             loadPhoto(uriStr);
         }
+    }
+
+    /** 折叠区头:点击展开/收起,箭头跟随;默认收起(见布局 visibility=gone) */
+    private void setupCollapse(int headerId, int arrowId, int bodyId) {
+        View header = findViewById(headerId);
+        final View body = findViewById(bodyId);
+        final View arrow = findViewById(arrowId);
+        if (header == null || body == null || arrow == null) return;
+        header.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (body.getVisibility() == View.VISIBLE) {
+                    com.pindou.app.util.Anim.collapse(body);
+                    ((TextView) arrow).setText("▸");
+                } else {
+                    com.pindou.app.util.Anim.expand(body);
+                    ((TextView) arrow).setText("▾");
+                }
+            }
+        });
     }
 
     private void bindViews() {
