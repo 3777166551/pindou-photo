@@ -476,10 +476,10 @@ ensure_home
 # 覆盖走查(与历史版本一致的其余入口)
 # ============================================================
 
-# ---------- 相机 / 识别图纸入口(CI 模拟器无相机/选图,soft) ----------
-tap_id btnCamera 0
-sleep 1.5
-snap camera_entry
+# ---------- 相机 / 识别图纸入口 ----------
+# 相机入口不点:CI 模拟器无摄像头但系统相机 APP 存在,拉起会把它自己
+# 崩掉(FATAL EXCEPTION 留在 logcat 缓冲,污染最终崩溃检查,还会连累
+# 我们的 Activity 栈)。识别图纸入口(DocumentsUI)安全,照常走查。
 tap_id btnScanPattern 0
 sleep 2
 snap scan_entry
@@ -546,6 +546,11 @@ adb shell input swipe 400 650 700 900 300; sleep 0.5
 snap sym_kaleido
 tap_id btnSym 0
 sleep 0.4
+# 面板回顶(上滚手势起点必须在设置区内):规格/尺寸卡都在顶部,
+# 否则万花筒段落把面板留在中部,后面 chip58 会找不到
+adb shell input swipe 540 1600 540 2250 300; sleep 0.5
+adb shell input swipe 540 1600 540 2250 300; sleep 0.5
+adb shell input swipe 540 1600 540 2250 300; sleep 0.6
 
 # ---------- v2.40 新功能走查:豆子规格 / 按板引导 / 描摹行(全部 soft) ----------
 # 迷你豆 2.6mm:切换后看板提示与摘要是否跟随(截图人眼审)
@@ -691,9 +696,9 @@ back
 sleep 0.8
 ensure_home
 
-# ---------- 崩溃检查 ----------
+# ---------- 崩溃检查(只认本包:系统 APP 在 CI 上自有崩溃不算) ----------
 snap final
-if adb logcat -d | grep -q "FATAL EXCEPTION"; then
+if adb logcat -d | grep -A 3 "FATAL EXCEPTION" | grep -q "Process: $PKG"; then
   adb logcat -d | grep -A 40 "FATAL EXCEPTION" | head -80
   echo "[smoke] APP CRASHED"
   exit 1
