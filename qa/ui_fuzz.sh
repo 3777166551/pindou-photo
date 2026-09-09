@@ -36,6 +36,30 @@ fatal_scan() { adb logcat -d 2>/dev/null | grep -A 3 "FATAL EXCEPTION" \
                  | grep -q "Process: $PKG"; }
 anr_scan()   { adb logcat -d 2>/dev/null | grep -q "ANR in $PKG"; }
 
+# 按"属性片段 + bounds"点击(与 qa/ui_smoke.sh 的 _tap_match 同一实现,
+# 该路径已在 CI 验证过二十余轮);软失败返回 1 不退出
+_walker_match() {
+  local pat="$1" must="$2" b x1 y1 x2 y2
+  for t in 1 2 3; do
+    adb shell uiautomator dump /sdcard/m.xml > /dev/null 2>&1
+    adb pull /sdcard/m.xml m.xml > /dev/null 2>&1
+    tr -d '\r' < m.xml > m2.xml && mv m2.xml m.xml
+    b=$(grep -oi "$pat[^\>]*bounds=\"\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]\"" m.xml \
+      | grep -o 'bounds="\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]"' | head -1)
+    [ -n "$b" ] && break
+    sleep 1
+  done
+  [ -z "$b" ] && return 1
+  b=${b#bounds=\"}; b=${b%\"}
+  x1=${b%%,*};       x1=${x1#[}
+  y1=${b#*,};        y1=${y1%%]*}
+  y2=${b##*,};       y2=${y2%]}
+  x2=${b#*][};       x2=${x2%%,*}
+  adb shell input tap $(( (x1 + x2) / 2 )) $(( (y1 + y2) / 2 ))
+  sleep 0.6
+  return 0
+}
+
 check_healthy() {  # $1 = phase label
   if ! app_alive; then
     log "FAIL: app process dead ($1)"
@@ -138,37 +162,19 @@ for i in $(seq 1 $ACTS); do
     if grep -q "com.pindou.app" w.xml 2>/dev/null; then ok=0; break; fi
     sleep 1.5
   done
-  if [ $i = 1 ] || [ $i = 5 ] || [ $i = 20 ]; then
-    SZ=$(wc -c < w.xml 2>/dev/null | tr -d ' \r')
-    CL=$(grep -c 'clickable="true"' w.xml 2>/dev/null)
-    OP=$(grep -c "package=\"$PKG\"" w.xml 2>/dev/null)
-    FOC=$(adb shell dumpsys window 2>/dev/null | grep mCurrentFocus | head -1 | tr -d '\r')
-    log "walker act $i debug: xml=${SZ}B clickable=$CL ourpkg=$OP dumpok=$ok focus=$FOC"
-  fi
-  tags=""
+  # 主通道(复用冒烟脚本被 CI 验证过的 resource-id 点击路径):
+  # 随机挑一个本包/对话框按钮 id,交给 _tap_match 点击
+  IDS=""
   if [ "$ok" = "0" ]; then
-    tags=$(grep -o '<node[^>]*>' w.xml 2>/dev/null | grep 'clickable="true"')
+    IDS=$(grep -o 'resource-id="[^"]*:[a-zA-Z0-9_]*"' w.xml 2>/dev/null \
+      | sed 's/resource-id="//; s/"$//' \
+      | grep -E "^(com\.pindou\.app|android):id/" | sort -u)
   fi
-  centers=$(printf '%s\n' "$tags" | grep "package=\"$PKG\"" \
-    | grep -o 'bounds="\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]"' \
-    | sed 's/bounds="//; s/"$//' \
-    | awk -F'[],[],' '{ if ($2 < $4 && $3 < $5) print int(($2+$4)/2), int(($3+$5)/2) }')
-  if [ -z "$(printf '%s\n' "$centers" | grep .)" ]; then
-    # 两级回退:本包无可点控件时,点任意包的可点控件(对话框/选图器也算,
-    # 和真人一样会点到系统 UI;排除桌面防误开别的 APP);仍为空才算 miss
-    centers=$(printf '%s\n' "$tags" | grep -v 'package="com.google.android.apps.nexuslauncher"' \
-      | grep -o 'bounds="\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]"' \
-      | sed 's/bounds="//; s/"$//' \
-      | awk -F'[],[],' '{ if ($2 < $4 && $3 < $5) print int(($2+$4)/2), int(($3+$5)/2) }')
-  fi
-  if [ $i = 5 ]; then
-    log "walker act 5 sample tags: $(printf '%s\n' "$tags" | head -c 260)"
-  fi
-  N=$(printf '%s\n' "$centers" | grep -c .)
+  N=$(printf '%s\n' "$IDS" | grep -c .)
   if [ "$N" = "0" ]; then
     miss=$((miss + 1))
     if [ "$miss" -ge 4 ]; then
-      log "walker act $i: no targets x4, BACK + relaunch"
+      log "walker act $i: no ids x4, BACK + relaunch"
       adb shell input keyevent 4; sleep 1
       adb shell am start -n $PKG/.SplashActivity > /dev/null 2>&1
       sleep 3
@@ -178,12 +184,14 @@ for i in $(seq 1 $ACTS); do
   fi
   miss=0
   K=$(awk -v s="$SEED" -v i="$i" -v n="$N" 'BEGIN{ srand(s + i*7919); print int(rand()*n) }')
-  XY=$(printf '%s\n' "$centers" | sed -n "$((K + 1))p")
-  X=$(echo "$XY" | cut -d' ' -f1)
-  Y=$(echo "$XY" | cut -d' ' -f2)
-  adb shell input tap "$X" "$Y"
-  taps=$((taps + 1))
-  echo "walker act $i: tap $XY" >> "$LOG"
+  RID=$(printf '%s\n' "$IDS" | sed -n "$((K + 1))p")
+  TID="${RID##*:}"
+  if _walker_match "resource-id=\"$RID\"" "0"; then
+    taps=$((taps + 1))
+    echo "walker act $i: tap id=$TID" >> "$LOG"
+  else
+    echo "walker act $i: tap miss id=$TID" >> "$LOG"
+  fi
   sleep 0.9
   R=$(awk -v s="$SEED" -v i="$i" 'BEGIN{ srand(s + i*104729); print int(rand()*100) }')
   if [ "$R" -lt 10 ]; then
