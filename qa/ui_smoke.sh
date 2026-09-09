@@ -298,6 +298,9 @@ tap_id tabList 0
 sleep 1
 snap photo_limit12
 check_text "Colors" 0
+# 豆单 tab 下设置面板是 GONE 的(587-594 行),先切回图纸 tab 再动控件
+tap_id tabPattern
+sleep 1
 tap_id chipLimit0 0
 sleep 5
 
