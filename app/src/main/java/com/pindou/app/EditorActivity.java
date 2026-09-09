@@ -1980,14 +1980,17 @@ public class EditorActivity extends Activity {
                         rawPattern = np;
                         pattern = PatternPatch.apply(np, editMap);
                         patternView.setPattern(pattern);
+                        // 重新生成后格子变了,完成度标记失效,清空重来。
+                        // 必须在豆单刷新之前清:countDonePerColor 会拿
+                        // beadDone 里的旧索引访问新 pattern,后清必越界崩溃
+                        // (monkey fuzz 抓出的 ArrayIndexOutOfBounds)
+                        beadDone.clear();
+                        rollBeadDay();
+                        beadDoneToday = 0;
                         adapter.notifyDataSetChanged();
                         updateSummary();
                         updateEditsButton();
                         showLoading(false);
-                        // 重新生成后格子变了,完成度标记失效,清空重来
-                        beadDone.clear();
-                        rollBeadDay();
-                        beadDoneToday = 0;
                         if (beadAssist) {
                             assistFocus = pattern.usedColors.isEmpty()
                                     ? -1 : pattern.usedColors.get(0).index;
@@ -2162,10 +2165,12 @@ public class EditorActivity extends Activity {
         return today.equals(beadDoneDay) ? beadDoneToday : 0;
     }
 
-    /** 逐色已拼数量(下标 = palette 下标) */
+    /** 逐色已拼数量(下标 = palette 下标);防御:尺寸切换瞬间过滤越界旧索引 */
     private int[] countDonePerColor() {
         int[] out = new int[pattern.palette.size()];
+        int total = pattern.cols * pattern.rows;
         for (int k : beadDone) {
+            if (k < 0 || k >= total) continue;
             int idx = pattern.cellAt(k % pattern.cols, k / pattern.cols);
             if (idx >= 0 && idx < out.length) out[idx]++;
         }
