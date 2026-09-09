@@ -173,7 +173,9 @@ for i in $(seq 1 $ACTS); do
   # 随机挑一个本包/对话框按钮 id,交给 _walker_match 点击
   IDS=""
   if [ "$ok" = "0" ]; then
-    IDS=$(grep -o 'resource-id="[^"]*:[a-zA-Z0-9_]*"' w.xml 2>/dev/null \
+    # 注意别把冒号后写成 [a-zA-Z0-9_]* 再接引号:Android id 形如
+    # pkg:id/name,中间的 / 会让该模式一个都匹配不上(教训)
+    IDS=$(grep -o 'resource-id="[^"]*"' w.xml 2>/dev/null \
       | sed 's/resource-id="//; s/"$//' \
       | grep -E "^(com\.pindou\.app|android):id/" | sort -u)
   fi
