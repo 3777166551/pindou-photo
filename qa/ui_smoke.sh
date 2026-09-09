@@ -237,8 +237,18 @@ fi
 adb push qa/test_data/ci_photo.png /data/local/tmp/ci_photo.png > /dev/null
 adb shell chmod 644 /data/local/tmp/ci_photo.png
 adb shell run-as $PKG mkdir -p files > /dev/null 2>&1
-adb shell run-as $PKG cp /data/local/tmp/ci_photo.png files/ci_photo.png \
-  || adb shell run-as $PKG sh -c 'cp /data/local/tmp/ci_photo.png files/ci_photo.png'
+if ! adb shell run-as $PKG cp /data/local/tmp/ci_photo.png files/ci_photo.png; then
+  adb shell run-as $PKG sh -c 'cp /data/local/tmp/ci_photo.png files/ci_photo.png'
+fi
+# root 视角核验文件就位(注入失败在此现形,别让后面瞎猜)
+adb root > /dev/null 2>&1
+adb wait-for-device
+sleep 2
+log "photo file in app dir:"
+adb shell ls -l /data/data/$PKG/files/ | grep ci_photo || {
+  echo "[smoke] FAIL: ci_photo.png not injected"
+  exit 1
+}
 
 # 1) 首页「相册选图」入口(soft):选图器能拉起即算过,
 #    不依赖系统选图器内部 UI(CI 上标签/布局不稳定)
@@ -248,14 +258,15 @@ snap gallery_resolver
 back
 sleep 1
 
-# 2) 直接带照片 URI 进编辑器(与 onActivityResult→openEditor 同参数);
-#    EditorActivity 未导出,shell 无权限时退回 run-as(同 uid 可启自身组件)
+# 2) 直接带照片 URI 进编辑器(与 onActivityResult→openEditor 同参数)。
+#    EditorActivity 未导出:shell 无权限,run-as(app uid)会撞 Android 10
+#    后台启动限制 —— 先 adb root(root 不受 exported/BAL 限制),run-as 兜底
 PHOTO_URI="file:///data/data/com.pindou.app/files/ci_photo.png"
 adb shell am start -n $PKG/.EditorActivity --es photo_uri "$PHOTO_URI"
 sleep 4
 dump_ui
 if ! grep -qi "text=\"[^\"]*Bead list[^\"]*\"" ui.xml; then
-  log "plain am start rejected, retry via run-as"
+  log "root am start did not open editor, retry via run-as"
   adb shell run-as $PKG am start -n $PKG/.EditorActivity --es photo_uri "$PHOTO_URI"
   sleep 4
 fi
