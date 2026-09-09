@@ -348,6 +348,7 @@ sleep 6
 #    上滚手势起点必须在设置区内(y>=1200),起点在 y=600 会被
 #    PatternView 吃掉变成平移图纸(2026-09-09 第五轮教训)
 tap_id btnAdvHeader 0
+tap_id btnImgHeader 0
 sleep 1
 adb shell input swipe 540 1600 540 2250 300; sleep 0.6
 adb shell input swipe 540 1600 540 2250 300; sleep 0.6
