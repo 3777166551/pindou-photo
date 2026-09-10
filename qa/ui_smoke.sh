@@ -571,7 +571,7 @@ while [ $extra -lt 2 ]; do
   sleep 1
   dump_ui
   grep -qi "text=\"[^\"]*100%[^\"]*\"" ui.xml && break
-fi
+done
 check_text "100%"              # 辅助进度:52/52 · 100%(硬断言)
 snap celebrate_100
 log "celebration flow done: 100% reached (celebration.start fires on this state)"
