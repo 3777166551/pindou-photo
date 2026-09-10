@@ -475,6 +475,77 @@ log "project reopened OK"
 back
 ensure_home
 
+# 15) 庆祝流程:8×8 最小画幅 + 逐格标记 100% → 庆祝动画。
+#     步进按钮坐标定位一次后连点(58→8 每轴 50 次,无 dump 快速连点)
+log "celebration flow: shrink to 8x8, mark all, expect celebration"
+adb shell am start -n $PKG/.EditorActivity --es photo_uri "$PHOTO_URI" > /dev/null 2>&1
+sleep 5
+check_text "Bead list"
+shrink_axis() {
+  dump_ui
+  local b=$(grep -oi "resource-id=\"$PKG:id/$1\"[^\>]*bounds=\"\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]\"" ui.xml \
+    | grep -o 'bounds="[^"]*"' | head -1)
+  if [ -z "$b" ]; then
+    echo "[smoke] FAIL: stepper not found: $1"
+    snap fail
+    exit 1
+  fi
+  local x1 y1 x2 y2
+  b=${b#bounds=\"}; b=${b%\"}
+  x1=${b%%,*};       x1=${x1#[}
+  y1=${b#*,};        y1=${y1%%]*}
+  y2=${b##*,};       y2=${y2%]}
+  x2=${b#*][};       x2=${x2%%,*}
+  local n
+  for n in $(seq 1 $2); do
+    adb shell input tap $(( (x1 + x2) / 2 )) $(( (y1 + y2) / 2 ))
+  done
+  sleep 1
+}
+shrink_axis btnWMinus 50
+shrink_axis btnHMinus 50
+sleep 8                        # 8×8 重新生成
+tap_id tabPattern 0            # 标记只在图纸 tab 生效
+tap_id swBeadAssist 0
+sleep 2
+# 蛇形刷选标记全图(辅助拖动沿路径记完成);最多三轮确保覆盖
+pass=0
+while [ $pass -lt 3 ]; do
+  y=330
+  while [ $y -le 1130 ]; do
+    if [ $((pass % 2)) = "0" ]; then
+      adb shell input swipe 110 $y 970 $y 300
+    else
+      adb shell input swipe 970 $y 110 $y 300
+    fi
+    y=$((y + 95))
+  done
+  sleep 1
+  dump_ui
+  if grep -qi "text=\"[^\"]*100%[^\"]*\"" ui.xml; then break; fi
+  pass=$((pass + 1))
+done
+check_text "100%"              # 辅助进度:Placed x/x · 100%(硬断言)
+snap celebrate_100
+# 庆祝动画 2100ms:最后一下拖动结束即触发,立刻快速重试抓帧
+cele=0
+for n in 1 2 3 4; do
+  dump_ui
+  if grep -q "resource-id=\"$PKG:id/celebration\"" ui.xml; then cele=1; break; fi
+  sleep 0.6
+done
+if [ "$cele" = "1" ]; then
+  snap celebrate_anim
+  log "celebration animation captured"
+else
+  log "celebration window missed on dump (anim is 2.1s); 100% assert above still holds"
+  snap celebrate_missed
+fi
+tap_id swBeadAssist 0
+sleep 1
+back
+ensure_home
+
 # ============================================================
 # 覆盖走查(与历史版本一致的其余入口)
 # ============================================================
