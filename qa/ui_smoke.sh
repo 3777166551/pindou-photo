@@ -505,12 +505,18 @@ shrink_axis() {
 shrink_axis btnWMinus 50
 shrink_axis btnHMinus 50
 sleep 8                        # 8×8 重新生成
+# 切圆形板:内切圆外的角格变空格(不计总量、点选无效),
+# 顶栏「3D preview」悬浮 chip 挡住右上角格的问题随之消失
+tap_id btnAdvHeader 0
+sleep 0.5
+tap_id chipShapeRound 0
+sleep 8
 tap_id tabPattern 0            # 标记只在图纸 tab 生效
 tap_id swBeadAssist 0
 sleep 2
 # 逐格点击标记全部 64 格(滑动路径插值有覆盖缺口,实测 x≈145-800/y≈390-1050,
-# 每格中心 = 起点 + (k+0.5)*82.5)。点一次=切换一次,所以固定跑奇数轮(3 轮):
-# 只要每轮命中情况一致,3 次奇数切换后所有格子都结束在"已标记"态
+# 每格中心 = 起点 + (k+0.5)*82.5)。圆板下角格是空格,点了无效;实格点一次
+# =标记一次,固定跑奇数轮(3 轮):只要每轮命中一致,全部结束在"已标记"态
 rnd=0
 while [ $rnd -lt 3 ]; do
   for Y in 431 514 596 679 761 844 926 1009; do
