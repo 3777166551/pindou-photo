@@ -545,37 +545,45 @@ while [ $r -lt 8 ]; do
   done
   r=$((r + 1))
 done
-# 点一次=切换一次,固定跑奇数轮(3 轮):每轮命中一致时全部结束在"已标记"态。
-# 故意跳过最后一格(右下角):3 轮后单独点它 —— 庆祝动画在这一击触发,
-# 立即 screencap 连拍(动画只有 2.1s,uiautomator dump 速度追不上)
-LASTX=$(( OX + 7 * CELL + CELL / 2 ))
-LASTY=$(( OY + 7 * CELL + CELL / 2 ))
-LASTP="$LASTX,$LASTY"
 placed_debug() {
   dump_ui
   grep -o 'text="[^"]*Placed[^"]*"' ui.xml | head -1 | sed 's/text=/PLACED: /; s/"//g' | while read -r l; do log "$l"; done
 }
-rnd=0
-while [ $rnd -lt 3 ]; do
+# 阶段 1:整格轮询直到 100%(最多 8 轮;奇偶切换会来回触发庆祝)
+attempt=0
+while [ $attempt -lt 8 ]; do
   for P in $CENTERS; do
-    [ "$P" = "$LASTP" ] && continue
     adb shell input tap ${P%,*} ${P#*,}
   done
-  rnd=$((rnd + 1))
+  attempt=$((attempt + 1))
+  dump_ui
+  grep -qi "text=\"[^\"]*100%[^\"]*\"" ui.xml && break
 done
-# 庆祝动画连拍:主线程点最后一格触发的同时,后台连拍 6 帧
-# ( screencap 循环 ~0.7s/帧,保证 2-3 帧落在 2.1s 动画窗口内 )
-( n=1; while [ $n -le 6 ]; do adb shell screencap -p /sdcard/cc$n.png; n=$((n + 1)); done ) &
-CAP_PID=$!
-adb shell input tap $LASTX $LASTY
-wait $CAP_PID
-# 庆祝动画 2.1s:后台 6 连拍已经起跑(见上),这里把帧拉回来
-n=1
-while [ $n -le 6 ]; do
-  i=$((i + 1))
-  adb pull /sdcard/cc$n.png "$SHOTS/$(printf '%02d' $i)_celebrate_anim.png" > /dev/null 2>&1
-  n=$((n + 1))
-done
+# 阶段 2:再跑两轮(第一轮清零、第二轮点满),庆祝动画在第二轮点满的一击
+# 重新触发;点最后一格前预先起后台 6 连拍(0.3s 间隔),稳稳落进 2.1s 窗口
+if grep -qi "text=\"[^\"]*100%[^\"]*\"" ui.xml; then
+  extra=0
+  while [ $extra -lt 2 ]; do
+    ci=0
+    NC=$(wc -w <<< "$CENTERS" | tr -d ' ')
+    for P in $CENTERS; do
+      ci=$((ci + 1))
+      if [ $extra = 1 ] && [ $ci = $NC ]; then
+        ( n=1; while [ $n -le 6 ]; do adb shell screencap -p /sdcard/cc$n.png; sleep 0.3; n=$((n + 1)); done ) &
+        CAP_PID=$!
+      fi
+      adb shell input tap ${P%,*} ${P#*,}
+    done
+    extra=$((extra + 1))
+  done
+  wait $CAP_PID 2>/dev/null
+  n=1
+  while [ $n -le 6 ]; do
+    i=$((i + 1))
+    adb pull /sdcard/cc$n.png "$SHOTS/$(printf '%02d' $i)_celebrate_anim.png" > /dev/null 2>&1
+    n=$((n + 1))
+  done
+fi
 check_text "100%"              # 辅助进度:52/52 · 100%(硬断言)
 snap celebrate_100
 placed_debug
