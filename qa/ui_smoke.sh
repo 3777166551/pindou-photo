@@ -563,13 +563,19 @@ while [ $rnd -lt 3 ]; do
   done
   rnd=$((rnd + 1))
 done
+# 庆祝动画连拍:主线程点最后一格触发的同时,后台连拍 6 帧
+# ( screencap 循环 ~0.7s/帧,保证 2-3 帧落在 2.1s 动画窗口内 )
+( n=1; while [ $n -le 6 ]; do adb shell screencap -p /sdcard/cc$n.png; n=$((n + 1)); done ) &
+CAP_PID=$!
 adb shell input tap $LASTX $LASTY
-i=$((i + 1))
-adb shell screencap -p /sdcard/c.png > /dev/null 2>&1
-adb pull /sdcard/c.png "$SHOTS/$(printf '%02d' $i)_celebrate_anim.png" > /dev/null 2>&1
-i=$((i + 1))
-adb shell screencap -p /sdcard/c.png > /dev/null 2>&1
-adb pull /sdcard/c.png "$SHOTS/$(printf '%02d' $i)_celebrate_anim2.png" > /dev/null 2>&1
+wait $CAP_PID
+# 庆祝动画 2.1s:后台 6 连拍已经起跑(见上),这里把帧拉回来
+n=1
+while [ $n -le 6 ]; do
+  i=$((i + 1))
+  adb pull /sdcard/cc$n.png "$SHOTS/$(printf '%02d' $i)_celebrate_anim.png" > /dev/null 2>&1
+  n=$((n + 1))
+done
 check_text "100%"              # 辅助进度:52/52 · 100%(硬断言)
 snap celebrate_100
 placed_debug
