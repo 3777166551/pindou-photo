@@ -568,15 +568,19 @@ if grep -qi "text=\"[^\"]*100%[^\"]*\"" ui.xml; then
     NC=$(wc -w <<< "$CENTERS" | tr -d ' ')
     for P in $CENTERS; do
       ci=$((ci + 1))
-      if [ $extra = 1 ] && [ $ci = $NC ]; then
-        ( n=1; while [ $n -le 6 ]; do adb shell screencap -p /sdcard/cc$n.png; sleep 0.3; n=$((n + 1)); done ) &
-        CAP_PID=$!
-      fi
+    if [ $extra = 1 ] && [ $ci = $NC ]; then
+      # 庆祝动画是 ValueAnimator:开场设置的 animator_duration_scale=0 会把
+      # 2100ms 缩成 0ms 瞬间播完,任何帧都抓不到 —— 拍摄前临时恢复动画时长
+      adb shell settings put global animator_duration_scale 1
+      ( n=1; while [ $n -le 6 ]; do adb shell screencap -p /sdcard/cc$n.png; sleep 0.3; n=$((n + 1)); done ) &
+      CAP_PID=$!
+    fi
       adb shell input tap ${P%,*} ${P#*,}
     done
     extra=$((extra + 1))
   done
   wait $CAP_PID 2>/dev/null
+  adb shell settings put global animator_duration_scale 0
   n=1
   while [ $n -le 6 ]; do
     i=$((i + 1))
