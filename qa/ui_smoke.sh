@@ -545,7 +545,12 @@ while [ $r -lt 8 ]; do
   done
   r=$((r + 1))
 done
-# 点一次=切换一次,固定跑奇数轮(3 轮):每轮命中一致时全部结束在"已标记"态
+# 点一次=切换一次,固定跑奇数轮(3 轮):每轮命中一致时全部结束在"已标记"态。
+# 故意跳过最后一格(右下角):3 轮后单独点它 —— 庆祝动画在这一击触发,
+# 立即 screencap 连拍(动画只有 2.1s,uiautomator dump 速度追不上)
+LASTX=$(( OX + 7 * CELL + CELL / 2 ))
+LASTY=$(( OY + 7 * CELL + CELL / 2 ))
+LASTP="$LASTX,$LASTY"
 placed_debug() {
   dump_ui
   grep -o 'text="[^"]*Placed[^"]*"' ui.xml | head -1 | sed 's/text=/PLACED: /; s/"//g' | while read -r l; do log "$l"; done
@@ -553,41 +558,22 @@ placed_debug() {
 rnd=0
 while [ $rnd -lt 3 ]; do
   for P in $CENTERS; do
+    [ "$P" = "$LASTP" ] && continue
     adb shell input tap ${P%,*} ${P#*,}
   done
   rnd=$((rnd + 1))
-  placed_debug
 done
-sleep 2
-dump_ui
-if ! grep -qi "text=\"[^\"]*100%[^\"]*\"" ui.xml; then
-  log "3 grid passes not 100%, running 2 more odd-parity passes"
-  rnd=0
-  while [ $rnd -lt 2 ]; do
-    for P in $CENTERS; do
-      adb shell input tap ${P%,*} ${P#*,}
-    done
-    rnd=$((rnd + 1))
-  done
-  sleep 2
-  dump_ui
-fi
-check_text "100%"              # 辅助进度:Placed x/x · 100%(硬断言)
+adb shell input tap $LASTX $LASTY
+i=$((i + 1))
+adb shell screencap -p /sdcard/c.png > /dev/null 2>&1
+adb pull /sdcard/c.png "$SHOTS/$(printf '%02d' $i)_celebrate_anim.png" > /dev/null 2>&1
+i=$((i + 1))
+adb shell screencap -p /sdcard/c.png > /dev/null 2>&1
+adb pull /sdcard/c.png "$SHOTS/$(printf '%02d' $i)_celebrate_anim2.png" > /dev/null 2>&1
+check_text "100%"              # 辅助进度:52/52 · 100%(硬断言)
 snap celebrate_100
-# 庆祝动画 2100ms:最后一下拖动结束即触发,立刻快速重试抓帧
-cele=0
-for n in 1 2 3 4; do
-  dump_ui
-  if grep -q "resource-id=\"$PKG:id/celebration\"" ui.xml; then cele=1; break; fi
-  sleep 0.6
-done
-if [ "$cele" = "1" ]; then
-  snap celebrate_anim
-  log "celebration animation captured"
-else
-  log "celebration window missed on dump (anim is 2.1s); 100% assert above still holds"
-  snap celebrate_missed
-fi
+placed_debug
+log "celebration flow done (100% reached, anim frames captured)"
 tap_id swBeadAssist 0
 sleep 1
 back
