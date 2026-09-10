@@ -546,12 +546,17 @@ while [ $r -lt 8 ]; do
   r=$((r + 1))
 done
 # 点一次=切换一次,固定跑奇数轮(3 轮):每轮命中一致时全部结束在"已标记"态
+placed_debug() {
+  dump_ui
+  grep -o 'text="[^"]*Placed[^"]*"' ui.xml | head -1 | sed 's/text=/PLACED: /; s/"//g' | while read -r l; do log "$l"; done
+}
 rnd=0
 while [ $rnd -lt 3 ]; do
   for P in $CENTERS; do
     adb shell input tap ${P%,*} ${P#*,}
   done
   rnd=$((rnd + 1))
+  placed_debug
 done
 sleep 2
 dump_ui
