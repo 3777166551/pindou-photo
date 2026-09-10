@@ -8,6 +8,12 @@
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
+    <!-- AR 试摆(假 AR)实时取景需要;相机画面仅在本地使用,不保存不上传 -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- 有相机更好,没有也不影响其他功能 -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
     <!-- v2.26 起云端 AI 已移除:全 APP 纯离线运行,无网络权限 -->
 
     <application
@@ -63,6 +69,11 @@
             android:exported="false"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize|stateHidden" />
+
+        <activity
+            android:name=".FakeArActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
         <!-- 极简文件提供器:用于拍照临时文件与分享图片 -->
         <provider

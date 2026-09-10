@@ -173,6 +173,26 @@
                 android:text="@string/chip_3d"
                 android:textColor="@color/text_chip"
                 android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/chipAr"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:layout_gravity="end|top"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginTop="46dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_chip"
+                android:clickable="true"
+                android:elevation="6dp"
+                android:focusable="true"
+                android:gravity="center"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:text="@string/chip_ar"
+                android:textColor="@color/text_chip"
+                android:textSize="12sp" />
         </FrameLayout>
 
         <!-- 豆豆清单 -->

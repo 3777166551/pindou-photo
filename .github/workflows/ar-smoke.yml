@@ -1,0 +1,96 @@
+name: ar-smoke
+
+# AR 试摆(假 AR)专项 CI:v2.49
+# 与主 build.yml 的区别:模拟器必须带虚拟摄像头(-camera-back virtualscene)
+# 启动 —— 主流水线的 -camera-back none 会让 AR 页直接报错退出。
+# 输入照片来自 Wikimedia Commons(qa/ar_data,许可见 CREDITS.md)。
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'app/src/main/java/com/pindou/app/FakeArActivity.java'
+      - 'app/src/main/java/com/pindou/app/view/FakeArView.java'
+      - 'app/src/main/java/com/pindou/app/view/BoardProjector.java'
+      - 'app/src/main/res/layout/activity_fake_ar.xml'
+      - 'qa/ar_smoke.sh'
+      - 'qa/ar_data/**'
+      - '.github/workflows/ar-smoke.yml'
+
+jobs:
+  ar-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      ANDROID_AVD_HOME: ${{ github.workspace }}/.android-avd
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Run qa test suite (incl. TestBoardProjector)
+        run: |
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+          sdkmanager --install "platforms;android-34" > /dev/null
+          bash qa/run_tests.sh
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.2
+
+      - name: Build debug APK
+        run: gradle -p . assembleDebug --no-daemon
+
+      - name: Install emulator and system image
+        run: |
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+          mkdir -p "$ANDROID_AVD_HOME"
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager --install "platform-tools" "emulator" \
+            "system-images;android-30;google_apis;x86_64" > /dev/null
+          echo no | avdmanager create avd -n arsmoke \
+            -k "system-images;android-30;google_apis;x86_64" --device pixel_4
+
+      - name: Start headless emulator (virtualscene back camera)
+        run: |
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+          if [ -e /dev/kvm ]; then
+            sudo chmod 666 /dev/kvm
+            ACCEL="-accel on"
+            echo "KVM available (permission granted)"
+          else
+            ACCEL="-no-accel"
+            echo "KVM missing, software emulation"
+          fi
+          emulator -avd arsmoke -no-window -no-audio -no-boot-anim \
+            -gpu swiftshader_indirect $ACCEL \
+            -camera-back virtualscene -camera-front emulated &
+          for i in $(seq 1 90); do
+            BOOT=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
+            if [ "$BOOT" = "1" ]; then echo "boot completed after ${i}0s"; break; fi
+            sleep 10
+          done
+          [ "$BOOT" = "1" ] || { echo "emulator boot timeout"; exit 1; }
+
+      - name: AR smoke (photo -> chart -> AR chip -> viewfinder overlay)
+        run: |
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export PATH="$ANDROID_HOME/platform-tools:$PATH"
+          APK=$(ls app/build/outputs/apk/debug/*.apk | head -1)
+          APK="$APK" bash qa/ar_smoke.sh
+
+      - name: Upload AR smoke screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ar-smoke-shots
+          path: shots/*
+          retention-days: 14

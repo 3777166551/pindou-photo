@@ -450,4 +450,13 @@
     <string name="fmt_cell_symbol">Symbol: %s</string>
     <string name="fmt_cell_rgb">RGB: #%06X</string>
     <string name="fmt_cell_count">Usage: %1$,d beads / %2$.1f%%</string>
+
+    <!-- AR try-on (fake AR: camera viewfinder + gyroscope, view only) -->
+    <string name="chip_ar">AR preview</string>
+    <string name="ar_recenter">Re-center</string>
+    <string name="ar_hint">Look around with your phone — the finished board stays where you left it. Tap "Re-center" if it drifts away.</string>
+    <string name="ar_no_camera">Cannot open the camera; AR preview unavailable</string>
+    <string name="ar_need_camera">Camera permission is required for AR preview (frames never leave your phone)</string>
+    <string name="ar_no_gyro">No orientation sensor found; the board will not follow your view</string>
+    <string name="ar_load_failed">Failed to load the effect image</string>
 </resources>

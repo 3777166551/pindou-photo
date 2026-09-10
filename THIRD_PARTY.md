@@ -66,6 +66,13 @@
 - **Pattern Keeper / MakeBead 等同类工具** —— 逐色进度标记、油漆桶填充、
   全局替换色等功能的交互设计参考,均未使用其任何代码或素材。
 
+## CI 测试图片(不随 APP 分发)
+
+`qa/ar_data/` 下的 AR 试摆专项冒烟输入照片来自 Wikimedia Commons,仅用于
+仓库与 CI 测试,不随 APK 分发。逐张出处与许可证见 [qa/ar_data/CREDITS.md](qa/ar_data/CREDITS.md):
+CC0 / Public domain / CC BY-SA 2.0 / CC BY-SA 4.0(作者 Jakob Voss、Pseudopanax、
+Saintfevrier、Björn Rixman、Superbass,按各许可证要求在此署名)。
+
 ## 关于本仓库代码
 
 截至当前版本,本仓库全部 `.java` 源码均为独立实现,未复制任何第三方项目的源代码;

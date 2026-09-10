@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 rem ============================================================
 rem  "PindouPhoto" (Photo -> Perler Bead Pattern) APK builder
 rem  No Gradle needed - uses raw Android build tools.
@@ -36,7 +36,7 @@ echo === [1/6] aapt2 compile resources ===
 if errorlevel 1 goto :err
 
 echo === [2/6] aapt2 link ===
-"%BT%\aapt2.exe" link -o %OUT%\base.apk -I "%AJ%" --manifest %SRC%\AndroidManifest.xml -R %OUT%\res.zip --java %OUT%\gen -A %SRC%\assets --min-sdk-version 24 --target-sdk-version 34 --version-code 59 --version-name "2.48" --auto-add-overlay
+"%BT%\aapt2.exe" link -o %OUT%\base.apk -I "%AJ%" --manifest %SRC%\AndroidManifest.xml -R %OUT%\res.zip --java %OUT%\gen -A %SRC%\assets --min-sdk-version 24 --target-sdk-version 34 --version-code 60 --version-name "2.49" --auto-add-overlay
 if errorlevel 1 goto :err
 
 echo === [3/6] javac compile ===
@@ -84,14 +84,14 @@ if not exist pindou.keystore (
     "%JAVA_HOME%\bin\keytool.exe" -genkeypair -keystore pindou.keystore -alias pindou -keyalg RSA -keysize 2048 -validity 10000 -storepass "%PINDOU_KS_PASS%" -keypass "%PINDOU_KS_PASS%" -dname "CN=PindouApp, OU=Personal, O=Personal, C=CN"
     if errorlevel 1 goto :err
 )
-call "%BT%\apksigner.bat" sign --ks pindou.keystore --ks-key-alias pindou --ks-pass pass:%PINDOU_KS_PASS% --key-pass pass:%PINDOU_KS_PASS% --out %OUT%\PindouPhoto-v2.48.apk %OUT%\aligned.apk
+call "%BT%\apksigner.bat" sign --ks pindou.keystore --ks-key-alias pindou --ks-pass pass:%PINDOU_KS_PASS% --key-pass pass:%PINDOU_KS_PASS% --out %OUT%\PindouPhoto-v2.49.apk %OUT%\aligned.apk
 if errorlevel 1 goto :err
-call "%BT%\apksigner.bat" verify %OUT%\PindouPhoto-v2.48.apk
+call "%BT%\apksigner.bat" verify %OUT%\PindouPhoto-v2.49.apk
 if errorlevel 1 goto :err
 
 echo.
 echo ============================================
-echo  BUILD OK: %CD%\%OUT%\PindouPhoto-v2.48.apk
+echo  BUILD OK: %CD%\%OUT%\PindouPhoto-v2.49.apk
 echo ============================================
 exit /b 0
 

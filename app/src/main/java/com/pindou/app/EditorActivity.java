@@ -274,6 +274,7 @@ public class EditorActivity extends Activity {
     private View btnCrop;
     private View chip3d;
     private boolean effect3d = false;
+    private View chipAr;
     private View btnAssistLocate, btnAssistCalendar, btnBrushMirror;
     private View assistToolsRow;
     private TextView btnAssistBoard, tvAssistBoard, btnAssistNextBoard, btnAssistRow;
@@ -493,6 +494,7 @@ public class EditorActivity extends Activity {
         btnStyleGhibli = findViewById(R.id.btnStyleGhibli);
         btnCrop = findViewById(R.id.btnCrop);
         chip3d = findViewById(R.id.chip3d);
+        chipAr = findViewById(R.id.chipAr);
         btnAssistLocate = findViewById(R.id.btnAssistLocate);
         btnAssistCalendar = findViewById(R.id.btnAssistCalendar);
         btnBrushMirror = findViewById(R.id.btnBrushMirror);
@@ -1650,6 +1652,13 @@ public class EditorActivity extends Activity {
                 patternView.setEffect3D(effect3d);
             }
         });
+        // AR 试摆(假 AR):相机取景 + 陀螺仪,看看拼完立在桌上什么样子
+        chipAr.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                launchFakeAr();
+            }
+        });
         btnCrop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1658,8 +1667,33 @@ public class EditorActivity extends Activity {
         });
     }
 
-    // ---------------- 取景裁剪 ----------------
+    /** AR 试摆:效果图落缓存文件,按豆子规格换算物理尺寸后进假 AR 页 */
+    private void launchFakeAr() {
+        if (pattern == null) {
+            Toast.makeText(this, getString(R.string.err_no_photo), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            Bitmap bmp = EffectRenderer.render(pattern);
+            File f = new File(getCacheDir(), "ar_effect.png");
+            java.io.FileOutputStream fo = new java.io.FileOutputStream(f);
+            bmp.compress(Bitmap.CompressFormat.PNG, 90, fo);
+            fo.close();
+            bmp.recycle();
+            // 豆子直径:标准 5mm / 迷你 2.6mm,换算板的真实宽高(米)
+            float mm = miniBead ? 2.6f : 5f;
+            Intent it = new Intent(this, FakeArActivity.class);
+            it.putExtra("path", f.getAbsolutePath());
+            it.putExtra("wm", pattern.cols * mm / 1000f);
+            it.putExtra("hm", pattern.rows * mm / 1000f);
+            startActivity(it);
+        } catch (Exception e) {
+            Toast.makeText(this,
+                    getString(R.string.ar_load_failed), Toast.LENGTH_SHORT).show();
+        }
+    }
 
+    // ---------------- 取景裁剪 ----------------
     /** 拖动/缩放选区,确定后按选区重新生成(解决居中裁剪不可调的问题) */
     private void showCropDialog() {
         if (source == null) {

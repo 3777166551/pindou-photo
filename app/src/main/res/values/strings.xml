@@ -450,4 +450,13 @@
     <string name="fmt_cell_symbol">符号:%s</string>
     <string name="fmt_cell_rgb">RGB:#%06X</string>
     <string name="fmt_cell_count">用量:%1$,d 颗 · %2$.1f%%</string>
+
+    <!-- AR 试摆(假 AR:相机取景 + 陀螺仪,无交互) -->
+    <string name="chip_ar">AR 试摆</string>
+    <string name="ar_recenter">摆正</string>
+    <string name="ar_hint">转动手机环顾四周,拼好的板子会立在那里;被挡住就点「摆正」</string>
+    <string name="ar_no_camera">无法打开相机,AR 试摆不可用</string>
+    <string name="ar_need_camera">需要相机权限才能 AR 试摆(画面不会保存或上传)</string>
+    <string name="ar_no_gyro">此手机没有姿态传感器,板子不会跟随视角变化</string>
+    <string name="ar_load_failed">效果图加载失败</string>
 </resources>

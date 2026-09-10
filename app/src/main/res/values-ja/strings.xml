@@ -450,4 +450,13 @@
     <string name="fmt_cell_symbol">記号:%s</string>
     <string name="fmt_cell_rgb">RGB:#%06X</string>
     <string name="fmt_cell_count">使用:%1$,d 個 · %2$.1f%%</string>
+
+    <!-- AR体感プレビュー(疑似AR:カメラプレビュー + ジャイロ、閲覧専用) -->
+    <string name="chip_ar">ARプレビュー</string>
+    <string name="ar_recenter">再配置</string>
+    <string name="ar_hint">スマホを動かして見回すと、完成した板はその場に立っています。見えなくなったら「再配置」をタップ</string>
+    <string name="ar_no_camera">カメラを開けないため、ARプレビューは利用できません</string>
+    <string name="ar_need_camera">ARプレビューにはカメラ権限が必要です(映像は保存・送信されません)</string>
+    <string name="ar_no_gyro">姿勢センサーがないため、板は視点に追従しません</string>
+    <string name="ar_load_failed">効果画像の読み込みに失敗しました</string>
 </resources>
