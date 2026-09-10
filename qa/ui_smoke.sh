@@ -514,15 +514,42 @@ sleep 8
 tap_id tabPattern 0            # 标记只在图纸 tab 生效
 tap_id swBeadAssist 0
 sleep 2
-# 逐格点击标记全部 64 格(滑动路径插值有覆盖缺口,实测 x≈145-800/y≈390-1050,
-# 每格中心 = 起点 + (k+0.5)*82.5)。圆板下角格是空格,点了无效;实格点一次
-# =标记一次,固定跑奇数轮(3 轮):只要每轮命中一致,全部结束在"已标记"态
+# 从 dump 取 patternView 真实边界,自适应算出 64 个格心再逐格点击
+# (硬编码坐标会因板面尺寸/圆板形状漂移而漏格)
+dump_ui
+PB=$(grep -oi 'resource-id="'"$PKG"':id/patternView"[^\>]*bounds="\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]"' ui.xml \
+  | grep -o 'bounds="[^"]*"' | head -1)
+if [ -z "$PB" ]; then
+  echo "[smoke] FAIL: patternView bounds not found"
+  snap fail
+  exit 1
+fi
+PB=${PB#bounds=\"}; PB=${PB%\"}
+PX1=${PB%%,*};       PX1=${PX1#[}
+PY1=${PB#*,};        PY1=${PY1%%]*}
+PY2=${PB##*,};       PY2=${PY2%]}
+PX2=${PB#*][};       PX2=${PX2%%,*}
+PW=$((PX2 - PX1)); PH=$((PY2 - PY1))
+if [ $PH -lt $PW ]; then SIDE=$PH; else SIDE=$PW; fi
+CELL=$((SIDE / 8))
+OX=$(( PX1 + (PW - CELL * 8) / 2 ))
+OY=$(( PY1 + (PH - CELL * 8) / 2 ))
+log "board: side=$SIDE cell=$CELL ox=$OX oy=$OY"
+CENTERS=""
+r=0
+while [ $r -lt 8 ]; do
+  c=0
+  while [ $c -lt 8 ]; do
+    CENTERS="$CENTERS $(( OX + c * CELL + CELL / 2 )),$(( OY + r * CELL + CELL / 2 ))"
+    c=$((c + 1))
+  done
+  r=$((r + 1))
+done
+# 点一次=切换一次,固定跑奇数轮(3 轮):每轮命中一致时全部结束在"已标记"态
 rnd=0
 while [ $rnd -lt 3 ]; do
-  for Y in 431 514 596 679 761 844 926 1009; do
-    for X in 186 268 351 433 516 598 681 763; do
-      adb shell input tap $X $Y
-    done
+  for P in $CENTERS; do
+    adb shell input tap ${P%,*} ${P#*,}
   done
   rnd=$((rnd + 1))
 done
@@ -532,10 +559,8 @@ if ! grep -qi "text=\"[^\"]*100%[^\"]*\"" ui.xml; then
   log "3 grid passes not 100%, running 2 more odd-parity passes"
   rnd=0
   while [ $rnd -lt 2 ]; do
-    for Y in 431 514 596 679 761 844 926 1009; do
-      for X in 186 268 351 433 516 598 681 763; do
-        adb shell input tap $X $Y
-      done
+    for P in $CENTERS; do
+      adb shell input tap ${P%,*} ${P#*,}
     done
     rnd=$((rnd + 1))
   done
