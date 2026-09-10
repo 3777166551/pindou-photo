@@ -508,22 +508,32 @@ sleep 8                        # 8×8 重新生成
 tap_id tabPattern 0            # 标记只在图纸 tab 生效
 tap_id swBeadAssist 0
 sleep 2
-# 蛇形刷选标记全图。板区实测坐标:8×8 缩放后 x≈145-800, y≈390-1050
-# (起笔点必须在板内,板外 cellAt=null 会丢弃整个手势)
-for X in 186 268 350 432 514 596 678 760; do
-  adb shell input swipe $X 400 $X 1040 500
+# 逐格点击标记全部 64 格(滑动路径插值有覆盖缺口,实测 x≈145-800/y≈390-1050,
+# 每格中心 = 起点 + (k+0.5)*82.5)。点一次=切换一次,所以固定跑奇数轮(3 轮):
+# 只要每轮命中情况一致,3 次奇数切换后所有格子都结束在"已标记"态
+rnd=0
+while [ $rnd -lt 3 ]; do
+  for Y in 431 514 596 679 761 844 926 1009; do
+    for X in 186 268 351 433 516 598 681 763; do
+      adb shell input tap $X $Y
+    done
+  done
+  rnd=$((rnd + 1))
 done
-sleep 1
+sleep 2
 dump_ui
 if ! grep -qi "text=\"[^\"]*100%[^\"]*\"" ui.xml; then
-  for Y in 431 514 596 679 761 844 926 1009; do
-    if [ $((Y % 2)) = "1" ]; then
-      adb shell input swipe 160 $Y 785 $Y 500
-    else
-      adb shell input swipe 785 $Y 160 $Y 500
-    fi
+  log "3 grid passes not 100%, running 2 more odd-parity passes"
+  rnd=0
+  while [ $rnd -lt 2 ]; do
+    for Y in 431 514 596 679 761 844 926 1009; do
+      for X in 186 268 351 433 516 598 681 763; do
+        adb shell input tap $X $Y
+      done
+    done
+    rnd=$((rnd + 1))
   done
-  sleep 1
+  sleep 2
   dump_ui
 fi
 check_text "100%"              # 辅助进度:Placed x/x · 100%(硬断言)
