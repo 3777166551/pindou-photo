@@ -508,23 +508,24 @@ sleep 8                        # 8×8 重新生成
 tap_id tabPattern 0            # 标记只在图纸 tab 生效
 tap_id swBeadAssist 0
 sleep 2
-# 蛇形刷选标记全图(辅助拖动沿路径记完成);最多三轮确保覆盖
-pass=0
-while [ $pass -lt 3 ]; do
-  y=330
-  while [ $y -le 1130 ]; do
-    if [ $((pass % 2)) = "0" ]; then
-      adb shell input swipe 110 $y 970 $y 300
+# 蛇形刷选标记全图。板区实测坐标:8×8 缩放后 x≈145-800, y≈390-1050
+# (起笔点必须在板内,板外 cellAt=null 会丢弃整个手势)
+for X in 186 268 350 432 514 596 678 760; do
+  adb shell input swipe $X 400 $X 1040 500
+done
+sleep 1
+dump_ui
+if ! grep -qi "text=\"[^\"]*100%[^\"]*\"" ui.xml; then
+  for Y in 431 514 596 679 761 844 926 1009; do
+    if [ $((Y % 2)) = "1" ]; then
+      adb shell input swipe 160 $Y 785 $Y 500
     else
-      adb shell input swipe 970 $y 110 $y 300
+      adb shell input swipe 785 $Y 160 $Y 500
     fi
-    y=$((y + 95))
   done
   sleep 1
   dump_ui
-  if grep -qi "text=\"[^\"]*100%[^\"]*\"" ui.xml; then break; fi
-  pass=$((pass + 1))
-done
+fi
 check_text "100%"              # 辅助进度:Placed x/x · 100%(硬断言)
 snap celebrate_100
 # 庆祝动画 2100ms:最后一下拖动结束即触发,立刻快速重试抓帧
