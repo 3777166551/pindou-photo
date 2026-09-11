@@ -198,6 +198,62 @@ gen_wait() {
 
 back() { adb shell input keyevent 4; sleep 1.5; }
 
+# ---------- 拼豆辅助开关:以 checked 状态为准的确定性拨动 ----------
+# 设置面板的滚动位置在导出/分享/重开项目后会漂移,盲点坐标会落到邻格
+# 开关上(v2.49 连续三轮 100% 步三种失败形态的公共根因)。这里直接读
+# uiautomator dump 里 swBeadAssist 的 checked 属性:不对就拨,拨完复核。
+assist_on() {
+  dump_ui
+  grep -q "resource-id=\"$PKG:id/swBeadAssist\"[^\>]*checked=\"true\"" ui.xml
+}
+# 先把设置面板滚回顶部(下拉 3 次;起点必须在设置区内 y>=1200,
+# 起点过高会被 PatternView 吃掉变成平移图纸)
+assist_scroll_top() {
+  n=0
+  while [ $n -lt 3 ]; do
+    adb shell input swipe 540 1600 540 2300 250
+    sleep 0.5
+    n=$((n + 1))
+  done
+  sleep 1
+}
+toggle_assist_on() {
+  assist_scroll_top
+  n=0
+  while [ $n -lt 6 ]; do
+    if assist_on; then
+      log "assist on (round $n)"
+      return 0
+    fi
+    if _tap_match "resource-id=\"$PKG:id/swBeadAssist\"" 0; then
+      sleep 2
+      if assist_on; then
+        log "assist toggled on (round $n)"
+        return 0
+      fi
+      log "assist tap round $n did not stick, retry"
+    else
+      adb shell input swipe 540 1700 540 900 300
+      sleep 0.8
+    fi
+    n=$((n + 1))
+  done
+  die "could not turn bead-assist on"
+}
+assist_off() {
+  n=0
+  while [ $n -lt 4 ]; do
+    if ! assist_on; then
+      log "assist off"
+      return 0
+    fi
+    _tap_match "resource-id=\"$PKG:id/swBeadAssist\"" 0
+    sleep 2
+    n=$((n + 1))
+  done
+  log "soft-warn: assist still on"
+}
+
 # 确保回到首页:不在首页就拉起 Splash(exported,必能启动,自动进首页)
 ensure_home() {
   local n
@@ -413,7 +469,7 @@ sleep 1.5
 
 # 11) 真图纸上的拼豆辅助:打卡日历
 adb shell input swipe 540 1700 540 500 300; sleep 0.8
-tap_id swBeadAssist 0
+toggle_assist_on
 sleep 1.5
 check_text "Find undone" 0
 tap_id btnAssistCalendar 0
@@ -421,7 +477,7 @@ sleep 1.5
 snap photo_calendar
 tap_text "Close" 0
 sleep 1
-tap_id swBeadAssist 0
+assist_off
 sleep 1
 adb shell input swipe 540 600 540 2100 300; sleep 0.6
 
@@ -516,7 +572,7 @@ fi
 tap_id chipShapeRound
 sleep 8
 tap_id tabPattern 0            # 标记只在图纸 tab 生效
-tap_id swBeadAssist 0
+toggle_assist_on
 sleep 2
 check_text "Find undone"       # 硬断言:辅助模式确实开了(开关点错邻格时在此现形)
 # 拼豆模式的按住滑动是"只加不减"的连续刷选(onAssistDragCell 只 add):
@@ -571,7 +627,7 @@ grep -qi "text=\"[^\"]*100%[^\"]*\"" ui.xml || placed_debug
 check_text "100%"              # 辅助进度:52/52 · 100%(硬断言)
 snap celebrate_100
 log "celebration flow done: 100% reached (celebration.start fires on this state)"
-tap_id swBeadAssist 0
+assist_off
 sleep 1
 back
 ensure_home
@@ -673,7 +729,7 @@ sleep 1.5
 adb shell input swipe 540 1700 540 500 300; sleep 0.8
 adb shell input swipe 540 1700 540 500 300; sleep 0.8
 check_text "Bead-along" 0
-tap_id swBeadAssist 0
+toggle_assist_on
 sleep 1.5
 check_text "Find undone" 0
 tap_id btnAssistBoard 0
@@ -690,8 +746,7 @@ sleep 0.5
 snap assist_row
 tap_id btnAssistRow 0
 sleep 0.5
-tap_id swBeadAssist 0
-sleep 1
+assist_off
 sleep 1
 # 描摹行存在性(不真选图,避免文件选择器挂住流程)
 adb shell input swipe 540 1500 540 900 300; sleep 0.6
