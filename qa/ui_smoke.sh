@@ -594,16 +594,27 @@ PY1=${PB#*,};        PY1=${PY1%%]*}
 PY2=${PB##*,};       PY2=${PY2%]}
 PX2=${PB#*][};       PX2=${PX2%%,*}
 PW=$((PX2 - PX1)); PH=$((PY2 - PY1))
-log "board view: ${PW}x${PH} @ $PX1,$PY1"
+# 按 PatternView.fitCell 的同款算法反推网格矩形:10dp 内边距 + 居中,
+# 图纸模式无额外边距。扫线必须落在网格内部——ACTION_DOWN 若在网格外,
+# cellAt 返回 null,整条手势被辅助模式拒绝(0/52 空扫的根因)。
+DENS=$(adb shell wm density | tr -dc '0-9' | head -c 4)
+case "$DENS" in ''|*[!0-9]*) DENS=420 ;; esac
+PAD=$(( 10 * DENS / 160 ))
+if [ $PH -lt $PW ]; then BASE=$PH; else BASE=$PW; fi
+CELL_T=$(( (BASE - 2 * PAD) / 8 ))
+GW=$(( CELL_T * 8 )); GH=$GW
+GL=$(( PX1 + (PW - GW) / 2 ))
+GT=$(( PY1 + (PH - GH) / 2 ))
+log "grid: ${GW}x${GH} @ $GL,$GT (pad=$PAD cell=$CELL_T)"
 placed_debug() {
   dump_ui
   grep -o 'text="[^"]*Placed[^"]*"' ui.xml | head -1 | sed 's/text=/PLACED: /; s/"//g' | while read -r l; do log "$l"; done
 }
 sweep() {
   n=0
-  while [ $n -lt 16 ]; do
-    Y=$(( PY1 + (n * 2 + 1) * PH / 32 ))
-    adb shell input swipe $((PX1 + 15)) $Y $((PX2 - 15)) $Y 350
+  while [ $n -lt 14 ]; do
+    Y=$(( GT + (n * 2 + 1) * GH / 28 ))
+    adb shell input swipe $(( GL + 4 )) $Y $(( GL + GW - 4 )) $Y 350
     n=$((n + 1))
   done
 }
