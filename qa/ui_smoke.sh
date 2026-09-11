@@ -505,15 +505,20 @@ shrink_axis() {
 shrink_axis btnWMinus 50
 shrink_axis btnHMinus 50
 sleep 8                        # 8×8 重新生成
-# 切圆形板:内切圆外的角格变空格(不计总量、点选无效),
-# 顶栏「3D preview」悬浮 chip 挡住右上角格的问题随之消失
-tap_id btnAdvHeader 0
-sleep 0.5
-tap_id chipShapeRound 0
+# 切圆形板:内切圆外的角格变空格(不计总量、点选无效)。
+# 重开项目后面板的折叠状态不确定:高级区若已展开,再点 btnAdvHeader 会
+# 把它折叠回去,chipShapeRound 就永远找不到(上一轮 square 板的根因)。
+# 所以先看 chip 在不在视野里,折叠了才点展开;chip 本身用硬断言。
+dump_ui
+if ! grep -q 'resource-id="'"$PKG"':id/chipShapeRound"' ui.xml; then
+  tap_id btnAdvHeader 0
+fi
+tap_id chipShapeRound
 sleep 8
 tap_id tabPattern 0            # 标记只在图纸 tab 生效
 tap_id swBeadAssist 0
 sleep 2
+check_text "Find undone"       # 硬断言:辅助模式确实开了(开关点错邻格时在此现形)
 # 拼豆模式的按住滑动是"只加不减"的连续刷选(onAssistDragCell 只 add):
 # 横向等距扫 12 条线盖满 patternView,每一行画出的格子都会被某条线划过。
 # 对格心估算误差、悬浮 chip 遮挡、双击判定全部免疫;重复划不取消标记。
@@ -540,19 +545,20 @@ placed_debug() {
 }
 sweep() {
   n=0
-  while [ $n -lt 12 ]; do
-    Y=$(( PY1 + (n * 2 + 1) * PH / 24 ))
+  while [ $n -lt 16 ]; do
+    Y=$(( PY1 + (n * 2 + 1) * PH / 32 ))
     adb shell input swipe $((PX1 + 15)) $Y $((PX2 - 15)) $Y 350
     n=$((n + 1))
   done
 }
-# 阶段 1:扫到 100%(滑动只加不减,最多 3 轮兜底)
+# 阶段 1:扫到 100%(滑动只加不减,最多 4 轮兜底;每轮落账进度,失败可定位)
 attempt=0
-while [ $attempt -lt 3 ]; do
+while [ $attempt -lt 4 ]; do
   sweep
   attempt=$((attempt + 1))
   dump_ui
   grep -qi "text=\"[^\"]*100%[^\"]*\"" ui.xml && break
+  log "sweep pass $attempt done, progress:"
   placed_debug
 done
 # 阶段 2:再扫一轮,验证 100% 状态可重复达到(滑动幂等)。
