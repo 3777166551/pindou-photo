@@ -12,6 +12,7 @@ on:
       - 'app/src/main/java/com/pindou/app/FakeArActivity.java'
       - 'app/src/main/java/com/pindou/app/view/FakeArView.java'
       - 'app/src/main/java/com/pindou/app/view/BoardProjector.java'
+      - 'app/src/main/java/com/pindou/app/export/EffectRenderer.java'
       - 'app/src/main/res/layout/activity_fake_ar.xml'
       - 'qa/ar_smoke.sh'
       - 'qa/ar_data/**'

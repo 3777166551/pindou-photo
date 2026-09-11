@@ -434,8 +434,13 @@ public class PatternView extends View {
                 final int fx = c[0];
                 final int fy = c[1];
                 if (pendingTap != null) {
-                    removeCallbacks(pendingTap);
+                    // 上一个待定标记与本次不同格,不可能构成双击:
+                    // 立即落账而不是吞掉——快速点相邻格时每一格都必须生效
+                    // (CI 冒烟 8×8 标 52 格只登记最后一格的根因,DEV-NOTES 25)
+                    Runnable prev = pendingTap;
                     pendingTap = null;
+                    removeCallbacks(prev);
+                    prev.run();
                 }
                 pendingTap = new Runnable() {
                     @Override

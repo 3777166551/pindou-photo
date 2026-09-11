@@ -20,6 +20,14 @@ public final class EffectRenderer {
      * 3720² ARGB ≈ 55MB 连续分配,低堆设备上会直接 OOM)。
      */
     public static Bitmap render(BeadPattern p, int maxDim) {
+        return render(p, maxDim, false);
+    }
+
+    /**
+     * arMode:空格的豆脚画淡(AR 取景里满板灰点太吵),
+     * 导出路径不受影响,依旧是实心豆脚。
+     */
+    public static Bitmap render(BeadPattern p, int maxDim, boolean arMode) {
         int cols = p.cols;
         int rows = p.rows;
         int cell = (int) Math.max(8, Math.min(64, (double) maxDim / Math.max(cols, rows)));
@@ -40,7 +48,7 @@ public final class EffectRenderer {
         }
 
         Paint peg = new Paint(Paint.ANTI_ALIAS_FLAG);
-        peg.setColor(0xFFD8D2C9);
+        peg.setColor(arMode ? 0x8CD8D2C9 : 0xFFD8D2C9);
 
         Paint bead = new Paint(Paint.ANTI_ALIAS_FLAG);
         Paint ring = new Paint(Paint.ANTI_ALIAS_FLAG);

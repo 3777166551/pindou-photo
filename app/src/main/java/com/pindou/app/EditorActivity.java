@@ -1675,8 +1675,8 @@ public class EditorActivity extends Activity {
         }
         try {
             // 叠层贴图 1024 宽足够;3600 全尺寸渲染在大图纸上是几十 MB
-            // 的连续分配,会 OOM 崩进程
-            Bitmap bmp = EffectRenderer.render(pattern, 1024);
+            // 的连续分配,会 OOM 崩进程。arMode:空格豆脚画淡,取景里不吵
+            Bitmap bmp = EffectRenderer.render(pattern, 1024, true);
             File f = new File(getCacheDir(), "ar_effect.png");
             java.io.FileOutputStream fo = new java.io.FileOutputStream(f);
             bmp.compress(Bitmap.CompressFormat.PNG, 90, fo);

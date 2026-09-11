@@ -6,6 +6,7 @@ import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -40,6 +41,10 @@ public final class FakeArView extends View {
 
     private final Paint boardPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
     private final Paint shadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint sidePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint sideEdgePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint framePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Path sidePath = new Path();
 
     /** XML 膨胀必须的构造器:缺了它 setContentView 直接 InflateException 崩 */
     public FakeArView(Context context, AttributeSet attrs) {
@@ -125,5 +130,31 @@ public final class FakeArView extends View {
         srcQuad[7] = board.getHeight();
         matrix.setPolyToPoly(srcQuad, 0, quad, 0, 4);
         canvas.drawBitmap(board, matrix, boardPaint);
+
+        // 板厚:底边向下挤出一条侧面(投影宽度按比例),立着的板子立刻有体积感
+        float t = Math.max(3f, Math.min(46f, bottomW * 0.045f));
+        sidePaint.setColor(0xFFC9BFAF);
+        sidePath.reset();
+        sidePath.moveTo(quad[6], quad[7]);
+        sidePath.lineTo(quad[4], quad[5]);
+        sidePath.lineTo(quad[4], quad[5] + t);
+        sidePath.lineTo(quad[6], quad[7] + t);
+        sidePath.close();
+        canvas.drawPath(sidePath, sidePaint);
+        sideEdgePaint.setStrokeWidth(Math.max(2f, t * 0.22f));
+        sideEdgePaint.setColor(0xFF9C937F);
+        canvas.drawLine(quad[6], quad[7] + t, quad[4], quad[5] + t, sideEdgePaint);
+
+        // 墨色细描边:把板子和花哨的取景背景分开
+        framePaint.setStrokeWidth(Math.max(2f, bottomW * 0.010f));
+        framePaint.setColor(0x9940354E);
+        framePaint.setStyle(Paint.Style.STROKE);
+        sidePath.reset();
+        sidePath.moveTo(quad[0], quad[1]);
+        sidePath.lineTo(quad[2], quad[3]);
+        sidePath.lineTo(quad[4], quad[5]);
+        sidePath.lineTo(quad[6], quad[7]);
+        sidePath.close();
+        canvas.drawPath(sidePath, framePaint);
     }
 }
