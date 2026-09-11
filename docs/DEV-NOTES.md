@@ -268,3 +268,28 @@ UI 冒烟别只走查"能看见的东西",要覆盖跨页面的状态链路(存�
 **教训**:①"清状态"和"触发重算"的先后顺序,重算链路越长越容易在
 中间读到脏数据,改 UI 回调时先看依赖;②monkey fuzz 对这类"状态残留
 + 参数切换"崩溃是原子弹级的,人类手测很难凑齐时序。
+## 23. 自定义 View 进 XML 必须有 (Context,AttributeSet) 构造器;资源 ID 现场取证靠 logcat(v2.49 教训,CI 专项冒烟抓出)
+
+**现象一**:ar-smoke 两轮都在点「AR 试摆」chip 的瞬间整进程死亡回首页,
+主界面无任何异常。logcat 抓栈才现形:`InflateException →
+NoSuchMethodException: FakeArView.<init>[Context, AttributeSet]`——
+XML 里写了 `<com.pindou.app.view.FakeArView>`,类里却只提供单参构造器,
+setContentView 当场炸。
+
+**修法**:补二参构造器。后又出现 findViewById 找不到自定义视图的诡异
+NPE,直接弃用该页 XML,改纯代码构建 UI(与对话框/CropView 同款写法),
+从根上消灭这一类问题。
+
+**教训**:①自定义 View 一进布局文件,四个构造器约定就是硬约束,编译期
+不报错、运行期必炸;②CI 冒烟失败时第一件事抓 `adb logcat -d` 的
+FATAL 栈(已固化进 ar_smoke.sh 的 die()),别靠截图猜。
+## 24. 无相机设备上 ACTION_IMAGE_CAPTURE 会抛 SecurityException(fuzz 抓出)
+
+**现象**:monkey(种子 90210)砸中首页「Take a photo」,
+`SecurityException: Permission Denial: starting Intent
+{act=android.media.action.IMAGE_CAPTURE...}` 直接崩进程。
+takePhoto 只接了 ActivityNotFoundException。
+
+**修法**:再补 catch SecurityException → 同款 toast。无摄像头模拟器/
+无相机应用的设备(含部分电视盒)走到这里不再崩。
+

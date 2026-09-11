@@ -796,6 +796,10 @@ public class MainActivity extends Activity {
             startActivityForResult(i, REQ_TAKE_PHOTO);
         } catch (ActivityNotFoundException e) {
             Toast.makeText(this, getString(R.string.err_no_camera), Toast.LENGTH_SHORT).show();
+        } catch (SecurityException e) {
+            // 无相机/无可处理相机应用的设备(含无摄像头模拟器):系统会直接
+            // 抛 SecurityException 而不是 ActivityNotFoundException(fuzz 抓出)
+            Toast.makeText(this, getString(R.string.err_no_camera), Toast.LENGTH_SHORT).show();
         }
     }
 
