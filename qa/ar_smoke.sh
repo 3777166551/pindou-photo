@@ -185,7 +185,7 @@ ensure_home
 snap home
 
 # ---------- 逐张豆板图:照片 -> 图纸 -> AR 试摆 ----------
-IMAGES=(qa/ar_data/ar_*.jpg)
+IMAGES=(qa/ar_data/ar*.jpg)
 if [ "${#IMAGES[@]}" -lt 3 ]; then
   echo "[ar-smoke] FAIL: expected >=3 test images in qa/ar_data, found ${#IMAGES[@]}"
   exit 1
