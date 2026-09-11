@@ -1,0 +1,3 @@
+# shell scripts must stay LF or CI bash chokes on CR
+*.sh text eol=lf
+*.bat text eol=crlf
