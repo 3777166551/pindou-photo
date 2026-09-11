@@ -11,6 +11,11 @@ AR 试摆专项冒烟(qa/ar_smoke.sh / .github/workflows/ar-smoke.yml)用的输�
 | ar_heart_bysa4.jpg | File:Perler bead heart fused side.jpg | Saintfevrier | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Perler_bead_heart_fused_side.jpg |
 | ar_parlplatta_bysa2.jpg | File:Parlplatta (8457346).jpg | Björn Rixman | CC BY-SA 2.0 | https://commons.wikimedia.org/wiki/File:Parlplatta_(8457346).jpg |
 | ar_buegel_bysa4.jpg | File:2022-01-06-Bügelperlen-6920.jpg | Superbass | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:2022-01-06-B%C3%BCgelperlen-6920.jpg |
+| ar2_buegel1_bysa3.jpg | File:Buegelperlen 1.jpg | Superbass | CC BY-SA 3.0 | https://commons.wikimedia.org/wiki/File:Buegelperlen_1.jpg |
+| ar2_fusing_by2.jpg | File:Fusing beads - September 16, 2009 (Québec City) (3927032444).jpg | Morgan (from Montreal) | CC BY 2.0 | https://commons.wikimedia.org/wiki/File:Fusing_beads_-_September_16,_2009_(Qu%C3%A9bec_City)_(3927032444).jpg |
+| ar2_arlanda_bysa4.jpg | File:StockholmArlandaPlasticBeadsMosaic.jpg | Oddjob | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:StockholmArlandaPlasticBeadsMosaic.jpg |
+| ar2_heartbeaded_bysa4.jpg | File:Perler bead heart beaded side.jpg | Saintfevrier | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Perler_bead_heart_beaded_side.jpg |
+| ar2_strijkkralen_bysa3.jpg | File:Strijkkralen.jpg | Rasbak | CC BY-SA 3.0 | https://commons.wikimedia.org/wiki/File:Strijkkralen.jpg |
 
 下载宽高统一缩到长边 1280(缩略图 URL),不影响作为测试输入的用途。
 CC BY-SA 系列图片以本仓库(3777166551/pindou-photo,AGPL-3.0)为衍生作品
