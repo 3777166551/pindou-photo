@@ -6,6 +6,7 @@ import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.util.AttributeSet;
 import android.view.View;
 
 /**
@@ -39,6 +40,11 @@ public final class FakeArView extends View {
 
     private final Paint boardPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
     private final Paint shadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    /** XML 膨胀必须的构造器:缺了它 setContentView 直接 InflateException 崩 */
+    public FakeArView(Context context, AttributeSet attrs) {
+        this(context);
+    }
 
     public FakeArView(Context context) {
         super(context);
