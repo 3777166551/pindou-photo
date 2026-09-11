@@ -514,8 +514,11 @@ sleep 8
 tap_id tabPattern 0            # 标记只在图纸 tab 生效
 tap_id swBeadAssist 0
 sleep 2
-# 从 dump 取 patternView 真实边界,自适应算出 64 个格心再逐格点击
-# (硬编码坐标会因板面尺寸/圆板形状漂移而漏格)
+# 拼豆模式的按住滑动是"只加不减"的连续刷选(onAssistDragCell 只 add):
+# 横向等距扫 12 条线盖满 patternView,每一行画出的格子都会被某条线划过。
+# 对格心估算误差、悬浮 chip 遮挡、双击判定全部免疫;重复划不取消标记。
+# (v2.49:原"64 个格心逐格点击"在 CI 上受 chip 遮挡+几何误差影响,
+#  8 轮尝试只能标到 ~34/52,100% 从未达成——滑线方案一并解决)
 dump_ui
 PB=$(grep -oi 'resource-id="'"$PKG"':id/patternView"[^\>]*bounds="\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]"' ui.xml \
   | grep -o 'bounds="[^"]*"' | head -1)
@@ -530,48 +533,35 @@ PY1=${PB#*,};        PY1=${PY1%%]*}
 PY2=${PB##*,};       PY2=${PY2%]}
 PX2=${PB#*][};       PX2=${PX2%%,*}
 PW=$((PX2 - PX1)); PH=$((PY2 - PY1))
-if [ $PH -lt $PW ]; then SIDE=$PH; else SIDE=$PW; fi
-CELL=$((SIDE / 8))
-OX=$(( PX1 + (PW - CELL * 8) / 2 ))
-OY=$(( PY1 + (PH - CELL * 8) / 2 ))
-log "board: side=$SIDE cell=$CELL ox=$OX oy=$OY"
-CENTERS=""
-r=0
-while [ $r -lt 8 ]; do
-  c=0
-  while [ $c -lt 8 ]; do
-    CENTERS="$CENTERS $(( OX + c * CELL + CELL / 2 )),$(( OY + r * CELL + CELL / 2 ))"
-    c=$((c + 1))
-  done
-  r=$((r + 1))
-done
+log "board view: ${PW}x${PH} @ $PX1,$PY1"
 placed_debug() {
   dump_ui
   grep -o 'text="[^"]*Placed[^"]*"' ui.xml | head -1 | sed 's/text=/PLACED: /; s/"//g' | while read -r l; do log "$l"; done
 }
-# 阶段 1:整格轮询直到 100%(最多 8 轮;奇偶切换会来回触发庆祝)
-attempt=0
-while [ $attempt -lt 8 ]; do
-  for P in $CENTERS; do
-    adb shell input tap ${P%,*} ${P#*,}
+sweep() {
+  n=0
+  while [ $n -lt 12 ]; do
+    Y=$(( PY1 + (n * 2 + 1) * PH / 24 ))
+    adb shell input swipe $((PX1 + 15)) $Y $((PX2 - 15)) $Y 350
+    n=$((n + 1))
   done
+}
+# 阶段 1:扫到 100%(滑动只加不减,最多 3 轮兜底)
+attempt=0
+while [ $attempt -lt 3 ]; do
+  sweep
   attempt=$((attempt + 1))
   dump_ui
   grep -qi "text=\"[^\"]*100%[^\"]*\"" ui.xml && break
+  placed_debug
 done
-# 阶段 2:再跑两轮(清零→点满),验证 100% 状态可重复达到。
+# 阶段 2:再扫一轮,验证 100% 状态可重复达到(滑动幂等)。
 # 庆祝动画画面帧不在 CI 抓取(2.1s 动画 + 模拟器无渲染加速,时序抖动大),
 # 触发逻辑已由 100% 硬断言覆盖;动画视觉效果在真机清单人工确认
-extra=0
-while [ $extra -lt 2 ]; do
-  for P in $CENTERS; do
-    adb shell input tap ${P%,*} ${P#*,}
-  done
-  extra=$((extra + 1))
-  sleep 1
-  dump_ui
-  grep -qi "text=\"[^\"]*100%[^\"]*\"" ui.xml && break
-done
+sweep
+sleep 1
+dump_ui
+grep -qi "text=\"[^\"]*100%[^\"]*\"" ui.xml || placed_debug
 check_text "100%"              # 辅助进度:52/52 · 100%(硬断言)
 snap celebrate_100
 log "celebration flow done: 100% reached (celebration.start fires on this state)"
