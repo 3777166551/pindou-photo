@@ -62,24 +62,7 @@ public class FakeArActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        setContentView(R.layout.activity_fake_ar);
-
-        preview = findViewById(R.id.preview);
-        arView = findViewById(R.id.arView);
-        TextView btnBack = findViewById(R.id.btnBack);
-        TextView chipRecenter = findViewById(R.id.chipRecenter);
-        btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
-        chipRecenter.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                arView.recenter();
-            }
-        });
+        buildUi();
 
         String path = getIntent().getStringExtra("path");
         float wm = getIntent().getFloatExtra("wm", 0.3f);
@@ -110,6 +93,88 @@ public class FakeArActivity extends Activity {
         } else {
             hookPreview();
         }
+    }
+
+    /**
+     * 纯代码构建 UI,不走 XML:CI 第三轮出现 setContentView 成功但
+     * findViewById 找不到自定义视图的诡异现象(NPE),程序化构建
+     * 从根上绕开资源膨胀这一类问题;工程里对话框/画板本就是这种写法。
+     */
+    private void buildUi() {
+        android.widget.FrameLayout root = new android.widget.FrameLayout(this);
+        root.setBackgroundColor(0xFF000000);
+
+        preview = new TextureView(this);
+        root.addView(preview, new android.widget.FrameLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+
+        arView = new FakeArView(this);
+        root.addView(arView, new android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT));
+
+        int pad = Math.round(14 * getResources().getDisplayMetrics().density);
+
+        TextView btnBack = new TextView(this);
+        btnBack.setText("‹");
+        btnBack.setTextColor(0xFFFFFFFF);
+        btnBack.setTextSize(30);
+        btnBack.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        btnBack.setPadding(pad, pad / 2, pad, pad / 2);
+        btnBack.setClickable(true);
+        btnBack.setFocusable(true);
+        btnBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+        root.addView(btnBack, new android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+                android.view.Gravity.START | android.view.Gravity.TOP));
+
+        TextView chipRecenter = new TextView(this);
+        chipRecenter.setText(getString(R.string.ar_recenter));
+        chipRecenter.setTextColor(0xFF3A3050);
+        chipRecenter.setTextSize(13);
+        chipRecenter.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        chipRecenter.setBackgroundResource(R.drawable.bg_chip);
+        chipRecenter.setPadding(pad + 2, 0, pad + 2, 0);
+        chipRecenter.setClickable(true);
+        chipRecenter.setFocusable(true);
+        chipRecenter.setGravity(android.view.Gravity.CENTER);
+        chipRecenter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                arView.recenter();
+            }
+        });
+        android.widget.FrameLayout.LayoutParams chipLp =
+                new android.widget.FrameLayout.LayoutParams(
+                        android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+                        Math.round(32 * getResources().getDisplayMetrics().density),
+                        android.view.Gravity.END | android.view.Gravity.TOP);
+        chipLp.setMargins(pad, pad, pad, pad);
+        root.addView(chipRecenter, chipLp);
+
+        TextView hint = new TextView(this);
+        hint.setText(getString(R.string.ar_hint));
+        hint.setTextColor(0xFFFFFFFF);
+        hint.setTextSize(13);
+        hint.setBackgroundColor(0x66000000);
+        hint.setGravity(android.view.Gravity.CENTER);
+        hint.setPadding(pad, pad / 2, pad, pad / 2);
+        android.widget.FrameLayout.LayoutParams hintLp =
+                new android.widget.FrameLayout.LayoutParams(
+                        android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+                        android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+                        android.view.Gravity.BOTTOM | android.view.Gravity.CENTER_HORIZONTAL);
+        hintLp.setMargins(pad, pad, pad, Math.round(26 * getResources().getDisplayMetrics().density));
+        root.addView(hint, hintLp);
+
+        setContentView(root);
     }
 
     /** 权限到手(或本就有)后,TextureView 才允许挂监听开相机 */
