@@ -20,6 +20,18 @@ mkdir -p "$SHOTS"
 i=0
 
 log() { echo "[ar-smoke] $*"; }
+
+# 失败出口:截图 + 抓 logcat(崩溃栈进 artifact),再退出
+die() {
+  echo "[ar-smoke] FAIL: $1"
+  adb shell screencap -p /sdcard/s.png > /dev/null 2>&1
+  adb pull /sdcard/s.png "$SHOTS/$(printf '%02d' $i)_fail.png" > /dev/null 2>&1
+  adb logcat -d > "$SHOTS/logcat_fail.txt" 2>&1
+  grep -A 60 "FATAL EXCEPTION" "$SHOTS/logcat_fail.txt" | head -100
+  grep -E "mResumedActivity|topResumedActivity" "$SHOTS/logcat_fail.txt" | head -4
+  exit 1
+}
+
 snap() {
   i=$((i + 1))
   adb shell screencap -p /sdcard/s.png > /dev/null 2>&1
@@ -66,9 +78,9 @@ tap_id() {
     fi
   done
   if [ "$must" = "1" ]; then
-    echo "[ar-smoke] FAIL: id not found: $1"
-    snap fail
-    exit 1
+    dump_ui || true
+    grep -o 'text="[^"]*"' ui.xml 2>/dev/null | head -20
+    die "id not found: $1"
   fi
   log "soft-miss id: $1"
 }
@@ -103,9 +115,10 @@ check_text() {
     sleep 2
   done
   if [ "$must" = "1" ]; then
-    echo "[ar-smoke] FAIL: expected text missing: $txt"
-    snap fail
-    exit 1
+    dump_ui || true
+    grep -o 'text="[^"]*"' ui.xml 2>/dev/null | head -25
+    adb shell "dumpsys activity activities 2>/dev/null | grep -E 'mResumedActivity|topResumedActivity'" | head -3
+    die "expected text missing: $txt"
   fi
   log "soft-miss text: $txt"
 }
@@ -122,7 +135,7 @@ gen_wait() {
     sleep 4
     tap_id tabList 0 > /dev/null 2>&1
   done
-  return 1
+  die "pattern not generated"
 }
 
 back() { adb shell input keyevent 4; sleep 1.5; }
@@ -202,8 +215,11 @@ for IMG in "${IMAGES[@]}"; do
   # 效果页 -> AR chip -> AR 页出现(硬断言:摆正 chip;提示文案软检查)
   tap_id tabEffect 0
   sleep 1
+  adb shell dumpsys package $PKG 2>/dev/null | grep 'permission.CAMERA' | grep -q 'granted=true' \
+    || log "soft-warn: CAMERA not granted in dumpsys"
   tap_id chipAr
-  sleep 3.5
+  sleep 2.5
+  log "resumed: $(adb shell 'dumpsys activity activities 2>/dev/null | grep -E "mResumedActivity" | head -1')"
   check_text "Re-center"
   dump_ui
   grep -qi "text=\"[^\"]*Look around[^\"]*\"" ui.xml \

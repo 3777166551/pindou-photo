@@ -11,9 +11,18 @@ import com.pindou.app.bead.ColorMath;
 public final class EffectRenderer {
 
     public static Bitmap render(BeadPattern p) {
+        return render(p, 3600);
+    }
+
+    /**
+     * maxDim 限制成品位图最长边(约),控制内存:
+     * 导出用默认 3600;AR 叠层贴图用 1024(58×58 按 3600 渲染要
+     * 3720² ARGB ≈ 55MB 连续分配,低堆设备上会直接 OOM)。
+     */
+    public static Bitmap render(BeadPattern p, int maxDim) {
         int cols = p.cols;
         int rows = p.rows;
-        int cell = (int) Math.max(8, Math.min(64, 3600.0 / Math.max(cols, rows)));
+        int cell = (int) Math.max(8, Math.min(64, (double) maxDim / Math.max(cols, rows)));
         int m = cell;
         int w = cols * cell + 2 * m;
         int h = rows * cell + 2 * m;

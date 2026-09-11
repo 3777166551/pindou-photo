@@ -1674,7 +1674,9 @@ public class EditorActivity extends Activity {
             return;
         }
         try {
-            Bitmap bmp = EffectRenderer.render(pattern);
+            // 叠层贴图 1024 宽足够;3600 全尺寸渲染在大图纸上是几十 MB
+            // 的连续分配,会 OOM 崩进程
+            Bitmap bmp = EffectRenderer.render(pattern, 1024);
             File f = new File(getCacheDir(), "ar_effect.png");
             java.io.FileOutputStream fo = new java.io.FileOutputStream(f);
             bmp.compress(Bitmap.CompressFormat.PNG, 90, fo);
@@ -1687,7 +1689,7 @@ public class EditorActivity extends Activity {
             it.putExtra("wm", pattern.cols * mm / 1000f);
             it.putExtra("hm", pattern.rows * mm / 1000f);
             startActivity(it);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Toast.makeText(this,
                     getString(R.string.ar_load_failed), Toast.LENGTH_SHORT).show();
         }

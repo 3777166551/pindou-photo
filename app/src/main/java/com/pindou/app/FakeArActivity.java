@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
@@ -207,7 +206,7 @@ public class FakeArActivity extends Activity {
                                         fail(getString(R.string.ar_no_camera));
                                     }
                                 }, camHandler);
-                    } catch (CameraAccessException e) {
+                    } catch (Exception e) {
                         fail(getString(R.string.ar_no_camera));
                     }
                 }
@@ -229,23 +228,29 @@ public class FakeArActivity extends Activity {
                     fail(getString(R.string.ar_no_camera));
                 }
             }, camHandler);
-        } catch (SecurityException | CameraAccessException e) {
+        } catch (Exception e) {
+            // 相机框架在某些设备/模拟器上会抛 RuntimeException 系:
+            // AR 页优雅退出回编辑器,绝不能带崩整个进程
             fail(getString(R.string.ar_no_camera));
         }
     }
 
-    /** 优先后置;没有明确标注的(部分模拟器)就取第一个 */
-    private String pickBackCamera(CameraManager cm) throws CameraAccessException {
+    /** 优先后置;没有明确标注的(部分模拟器)就取第一个;枚举失败按无相机处理 */
+    private String pickBackCamera(CameraManager cm) {
         String first = null;
-        for (String id : cm.getCameraIdList()) {
-            Integer facing = cm.getCameraCharacteristics(id)
-                    .get(CameraCharacteristics.LENS_FACING);
-            if (facing != null && facing == CameraCharacteristics.LENS_FACING_BACK) {
-                return id;
+        try {
+            for (String id : cm.getCameraIdList()) {
+                Integer facing = cm.getCameraCharacteristics(id)
+                        .get(CameraCharacteristics.LENS_FACING);
+                if (facing != null && facing == CameraCharacteristics.LENS_FACING_BACK) {
+                    return id;
+                }
+                if (first == null) {
+                    first = id;
+                }
             }
-            if (first == null) {
-                first = id;
-            }
+        } catch (Exception e) {
+            return null;
         }
         return first;
     }
