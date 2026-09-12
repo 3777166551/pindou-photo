@@ -221,22 +221,30 @@ toggle_assist_on() {
   assist_scroll_top
   n=0
   while [ $n -lt 6 ]; do
-    if assist_on; then
-      log "assist on (round $n)"
-      return 0
+    if ! assist_on; then
+      if _tap_match "resource-id=\"$PKG:id/swBeadAssist\"" 0; then
+        sleep 2
+      else
+        adb shell input swipe 540 1700 540 900 300
+        sleep 0.8
+        n=$((n + 1))
+        continue
+      fi
     fi
-    if _tap_match "resource-id=\"$PKG:id/swBeadAssist\"" 0; then
-      sleep 2
-      if assist_on; then
-        log "assist toggled on (round $n)"
+    # 开关已确认 ON。"Find undone" 等按钮在开关下方的面板里,不滚进屏幕
+    # 就不会出现在 uiautomator dump 里(屏外节点被丢弃)——逐屏滚动到可见
+    s=0
+    while [ $s -lt 3 ]; do
+      dump_ui
+      if grep -qi "text=\"[^\"]*Find undone[^\"]*\"" ui.xml; then
+        log "assist on, panel visible (switch round $n, scroll $s)"
         return 0
       fi
-      log "assist tap round $n did not stick, retry"
-    else
       adb shell input swipe 540 1700 540 900 300
-      sleep 0.8
-    fi
-    n=$((n + 1))
+      sleep 1
+      s=$((s + 1))
+    done
+    die "assist on but panel buttons never became visible"
   done
   die "could not turn bead-assist on"
 }
