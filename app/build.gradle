@@ -10,8 +10,8 @@ android {
         applicationId "com.pindou.app"
         minSdk 24
         targetSdk 34
-        versionCode 60
-        versionName "2.49-beta"
+        versionCode 1
+        versionName "1.0"
         // 仅 64 位:ONNX 原生库只打包 arm64-v8a,与商店"仅支持 64 位设备"
         // 的声明一致(32 位设备被商店过滤;本地 bat 构建本就只带 arm64 so)
         ndk {

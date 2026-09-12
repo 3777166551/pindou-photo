@@ -57,7 +57,7 @@
     <string name="tool_projects_desc">Saved progress &amp; inventory</string>
     <string name="main_footer">· Bead your happiness ·</string>
     <string name="pick_photo">Choose a photo</string>
-    <string name="pick_pattern_photo">Choose a chart photo</string>
+    <string name="pick_pattern_photo">Choose a chart photo or PDF</string>
     <string name="pick_wm_photo">Pick an image with a watermark</string>
     <string name="err_no_gallery">No gallery app available</string>
     <string name="err_no_camera">No camera app available</string>
@@ -450,6 +450,40 @@
     <string name="fmt_cell_symbol">Symbol: %s</string>
     <string name="fmt_cell_rgb">RGB: #%06X</string>
     <string name="fmt_cell_count">Usage: %1$,d beads / %2$.1f%%</string>
+
+    <!-- Layered compose (v2.50): stack 2-4 saved projects into a 3D piece -->
+    <string name="btn_layered">🧊 Layered 3D (stack projects)</string>
+    <string name="layered_title">Layered 3D compose</string>
+    <string name="layered_tip">Pick 2-4 saved projects, stack them bottom-up into a 3D piece; drag each layer to fine-tune, adjust lift, export a preview or view the merged bead list. Per-layer charts are each project\'s own chart.</string>
+    <string name="layered_need_projects">Layered compose needs at least 2 saved projects — save a few in the editor first</string>
+    <string name="layered_pick_2_4">Pick 2-4 projects</string>
+    <string name="layered_start">Compose</string>
+    <string name="layered_load_failed">Failed to load project: </string>
+    <string name="layered_load_failed2">Fewer than 2 usable projects</string>
+    <string name="fmt_layered_layer">Layer %1$d/%2$d · %3$s (drag to move, slider for lift)</string>
+    <string name="layered_bom">Merged bead list</string>
+    <string name="layered_export">Export preview</string>
+    <string name="fmt_layered_bom_head">%1$d layers · %2$,d beads total</string>
+    <string name="fmt_layered_bom_row">%1$s × %2$,d</string>
+    <string name="file_layered_prefix">Layered3D_</string>
+
+    <!-- Projection align (v2.50): pin the chart onto a real board with 4 calibration points -->
+    <string name="assist_project_btn">Project</string>
+    <string name="align_whole">Ghost chart</string>
+    <string name="align_single">This color</string>
+    <string name="align_opacity">Opacity</string>
+    <string name="align_reset">Reset</string>
+    <string name="align_hint">Drag the 4 dots onto your real board corners; ◀ ▶ change color, ghost chart available</string>
+    <string name="fmt_align_color">%1$d/%2$d · %3$s</string>
+
+    <!-- Cross-stitch export (v2.50): bead palette mapped to nearest DMC floss via CIEDE2000 -->
+    <string name="menu_cross">🧵 Cross-stitch chart (DMC)</string>
+    <string name="file_cross_prefix">CrossStitch_</string>
+    <string name="cross_title">Cross Stitch Chart</string>
+    <string name="fmt_cross_info">%1$d×%2$d stitches · %3$,d stitches · %4$d colors · 14ct ≈ %5$.1f×%6$.1f cm</string>
+    <string name="cross_legend">DMC floss list</string>
+    <string name="cross_stitches"> pcs</string>
+    <string name="cross_footer">Exported by PindouPhoto · nearest-color mapping, check the official DMC card before buying</string>
 
     <!-- AR try-on (fake AR: camera viewfinder + gyroscope, view only) -->
     <string name="chip_ar">AR preview</string>

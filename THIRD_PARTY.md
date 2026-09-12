@@ -66,6 +66,18 @@
 - **Pattern Keeper / MakeBead 等同类工具** —— 逐色进度标记、油漆桶填充、
   全局替换色等功能的交互设计参考,均未使用其任何代码或素材。
 
+## 十字绣 DMC 绣线色号表(v2.50 起)
+
+| 数据 | 许可证 | 来源 |
+|---|---|---|
+| DMC 绣线色号表(454 色:色号/名称/RGB 近似值,`DmcTable.java`) | MIT License (c) 2026 Skytuhua | https://github.com/Skytuhua/stitch-forge (`assets/dmc-source.json`) |
+
+- 十字绣导出把拼豆颜色按 CIEDE2000 就近映射到 DMC 色号;色号与名称为
+  事实数据,RGB 为社区测色近似值,实物请以 DMC 官方色卡为准(导出图上
+  亦有同款提示)。按 MIT 要求在此保留许可声明;生成脚本
+  `tools/gen_dmc_table.py` 拥有生成文件的全部内容。
+- DMC、Anchor 等品牌名称归各自品牌方所有,仅作兼容性引用。
+
 ## CI 测试图片(不随 APP 分发)
 
 `qa/ar_data/` 下的 AR 试摆专项冒烟输入照片来自 Wikimedia Commons,仅用于

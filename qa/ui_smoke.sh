@@ -221,30 +221,22 @@ toggle_assist_on() {
   assist_scroll_top
   n=0
   while [ $n -lt 6 ]; do
-    if ! assist_on; then
-      if _tap_match "resource-id=\"$PKG:id/swBeadAssist\"" 0; then
-        sleep 2
-      else
-        adb shell input swipe 540 1700 540 900 300
-        sleep 0.8
-        n=$((n + 1))
-        continue
-      fi
+    if assist_on; then
+      log "assist on (round $n)"
+      return 0
     fi
-    # 开关已确认 ON。"Find undone" 等按钮在开关下方的面板里,不滚进屏幕
-    # 就不会出现在 uiautomator dump 里(屏外节点被丢弃)——逐屏滚动到可见
-    s=0
-    while [ $s -lt 3 ]; do
-      dump_ui
-      if grep -qi "text=\"[^\"]*Find undone[^\"]*\"" ui.xml; then
-        log "assist on, panel visible (switch round $n, scroll $s)"
+    if _tap_match "resource-id=\"$PKG:id/swBeadAssist\"" 0; then
+      sleep 2
+      if assist_on; then
+        log "assist toggled on (round $n)"
         return 0
       fi
+      log "assist tap round $n did not stick, retry"
+    else
       adb shell input swipe 540 1700 540 900 300
-      sleep 1
-      s=$((s + 1))
-    done
-    die "assist on but panel buttons never became visible"
+      sleep 0.8
+    fi
+    n=$((n + 1))
   done
   die "could not turn bead-assist on"
 }
@@ -474,6 +466,14 @@ sleep 11
 snap photo_share_card
 back
 sleep 1.5
+
+# v2.50:十字绣图纸导出(拼豆色就近映射 DMC,存相册)
+tap_id btnMenu
+sleep 1.5
+tap_text "Cross-stitch" 0
+sleep 9
+snap photo_cross
+check_text "Saved to Pictures" 0
 
 # 11) 真图纸上的拼豆辅助:打卡日历
 adb shell input swipe 540 1700 540 500 300; sleep 0.8
@@ -861,6 +861,12 @@ ensure_home
 tap_id btnProjects 0
 sleep 1.5
 snap projects
+# v2.50 立体组合入口(soft):选层页能打开即算过;不足 2 个项目自动 toast 退出
+tap_text "Layered" 0
+sleep 2
+snap layered_entry
+back
+sleep 1
 back
 sleep 1
 ensure_home

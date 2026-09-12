@@ -57,7 +57,7 @@
     <string name="tool_projects_desc">存档随时接着拼,豆仓进度都在</string>
     <string name="main_footer">· 拼出你的快乐 ·</string>
     <string name="pick_photo">选择一张照片</string>
-    <string name="pick_pattern_photo">选择一张图纸照片</string>
+    <string name="pick_pattern_photo">选择图纸照片或 PDF 文件</string>
     <string name="pick_wm_photo">选一张带水印的图</string>
     <string name="err_no_gallery">没有可用的相册应用</string>
     <string name="err_no_camera">没有可用的相机应用</string>
@@ -450,6 +450,40 @@
     <string name="fmt_cell_symbol">符号:%s</string>
     <string name="fmt_cell_rgb">RGB:#%06X</string>
     <string name="fmt_cell_count">用量:%1$,d 颗 · %2$.1f%%</string>
+
+    <!-- 立体组合(v2.50):多存档堆叠成多层立体件 -->
+    <string name="btn_layered">🧊 立体组合(多层堆叠)</string>
+    <string name="layered_title">立体组合</string>
+    <string name="layered_tip">勾选 2~4 个项目存档,自下而上堆成立体件;每层可拖动微调位置和层高,导出预览图或查看合并豆单。逐层图纸 = 各项目自己的图纸。</string>
+    <string name="layered_need_projects">立体组合需要至少 2 个项目存档,先去编辑器里保存几个吧</string>
+    <string name="layered_pick_2_4">请勾选 2~4 个项目</string>
+    <string name="layered_start">开始合成</string>
+    <string name="layered_load_failed">项目加载失败:</string>
+    <string name="layered_load_failed2">可用的项目不足 2 个</string>
+    <string name="fmt_layered_layer">第 %1$d/%2$d 层 · %3$s(拖动调位置,滑杆调层高)</string>
+    <string name="layered_bom">合并豆单</string>
+    <string name="layered_export">导出预览图</string>
+    <string name="fmt_layered_bom_head">%1$d 层 · 共 %2$,d 颗</string>
+    <string name="fmt_layered_bom_row">%1$s × %2$,d</string>
+    <string name="file_layered_prefix">立体组合_</string>
+
+    <!-- 对位投屏(v2.50):四点校准把图纸钉到真实拼豆板 -->
+    <string name="assist_project_btn">对位投屏</string>
+    <string name="align_whole">整图虚影</string>
+    <string name="align_single">当前色</string>
+    <string name="align_opacity">透明度</string>
+    <string name="align_reset">重置</string>
+    <string name="align_hint">拖动四个圆点对齐真实拼豆板;◀ ▶ 换色,可切整图虚影</string>
+    <string name="fmt_align_color">%1$d/%2$d · %3$s</string>
+
+    <!-- 十字绣导出(v2.50):拼豆图纸按 CIEDE2000 就近映射 DMC 绣线 -->
+    <string name="menu_cross">🧵 十字绣图纸(DMC)</string>
+    <string name="file_cross_prefix">十字绣图纸_</string>
+    <string name="cross_title">十字绣图纸 · Cross Stitch Chart</string>
+    <string name="fmt_cross_info">%1$d×%2$d 格 · %3$,d 针 · %4$d 色 · 14ct 成品约 %5$.1f×%6$.1f cm</string>
+    <string name="cross_legend">DMC 绣线清单</string>
+    <string name="cross_stitches"> 针</string>
+    <string name="cross_footer">照片变拼豆 PindouPhoto 导出 · 颜色为就近映射,实物以 DMC 官方色卡为准</string>
 
     <!-- AR 试摆(假 AR:相机取景 + 陀螺仪,无交互) -->
     <string name="chip_ar">AR 试摆</string>

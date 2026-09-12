@@ -53,6 +53,7 @@ import com.pindou.app.bead.PatternPatch;
 import com.pindou.app.bead.Symmetry;
 import com.pindou.app.bead.StyleTransfer;
 import com.pindou.app.export.EffectRenderer;
+import com.pindou.app.export.CrossStitchRenderer;
 import com.pindou.app.export.PatternSheetRenderer;
 import com.pindou.app.export.PdfExporter;
 import com.pindou.app.export.ShareCardRenderer;
@@ -125,6 +126,7 @@ public class EditorActivity extends Activity {
     private static final int EXP_SHARE = 3;
     private static final int EXP_PDF = 4;
     private static final int EXP_FILE = 6;
+    private static final int EXP_CROSS = 10;
 
     // 状态
     private Bitmap source;
@@ -277,6 +279,7 @@ public class EditorActivity extends Activity {
     private View chipAr;
     private View btnAssistLocate, btnAssistCalendar, btnBrushMirror;
     private View assistToolsRow;
+    private View btnAssistProject;
     private TextView btnAssistBoard, tvAssistBoard, btnAssistNextBoard, btnAssistRow;
     private View assistBoardRow;
     /** 拼豆辅助模式:0 逐色 / 1 按板 / 2 逐行 */
@@ -501,6 +504,7 @@ public class EditorActivity extends Activity {
         assistToolsRow = findViewById(R.id.assistToolsRow);
         btnAssistBoard = findViewById(R.id.btnAssistBoard);
         btnAssistRow = findViewById(R.id.btnAssistRow);
+        btnAssistProject = findViewById(R.id.btnAssistProject);
         assistBoardRow = findViewById(R.id.assistBoardRow);
         tvAssistBoard = findViewById(R.id.tvAssistBoard);
         btnAssistNextBoard = findViewById(R.id.btnAssistNextBoard);
@@ -722,6 +726,13 @@ public class EditorActivity extends Activity {
                 assistMode = assistMode == ASSIST_ROW ? ASSIST_COLOR : ASSIST_ROW;
                 assistRow = 0;
                 syncAssistBoardUi();
+            }
+        });
+        // 对位投屏:相机取景 + 四点校准,把当前色"钉"到真实拼豆板上
+        btnAssistProject.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                launchAlign();
             }
         });
         btnAssistNextBoard.setOnClickListener(new View.OnClickListener() {
@@ -1692,6 +1703,32 @@ public class EditorActivity extends Activity {
         } catch (Throwable e) {
             Toast.makeText(this,
                     getString(R.string.ar_load_failed), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /** 对位投屏:图纸落分享格式缓存文件,带上当前辅助色位置进对位页 */
+    private void launchAlign() {
+        if (pattern == null || pattern.usedColors.isEmpty()) {
+            Toast.makeText(this, getString(R.string.err_not_ready), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            JSONObject o = PatternShare.build(pattern, null);
+            File f = new File(getCacheDir(), "align_pattern.json");
+            Jsons.write(f, o);
+            int pos = 0;
+            for (int i = 0; i < pattern.usedColors.size(); i++) {
+                if (pattern.usedColors.get(i).index == assistFocus) {
+                    pos = i;
+                    break;
+                }
+            }
+            Intent it = new Intent(this, ProjectAlignActivity.class);
+            it.putExtra("path", f.getAbsolutePath());
+            it.putExtra("focusPos", pos);
+            startActivity(it);
+        } catch (Exception e) {
+            Toast.makeText(this, getString(R.string.ar_load_failed), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -3454,10 +3491,11 @@ public class EditorActivity extends Activity {
         menu.getMenu().add(0, EXP_CARD, 3, getString(R.string.menu_card));
         menu.getMenu().add(0, EXP_SHARE, 4, getString(R.string.menu_share));
         menu.getMenu().add(0, EXP_PDF, 5, getString(R.string.menu_pdf));
-        menu.getMenu().add(0, EXP_FILE, 6, getString(R.string.menu_file));
-        menu.getMenu().add(0, 7, 7, "📂 导入图纸文件(.json)");
-        menu.getMenu().add(1, 5, 8, getString(R.string.save_proj_title));
-        android.view.MenuItem night = menu.getMenu().add(0, 9, 9,
+        menu.getMenu().add(0, EXP_CROSS, 6, getString(R.string.menu_cross));
+        menu.getMenu().add(0, EXP_FILE, 7, getString(R.string.menu_file));
+        menu.getMenu().add(0, 11, 8, "📂 导入图纸文件(.json)");
+        menu.getMenu().add(1, 5, 9, getString(R.string.save_proj_title));
+        android.view.MenuItem night = menu.getMenu().add(0, 9, 10,
                 nightMode ? R.string.menu_night_off : R.string.menu_night_on);
         night.setChecked(nightMode);
         night.setCheckable(true);
@@ -3466,7 +3504,7 @@ public class EditorActivity extends Activity {
             public boolean onMenuItemClick(android.view.MenuItem item) {
                 if (item.getItemId() == 5) {
                     saveProjectDialog();
-                } else if (item.getItemId() == 7) {
+                } else if (item.getItemId() == 11) {
                     importFile();
                 } else if (item.getItemId() == 9) {
                     toggleNight();
@@ -3616,6 +3654,9 @@ public class EditorActivity extends Activity {
                     Bitmap bmp;
                     if (what == 2) {
                         bmp = EffectRenderer.render(pattern);
+                    } else if (what == EXP_CROSS) {
+                        bmp = CrossStitchRenderer.render(EditorActivity.this,
+                                pattern, currentPaletteName());
                     } else if (what == EXP_CARD) {
                         bmp = ShareCardRenderer.render(EditorActivity.this, pattern,
                                 currentPaletteName(), miniBead,
@@ -3627,6 +3668,7 @@ public class EditorActivity extends Activity {
                     String stamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA)
                             .format(new Date());
                     String name = (what == 2 ? getString(R.string.file_effect_prefix)
+                    : what == EXP_CROSS ? getString(R.string.file_cross_prefix)
                     : what == EXP_CARD ? getString(R.string.file_card_prefix)
                     : getString(R.string.file_pattern_prefix))
                             + pattern.cols + "x" + pattern.rows + "_" + stamp + ".png";

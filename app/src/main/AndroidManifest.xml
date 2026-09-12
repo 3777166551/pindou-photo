@@ -75,6 +75,16 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".ProjectAlignActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".LayeredComposeActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
         <!-- 极简文件提供器:用于拍照临时文件与分享图片 -->
         <provider
             android:name=".provider.AppFileProvider"

@@ -57,7 +57,7 @@
     <string name="tool_projects_desc">保存・在庫もそのまま</string>
     <string name="main_footer">· ビーズで楽しく ·</string>
     <string name="pick_photo">写真を選択</string>
-    <string name="pick_pattern_photo">図案の写真を選択</string>
+    <string name="pick_pattern_photo">図案の写真または PDF を選択</string>
     <string name="pick_wm_photo">ウォーターマーク付き画像を選択</string>
     <string name="err_no_gallery">ギャラリーアプリがありません</string>
     <string name="err_no_camera">カメラアプリがありません</string>
@@ -450,6 +450,40 @@
     <string name="fmt_cell_symbol">記号:%s</string>
     <string name="fmt_cell_rgb">RGB:#%06X</string>
     <string name="fmt_cell_count">使用:%1$,d 個 · %2$.1f%%</string>
+
+    <!-- 立体重ね合わせ(v2.50):2〜4 個の保存プロジェクトを積んで立体作品に -->
+    <string name="btn_layered">🧊 立体コンボ(重ね合わせ)</string>
+    <string name="layered_title">立体コンボ</string>
+    <string name="layered_tip">2〜4 個の保存プロジェクトを選んで下から順に積み上げます。各層はドラッグで位置、スライダーで高さを調整。プレビュー書き出しと合算ビーズリストに対応。各層の図案は各プロジェクトのものです。</string>
+    <string name="layered_need_projects">立体コンボには保存済みプロジェクトが 2 個以上必要です</string>
+    <string name="layered_pick_2_4">2〜4 個選んでください</string>
+    <string name="layered_start">合成開始</string>
+    <string name="layered_load_failed">読み込み失敗:</string>
+    <string name="layered_load_failed2">使えるプロジェクトが 2 個未満です</string>
+    <string name="fmt_layered_layer">第 %1$d/%2$d 層 · %3$s(ドラッグで移動、スライダーで高さ)</string>
+    <string name="layered_bom">合算ビーズリスト</string>
+    <string name="layered_export">プレビュー書き出し</string>
+    <string name="fmt_layered_bom_head">%1$d 層 · 合計 %2$,d 個</string>
+    <string name="fmt_layered_bom_row">%1$s × %2$,d</string>
+    <string name="file_layered_prefix">立体コンボ_</string>
+
+    <!-- 位置合わせ投影(v2.50):4点キャリブレーションで図案を実際の板に固定 -->
+    <string name="assist_project_btn">投影合わせ</string>
+    <string name="align_whole">全体表示</string>
+    <string name="align_single">現在の色</string>
+    <string name="align_opacity">不透明度</string>
+    <string name="align_reset">リセット</string>
+    <string name="align_hint">4つの点を実際の板の角に合わせる;◀ ▶ で色切替</string>
+    <string name="fmt_align_color">%1$d/%2$d · %3$s</string>
+
+    <!-- 十字繍いエクスポート(v2.50):CIEDE2000 で DMC 刺繍糸に最近傍マッピング -->
+    <string name="menu_cross">🧵 十字繍い図案(DMC)</string>
+    <string name="file_cross_prefix">十字繍い図案_</string>
+    <string name="cross_title">十字繍い図案 · Cross Stitch Chart</string>
+    <string name="fmt_cross_info">%1$d×%2$d マス · %3$,d針 · %4$d色 · 14ct 約 %5$.1f×%6$.1f cm</string>
+    <string name="cross_legend">DMC 糸リスト</string>
+    <string name="cross_stitches"> 針</string>
+    <string name="cross_footer">PindouPhoto で書き出し · 近似マッピングのため DMC 公式色見本で確認してください</string>
 
     <!-- AR体感プレビュー(疑似AR:カメラプレビュー + ジャイロ、閲覧専用) -->
     <string name="chip_ar">ARプレビュー</string>

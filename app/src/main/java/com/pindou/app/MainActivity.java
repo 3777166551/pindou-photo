@@ -462,6 +462,25 @@ public class MainActivity extends Activity {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
 
+        // 立体组合:选 2~4 个存档堆成多层立体件(v2.50)
+        TextView layerBtn = new TextView(this);
+        layerBtn.setText(getString(R.string.btn_layered));
+        layerBtn.setTextColor(0xFF1E6BB8);
+        layerBtn.setTextSize(13);
+        int lpad = pad;
+        layerBtn.setPadding(lpad, lpad / 2, lpad, lpad);
+        layerBtn.setBackgroundResource(android.R.drawable.list_selector_background);
+        layerBtn.setClickable(true);
+        layerBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, LayeredComposeActivity.class));
+            }
+        });
+        box.addView(layerBtn, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
+
         SimpleDateFormat fmt = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.CHINA);
         for (final ProjectStore.Entry e : items) {
             LinearLayout row = new LinearLayout(this);
@@ -760,11 +779,13 @@ public class MainActivity extends Activity {
         }
     }
 
-    /** 识别现成图纸:先选一张图纸照片 */
+    /** 识别现成图纸:选一张图纸照片或 PDF 图纸文件(PDF 取第一页) */
     private void pickForScan() {
         Intent i = new Intent(Intent.ACTION_GET_CONTENT);
         i.addCategory(Intent.CATEGORY_OPENABLE);
-        i.setType("image/*");
+        i.setType("*/*");
+        i.putExtra(Intent.EXTRA_MIME_TYPES,
+                new String[]{"image/*", "application/pdf"});
         try {
             startActivityForResult(Intent.createChooser(i, getString(R.string.pick_pattern_photo)), REQ_SCAN_PATTERN);
         } catch (ActivityNotFoundException e) {
@@ -837,6 +858,43 @@ public class MainActivity extends Activity {
         overridePendingTransition(R.anim.enter_up, R.anim.exit_dim);
     }
 
+    /**
+     * PDF 图纸导入:系统 PdfRenderer(离线、零权限)把第一页渲成位图,
+     * 之后走与照片识别完全相同的框选 → 网格检测管线。
+     */
+    private android.graphics.Bitmap renderPdfPage(Uri uri, int maxDim) throws Exception {
+        android.os.ParcelFileDescriptor pfd =
+                getContentResolver().openFileDescriptor(uri, "r");
+        if (pfd == null) throw new Exception("cannot open pdf");
+        android.graphics.Bitmap out = null;
+        try {
+            android.graphics.pdf.PdfRenderer renderer =
+                    new android.graphics.pdf.PdfRenderer(pfd);
+            try {
+                android.graphics.pdf.PdfRenderer.Page page = renderer.openPage(0);
+                try {
+                    int w = page.getWidth();
+                    int h = page.getHeight();
+                    if (w <= 0 || h <= 0) throw new Exception("empty pdf page");
+                    int scale = 1;
+                    while (Math.max(w, h) * scale * 2 <= maxDim) scale *= 2;
+                    out = android.graphics.Bitmap.createBitmap(
+                            w * scale, h * scale, android.graphics.Bitmap.Config.ARGB_8888);
+                    out.eraseColor(android.graphics.Color.WHITE);
+                    page.render(out, null, null,
+                            android.graphics.pdf.PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+                } finally {
+                    page.close();
+                }
+            } finally {
+                renderer.close();
+            }
+        } finally {
+            pfd.close();
+        }
+        return out;
+    }
+
     // ---------------- 识别现成图纸 ----------------
 
     /**
@@ -847,18 +905,26 @@ public class MainActivity extends Activity {
         // 解码并限制到工作分辨率(检测/采样在缩图上做,足够精确且快)
         android.graphics.Bitmap bmp;
         try {
-            android.graphics.BitmapFactory.Options o = new android.graphics.BitmapFactory.Options();
-            o.inJustDecodeBounds = true;
-            java.io.InputStream in = getContentResolver().openInputStream(uri);
-            android.graphics.BitmapFactory.decodeStream(in, null, o);
-            if (in != null) in.close();
-            int sample = 1;
-            while (Math.max(o.outWidth, o.outHeight) / sample > 900) sample *= 2;
-            android.graphics.BitmapFactory.Options o2 = new android.graphics.BitmapFactory.Options();
-            o2.inSampleSize = sample;
-            java.io.InputStream in2 = getContentResolver().openInputStream(uri);
-            bmp = android.graphics.BitmapFactory.decodeStream(in2, null, o2);
-            if (in2 != null) in2.close();
+            String mime = getContentResolver().getType(uri);
+            String last = uri.getLastPathSegment() == null
+                    ? "" : uri.getLastPathSegment().toLowerCase(Locale.CHINA);
+            boolean pdf = "application/pdf".equals(mime) || last.endsWith(".pdf");
+            if (pdf) {
+                bmp = renderPdfPage(uri, 1600);
+            } else {
+                android.graphics.BitmapFactory.Options o = new android.graphics.BitmapFactory.Options();
+                o.inJustDecodeBounds = true;
+                java.io.InputStream in = getContentResolver().openInputStream(uri);
+                android.graphics.BitmapFactory.decodeStream(in, null, o);
+                if (in != null) in.close();
+                int sample = 1;
+                while (Math.max(o.outWidth, o.outHeight) / sample > 900) sample *= 2;
+                android.graphics.BitmapFactory.Options o2 = new android.graphics.BitmapFactory.Options();
+                o2.inSampleSize = sample;
+                java.io.InputStream in2 = getContentResolver().openInputStream(uri);
+                bmp = android.graphics.BitmapFactory.decodeStream(in2, null, o2);
+                if (in2 != null) in2.close();
+            }
         } catch (Exception e) {
             Toast.makeText(this, getString(R.string.err_image), Toast.LENGTH_SHORT).show();
             return;
