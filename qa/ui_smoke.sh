@@ -404,19 +404,25 @@ sleep 8
 
 # 7) 圆形板 → 效果图/图纸按圆渲染。
 #    形状/豆子规格在「高级设置」折叠区(默认收起),先点开再找;
-#    上滚手势起点必须在设置区内(y>=1200),起点在 y=600 会被
-#    PatternView 吃掉变成平移图纸(2026-09-09 第五轮教训)
-tap_id btnAdvHeader 0
-tap_id btnImgHeader 0
-sleep 1
-adb shell input swipe 540 1600 540 2250 300; sleep 0.6
-adb shell input swipe 540 1600 540 2250 300; sleep 0.6
-adb shell input swipe 540 1600 540 2250 300; sleep 0.8
+#    折叠头是开关:区段已展开时再点会折回去——一律先看门控子控件
+#    在不在视野,不在才点头按钮(v2.50 第七轮:btnCrop 因 Image 区被
+#    盲点折回而连锁脱同步)
+ensure_section() { # $1 = 门控子控件 id, $2 = 折叠头 id
+  dump_ui
+  if ! grep -q "resource-id=\"$PKG:id/$1\"" ui.xml; then
+    tap_id "$2" 0
+    sleep 0.8
+  fi
+}
+ensure_section chipShapeRound btnAdvHeader
 tap_id chipShapeRound 0
 sleep 5
 snap photo_round
 tap_id chipShapeRect 0
 sleep 4
+ensure_section btnCrop btnImgHeader
+tap_id btnCrop 0
+sleep 2.5
 
 # 8) 真照片裁剪:拖角缩小选区 → 拖中间移动 → OK 应用(重新生成)
 tap_id btnCrop 0
