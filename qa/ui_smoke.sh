@@ -390,14 +390,17 @@ sleep 1.2
 snap photo_brand_nabbi
 sleep 6
 
-# 6) 抽象风格 + 砖块纹理 → 回写实
+# 6) 抽象风格 + 砖块纹理 → 回写实。
+#    风格切换触发整图重生成(loading 蒙层挡住全屏,uiautomator 找不到任何
+#    控件)——每步后等重生成完成再找下一个控件,否则连锁 soft-miss
+#    (v2.50 第六轮:chipStyleAbs 后蒙层未落,后面 7 个控件全部脱同步)
 tap_id chipStyleAbs 0
-sleep 1.5
+sleep 8
 tap_id chipBrickMid 0
-sleep 6
+sleep 8
 snap photo_abstract
 tap_id chipStyleReal 0
-sleep 6
+sleep 8
 
 # 7) 圆形板 → 效果图/图纸按圆渲染。
 #    形状/豆子规格在「高级设置」折叠区(默认收起),先点开再找;
