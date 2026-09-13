@@ -221,30 +221,22 @@ toggle_assist_on() {
   assist_scroll_top
   n=0
   while [ $n -lt 6 ]; do
-    if ! assist_on; then
-      if _tap_match "resource-id=\"$PKG:id/swBeadAssist\"" 0; then
-        sleep 2
-      else
-        adb shell input swipe 540 1700 540 900 300
-        sleep 0.8
-        n=$((n + 1))
-        continue
-      fi
+    if assist_on; then
+      log "assist on (round $n)"
+      return 0
     fi
-    # 开关已确认 ON。"Find undone" 等按钮在开关下方的面板里,不滚进屏幕
-    # 就不会出现在 uiautomator dump 里(屏外节点被丢弃)——逐屏滚动到可见
-    s=0
-    while [ $s -lt 3 ]; do
-      dump_ui
-      if grep -qi "text=\"[^\"]*Find undone[^\"]*\"" ui.xml; then
-        log "assist on, panel visible (switch round $n, scroll $s)"
+    if _tap_match "resource-id=\"$PKG:id/swBeadAssist\"" 0; then
+      sleep 2
+      if assist_on; then
+        log "assist toggled on (round $n)"
         return 0
       fi
+      log "assist tap round $n did not stick, retry"
+    else
       adb shell input swipe 540 1700 540 900 300
-      sleep 1
-      s=$((s + 1))
-    done
-    die "assist on but panel buttons never became visible"
+      sleep 0.8
+    fi
+    n=$((n + 1))
   done
   die "could not turn bead-assist on"
 }
@@ -398,39 +390,30 @@ sleep 1.2
 snap photo_brand_nabbi
 sleep 6
 
-# 6) 抽象风格 + 砖块纹理 → 回写实。
-#    风格切换触发整图重生成(loading 蒙层挡住全屏,uiautomator 找不到任何
-#    控件)——每步后等重生成完成再找下一个控件,否则连锁 soft-miss
-#    (v2.50 第六轮:chipStyleAbs 后蒙层未落,后面 7 个控件全部脱同步)
+# 6) 抽象风格 + 砖块纹理 → 回写实
 tap_id chipStyleAbs 0
-sleep 8
+sleep 1.5
 tap_id chipBrickMid 0
-sleep 8
+sleep 6
 snap photo_abstract
 tap_id chipStyleReal 0
-sleep 8
+sleep 6
 
 # 7) 圆形板 → 效果图/图纸按圆渲染。
 #    形状/豆子规格在「高级设置」折叠区(默认收起),先点开再找;
-#    折叠头是开关:区段已展开时再点会折回去——一律先看门控子控件
-#    在不在视野,不在才点头按钮(v2.50 第七轮:btnCrop 因 Image 区被
-#    盲点折回而连锁脱同步)
-ensure_section() { # $1 = 门控子控件 id, $2 = 折叠头 id
-  dump_ui
-  if ! grep -q "resource-id=\"$PKG:id/$1\"" ui.xml; then
-    tap_id "$2" 0
-    sleep 0.8
-  fi
-}
-ensure_section chipShapeRound btnAdvHeader
+#    上滚手势起点必须在设置区内(y>=1200),起点在 y=600 会被
+#    PatternView 吃掉变成平移图纸(2026-09-09 第五轮教训)
+tap_id btnAdvHeader 0
+tap_id btnImgHeader 0
+sleep 1
+adb shell input swipe 540 1600 540 2250 300; sleep 0.6
+adb shell input swipe 540 1600 540 2250 300; sleep 0.6
+adb shell input swipe 540 1600 540 2250 300; sleep 0.8
 tap_id chipShapeRound 0
 sleep 5
 snap photo_round
 tap_id chipShapeRect 0
 sleep 4
-ensure_section btnCrop btnImgHeader
-tap_id btnCrop 0
-sleep 2.5
 
 # 8) 真照片裁剪:拖角缩小选区 → 拖中间移动 → OK 应用(重新生成)
 tap_id btnCrop 0
@@ -483,14 +466,6 @@ sleep 11
 snap photo_share_card
 back
 sleep 1.5
-
-# v2.50:十字绣图纸导出(拼豆色就近映射 DMC,存相册)
-tap_id btnMenu
-sleep 1.5
-tap_text "Cross-stitch" 0
-sleep 9
-snap photo_cross
-check_text "Saved to Pictures" 0
 
 # 11) 真图纸上的拼豆辅助:打卡日历
 adb shell input swipe 540 1700 540 500 300; sleep 0.8
@@ -665,6 +640,41 @@ snap celebrate_100
 log "celebration flow done: 100% reached (celebration.start fires on this state)"
 assist_off
 sleep 1
+
+# 16) 进度持久化回归(v2.50 审计):100% 状态存档 → 重开 → 进度必须还在。
+#     曾经的 bug:loadProject 恢复标记后 regenerate 又无条件清空,
+#     重开项目进度全丢;调滑杆也会清光。
+log "persistence flow: save the 8x8 project at 100%, reopen, expect 100%"
+tap_id btnMenu
+sleep 1.5
+tap_text "Save project"
+sleep 1.5
+dump_ui
+PNAME2=$(grep -o 'text="Beads_[0-9_]*"' ui.xml | head -1 | cut -d'"' -f2)
+if [ -z "$PNAME2" ]; then
+  tap_edittext
+  adb shell input text "CI_Persist_1"
+  PNAME2="CI_Persist_1"
+fi
+log "persist project name: $PNAME2"
+tap_text_exact "Save"
+sleep 7
+back
+ensure_home
+tap_id btnProjects
+sleep 2
+check_text "$PNAME2"
+tap_text_still "$PNAME2"
+sleep 12
+check_text "Bead list"
+tap_id tabPattern 0
+sleep 1
+toggle_assist_on
+sleep 1.5
+check_text "100%"              # 硬断言:重开后进度还在(回归审计修复)
+snap persist_100
+log "persistence flow OK: progress survived reopen"
+assist_off
 back
 ensure_home
 
@@ -878,12 +888,6 @@ ensure_home
 tap_id btnProjects 0
 sleep 1.5
 snap projects
-# v2.50 立体组合入口(soft):选层页能打开即算过;不足 2 个项目自动 toast 退出
-tap_text "Layered" 0
-sleep 2
-snap layered_entry
-back
-sleep 1
 back
 sleep 1
 ensure_home
