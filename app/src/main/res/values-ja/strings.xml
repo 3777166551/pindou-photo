@@ -458,6 +458,7 @@
     <string name="layered_need_projects">立体コンボには保存済みプロジェクトが 2 個以上必要です</string>
     <string name="layered_pick_2_4">2〜4 個選んでください</string>
     <string name="layered_start">合成開始</string>
+    <string name="layered_working">合成中…</string>
     <string name="layered_load_failed">読み込み失敗:</string>
     <string name="layered_load_failed2">使えるプロジェクトが 2 個未満です</string>
     <string name="fmt_layered_layer">第 %1$d/%2$d 層 · %3$s(ドラッグで移動、スライダーで高さ)</string>

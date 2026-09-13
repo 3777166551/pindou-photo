@@ -386,7 +386,20 @@ public class PatternView extends View {
                 return true;
             }
             case MotionEvent.ACTION_MOVE: {
-                if (!dragging || event.getPointerCount() != 1) return dragging;
+                if (!dragging || event.getPointerCount() != 1) {
+                    // 第二根手指落下:中断标记(取消待定单击),放行给缩放手势
+                    // ——与画笔模式同款约定,否则辅助模式下双指缩放永远失效
+                    if (dragging && event.getPointerCount() > 1) {
+                        dragging = false;
+                        dragMarking = false;
+                        if (pendingTap != null) {
+                            removeCallbacks(pendingTap);
+                            pendingTap = null;
+                        }
+                        return false;
+                    }
+                    return dragging;
+                }
                 if (!dragMarking) {
                     if (!isBeyondSlop(event)) return true;
                     dragMarking = true;

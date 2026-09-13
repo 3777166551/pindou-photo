@@ -2152,13 +2152,25 @@ public class EditorActivity extends Activity {
                         rawPattern = np;
                         pattern = PatternPatch.apply(np, editMap);
                         patternView.setPattern(pattern);
-                        // 重新生成后格子变了,完成度标记失效,清空重来。
-                        // 必须在豆单刷新之前清:countDonePerColor 会拿
-                        // beadDone 里的旧索引访问新 pattern,后清必越界崩溃
-                        // (monkey fuzz 抓出的 ArrayIndexOutOfBounds)
+                        // 网格尺寸没变(仅调色/风格/品牌/规格等)时保留拼豆进度:
+                        // 滑杆微调或重开项目都走 regenerate,无条件清空会把用户
+                        // 标了几十格的进度抹掉(v2.50 审计修复;尺寸变了才清)。
+                        // 清空必须发生在豆单刷新之前:countDonePerColor 拿旧
+                        // 索引访问新 pattern 会越界(monkey fuzz 抓出的崩溃)
                         beadDone.clear();
+                        if (savedCols == pattern.cols && savedRows == pattern.rows) {
+                            for (int k : savedDone) {
+                                int x = k % pattern.cols;
+                                int y = k / pattern.cols;
+                                if (pattern.outsideShape(x, y)) continue;
+                                if (pattern.cellAt(x, y) < 0) continue;
+                                beadDone.add(k);
+                            }
+                        }
+                        if (beadDone.isEmpty()) {
+                            beadDoneToday = 0;
+                        }
                         rollBeadDay();
-                        beadDoneToday = 0;
                         adapter.notifyDataSetChanged();
                         updateSummary();
                         updateEditsButton();
@@ -2166,6 +2178,8 @@ public class EditorActivity extends Activity {
                         if (beadAssist) {
                             assistFocus = pattern.usedColors.isEmpty()
                                     ? -1 : pattern.usedColors.get(0).index;
+                            assistBoard = Math.min(assistBoard,
+                                    Math.max(0, pattern.boardsNeeded() - 1));
                             updateAssistUi();
                             applyAssistToView();
                         }

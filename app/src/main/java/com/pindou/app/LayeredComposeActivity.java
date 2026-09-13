@@ -53,6 +53,7 @@ public class LayeredComposeActivity extends Activity {
 
     private final List<Layer> layers = new ArrayList<>();
     private LinearLayout pickBox;
+    private TextView goBtn;
     private LinearLayout editBar;
     private LayerView layerView;
     private TextView layerInfo;
@@ -129,6 +130,7 @@ public class LayeredComposeActivity extends Activity {
         }
 
         TextView go = new TextView(this);
+        goBtn = go;
         go.setText(getString(R.string.layered_start));
         go.setTextColor(0xFFFFFFFF);
         go.setTextSize(16);
@@ -166,29 +168,61 @@ public class LayeredComposeActivity extends Activity {
                     Toast.LENGTH_SHORT).show();
             return;
         }
-        for (ProjectStore.Entry e : picked) {
-            try {
-                JSONObject o = Jsons.read(e.file);
-                BeadPattern p = PatternShare.fromProject(o);
-                if (p == null || p.cols == 0) continue;
-                Layer l = new Layer();
-                l.name = e.name;
-                l.pattern = p;
-                l.effect = EffectRenderer.render(p, 1024);
-                layers.add(l);
-            } catch (Exception ex) {
-                Toast.makeText(this, getString(R.string.layered_load_failed)
-                        + " " + e.name, Toast.LENGTH_SHORT).show();
+        // 生成在后台线程跑(每个项目都要解码照片+重新生成图纸,
+        // 58×58 连跑 4 个在 UI 线程会卡死数秒)
+        final List<ProjectStore.Entry> toLoad = picked;
+        if (goBtn != null) {
+            goBtn.setText(getString(R.string.layered_working));
+            goBtn.setClickable(false);
+            goBtn.setEnabled(false);
+        }
+        final java.util.concurrent.ExecutorService exec =
+                java.util.concurrent.Executors.newSingleThreadExecutor();
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                final List<Layer> loaded = new ArrayList<>();
+                String failedName = null;
+                for (ProjectStore.Entry e : toLoad) {
+                    try {
+                        JSONObject o = Jsons.read(e.file);
+                        BeadPattern p = PatternShare.fromProject(o);
+                        if (p == null || p.cols == 0) {
+                            if (failedName == null) failedName = e.name;
+                            continue;
+                        }
+                        Layer l = new Layer();
+                        l.name = e.name;
+                        l.pattern = p;
+                        l.effect = EffectRenderer.render(p, 1024);
+                        loaded.add(l);
+                    } catch (Exception ex) {
+                        if (failedName == null) failedName = e.name;
+                    }
+                }
+                final String bad = failedName;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        layers.addAll(loaded);
+                        if (layers.size() < 2) {
+                            Toast.makeText(LayeredComposeActivity.this,
+                                    getString(R.string.layered_load_failed2),
+                                    Toast.LENGTH_LONG).show();
+                            finish();
+                            return;
+                        }
+                        if (bad != null) {
+                            Toast.makeText(LayeredComposeActivity.this,
+                                    getString(R.string.layered_load_failed) + " " + bad,
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                        showEditor();
+                    }
+                });
+                exec.shutdown();
             }
-        }
-        if (layers.size() < 2) {
-            Toast.makeText(this, getString(R.string.layered_load_failed2),
-                    Toast.LENGTH_LONG).show();
-            finish();
-            return;
-        }
-        // 底层在前(layers[0] = 底),上面层依次抬升
-        showEditor();
+        });
     }
 
     // ---------------- 合成编辑 ----------------

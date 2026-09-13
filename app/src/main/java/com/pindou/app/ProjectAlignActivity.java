@@ -178,13 +178,15 @@ public class ProjectAlignActivity extends Activity {
         });
         row1.addView(next, rowChipLp());
 
-        modeChip = chip(getString(R.string.align_whole));
+        modeChip = chip(getString(R.string.align_single));
+        modeChip.setSelected(true);
         modeChip.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 wholeMode = !wholeMode;
-                modeChip.setText(wholeMode
-                        ? getString(R.string.align_single) : getString(R.string.align_whole));
+                modeChip.setText(getString(wholeMode
+                        ? R.string.align_whole : R.string.align_single));
+                modeChip.setSelected(wholeMode);
                 overlay.invalidate();
             }
         });
