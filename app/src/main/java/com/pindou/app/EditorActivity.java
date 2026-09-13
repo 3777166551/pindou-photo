@@ -2152,20 +2152,24 @@ public class EditorActivity extends Activity {
                         rawPattern = np;
                         pattern = PatternPatch.apply(np, editMap);
                         patternView.setPattern(pattern);
-                        // 网格尺寸没变(仅调色/风格/品牌/规格等)时保留拼豆进度:
-                        // 滑杆微调或重开项目都走 regenerate,无条件清空会把用户
-                        // 标了几十格的进度抹掉(v2.50 审计修复;尺寸变了才清)。
-                        // 清空必须发生在豆单刷新之前:countDonePerColor 拿旧
-                        // 索引访问新 pattern 会越界(monkey fuzz 抓出的崩溃)
-                        beadDone.clear();
-                        if (savedCols == pattern.cols && savedRows == pattern.rows) {
-                            for (int k : savedDone) {
+                        // 网格尺寸没变(仅调色/风格/品牌/规格等)时保留进度:
+                        // 滑杆微调或重开项目都走 regenerate,无条件清空会把
+                        // 用户标了几十格的进度抹掉;尺寸变了才清(索引全变)。
+                        // genSeq 守卫保证回调执行时 cols/rows 字段仍是本次
+                        // 生成的尺寸,直接用字段比较,无需外部捕获变量。
+                        if (cols == pattern.cols && rows == pattern.rows) {
+                            java.util.Iterator<Integer> it = beadDone.iterator();
+                            while (it.hasNext()) {
+                                int k = it.next();
                                 int x = k % pattern.cols;
                                 int y = k / pattern.cols;
-                                if (pattern.outsideShape(x, y)) continue;
-                                if (pattern.cellAt(x, y) < 0) continue;
-                                beadDone.add(k);
+                                if (pattern.outsideShape(x, y)
+                                        || pattern.cellAt(x, y) < 0) {
+                                    it.remove();
+                                }
                             }
+                        } else {
+                            beadDone.clear();
                         }
                         if (beadDone.isEmpty()) {
                             beadDoneToday = 0;
