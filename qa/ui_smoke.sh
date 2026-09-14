@@ -242,28 +242,42 @@ dismiss_assist_help() {
     tap_text_still "OK" 0
   fi
 }
+# 成功开启后把辅助面板露出来:两行工具行把面板撑高了,开关下方
+# (进度行/工具行)常被挤出视口,"屏外节点不进 dump"会让 100% 断言
+# 永远找不到进度文字(0914 run136 实锤)。慢拖(600ms)避免 fling 过冲,
+# 每步复核进度行是否进 dump,最多 3 步。起点 y=1700 在设置区内,
+# 高于被钉在顶部的 PatternView 下缘,不会误滑画布。
+reveal_assist_panel() {
+  n=0
+  while [ $n -lt 3 ]; do
+    dump_ui
+    if grep -qi "text=\"[^\"]*placed[^\"]*\"" ui.xml; then
+      return 0
+    fi
+    adb shell input swipe 540 1700 540 1200 600
+    sleep 0.8
+    n=$((n + 1))
+  done
+}
 toggle_assist_on() {
-  assist_scroll_top
   n=0
   while [ $n -lt 6 ]; do
     if assist_on; then
       log "assist on (round $n)"
       dismiss_assist_help
+      reveal_assist_panel
       return 0
     fi
-    if _tap_match "resource-id=\"$PKG:id/swBeadAssist\"" 0; then
-      sleep 2
-      if assist_on; then
-        log "assist toggled on (round $n)"
-        dismiss_assist_help
-        return 0
-      fi
-      log "assist tap round $n did not stick, retry"
+    tap_id swBeadAssist 0
+    sleep 2
+    if assist_on; then
+      log "assist toggled on (round $n)"
       dismiss_assist_help
-    else
-      adb shell input swipe 540 1700 540 900 300
-      sleep 0.8
+      reveal_assist_panel
+      return 0
     fi
+    log "assist tap round $n did not stick, retry"
+    dismiss_assist_help
     n=$((n + 1))
   done
   die "could not turn bead-assist on"
@@ -275,7 +289,7 @@ assist_off() {
       log "assist off"
       return 0
     fi
-    _tap_match "resource-id=\"$PKG:id/swBeadAssist\"" 0
+    tap_id swBeadAssist 0
     sleep 2
     n=$((n + 1))
   done
