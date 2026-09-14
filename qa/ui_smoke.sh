@@ -67,7 +67,10 @@ _tap_match() {
   return 0
 }
 
-# 按 resource-id 结尾点击(id 与语言无关),自动滚动查找(最多下滑 6 屏)
+# 按 resource-id 结尾点击(id 与语言无关),自动滚动查找:
+# 先下滑 6 屏找;再上滑 4 屏兜底 —— 面板滚动位置在对话框/重开项目后会
+# 漂移,目标可能在视口上方,只往下滚永远够不着(0914 轮 CI 实测:
+# chipBrickMid 起全部 soft-miss,裁剪没打开导致 OK 硬断言失败)
 tap_id() {
   local id="$PKG:id/$1" must="${2:-1}" n
   for n in 0 1 2 3 4 5 6; do
@@ -76,6 +79,13 @@ tap_id() {
     fi
     if _tap_match "resource-id=\"$id\"" 0; then
       log "tapped id: $1"
+      return 0
+    fi
+  done
+  for n in 1 2 3 4; do
+    adb shell input swipe 540 1600 540 2250 250; sleep 0.8
+    if _tap_match "resource-id=\"$id\"" 0; then
+      log "tapped id (after scroll-up): $1"
       return 0
     fi
   done
