@@ -208,6 +208,10 @@ gen_wait() {
 
 back() { adb shell input keyevent 4; sleep 1.5; }
 
+# 硬失败退出(曾漏定义:toggle 六轮失败后 "die: command not found",
+# 脚本带病继续跑,辅助没开导致后续链条全乱,0914 run135 实锤)
+die() { echo "[smoke] FAIL: $*"; snap fail; exit 1; }
+
 # ---------- 拼豆辅助开关:以 checked 状态为准的确定性拨动 ----------
 # 设置面板的滚动位置在导出/分享/重开项目后会漂移,盲点坐标会落到邻格
 # 开关上(v2.49 连续三轮 100% 步三种失败形态的公共根因)。这里直接读
@@ -228,7 +232,9 @@ assist_scroll_top() {
   sleep 1
 }
 # 首次开启辅助会自动弹「How bead-along works」帮助弹窗(每次安装一次):
-# 在场就点 OK 关掉;不在场(已看过)时跳过,不浪费重试
+# 在场就点 OK 关掉;不在场(已看过)时跳过,不浪费重试。
+# 弹窗开着时 uiautomator dump 可能只剩弹窗窗口——拨开关的坐标点击会
+# 落在弹窗上,造成"拨了没上"的假象,所以拨杆失败后也要兜底关一次。
 dismiss_assist_help() {
   dump_ui
   if grep -qi "text=\"[^\"]*bead-along works[^\"]*\"" ui.xml; then
@@ -253,6 +259,7 @@ toggle_assist_on() {
         return 0
       fi
       log "assist tap round $n did not stick, retry"
+      dismiss_assist_help
     else
       adb shell input swipe 540 1700 540 900 300
       sleep 0.8
@@ -595,7 +602,9 @@ sleep 8
 tap_id tabPattern 0            # 标记只在图纸 tab 生效
 toggle_assist_on
 sleep 2
-check_text "Locate"              # 硬断言:辅助模式确实开了(开关点错邻格时在此现形)
+# 辅助确实开了由 toggle 的 checked 复核兜底;工具行 chip 可能被两行
+# 布局挤出视口("屏外节点不进 dump"),text 断言只做 soft(0914 run135)
+check_text "Locate" 0
 # 拼豆模式的按住滑动是"只加不减"的连续刷选(onAssistDragCell 只 add):
 # 横向等距扫 12 条线盖满 patternView,每一行画出的格子都会被某条线划过。
 # 对格心估算误差、悬浮 chip 遮挡、双击判定全部免疫;重复划不取消标记。
