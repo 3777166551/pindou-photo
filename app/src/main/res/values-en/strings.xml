@@ -225,7 +225,7 @@
     <string name="assist_color_default">Color 1/1</string>
     <string name="assist_next">Next color</string>
     <string name="assist_progress_default">Done 0 / 0 (0%)</string>
-    <string name="assist_locate">📍 Find undone</string>
+    <string name="assist_locate">📍 Locate</string>
     <string name="assist_calendar">📅 Check-in</string>
     <string name="brush_default_name">Black (#5)</string>
     <string name="brush_change">Change 🖌</string>

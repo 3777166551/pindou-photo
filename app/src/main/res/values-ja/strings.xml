@@ -225,7 +225,7 @@
     <string name="assist_color_default">色 1/1</string>
     <string name="assist_next">次の色へ</string>
     <string name="assist_progress_default">完了 0 / 0(0%)</string>
-    <string name="assist_locate">📍 未完を検索</string>
+    <string name="assist_locate">📍 未完へ</string>
     <string name="assist_calendar">📅 記録</string>
     <string name="brush_default_name">黒(5番)</string>
     <string name="brush_change">替える 🖌</string>

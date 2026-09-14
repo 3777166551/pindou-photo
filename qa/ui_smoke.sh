@@ -492,7 +492,7 @@ sleep 1.5
 adb shell input swipe 540 1700 540 500 300; sleep 0.8
 toggle_assist_on
 sleep 1.5
-check_text "Find undone" 0
+check_text "Locate" 0
 tap_id btnAssistCalendar 0
 sleep 1.5
 snap photo_calendar
@@ -595,7 +595,7 @@ sleep 8
 tap_id tabPattern 0            # 标记只在图纸 tab 生效
 toggle_assist_on
 sleep 2
-check_text "Find undone"       # 硬断言:辅助模式确实开了(开关点错邻格时在此现形)
+check_text "Locate"              # 硬断言:辅助模式确实开了(开关点错邻格时在此现形)
 # 拼豆模式的按住滑动是"只加不减"的连续刷选(onAssistDragCell 只 add):
 # 横向等距扫 12 条线盖满 patternView,每一行画出的格子都会被某条线划过。
 # 对格心估算误差、悬浮 chip 遮挡、双击判定全部免疫;重复划不取消标记。
@@ -798,7 +798,7 @@ adb shell input swipe 540 1700 540 500 300; sleep 0.8
 check_text "Bead-along" 0
 toggle_assist_on
 sleep 1.5
-check_text "Find undone" 0
+check_text "Locate" 0
 tap_id btnAssistBoard 0
 sleep 1
 tap_id btnAssistNextBoard 0
