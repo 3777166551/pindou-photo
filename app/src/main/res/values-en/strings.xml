@@ -486,6 +486,10 @@
     <string name="cross_stitches"> pcs</string>
     <string name="cross_footer">Exported by PindouPhoto · nearest-color mapping, check the official DMC card before buying</string>
 
+    <!-- Immersive bead mode: fullscreen assist page with in-page exit; ✓ stamp on each mark -->
+    <string name="assist_immersive_btn">Immersive</string>
+    <string name="immersive_exit">✕ Exit</string>
+
     <!-- AR try-on (fake AR: camera viewfinder + gyroscope, view only) -->
     <string name="chip_ar">AR preview</string>
     <string name="ar_recenter">Re-center</string>

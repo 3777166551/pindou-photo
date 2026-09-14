@@ -71,6 +71,15 @@ public class PatternView extends View {
         symbolPaint.setTypeface(Typeface.DEFAULT_BOLD);
         symbolPaint.setTextAlign(Paint.Align.CENTER);
 
+        // 完成 ✓ 印章:白圈衬底 + 黄油圆 + 墨勾(贴纸风,与选框/行框同语言)
+        popHaloPaint.setColor(0xFFFFFFFF);
+        popDiscPaint.setColor(0xFFFFCF56);
+        popRingPaint.setColor(0xFF40354E);
+        popRingPaint.setStyle(Paint.Style.STROKE);
+        popCheckPaint.setColor(0xFF40354E);
+        popCheckPaint.setStrokeCap(Paint.Cap.ROUND);
+        popCheckPaint.setStrokeJoin(Paint.Join.ROUND);
+
         scaleDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
             @Override
             public boolean onScale(ScaleGestureDetector detector) {
@@ -237,6 +246,23 @@ public class PatternView extends View {
     private int[] flashCell;
     private long flashUntil;
     private Paint flashPaint;
+
+    // 完成 ✓ 印章:{cellX, cellY, t0};标记完成的格心弹一枚贴纸,460ms 弹回淡出
+    private static final long POP_MS = 460L;
+    private static final int MAX_POPS = 24;   // 拖动刷选一扫一串,限制同屏数量
+    private final java.util.ArrayList<float[]> popStamps = new java.util.ArrayList<>();
+    private final Paint popHaloPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint popDiscPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint popRingPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint popCheckPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    /** 标记完成反馈:格心弹一枚 ✓ 印章并给一次轻触感(点没点上,手和眼都有数) */
+    public void popCell(int gx, int gy) {
+        if (popStamps.size() >= MAX_POPS) popStamps.remove(0);
+        popStamps.add(new float[]{gx, gy, SystemClock.uptimeMillis()});
+        performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);
+        postInvalidateOnAnimation();
+    }
 
     // ---- 拼豆模式(逐色辅助)----
     /** true = 只突出 assistFocus 颜色,已完成的格子画描边 */
@@ -722,6 +748,38 @@ public class PatternView extends View {
                 flashPaint.setStrokeWidth(Math.max(2f, cell * 0.12f));
                 canvas.drawRect(flashCell[0] * cell, flashCell[1] * cell,
                         (flashCell[0] + 1) * cell, (flashCell[1] + 1) * cell, flashPaint);
+            }
+            // 完成 ✓ 印章:前 40% 从 1.55 倍压到 0.92(盖章),回弹到 1,末段整体淡出
+            if (!popStamps.isEmpty()) {
+                long now = SystemClock.uptimeMillis();
+                for (int i = popStamps.size() - 1; i >= 0; i--) {
+                    float[] s = popStamps.get(i);
+                    float t = (now - s[2]) / (float) POP_MS;
+                    if (t >= 1f) {
+                        popStamps.remove(i);
+                        continue;
+                    }
+                    float cx = (s[0] + 0.5f) * cell;
+                    float cy = (s[1] + 0.5f) * cell;
+                    float scale = t < 0.4f ? 1.55f - 1.57f * (t / 0.4f)
+                            : t < 0.75f ? 0.92f + 0.08f * ((t - 0.4f) / 0.35f) : 1f;
+                    float alpha = t < 0.75f ? 1f : 1f - (t - 0.75f) / 0.25f;
+                    float r = cell * 0.62f * scale;
+                    popHaloPaint.setAlpha((int) (236 * alpha));
+                    popDiscPaint.setAlpha((int) (255 * alpha));
+                    popRingPaint.setAlpha((int) (255 * alpha));
+                    popCheckPaint.setAlpha((int) (255 * alpha));
+                    canvas.drawCircle(cx, cy, r, popHaloPaint);
+                    canvas.drawCircle(cx, cy, r * 0.82f, popDiscPaint);
+                    popRingPaint.setStrokeWidth(Math.max(2f, r * 0.1f));
+                    canvas.drawCircle(cx, cy, r * 0.82f, popRingPaint);
+                    popCheckPaint.setStrokeWidth(r * 0.24f);
+                    canvas.drawLine(cx - r * 0.40f, cy + r * 0.02f,
+                            cx - r * 0.10f, cy + r * 0.32f, popCheckPaint);
+                    canvas.drawLine(cx - r * 0.10f, cy + r * 0.32f,
+                            cx + r * 0.44f, cy - r * 0.30f, popCheckPaint);
+                }
+                if (!popStamps.isEmpty()) postInvalidateOnAnimation();
             }
         }
         canvas.restore();

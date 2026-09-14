@@ -480,6 +480,10 @@
     <!-- 十字绣导出(v2.50):拼豆图纸按 CIEDE2000 就近映射 DMC 绣线 -->
     <string name="menu_cross">🧵 十字绣图纸(DMC)</string>
     <string name="file_cross_prefix">十字绣图纸_</string>
+
+    <!-- 沉浸拼豆:一键进入全屏拼豆页,页内退出;点格弹 ✓ 印章反馈 -->
+    <string name="assist_immersive_btn">沉浸拼豆</string>
+    <string name="immersive_exit">✕ 退出</string>
     <string name="cross_title">十字绣图纸 · Cross Stitch Chart</string>
     <string name="fmt_cross_info">%1$d×%2$d 格 · %3$,d 针 · %4$d 色 · 14ct 成品约 %5$.1f×%6$.1f cm</string>
     <string name="cross_legend">DMC 绣线清单</string>

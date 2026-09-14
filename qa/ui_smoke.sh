@@ -792,6 +792,24 @@ sleep 0.5
 snap assist_row
 tap_id btnAssistRow 0
 sleep 0.5
+# ---------- v2.51:沉浸拼豆(全屏画布 + 顶栏退出) ----------
+# 工具行「Immersive」chip -> 全屏覆盖层:硬断言顶栏 Exit 可见,
+# 沉浸页里点一格走共用标记路径,截图后退出,再硬断言覆盖层真的关了
+tap_id btnAssistImmersive
+sleep 1.5
+check_text "Exit"              # 硬断言:沉浸层顶栏存在(覆盖层进了 a11y 树)
+adb shell input tap 540 900    # 沉浸页点一格(空格/有豆格都安全:toggle 自带防御)
+sleep 0.8
+snap immersive
+tap_text_still "Exit"
+sleep 1
+dump_ui
+if grep -qi "text=\"[^\"]*Exit[^\"]*\"" ui.xml; then
+  echo "[smoke] FAIL: immersive overlay did not close"
+  snap fail
+  exit 1
+fi
+log "immersive flow OK"
 assist_off
 sleep 1
 # 描摹行存在性(不真选图,避免文件选择器挂住流程)

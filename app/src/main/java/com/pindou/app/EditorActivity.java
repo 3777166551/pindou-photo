@@ -279,6 +279,12 @@ public class EditorActivity extends Activity {
     private View chipAr;
     private View btnAssistLocate, btnAssistCalendar, btnBrushMirror;
     private View assistToolsRow;
+    private View btnAssistImmersive;
+    // 沉浸拼豆:全屏覆盖层(专用画布+顶栏),null = 未进入
+    private android.view.ViewGroup immersiveOverlay;
+    private PatternView immersiveView;
+    private android.widget.TextView tvImmersiveInfo;
+    private View dotImmersive, btnImmersiveNext;
     private View btnAssistProject;
     private TextView btnAssistBoard, tvAssistBoard, btnAssistNextBoard, btnAssistRow;
     private View assistBoardRow;
@@ -502,6 +508,7 @@ public class EditorActivity extends Activity {
         btnAssistCalendar = findViewById(R.id.btnAssistCalendar);
         btnBrushMirror = findViewById(R.id.btnBrushMirror);
         assistToolsRow = findViewById(R.id.assistToolsRow);
+        btnAssistImmersive = findViewById(R.id.btnAssistImmersive);
         btnAssistBoard = findViewById(R.id.btnAssistBoard);
         btnAssistRow = findViewById(R.id.btnAssistRow);
         btnAssistProject = findViewById(R.id.btnAssistProject);
@@ -735,6 +742,13 @@ public class EditorActivity extends Activity {
                 launchAlign();
             }
         });
+        // 沉浸拼豆:一键进入全屏拼豆页,页内退出
+        btnAssistImmersive.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                enterImmersive();
+            }
+        });
         btnAssistNextBoard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -925,20 +939,7 @@ public class EditorActivity extends Activity {
                 if (pattern == null) return;
                 if (pattern.outsideShape(cellX, cellY)) return;   // 圆形板板外无格
                 if (beadAssist) {
-                    int idx = pattern.cellAt(cellX, cellY);
-                    if (idx < 0) return;
-                    int key = cellY * pattern.cols + cellX;
-                    boolean added = beadDone.add(key);
-                    if (!added) beadDone.remove(key);
-                    rollBeadDay();
-                    beadDoneToday = Math.max(0, beadDoneToday + (added ? 1 : -1));
-                    BeadCalendar.add(EditorActivity.this, added ? 1 : -1);
-                    updateAssistUi();
-                    updateSummary();
-                    adapter.notifyDataSetChanged();
-                    patternView.invalidate();
-                    maybeAutoAdvanceBand();
-                    maybeCelebrate();
+                    toggleAssistCell(cellX, cellY, patternView);
                     return;
                 }
                 if (!editCell) {
@@ -959,30 +960,12 @@ public class EditorActivity extends Activity {
         patternView.setOnAssistDragListener(new PatternView.OnAssistDragListener() {
             @Override
             public void onAssistDragCell(int cellX, int cellY) {
-                if (pattern == null) return;
-                if (pattern.outsideShape(cellX, cellY)) return;
-                int idx = pattern.cellAt(cellX, cellY);
-                if (idx < 0) return;
-                int key = cellY * pattern.cols + cellX;
-                if (beadDone.add(key)) {
-                    rollBeadDay();
-                    beadDoneToday++;
-                    BeadCalendar.add(EditorActivity.this, 1);
-                    patternView.invalidate();
-                    dragDirty = true;
-                }
+                if (markAssistDragCell(cellX, cellY, patternView)) dragDirty = true;
             }
 
             @Override
             public void onAssistDragEnd() {
-                if (dragDirty) {
-                    dragDirty = false;
-                    updateAssistUi();
-                    updateSummary();
-                    adapter.notifyDataSetChanged();
-                    maybeAutoAdvanceBand();
-                    maybeCelebrate();
-                }
+                finishAssistDrag();
             }
         });
 
@@ -2152,6 +2135,7 @@ public class EditorActivity extends Activity {
                         rawPattern = np;
                         pattern = PatternPatch.apply(np, editMap);
                         patternView.setPattern(pattern);
+                        if (immersiveView != null) immersiveView.setPattern(pattern);
                         // 网格尺寸没变(仅调色/风格/品牌/规格等)时保留进度:
                         // 滑杆微调或重开项目都走 regenerate,无条件清空会把
                         // 用户标了几十格的进度抹掉;尺寸变了才清(索引全变)。
@@ -2242,12 +2226,77 @@ public class EditorActivity extends Activity {
         }
     }
 
-    /** 把当前辅助状态(逐色/按板/逐行)套到 PatternView 上 */
-    private void applyAssistToView() {
-        patternView.setAssist(beadAssist,
+    /** 把当前辅助状态(逐色/按板/逐行)套到指定 PatternView(编辑页/沉浸页共用) */
+    private void applyAssistParamsTo(PatternView v) {
+        v.setAssist(beadAssist,
                 assistMode == ASSIST_COLOR ? assistFocus : -1, beadDone,
                 assistMode == ASSIST_BOARD, assistBoard,
                 assistMode == ASSIST_ROW, assistRow);
+    }
+
+    private void applyAssistToView() {
+        applyAssistParamsTo(patternView);
+        if (immersiveView != null) applyAssistParamsTo(immersiveView);
+    }
+
+    /**
+     * 辅助模式单击一格 = 切换完成标记(编辑页/沉浸页共用)。
+     * 新标记的格子在其来源画布上弹 ✓ 印章,点没点上手眼都有数。
+     */
+    private void toggleAssistCell(int cellX, int cellY, PatternView src) {
+        if (pattern == null || pattern.outsideShape(cellX, cellY)) return;
+        int idx = pattern.cellAt(cellX, cellY);
+        if (idx < 0) return;
+        int key = cellY * pattern.cols + cellX;
+        boolean added = beadDone.add(key);
+        if (!added) beadDone.remove(key);
+        rollBeadDay();
+        beadDoneToday = Math.max(0, beadDoneToday + (added ? 1 : -1));
+        BeadCalendar.add(EditorActivity.this, added ? 1 : -1);
+        if (added && src != null) src.popCell(cellX, cellY);
+        updateAssistUi();
+        updateSummary();
+        adapter.notifyDataSetChanged();
+        if (patternView != src) patternView.invalidate();
+        if (immersiveView != null && immersiveView != src) immersiveView.invalidate();
+        updateImmersiveBar();
+        if (added) {
+            maybeAutoAdvanceBand();
+            maybeCelebrate();
+            // 庆祝动画在主界面,沉浸层开着会挡住它:拼满即退出沉浸页
+            if (celebrated && immersiveOverlay != null) exitImmersive();
+        }
+    }
+
+    /** 辅助模式拖动刷选过一格(只标记不取消);新增标记返回 true 供收尾统计 */
+    private boolean markAssistDragCell(int cellX, int cellY, PatternView src) {
+        if (pattern == null || pattern.outsideShape(cellX, cellY)) return false;
+        int idx = pattern.cellAt(cellX, cellY);
+        if (idx < 0) return false;
+        int key = cellY * pattern.cols + cellX;
+        if (beadDone.add(key)) {
+            rollBeadDay();
+            beadDoneToday++;
+            BeadCalendar.add(EditorActivity.this, 1);
+            if (src != null) src.popCell(cellX, cellY);
+            if (patternView != src) patternView.invalidate();
+            if (immersiveView != null && immersiveView != src) immersiveView.invalidate();
+            return true;
+        }
+        return false;
+    }
+
+    /** 拖动刷选收尾:刷新统计并检查跳板/庆祝 */
+    private void finishAssistDrag() {
+        if (!dragDirty) return;
+        dragDirty = false;
+        updateAssistUi();
+        updateSummary();
+        adapter.notifyDataSetChanged();
+        maybeAutoAdvanceBand();
+        maybeCelebrate();
+        if (celebrated && immersiveOverlay != null) exitImmersive();
+        updateImmersiveBar();
     }
 
     /** 按板/逐行引导 UI:工具行 chip 选中态 + 进度行显隐/文案 + 视图重绘 */
@@ -2505,6 +2554,7 @@ public class EditorActivity extends Activity {
         assistFocus = pattern.usedColors.get(next).index;
         updateAssistUi();
         applyAssistToView();
+        updateImmersiveBar();
     }
 
     private void updateAssistUi() {
@@ -2556,6 +2606,171 @@ public class EditorActivity extends Activity {
         tvAssistProgress.setText(String.format(Locale.CHINA,
                 getString(R.string.fmt_assist_head),
                 done, total, pct, beadDone.size(), pattern.totalBeads, todayCount()));
+    }
+
+    // ---------------- 沉浸拼豆(全屏覆盖层) ----------------
+
+    /** 一键进入沉浸拼豆:拼豆画布铺满全屏,顶栏只剩 退出/进度/换色 */
+    private void enterImmersive() {
+        if (pattern == null || !beadAssist || immersiveOverlay != null) return;
+        float den = getResources().getDisplayMetrics().density;
+        int pad8 = Math.round(8 * den);
+        int pad14 = Math.round(14 * den);
+
+        android.widget.FrameLayout box = new android.widget.FrameLayout(this);
+        box.setBackgroundColor(nightMode ? 0xFF221E2C : 0xFFF3EDE2);
+
+        immersiveView = new PatternView(this);
+        immersiveView.setMode(PatternView.MODE_PATTERN);
+        immersiveView.setPattern(pattern);
+        immersiveView.setShowSymbols(swSymbols.isChecked());
+        immersiveView.setShowGrid(swGrid.isChecked());
+        immersiveView.setNight(nightMode);
+        applyAssistParamsTo(immersiveView);
+        immersiveView.setOnCellTapListener(new PatternView.OnCellTapListener() {
+            @Override
+            public void onCellTap(int cellX, int cellY) {
+                toggleAssistCell(cellX, cellY, immersiveView);
+            }
+        });
+        immersiveView.setOnAssistDragListener(new PatternView.OnAssistDragListener() {
+            @Override
+            public void onAssistDragCell(int cellX, int cellY) {
+                if (markAssistDragCell(cellX, cellY, immersiveView)) dragDirty = true;
+            }
+
+            @Override
+            public void onAssistDragEnd() {
+                finishAssistDrag();
+            }
+        });
+        box.addView(immersiveView, new android.widget.FrameLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+
+        // 顶栏:退出 | 色点+进度 | 下一个颜色(仅逐色模式)
+        android.widget.LinearLayout bar = new android.widget.LinearLayout(this);
+        bar.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        bar.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        bar.setPadding(pad14, pad8, pad14, pad8);
+        android.widget.TextView exit = makeBarChip(getString(R.string.immersive_exit));
+        exit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                exitImmersive();
+            }
+        });
+        bar.addView(exit);
+
+        android.widget.LinearLayout info = new android.widget.LinearLayout(this);
+        info.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        info.setGravity(android.view.Gravity.CENTER);
+        android.widget.LinearLayout.LayoutParams infoLp =
+                new android.widget.LinearLayout.LayoutParams(
+                        0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        infoLp.setMargins(pad8, 0, pad8, 0);
+        dotImmersive = new View(this);
+        int dot = Math.round(14 * den);
+        android.widget.LinearLayout.LayoutParams dotLp =
+                new android.widget.LinearLayout.LayoutParams(dot, dot);
+        dotLp.rightMargin = pad8 / 2;
+        info.addView(dotImmersive, dotLp);
+        tvImmersiveInfo = new android.widget.TextView(this);
+        tvImmersiveInfo.setTextSize(13);
+        tvImmersiveInfo.setTextColor(0xFF40354E);
+        tvImmersiveInfo.setMaxLines(1);
+        tvImmersiveInfo.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        info.addView(tvImmersiveInfo);
+        bar.addView(info, infoLp);
+
+        btnImmersiveNext = makeBarChip(getString(R.string.assist_next));
+        btnImmersiveNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                cycleAssistColor();
+            }
+        });
+        bar.addView(btnImmersiveNext);
+
+        box.addView(bar, new android.widget.FrameLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                android.view.Gravity.TOP));
+
+        ((android.view.ViewGroup) findViewById(android.R.id.content)).addView(box,
+                new android.widget.FrameLayout.LayoutParams(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+        immersiveOverlay = box;
+        // 沉浸式:隐藏状态栏/导航键,拼豆时不被系统栏挤占视野(移除覆盖层即还原)
+        box.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        updateImmersiveBar();
+    }
+
+    /** 沉浸页顶栏的贴纸 chip(与工具行同语言:bg_chip 底 + 墨字) */
+    private android.widget.TextView makeBarChip(String text) {
+        android.widget.TextView tv = new android.widget.TextView(this);
+        tv.setText(text);
+        tv.setTextSize(13);
+        // 与 res/color/text_chip.xml 的默认态一致(textSub);纯代码视图不走 selector
+        tv.setTextColor(getResources().getColor(R.color.textSub));
+        tv.setBackgroundResource(R.drawable.bg_chip);
+        tv.setElevation(2f * getResources().getDisplayMetrics().density);
+        int px = Math.round(12 * getResources().getDisplayMetrics().density);
+        int py = Math.round(7 * getResources().getDisplayMetrics().density);
+        tv.setPadding(px, py, px, py);
+        tv.setClickable(true);
+        tv.setFocusable(true);
+        return tv;
+    }
+
+    /** 沉浸页顶栏进度:逐色模式显示当前色点+剩余,按板/逐行显示总进度 */
+    private void updateImmersiveBar() {
+        if (tvImmersiveInfo == null || tvAssistColor == null || pattern == null) return;
+        boolean byColor = assistMode == ASSIST_COLOR
+                && assistFocus >= 0 && assistFocus < pattern.palette.size();
+        if (dotImmersive != null) {
+            dotImmersive.setVisibility(byColor ? View.VISIBLE : View.GONE);
+            if (byColor) {
+                android.graphics.drawable.GradientDrawable gd =
+                        new android.graphics.drawable.GradientDrawable();
+                gd.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+                gd.setColor(0xFF000000 | pattern.palette.get(assistFocus).rgb);
+                dotImmersive.setBackground(gd);
+            }
+        }
+        tvImmersiveInfo.setText(byColor
+                ? tvAssistColor.getText() : tvAssistProgress.getText());
+        if (btnImmersiveNext != null) {
+            btnImmersiveNext.setVisibility(assistMode == ASSIST_COLOR
+                    ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    /** 退出沉浸拼豆,回到编辑页 */
+    private void exitImmersive() {
+        if (immersiveOverlay == null) return;
+        android.view.ViewGroup parent = (android.view.ViewGroup) immersiveOverlay.getParent();
+        if (parent != null) parent.removeView(immersiveOverlay);
+        immersiveOverlay = null;
+        immersiveView = null;
+        tvImmersiveInfo = null;
+        dotImmersive = null;
+        btnImmersiveNext = null;
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (immersiveOverlay != null) {
+            exitImmersive();   // 沉浸页里按返回 = 先退沉浸,不关编辑器
+            return;
+        }
+        super.onBackPressed();
     }
 
     // ---------------- 豆豆清单 ----------------

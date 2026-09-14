@@ -486,6 +486,10 @@
     <string name="cross_stitches"> 針</string>
     <string name="cross_footer">PindouPhoto で書き出し · 近似マッピングのため DMC 公式色見本で確認してください</string>
 
+    <!-- 全画面ビーズモード:図案ページから一発で全画面へ、画面内で解除;完了マスに ✓ スタンプ -->
+    <string name="assist_immersive_btn">全画面</string>
+    <string name="immersive_exit">✕ 終了</string>
+
     <!-- AR体感プレビュー(疑似AR:カメラプレビュー + ジャイロ、閲覧専用) -->
     <string name="chip_ar">ARプレビュー</string>
     <string name="ar_recenter">再配置</string>
