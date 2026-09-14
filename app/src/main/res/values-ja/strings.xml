@@ -226,7 +226,7 @@
     <string name="assist_next">次の色へ</string>
     <string name="assist_progress_default">完了 0 / 0(0%)</string>
     <string name="assist_locate">📍 未完を検索</string>
-    <string name="assist_calendar">📅 記録カレンダー</string>
+    <string name="assist_calendar">📅 記録</string>
     <string name="brush_default_name">黒(5番)</string>
     <string name="brush_change">替える 🖌</string>
     <string name="brush_eraser">⌫ 消しゴム</string>
@@ -489,6 +489,11 @@
     <!-- 全画面ビーズモード:図案ページから一発で全画面へ、画面内で解除;完了マスに ✓ スタンプ -->
     <string name="assist_immersive_btn">全画面</string>
     <string name="immersive_exit">✕ 終了</string>
+
+    <!-- ビーズ補助のつかいかた:初回オン時に自動で1回、ツール行の「つかいかた」で再表示 -->
+    <string name="assist_help_btn">つかいかた</string>
+    <string name="assist_help_title">ビーズ補助のつかいかた</string>
+    <string name="assist_help_body">図案のマスをタップ = 完成印（✓が出ます）、もう一度タップで解除。押したまま動かすと連続で塗れます。\n\n• 色ごと（初期）:現在の色だけ光る —「次の色」で切替\n• 板ごと:29×29 の板を 1 枚ずつ、埋まると次へ\n• 行ごと:1 行ずつ、埋まると次の行へ\n• 全画面:図案を画面いっぱいに広げて集中（戻るキーで終了）\n• 投影合わせ:カメラで実際の板に図案を重ねて見る\n• 📍未完を検索:次の未完成マスへジャンプ\n\n進捗は自動保存され、開き直しても残ります。</string>
 
     <!-- AR体感プレビュー(疑似AR:カメラプレビュー + ジャイロ、閲覧専用) -->
     <string name="chip_ar">ARプレビュー</string>

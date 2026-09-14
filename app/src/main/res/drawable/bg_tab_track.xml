@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- tab 槽:白底 + 墨描边,选中项是糖果粉贴纸 -->
+<!-- tab 槽:白底软投影;选中项玫瑰药丸 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:top="1dp">
         <shape android:shape="rectangle">
@@ -10,7 +10,6 @@
     <item android:bottom="2.5dp">
         <shape android:shape="rectangle">
             <solid android:color="@color/card" />
-            <stroke android:width="2dp" android:color="@color/ink" />
             <corners android:radius="21dp" />
         </shape>
     </item>

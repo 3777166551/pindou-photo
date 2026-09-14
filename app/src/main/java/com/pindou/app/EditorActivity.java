@@ -279,7 +279,7 @@ public class EditorActivity extends Activity {
     private View chipAr;
     private View btnAssistLocate, btnAssistCalendar, btnBrushMirror;
     private View assistToolsRow;
-    private View btnAssistImmersive;
+    private View btnAssistImmersive, btnAssistHelp;
     // 沉浸拼豆:全屏覆盖层(专用画布+顶栏),null = 未进入
     private android.view.ViewGroup immersiveOverlay;
     private PatternView immersiveView;
@@ -509,6 +509,7 @@ public class EditorActivity extends Activity {
         btnBrushMirror = findViewById(R.id.btnBrushMirror);
         assistToolsRow = findViewById(R.id.assistToolsRow);
         btnAssistImmersive = findViewById(R.id.btnAssistImmersive);
+        btnAssistHelp = findViewById(R.id.btnAssistHelp);
         btnAssistBoard = findViewById(R.id.btnAssistBoard);
         btnAssistRow = findViewById(R.id.btnAssistRow);
         btnAssistProject = findViewById(R.id.btnAssistProject);
@@ -747,6 +748,13 @@ public class EditorActivity extends Activity {
             @Override
             public void onClick(View v) {
                 enterImmersive();
+            }
+        });
+        // 拼豆辅助怎么用:帮助弹窗(首次开启自动弹,这里随时再看)
+        btnAssistHelp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showAssistHelpDialog();
             }
         });
         btnAssistNextBoard.setOnClickListener(new View.OnClickListener() {
@@ -2209,6 +2217,13 @@ public class EditorActivity extends Activity {
             }
             Toast.makeText(this, getString(R.string.assist_on),
                     Toast.LENGTH_LONG).show();
+            // 第一次开辅助自动弹一次用法说明(之后想看走工具行「怎么用」)
+            if (!getSharedPreferences("pindou", MODE_PRIVATE)
+                    .getBoolean("assist_help_seen", false)) {
+                getSharedPreferences("pindou", MODE_PRIVATE).edit()
+                        .putBoolean("assist_help_seen", true).apply();
+                showAssistHelpDialog();
+            }
         } else {
             beadAssistPanel.setVisibility(View.GONE);
             tvAssistProgress.setVisibility(View.GONE);
@@ -2606,6 +2621,17 @@ public class EditorActivity extends Activity {
         tvAssistProgress.setText(String.format(Locale.CHINA,
                 getString(R.string.fmt_assist_head),
                 done, total, pct, beadDone.size(), pattern.totalBeads, todayCount()));
+    }
+
+    // ---------------- 拼豆辅助怎么用 ----------------
+
+    /** 辅助模式用法说明:标记操作 + 六个工具项各自干什么(首次开启自动弹一次) */
+    private void showAssistHelpDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.assist_help_title))
+                .setMessage(getString(R.string.assist_help_body))
+                .setPositiveButton(getString(R.string.btn_ok), null)
+                .show();
     }
 
     // ---------------- 沉浸拼豆(全屏覆盖层) ----------------

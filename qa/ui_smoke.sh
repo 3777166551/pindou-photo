@@ -227,18 +227,29 @@ assist_scroll_top() {
   done
   sleep 1
 }
+# 首次开启辅助会自动弹「How bead-along works」帮助弹窗(每次安装一次):
+# 在场就点 OK 关掉;不在场(已看过)时跳过,不浪费重试
+dismiss_assist_help() {
+  dump_ui
+  if grep -qi "text=\"[^\"]*bead-along works[^\"]*\"" ui.xml; then
+    log "assist help dialog present, dismissing"
+    tap_text_still "OK" 0
+  fi
+}
 toggle_assist_on() {
   assist_scroll_top
   n=0
   while [ $n -lt 6 ]; do
     if assist_on; then
       log "assist on (round $n)"
+      dismiss_assist_help
       return 0
     fi
     if _tap_match "resource-id=\"$PKG:id/swBeadAssist\"" 0; then
       sleep 2
       if assist_on; then
         log "assist toggled on (round $n)"
+        dismiss_assist_help
         return 0
       fi
       log "assist tap round $n did not stick, retry"

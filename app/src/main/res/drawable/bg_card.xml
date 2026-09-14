@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 贴纸大卡(v2.39):白底 + 2dp 墨描边 + 墨色硬投影(offset 3dp) -->
+<!-- 大卡:白底大圆角 + 暖色软投影,无描边 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:top="1dp">
         <shape android:shape="rectangle">
@@ -10,7 +10,6 @@
     <item android:bottom="3dp">
         <shape android:shape="rectangle">
             <solid android:color="@color/card" />
-            <stroke android:width="2dp" android:color="@color/ink" />
             <corners android:radius="22dp" />
         </shape>
     </item>

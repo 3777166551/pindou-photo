@@ -226,7 +226,7 @@
     <string name="assist_next">Next color</string>
     <string name="assist_progress_default">Done 0 / 0 (0%)</string>
     <string name="assist_locate">📍 Find undone</string>
-    <string name="assist_calendar">📅 Check-in calendar</string>
+    <string name="assist_calendar">📅 Check-in</string>
     <string name="brush_default_name">Black (#5)</string>
     <string name="brush_change">Change 🖌</string>
     <string name="brush_eraser">⌫ Eraser</string>
@@ -489,6 +489,11 @@
     <!-- Immersive bead mode: fullscreen assist page with in-page exit; ✓ stamp on each mark -->
     <string name="assist_immersive_btn">Focus</string>
     <string name="immersive_exit">✕ Exit</string>
+
+    <!-- Bead-assist how-to: auto-shown once on first enable, "How-to" chip reopens -->
+    <string name="assist_help_btn">How-to</string>
+    <string name="assist_help_title">How bead-along works</string>
+    <string name="assist_help_body">Tap a cell in the chart to mark it placed (a ✓ pops up); tap again to undo. Hold and drag to mark a whole run.\n\n• Per color (default): only the current color lights up — "Next color" cycles\n• By board: one 29×29 board at a time, auto-advances when full\n• By row: one row at a time, auto-advances downward\n• Focus: the chart goes fullscreen for distraction-free beading (Back exits)\n• Project: camera overlay pins the chart onto your real board\n• 📍 Find undone: jumps straight to the next unplaced cell\n\nProgress is saved automatically and survives reopen.</string>
 
     <!-- AR try-on (fake AR: camera viewfinder + gyroscope, view only) -->
     <string name="chip_ar">AR preview</string>

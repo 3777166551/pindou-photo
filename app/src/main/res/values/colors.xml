@@ -1,28 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 糖果贴纸风(v2.39):奶油底 + 墨色描边贴纸卡 + 糖果粉主操作 + 多巴胺点缀
-     规范见 docs/视觉与动效设计.md 第七章。改色先读规范,别把风格改散。 -->
+<!-- 暖陶玫瑰风(v2.52 重制):奶白底 + 无描边色调容器 + 玫瑰主操作 + 多巴胺点缀
+     对标 2026 Material 3 Expressive:大圆角/去硬描边/软层次/单主色 tonal。
+     改色保持"一个主色 + 中性暖灰 + 功能点缀色"的结构,别再加描边。 -->
 <resources>
-    <!-- 墨色:描边/硬投影/标题,整套风格的灵魂 -->
-    <color name="ink">#40354E</color>
-    <color name="inkSoft">#C9BFD6</color>
+    <!-- 墨色:仅存于代码级画布元素(框选/帧线),UI 容器一律不再描边 -->
+    <color name="ink">#3B3230</color>
+    <color name="inkSoft">#E7DCD2</color>
 
     <!-- 底与卡 -->
-    <color name="bg">#FFF6ED</color>
-    <color name="card">#FEFEFE</color>
-    <color name="subsurface">#FFF3E4</color>
-    <color name="line">#F4E3EC</color>
-    <color name="stickerShadow">#40354E</color>
+    <color name="bg">#FAF5EF</color>
+    <color name="card">#FFFFFF</color>
+    <color name="subsurface">#F4EDE3</color>
+    <color name="line">#EFE5D8</color>
+    <color name="stickerShadow">#EADCCB</color>
 
-    <!-- 主操作:糖果粉 -->
-    <color name="primary">#FF6E9C</color>
-    <color name="primaryDark">#F0588B</color>
-    <color name="primaryLight">#FFE3EE</color>
-    <color name="gradStart">#FF8DB8</color>
-    <color name="gradEnd">#FF5C96</color>
+    <!-- 主操作:玫瑰 -->
+    <color name="primary">#E85D75</color>
+    <color name="primaryDark">#CE4A62</color>
+    <color name="primaryLight">#FBE7EC</color>
+    <color name="gradStart">#F27890</color>
+    <color name="gradEnd">#E44F6C</color>
 
     <!-- 文字 -->
-    <color name="textMain">#3A3050</color>
-    <color name="textSub">#9A8FA6</color>
+    <color name="textMain">#37302C</color>
+    <color name="textSub">#9A8F87</color>
 
     <!-- 多巴胺点缀(图标盘/徽章/进度) -->
     <color name="accentMint">#35C98E</color>
