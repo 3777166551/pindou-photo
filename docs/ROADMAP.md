@@ -1,113 +1,67 @@
 # 路线图与交接文档 (ROADMAP & HANDOFF)
 
 > 本文档是项目的**持续交接入口**：当前状态、待办功能、开发约定、操作备忘。
-> 新会话/新开发者从这里开始读。最后更新：2026-09-07（v2.39 糖果贴纸风 UI 改版）
+> 新会话/新开发者从这里开始读。最后更新：2026-09-13（v2.50-beta.1 测试版已发）
 
-## 一、当前状态快照（2026-09-10,v2.48 已发）
+## 一、当前状态快照（2026-09-13,v2.50-beta.1 测试版已发）
 
-- **已发三个正式 Release**(Assets 均为签名 APK):
-  - **v2.46 第一个正式版**(versionCode 57):v2.45 全部功能 + 修复两个
-    测试抓出的真 BUG(见 DEV-NOTES 21/22)
-  - **v2.47 编辑页大整理**(58):常用参数前置,「高级设置」「图片处理」
-    默认折叠,顶栏「分享」大按钮(小白友好;冒烟已适配折叠)
-  - **v2.48 精细编辑三件套**(59):颜色排除+智能重映射(豆单⊘/存档持久)、
-    轻点查色号弹窗、画笔吸管
-- **测试体系三层,每次 push 自动执行**:148 项 JVM 单测(含 AR 投影数学
-  TestBoardProjector 16 项) → 完整拼豆流程
-  端到端冒烟(照片注入→出图→豆单断言→导出四件套→存档→合并采购→
-  重开→**庆祝流程 8×8 标记 100%**)→ **模糊测试 emulator-fuzz**(边界
-  图片/Monkey 2×3000/拟人漫游 260 步,本包 FATAL 或 ANR 即红);
-  另有 **ar-smoke.yml 专属流水线**(v2.49,虚拟摄像头模拟器逐张走查
-  Wikimedia Commons 豆板照片进 AR 试摆)
-- **模糊测试战果**:monkey 种子 424242 砸出「辅助标记后切尺寸 → 豆单
-  刷新越界崩溃」(已修);冒烟砸出「首页我的项目入口不可见」(已修)
-- **Firecrawl 已可用**(用户配好 key):竞品增量发现见
-  竞品功能比对2026-09.md 附录(吸管✅已做;候选:投影上板模式、
-  立体分层图纸;不做:蓝牙硬件板/社区/云)
-- **tools/promo/ 推广小工具**(B站视频/卡片生成)= 用户本地工具,
-  .gitignore 的 tools/ 规则覆盖,**永不入库**(用户明确要求)
-- **GitHub Token**:会话用完,提醒用户吊销;下次会话需用户提供新 Token
-  (仅 push/Release 需要,匿名读公开仓库不限)
-- 真机验收清单:qa/全面测试清单.md(已同步 v2.48)
-- v2.38 及以前见"历史版本索引"。qa 四套 66 项全绿,compile_check 通过。
-- 发布流程不变:build_apk.bat(PINDOU_KS_PASS,口令在 HANDOFF.md)→
-  GitHub API 发 Release。**本版尚未出 APK/未发 Release**。
-- **CI 全绿**：每次 push 自动跑 qa 测试套件 + Gradle 编译 + 云端模拟器 UI 冒烟
-  （qa/ui_smoke.sh:首页/知识/模板/空白画布/清单/色板管理/豆仓/文字生成 全点击走查,
-  英文环境运行顺带验证 i18n,截图存为构建产物）
-- **测试**：`qa/` 四套 69 项断言全绿
-  （TestColorMath 17 / TestPatternEngine 11 / TestPatternPatch 13 / TestCustomPalette 28），
-  入口 `qa/run_tests.sh`（CI/Linux）或 `qa/run_tests.bat`（Windows 本地）；
-  纯编译检查用根目录 `compile_check.bat`（aapt2+javac，不动 build_apk 产物）
-- **合规链**：AGPL-3.0(LICENSE) + THIRD_PARTY.md(全部第三方声明,含 Fluent Emoji MIT)
-  + DISCLAIMER.md + docs/DEV-NOTES.md(踩坑记录) + docs/SHARE-FORMAT.md(开放图纸/色板格式)
-  + 隐私政策页 https://3777166551.github.io/pindou-photo/privacy.html(已上线)
-- **权限底账**：全 APP 唯一权限 WRITE_EXTERNAL_STORAGE(maxSdkVersion=28)，
-  Android 10+ 零权限、零网络
-- **本机注意**：git 后台维护偶尔报 multi-pack-index 权限错(无害,推送成功即可);
-  github.com 连接间歇性抽风,推送/下载用重试循环即可
+- **最新 Release**:`v2.50-beta.1`(CI debug 签名测试包,17.1MB,含 v2.49 AR 试摆
+  + v2.50 四件套 + 审计修复)。**正式签名版尚未发布**(build_apk.bat 需
+  PINDOU_KS_PASS);v2.46~v2.48 三个正式版见历史版本索引。
+- **v2.49 AR 试摆(假 AR)** + **v2.50 四件套**(对位投屏/立体组合/PDF 导入/
+  十字绣导出)详见版本索引 v2.49/v2.50 行。
+- **2026-09-13 专项审计**(辅助/日历/打卡/投影对位逐行审读)抓出 5 个问题,
+  全部修复并 CI 验证:①严重——regenerate 无条件清空拼豆进度,重开存档/
+  调滑杆即丢全部标记(已改:网格尺寸不变则保留,仅剔除空格/板外;CI 新增
+  进度持久化回归用例);②辅助模式双指缩放失效(已修);③立体组合 UI 线程
+  生成(已改后台);④assistBoard 无上界钳制(已修);⑤投影对位模式 chip
+  语义(已修)。教训见 DEV-NOTES 25/26。
+- **测试体系三层,每次 push 自动执行**:158 项 JVM 单测(TestColorMath 17 /
+  PatternEngine 11 / PatternPatch 13 / CustomPalette 28 / Symmetry 18 /
+  LineArt 14 / BrandCharts 31 / BoardProjector 16 / CrossStitch 11)→
+  完整流程端到端冒烟(注入→出图→断言→导出→存档→重开→庆祝 100%→
+  **进度持久化回归**)→ 模糊测试;另有 **ar-smoke.yml 专属流水线**
+  (虚拟摄像头,10 张 Wikimedia 豆板照片走查 AR 全链)。
+- **发布渠道现状**:仅 GitHub Releases(国内下载不便,是当前最大短板);
+  候选:酷安直传 / 应用宝+华为(需软著,鸿蒙工程已有)。突围策略讨论:
+  多工艺图纸翻译器(数字油画/乐高,开源色表可核许可)+ 语音引导 + 年报卡片。
+- **权限底账**:CAMERA(AR 试摆/对位投屏,画面仅本地) +
+  WRITE_EXTERNAL_STORAGE(maxSdkVersion=28);无网络权限不变。
+- **合规链**:AGPL-3.0 + THIRD_PARTY.md(含 DMC 数据 MIT 声明) + DISCLAIMER
+  + DEV-NOTES + SHARE-FORMAT + 隐私政策页(已上线)。
+- **本机注意**:git 后台维护偶尔报 multi-pack-index 权限错(无害);
+  github.com 直连间歇抽风——git 通道全断时可走 **GitHub REST API 推送**
+  (blob/tree/commit/ref 与 Contents API,二进制走 base64 blob,见
+  DEV-NOTES 26 说明);Token 用完即吊销。
 
 ## 二、功能路线图（按优先级）
 
-### 1. ✅ 自定义色板完整编辑器（v2.34 已完成）
+### 已完成(细节见版本索引 v2.34~v2.50,此处只留索引)
 
-「我的色板」管理页（PaletteActivity，编辑器豆豆清单页入口）：多套自定义色板
-增删改、单色编辑（RGB 滑杆/十六进制取色器 + 名称/色号）、按色相排序、
-导出/导入（开放色板格式 `pindou-palette`，兼容取 pindou-pattern 的颜色表）、
-豆仓一键重建"我的豆板"。数据存 `files/custom_palettes.json`（CustomPalettes），
-运行时槽位在 BeadBrandCharts.customs（可多套），EditorActivity 靠
-`CustomPalettes.revision()` 在 onResume 自动刷新色板下拉框。
+- ✅ 自定义色板完整编辑器(v2.34) / ✅ 多语言英日(v2.35) /
+  ✅ 仅 64 位 ABI 声明(v2.35) / ✅ 隐私政策网页上线(v2.35,
+  https://3777166551.github.io/pindou-photo/privacy.html) /
+  ✅ 用户反馈修复+模板库 277 款(v2.36~v2.38,生成管线 tools/emoji_src)
 
-### 2. ✅ 多语言(英/日)(v2.35 已完成)
+### 下一批候选(2026-09 突围讨论,未立项)
 
-全部 UI 串抽到 `values/strings.xml`(中文默认),`values-en` / `values-ja` 同步;
-120 个通用色名、档位名、砖块/去噪档位、星期、知识页 7 篇文章均为三语资源数组,
-由 `util/L10n.apply(context)` 在各 Activity onCreate 时套用(未调用时保持中文,
-qa 纯 JVM 测试不受影响)。跟随系统语言,无应用内切换(如需 per-app 语言,
-等 minSdk 提到 33 用系统设置或接 appcompat)。CI 冒烟跑在英文模拟器上,
-顺带端到端验证英文串。
+- 外部打开图纸文件(intent filter,打通微信/QQ 分享闭环)
+- 全量备份/恢复(项目+豆仓+日历+色板打包 zip,离线工具留存刚需)
+- 进度分享卡片 / 拼豆年报(打卡数据本地合成,社媒裂变素材)
+- 语音引导(Android 本地 TTS 播报行/色/颗数,拼豆过程双手被占)
+- 多工艺图纸翻译器(数字油画→乐高,开源色表需逐个核许可)
 
-### 3. ✅ 全 ABI 决策:声明仅支持 64 位(v2.35 已定)
-
-`app/build.gradle` 加 `ndk { abiFilters 'arm64-v8a' }`,Gradle/CI 构建的 APK
-同样只含 arm64,与本地 bat 构建一致;商店侧按 64 位 APK 自动过滤 32 位设备,
-列表再标注"仅支持 64 位设备"。32 位老手机明确不支持(2019 年后设备几乎全 64 位)。
-
-### 4. ✅ 隐私政策网页(v2.35 已上线)
-
-`docs/privacy.html`(中英双语,内容取自 DISCLAIMER + 数据安全说明)。
-GitHub Pages 已通过 API 开通(main 分支 /docs 目录,并加 `docs/.nojekyll`
-禁用 Jekyll——docs 里的 Markdown 代码示例会让 Jekyll 构建报错)。
-
-**商店后台填这个 URL**:
-`https://3777166551.github.io/pindou-photo/privacy.html`
-
-### 5. 图纸社区模板仓库（零服务器飞轮）
+### 5. 图纸社区模板仓库（零服务器飞轮,待立项）
 
 仓库开 `templates/` 目录收社区投稿（SHARE-FORMAT v1 的 .json 文件），
 随版本打包进 APP 模板库；配 Issue 模板收稿。种子内容可以从
 Kenney 素材 + 社区精选开始。
 
-### 5. ✅ 用户反馈修复 + 模板库大扩充(v2.36~v2.38 已完成)
-
-- v2.36:吉卜力风强度滑杆(默认 65%)+模型输出色系统一(治黄绿偏色);
-  模板库单屏改版+真实数量;取景裁剪(CropView,拖动/缩放选区);
-  效果图 zoom=1 板底完整显示;首页豆仓独立管理页(InventoryActivity)
-- v2.37:**照片 EXIF 8 方向全支持**(治"照片歪斜只显示一部分"——旧代码只处理
-  3/6/8 且识别图纸完全没修);模板库换 Fluent Emoji 176 款
-- v2.38:模板扩到 **8 大类 277 款**(新增游戏音乐/运动奖牌/出行工具/潮流符号,
-  动物+16)。生成管线在 tools/emoji_src(本地,不入库):
-  entries_data.py 策划清单 → resolve.py 出下载清单 → curl 走
-  api.github.com contents(base64;raw CDN 被墙)→ quantize_data3.py
-  Lab 最近邻量化到 120 色板(安全字母表 SAFE_ALPHABET,见 DEV-NOTES 14)→
-  emit_java.py 发射 TemplateEmojiData(spec 带 0:32:32: 前缀,
-  发射前逐条模拟解析,防启动崩溃复发)
-- 首页豆仓卡片/模板卡片数字均为运行时统计,加素材自动变
-
 ### 6. 明确不做（红线）
 
 在线同步/账号/任何网络功能（破"零网络权限"卖点）、广告 SDK、
-更多 AI 模型（包体积）、桌面端移植。详见 docs/完整文档.md 开头的"发布渠道计划"。
+更多 AI 模型（包体积）、桌面端移植、社区广场/图纸市集、云同步、
+IoT/蓝牙硬件板。详见 docs/完整文档.md 开头的"发布渠道计划"。
 
 ## 三、开发约定（下一轮会话必须遵守）
 
@@ -119,9 +73,15 @@ Kenney 素材 + 社区精选开始。
   （javac 必须带 `-encoding UTF-8`，否则中文注释在 GBK 环境编译失败）。
 - **提交**：本地构建产物（qa/out、build_apk、tools、keystore、备份）都在
   .gitignore；`.github/workflows/*` 的推送需要 Token 有 Workflows 写权限。
+  已加 `.gitattributes`（\*.sh 强制 LF——CI bash 遇 CRLF 直接语法崩；
+  \*.bat CRLF）。
 - **合规红线**：不新增任何权限（尤其网络）、不引入广告/跟踪 SDK、
   第三方内容先查许可证再入库并登记 THIRD_PARTY.md、模型注意再分发条款
   （AnimeGANv3 非商业、F-Droid 需 Lite 构建——见 DEV-NOTES/渠道计划）。
+- **PowerShell 编码坑(PS5.1)**:无 BOM 的 .ps1 里写中文会按 ANSI 误读导致
+  语法错——含中文的脚本存 UTF-8 with BOM,或脚本纯 ASCII + 内容走外挂
+  UTF-8 文件/base64(中文字符串务必走 base64 解码,直接字面量会被 mangle);
+  Write 工具写的是无 BOM UTF-8,注意。
 
 ## 四、给下一轮会话的操作备忘（环境相关，勿外传密钥）
 
@@ -155,6 +115,23 @@ Kenney 素材 + 社区精选开始。
   后才可用（本机 IP 无 key 会被拒）。
 - **本机编码**：cmd 控制台是 GBK，UTF-8 中文输出会乱码但不影响实际数据；
   javac/python 务必显式 UTF-8。
+- **★ git 通道全断时的降级推送(2026-09-13 实战验证)**:github.com:443 的
+  git 端点间歇全断而 api.github.com 仍通——走 REST API 推:单文本文件用
+  Contents API(PUT contents,须带旧 sha);多文件/二进制用 Git Data API
+  (blob base64 → tree(base_tree=HEAD tree) → commit(parents=HEAD) →
+  PATCH ref)。注意:①API 提交不触发本地历史,网络恢复后
+  `git fetch && git reset --hard origin/main` 对齐;②中文路径/内容的
+  base64 要在脚本外先算好或脚本内解码,PowerShell 字面量会被 ANSI mangle;
+  ③同一文件多次 edit 后推树,以 commit_map 最后版本为准(初版脚本同路径
+  双条目后者覆盖前者,曾因此丢捕获块导致编译失败)。
+- **★ 冒烟脚本防脱同步三原则(三轮 CI 折腾的总结)**:
+  ①折叠区头按钮是开关——先查门控子控件(如 chipShapeRound/btnCrop)在不在
+  dump 里,不在才点头按钮,盲点会把已展开的区段折回去;
+  ②开关类控件以 uiautomator 的 checked 属性为准拨动并复核,盲点坐标会
+  落到邻格开关;面板按钮在开关下方,拨完要逐屏滚动到按钮可见
+  (屏外节点不进 dump);
+  ③风格切换/参数改动有 loading 蒙层,蒙层期间 uiautomator 找不到任何
+  控件——每步等足重生成时间(8s)再走下一步。
 
 ## 五、历史版本索引（详情见各 Release 说明）
 
@@ -183,5 +160,5 @@ Kenney 素材 + 社区精选开始。
 | v2.46 | 第一个正式版：v2.45 全量 + 修复两个测试抓出的真 BUG（首页「我的项目」入口不可见=DEV-NOTES 21；辅助标记后切尺寸豆单越界崩溃=DEV-NOTES 22）；测试体系升级：完整拼豆流程端到端冒烟 + 模糊测试 emulator-fuzz（边界图片/Monkey/拟人漫游） |
 | v2.47 | 编辑页大整理：常用参数前置，「高级设置」「图片处理」默认折叠，顶栏「分享」大按钮，清理孤儿标题；真 BUG 修复：首页「我的项目」入口不可见（cf25c3d） |
 | v2.48 | 精细编辑三件套：颜色排除+智能重映射（豆单⊘/已排除条/存档持久）、轻点查色号弹窗、画笔吸管；真 BUG 修复：辅助标记后切尺寸豆单越界崩溃（5ba70e88）；庆祝流程进入 CI 冒烟（8×8 标记 100% 断言） |
-| v2.49 | **AR 试摆（假 AR，先期调研后落地的最小版）**：效果图页新增「AR 试摆」chip → 全屏相机取景（Camera2 手写，零依赖），效果图按豆子规格换算物理尺寸后作为一块"板子"立在放置时的视线前方，旋转矢量传感器驱动透视（nlerp 平滑），纯展示不可交互；传感器三级降级（旋转矢量→游戏旋转矢量→加速度+磁场→固定视角）；新增 CAMERA 运行时权限（画面仅本地使用，隐私政策不变），无网络权限依旧；BoardProjector 纯 Java 投影数学（16 项 JVM 单测，全套 148 项），qa/ar_smoke.sh + 专属 CI ar-smoke.yml（模拟器 -camera-back virtualscene，5 张 Wikimedia Commons 豆板照片逐张走查，许可见 qa/ar_data/CREDITS.md，**已跑绿**）；**CI 抓出三个真问题**：① 自定义 View 缺 (Context,AttributeSet) 构造器 → XML 膨胀崩进程（DEV-NOTES 23）；② 再现 findViewById 找不到自定义视图的 NPE → 该页弃 XML 改纯代码构建 UI；③ AR 路径效果图渲染限宽 1024（58×58 全尺寸 3720²≈55MB 连续分配，导出路径不变，EffectRenderer.render 增 maxDim 重载）。顺带 fuzz 抓出存量 BUG：无相机设备 ACTION_IMAGE_CAPTURE 抛 SecurityException 崩进程（DEV-NOTES 24，已修）；全流程 smoke 的「庆祝 100%」步在本轮之前就已在 main 上红（基线 0200077 同步失败，与 AR 无关，待查） |
-| v2.50 | **四件套（竞品调研既有候选，在线复核后落地）**：① **投影对位模式**（拼豆辅助工具行新增「对位投屏」：相机取景 + 四点校准把图纸"钉"到真实拼豆板，当前辅助色高亮/整图虚影切换、◀▶ 换色、透明度滑杆、手机支架俯拍即用——把 v2.49 假 AR 基建从"看成品"升级到"辅助拼"）；② **立体组合**（我的项目对话框新增入口：选 2~4 个存档自下而上堆叠，逐层拖动调位/层高滑杆，上小下大透视+侧壁+投影预览，合并豆单按色汇总，导出预览 PNG）；③ **PDF 图纸导入**（识别图纸入口接受 application/pdf，系统 PdfRenderer 离线渲染第一页 → 现有框选/网格检测管线，零新权限）；④ **十字绣导出**（导出菜单新增「十字绣图纸(DMC)」：拼豆色按 CIEDE2000 就近映射 DMC 绣线 454 色（`DmcMapper` 纯 Java 可单测，全套 158 项），出 10 格加粗网格绣图 + DMC 色号清单 + 14ct 成品尺寸；DMC 数据取自 MIT 的 Skytuhua/stitch-forge，THIRD_PARTY 已声明，无许可数据集一概不用）；新增 .gitattributes（\*.sh 强制 LF，治 CI bash CRLF 崩）；ar-smoke 图集扩到 10 张（ar2_* 批次，glob 修正后全绿）；庆祝 100% 三层根因修复后 CI 首次全绿（smoke+fuzz） |
+| v2.49 | **AR 试摆（假 AR，先期调研后落地的最小版）**：效果图页新增「AR 试摆」chip → 全屏相机取景（Camera2 手写，零依赖），效果图按豆子规格换算物理尺寸后作为一块"板子"立在放置时的视线前方，旋转矢量传感器驱动透视（nlerp 平滑），纯展示不可交互；传感器三级降级（旋转矢量→游戏旋转矢量→加速度+磁场→固定视角）；新增 CAMERA 运行时权限（画面仅本地使用，隐私政策不变），无网络权限依旧；BoardProjector 纯 Java 投影数学（16 项 JVM 单测）；qa/ar_smoke.sh + 专属 CI ar-smoke.yml（模拟器 -camera-back virtualscene，Wikimedia Commons 豆板照片逐张走查，许可见 qa/ar_data/CREDITS.md）；CI 抓出的构造器缺失/findViewById/大图 OOM 三问题与无相机 SecurityException 崩溃详见 DEV-NOTES 23/24（该页已改纯代码构建 UI） |
+| v2.50 | **四件套（竞品调研既有候选，在线复核后落地）**：① **投影对位模式**（拼豆辅助工具行新增「对位投屏」：相机取景 + 四点校准把图纸"钉"到真实拼豆板，当前辅助色高亮/整图虚影切换、◀▶ 换色、透明度滑杆——把 v2.49 假 AR 基建从"看成品"升级到"辅助拼"）；② **立体组合**（我的项目对话框新增入口：选 2~4 个存档自下而上堆叠，逐层拖动调位/层高滑杆，透视+侧壁+投影预览，合并豆单按色汇总，导出预览 PNG；生成走后台线程）；③ **PDF 图纸导入**（识别图纸入口接受 application/pdf，系统 PdfRenderer 离线渲染第一页 → 现有框选/网格检测管线，零新权限）；④ **十字绣导出**（导出菜单「十字绣图纸(DMC)」：拼豆色按 CIEDE2000 就近映射 DMC 绣线 454 色，DmcMapper 纯 Java 可单测，出 10 格加粗绣图+色号清单+14ct 成品尺寸；DMC 数据取自 MIT 的 Skytuhua/stitch-forge，THIRD_PARTY 已声明）。**2026-09-13 专项审计**抓出并修复：重开存档/调参数清空拼豆进度（严重，CI 新增持久化回归用例）、辅助模式双指缩放失效、立体组合 UI 线程生成、assistBoard 无上界、投影对位 chip 语义（DEV-NOTES 25/26）；ar-smoke 图集扩到 10 张全绿；全套 158 项单测；发布 **v2.50-beta.1**（CI debug 签名测试包） |
