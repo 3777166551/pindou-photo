@@ -843,13 +843,15 @@ snap palettes
 tap_id btnNew
 sleep 1.5
 check_text "New palette"
-tap_id btnAddColor 0
-tap_text "Add color" 0
+# 对话框内一律免滚动点击(tap_text_still):滚动手势起点落在对话框之外,
+# 会把非模态 AlertDialog 按 touch-outside 取消掉(第七轮教训,0914 轮复现:
+# btnAddColor 滚动查找把 New palette 对话框划没了,OK 硬断言跟着失败)
+tap_text_still "Add color" 0
 sleep 1.5
 snap color_picker
-tap_text "OK"
+tap_text_still "OK"
 sleep 1
-tap_text "Save"
+tap_text_still "Save"
 sleep 1.5
 check_text "tap to manage" 0
 snap palette_saved

@@ -1707,6 +1707,7 @@
                             android:elevation="2dp"
                             android:focusable="true"
                             android:gravity="center"
+                            android:maxLines="1"
                             android:text="@string/assist_immersive_btn"
                             android:textColor="@color/text_chip"
                             android:textSize="12sp" />
