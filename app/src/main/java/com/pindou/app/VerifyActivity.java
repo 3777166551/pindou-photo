@@ -16,7 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.pindou.app.bead.BeadPattern;
-import com.pindou.app.util.AppFileProvider;
+import com.pindou.app.provider.AppFileProvider;
 import com.pindou.app.util.ImageLoader;
 import com.pindou.app.util.Jsons;
 import com.pindou.app.util.PatternShare;
@@ -334,7 +334,7 @@ public class VerifyActivity extends Activity {
         worker = new Thread(new Runnable() {
             @Override
             public void run() {
-                final VerifyResult r;
+                final VerifyEngine.VerifyResult r;
                 try {
                     r = compare(viewQuad);
                 } catch (Exception e) {

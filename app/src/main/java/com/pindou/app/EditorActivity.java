@@ -2710,20 +2710,24 @@ public class EditorActivity extends Activity {
     private void speak(String msg) {
         if (!voiceOn || msg == null || msg.isEmpty()) return;
         if (voiceTts == null) {
-            voiceTts = new android.speech.tts.TextToSpeech(this, status -> {
-                if (status == android.speech.tts.TextToSpeech.SUCCESS) {
-                    voiceTtsReady = true;
-                    try {
-                        voiceTts.setLanguage(java.util.Locale.getDefault());
-                    } catch (Throwable t) {
-                    }
-                }
-                if (voiceTtsReady && pendingVoice != null) {
-                    String p = pendingVoice;
-                    pendingVoice = null;
-                    doSpeak(p);
-                }
-            });
+            voiceTts = new android.speech.tts.TextToSpeech(this,
+                    new android.speech.tts.TextToSpeech.OnInitListener() {
+                        @Override
+                        public void onInit(int status) {
+                            if (status == android.speech.tts.TextToSpeech.SUCCESS) {
+                                voiceTtsReady = true;
+                                try {
+                                    voiceTts.setLanguage(java.util.Locale.getDefault());
+                                } catch (Throwable t) {
+                                }
+                            }
+                            if (voiceTtsReady && pendingVoice != null) {
+                                String p = pendingVoice;
+                                pendingVoice = null;
+                                doSpeak(p);
+                            }
+                        }
+                    });
         }
         if (voiceTtsReady) doSpeak(msg);
         else pendingVoice = msg;
