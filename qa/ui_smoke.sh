@@ -682,6 +682,27 @@ grep -qi "text=\"[^\"]*100%[^\"]*\"" ui.xml || placed_debug
 check_text "100%"              # 辅助进度:52/52 · 100%(硬断言)
 snap celebrate_100
 log "celebration flow done: 100% reached (celebration.start fires on this state)"
+# 单击标记/再点取消 回路(此前只有拖刷"只加"方向被断言,单击 toggle 的
+# 减向从未验证):点 (1,1) 格心(8×8 圆板内圈,必是豆格且已被扫线标记)
+# → 51/52 = 98% → 再点同一格 → 回到 100%。两次 tap 间隔数秒,不构成双击。
+adb shell input tap $(( GL + CELL_T + CELL_T / 2 )) $(( GT + CELL_T + CELL_T / 2 ))
+sleep 1.5
+dump_ui
+grep -qi "text=\"[^\"]*98%[^\"]*\"" ui.xml || {
+  echo "[smoke] FAIL: single-tap unmark did not decrement (expected 98%)"
+  snap fail
+  exit 1
+}
+log "tap-unmark OK: 100% -> 98%"
+adb shell input tap $(( GL + CELL_T + CELL_T / 2 )) $(( GT + CELL_T + CELL_T / 2 ))
+sleep 1.5
+dump_ui
+grep -qi "text=\"[^\"]*100%[^\"]*\"" ui.xml || {
+  echo "[smoke] FAIL: single-tap remark did not restore 100%"
+  snap fail
+  exit 1
+}
+log "tap-remark OK: 98% -> 100%"
 assist_off
 sleep 1
 
@@ -842,8 +863,9 @@ sleep 0.5
 tap_id btnAssistImmersive
 sleep 1.5
 check_text "Exit"              # 硬断言:沉浸层顶栏存在(覆盖层进了 a11y 树)
-adb shell input tap 540 900    # 沉浸页点一格(空格/有豆格都安全:toggle 自带防御)
+adb shell input tap 540 900    # 沉浸页点一格:模板 95 颗、标记集为空 → 95 left
 sleep 0.8
+check_text "94 left"           # 硬断言:点中一颗并落账(单击加向,此前仅截图背书)
 snap immersive
 tap_text_still "Exit"
 sleep 1
