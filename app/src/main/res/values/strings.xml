@@ -487,8 +487,16 @@
 
     <!-- 拼豆辅助怎么用:首次开启自动弹一次,工具行「怎么用」随时再看 -->
     <string name="assist_help_btn">怎么用?</string>
+    <string name="assist_help_card">怎么用?点这里 ▸</string>
     <string name="assist_help_title">拼豆辅助怎么用</string>
-    <string name="assist_help_body">图纸页直接点格子 = 标记已拼好（弹✓），再点一下取消；按住滑动可以连续刷。\n\n• 逐色辅助（默认）：只亮当前颜色，点「下一个颜色」切换\n• 按板拼：一次点亮一块 29×29 拼板，拼满自动跳下一块\n• 按行拼：一次点亮一行，拼完自动下一行\n• 沉浸拼豆：图纸铺满全屏专心拼，返回键退出\n• 对位投屏：打开相机，把图纸对准真实拼豆板照着摆\n• 📍定位未拼：直接跳到下一个还没拼的格子\n\n进度自动保存，退出重开都在。</string>
+    <string name="assist_help_body">图纸页直接点格子 = 标记已拼好（弹✓），再点一下取消；按住滑动可以连续刷。\n\n• 逐色辅助（默认）：只亮当前颜色，点「下一个颜色」切换\n• 按板拼：一次点亮一块 29×29 拼板，拼满自动跳下一块\n• 按行拼：一次点亮一行，拼完自动下一行\n• 沉浸拼豆：图纸铺满全屏专心拼，返回键退出\n• 对位投屏：打开相机，把图纸对准真实拼豆板照着摆\n• 📍定位未拼：直接跳到下一个还没拼的格子\n• 🔊语音播报：拼完一板/换色时开口报进度，拼豆不用低头看屏\n\n进度自动保存，退出重开都在。</string>
+
+    <!-- 语音引导:本地 TTS 播报,零网络零权限 -->
+    <string name="assist_voice_btn">🔊 语音</string>
+    <string name="voice_on">语音引导已开启</string>
+    <string name="fmt_voice_color">第%1$d种颜色，共%2$d种，还剩%3$d颗</string>
+    <string name="fmt_voice_board">第%1$d块板，共%2$d块，已拼%3$d颗，剩%4$d颗</string>
+    <string name="fmt_voice_row">第%1$d行，共%2$d行，已拼%3$d颗，剩%4$d颗</string>
     <string name="cross_title">十字绣图纸 · Cross Stitch Chart</string>
     <string name="fmt_cross_info">%1$d×%2$d 格 · %3$,d 针 · %4$d 色 · 14ct 成品约 %5$.1f×%6$.1f cm</string>
     <string name="cross_legend">DMC 绣线清单</string>

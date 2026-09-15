@@ -857,6 +857,25 @@ sleep 0.5
 snap assist_row
 tap_id btnAssistRow 0
 sleep 0.5
+# ---------- v2.52:语音引导开关(selected 态硬断言;TTS 引擎有无不影响断言) ----------
+tap_id btnAssistVoice 0
+sleep 0.5
+dump_ui
+grep -q "resource-id=\"$PKG:id/btnAssistVoice\"[^\>]*selected=\"true\"" ui.xml || {
+  echo "[smoke] FAIL: voice chip not selected after tap"
+  snap fail
+  exit 1
+}
+log "voice guide on"
+tap_id btnAssistVoice 0
+sleep 0.5
+dump_ui
+grep -q "resource-id=\"$PKG:id/btnAssistVoice\"[^\>]*selected=\"true\"" ui.xml && {
+  echo "[smoke] FAIL: voice chip still selected after second tap"
+  snap fail
+  exit 1
+}
+log "voice guide off"
 # ---------- v2.51:沉浸拼豆(全屏画布 + 顶栏退出) ----------
 # 工具行「Immersive」chip -> 全屏覆盖层:硬断言顶栏 Exit 可见,
 # 沉浸页里点一格走共用标记路径,截图后退出,再硬断言覆盖层真的关了

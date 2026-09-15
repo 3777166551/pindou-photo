@@ -279,7 +279,12 @@ public class EditorActivity extends Activity {
     private View chipAr;
     private View btnAssistLocate, btnAssistCalendar, btnBrushMirror;
     private View assistToolsRow;
-    private View btnAssistImmersive, btnAssistHelp;
+    private View btnAssistImmersive, btnAssistHelp, btnAssistVoice, btnAssistHelpCard;
+    // 语音引导:本地 TTS 播报进度(零网络零权限),只在辅助开启期间工作
+    private android.speech.tts.TextToSpeech voiceTts;
+    private boolean voiceOn = false;
+    private boolean voiceTtsReady = false;
+    private String pendingVoice;
     // 沉浸拼豆:全屏覆盖层(专用画布+顶栏),null = 未进入
     private android.view.ViewGroup immersiveOverlay;
     private PatternView immersiveView;
@@ -510,6 +515,8 @@ public class EditorActivity extends Activity {
         assistToolsRow = findViewById(R.id.assistToolsRow);
         btnAssistImmersive = findViewById(R.id.btnAssistImmersive);
         btnAssistHelp = findViewById(R.id.btnAssistHelp);
+        btnAssistVoice = findViewById(R.id.btnAssistVoice);
+        btnAssistHelpCard = findViewById(R.id.btnAssistHelpCard);
         btnAssistBoard = findViewById(R.id.btnAssistBoard);
         btnAssistRow = findViewById(R.id.btnAssistRow);
         btnAssistProject = findViewById(R.id.btnAssistProject);
@@ -755,6 +762,31 @@ public class EditorActivity extends Activity {
             @Override
             public void onClick(View v) {
                 showAssistHelpDialog();
+            }
+        });
+        // 卡片标题上的「怎么用?点这里」:不开辅助也能直达说明
+        btnAssistHelpCard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showAssistHelpDialog();
+            }
+        });
+        // 语音引导开关:本地 TTS,换色/拼完一板一行/全部拼完时开口
+        btnAssistVoice.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                voiceOn = !voiceOn;
+                btnAssistVoice.setSelected(voiceOn);
+                if (voiceOn) {
+                    speak(getString(R.string.voice_on));
+                    speakAssistStatus();
+                } else if (voiceTts != null) {
+                    try {
+                        voiceTts.stop();
+                    } catch (Throwable t) {
+                    }
+                    pendingVoice = null;
+                }
             }
         });
         btnAssistNextBoard.setOnClickListener(new View.OnClickListener() {
@@ -1473,6 +1505,7 @@ public class EditorActivity extends Activity {
         if (complete && !celebrated) {
             celebrated = true;
             celebration.start(getString(R.string.celebrate_done));
+            speak(getString(R.string.celebrate_done));
         } else if (!complete) {
             celebrated = false;
         }
@@ -2224,6 +2257,7 @@ public class EditorActivity extends Activity {
                         .putBoolean("assist_help_seen", true).apply();
                 showAssistHelpDialog();
             }
+            if (voiceOn) speakAssistStatus();
         } else {
             beadAssistPanel.setVisibility(View.GONE);
             tvAssistProgress.setVisibility(View.GONE);
@@ -2378,25 +2412,30 @@ public class EditorActivity extends Activity {
             if (assistRow < pattern.rows - 1) {
                 int finished = assistRow + 1;
                 assistRow++;
-                Toast.makeText(this, String.format(Locale.CHINA,
-                        getString(R.string.fmt_assist_row_next), finished),
-                        Toast.LENGTH_SHORT).show();
+                String msg = String.format(Locale.CHINA,
+                        getString(R.string.fmt_assist_row_next), finished);
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+                speak(msg);
                 syncAssistBoardUi();
             } else {
-                Toast.makeText(this, getString(R.string.assist_row_all),
-                        Toast.LENGTH_SHORT).show();
+                String msg = getString(R.string.assist_row_all);
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+                speak(msg);
             }
         } else {
             if (assistBoard < pattern.boardsNeeded() - 1) {
                 int finished = assistBoard + 1;
                 assistBoard++;
-                Toast.makeText(this, String.format(Locale.CHINA,
+                String msg = String.format(Locale.CHINA,
                         getString(R.string.fmt_assist_board_next),
-                        finished, pattern.boardsNeeded()), Toast.LENGTH_SHORT).show();
+                        finished, pattern.boardsNeeded());
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+                speak(msg);
                 syncAssistBoardUi();
             } else {
-                Toast.makeText(this, getString(R.string.assist_board_all),
-                        Toast.LENGTH_SHORT).show();
+                String msg = getString(R.string.assist_board_all);
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+                speak(msg);
             }
         }
     }
@@ -2570,6 +2609,7 @@ public class EditorActivity extends Activity {
         updateAssistUi();
         applyAssistToView();
         updateImmersiveBar();
+        speakAssistStatus();
     }
 
     private void updateAssistUi() {
@@ -2623,7 +2663,7 @@ public class EditorActivity extends Activity {
                 done, total, pct, beadDone.size(), pattern.totalBeads, todayCount()));
     }
 
-    // ---------------- 拼豆辅助怎么用 ----------------
+    // ---------------- 拼豆辅助怎么用 / 语音引导 ----------------
 
     /** 辅助模式用法说明:标记操作 + 六个工具项各自干什么(首次开启自动弹一次) */
     private void showAssistHelpDialog() {
@@ -2632,6 +2672,74 @@ public class EditorActivity extends Activity {
                 .setMessage(getString(R.string.assist_help_body))
                 .setPositiveButton(getString(R.string.btn_ok), null)
                 .show();
+    }
+
+    /** 本地 TTS 懒初始化:引擎就绪前排队的口播在回调里补播 */
+    private void speak(String msg) {
+        if (!voiceOn || msg == null || msg.isEmpty()) return;
+        if (voiceTts == null) {
+            voiceTts = new android.speech.tts.TextToSpeech(this, status -> {
+                if (status == android.speech.tts.TextToSpeech.SUCCESS) {
+                    voiceTtsReady = true;
+                    try {
+                        voiceTts.setLanguage(java.util.Locale.getDefault());
+                    } catch (Throwable t) {
+                    }
+                }
+                if (voiceTtsReady && pendingVoice != null) {
+                    String p = pendingVoice;
+                    pendingVoice = null;
+                    doSpeak(p);
+                }
+            });
+        }
+        if (voiceTtsReady) doSpeak(msg);
+        else pendingVoice = msg;
+    }
+
+    private void doSpeak(String msg) {
+        try {
+            voiceTts.speak(msg, android.speech.tts.TextToSpeech.QUEUE_ADD, null,
+                    "pindou_" + System.currentTimeMillis());
+        } catch (Throwable t) {
+        }
+    }
+
+    /** 当前辅助状态口播:逐色报颜色序号+剩豆,按板/逐行报进度 */
+    private void speakAssistStatus() {
+        if (!voiceOn || pattern == null) return;
+        String msg;
+        if (assistMode == ASSIST_ROW) {
+            int[] st = bandDoneStats();
+            msg = getString(R.string.fmt_voice_row,
+                    assistRow + 1, pattern.rows, st[0], st[1] - st[0]);
+        } else if (assistMode == ASSIST_BOARD) {
+            int[] st = bandDoneStats();
+            msg = getString(R.string.fmt_voice_board,
+                    assistBoard + 1, pattern.boardsNeeded(), st[0], st[1] - st[0]);
+        } else {
+            if (assistFocus < 0 || assistFocus >= pattern.palette.size()) return;
+            int order = 0;
+            for (int i = 0; i < pattern.usedColors.size(); i++) {
+                if (pattern.usedColors.get(i).index == assistFocus) {
+                    order = i + 1;
+                    break;
+                }
+            }
+            int total = pattern.counts[assistFocus];
+            int done = 0;
+            for (int y = 0; y < pattern.rows; y++) {
+                for (int x = 0; x < pattern.cols; x++) {
+                    if (pattern.cellAt(x, y) == assistFocus
+                            && beadDone.contains(y * pattern.cols + x)) {
+                        done++;
+                    }
+                }
+            }
+            msg = getString(R.string.fmt_voice_color,
+                    order, pattern.usedColors.size(), total - done);
+        }
+        speak(msg);
     }
 
     // ---------------- 沉浸拼豆(全屏覆盖层) ----------------
@@ -4800,5 +4908,14 @@ public class EditorActivity extends Activity {
         super.onDestroy();
         main.removeCallbacks(regenTask);
         exec.shutdownNow();
+        if (voiceTts != null) {
+            try {
+                voiceTts.stop();
+                voiceTts.shutdown();
+            } catch (Throwable t) {
+            }
+            voiceTts = null;
+            voiceTtsReady = false;
+        }
     }
 }

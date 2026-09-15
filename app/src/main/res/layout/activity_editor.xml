@@ -1552,6 +1552,17 @@
                                 android:text="@string/bead_assist_hint"
                                 android:textColor="@color/textSub"
                                 android:textSize="11sp" />
+
+                            <TextView
+                                android:id="@+id/btnAssistHelpCard"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="3dp"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:text="@string/assist_help_card"
+                                android:textColor="@color/primary"
+                                android:textSize="11sp" />
                         </LinearLayout>
 
                         <Switch
@@ -1733,6 +1744,7 @@
                                 android:id="@+id/btnAssistProject"
                                 android:layout_width="0dp"
                                 android:layout_height="34dp"
+                                android:layout_marginEnd="6dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
@@ -1741,6 +1753,21 @@
                                 android:gravity="center"
                                 android:maxLines="1"
                                 android:text="@string/assist_project_btn"
+                                android:textColor="@color/text_chip"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/btnAssistVoice"
+                                android:layout_width="0dp"
+                                android:layout_height="34dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_chip"
+                                android:clickable="true"
+                                android:elevation="2dp"
+                                android:focusable="true"
+                                android:gravity="center"
+                                android:maxLines="1"
+                                android:text="@string/assist_voice_btn"
                                 android:textColor="@color/text_chip"
                                 android:textSize="12sp" />
                         </LinearLayout>

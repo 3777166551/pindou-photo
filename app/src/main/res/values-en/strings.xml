@@ -492,8 +492,16 @@
 
     <!-- Bead-assist how-to: auto-shown once on first enable, "How-to" chip reopens -->
     <string name="assist_help_btn">How-to</string>
+    <string name="assist_help_card">How-to: tap here ▸</string>
     <string name="assist_help_title">How bead-along works</string>
-    <string name="assist_help_body">Tap a cell in the chart to mark it placed (a ✓ pops up); tap again to undo. Hold and drag to mark a whole run.\n\n• Per color (default): only the current color lights up — "Next color" cycles\n• By board: one 29×29 board at a time, auto-advances when full\n• By row: one row at a time, auto-advances downward\n• Focus: the chart goes fullscreen for distraction-free beading (Back exits)\n• Project: camera overlay pins the chart onto your real board\n• 📍 Find undone: jumps straight to the next unplaced cell\n\nProgress is saved automatically and survives reopen.</string>
+    <string name="assist_help_body">Tap a cell in the chart to mark it placed (a ✓ pops up); tap again to undo. Hold and drag to mark a whole run.\n\n• Per color (default): only the current color lights up — "Next color" cycles\n• By board: one 29×29 board at a time, auto-advances when full\n• By row: one row at a time, auto-advances downward\n• Focus: the chart goes fullscreen for distraction-free beading (Back exits)\n• Project: camera overlay pins the chart onto your real board\n• 📍 Locate: jumps straight to the next unplaced cell\n• 🔊 Voice: speaks progress on color switches and board/row completion\n\nProgress is saved automatically and survives reopen.</string>
+
+    <!-- Voice guide: local TTS, zero network zero permissions -->
+    <string name="assist_voice_btn">🔊 Voice</string>
+    <string name="voice_on">Voice guide on</string>
+    <string name="fmt_voice_color">Color %1$d of %2$d, %3$d beads left</string>
+    <string name="fmt_voice_board">Board %1$d of %2$d, %3$d placed, %4$d left</string>
+    <string name="fmt_voice_row">Row %1$d of %2$d, %3$d placed, %4$d left</string>
 
     <!-- AR try-on (fake AR: camera viewfinder + gyroscope, view only) -->
     <string name="chip_ar">AR preview</string>
