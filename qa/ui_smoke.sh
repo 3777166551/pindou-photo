@@ -863,9 +863,36 @@ sleep 0.5
 tap_id btnAssistImmersive
 sleep 1.5
 check_text "Exit"              # 硬断言:沉浸层顶栏存在(覆盖层进了 a11y 树)
-adb shell input tap 540 900    # 沉浸页点一格:模板 95 颗、标记集为空 → 95 left
-sleep 0.8
-check_text "94 left"           # 硬断言:点中一颗并落账(单击加向,此前仅截图背书)
+# 单击标记断言(模板无关):记下顶栏 "N left",点一下必须变 N-1。
+# 点击点可能落在空格(无操作),点不中就换坐标重试,最多 4 次。
+# (上一版硬编码 "94 left" 与模板强耦合,chip58 漂移一挂就碎,0915 实锤)
+immersive_left() {
+  dump_ui
+  grep -o 'text="[^"]*[0-9][0-9]* left[^"]*"' ui.xml | head -1 \
+    | grep -o '[0-9][0-9]* left' | grep -o '[0-9][0-9]*'
+}
+L0=$(immersive_left)
+log "immersive beads left before tap: ${L0:-?}"
+tap_x=(540 400 700 540)
+tap_y=(900 1300 1100 700)
+n=0
+L1=""
+while [ $n -lt 4 ]; do
+  adb shell input tap ${tap_x[$n]} ${tap_y[$n]}
+  sleep 1
+  L1=$(immersive_left)
+  if [ -n "$L0" ] && [ -n "$L1" ] && [ "$L1" -lt "$L0" ] 2>/dev/null; then
+    break
+  fi
+  n=$((n + 1))
+done
+if [ -n "$L0" ] && [ -n "$L1" ] && [ "$L1" -lt "$L0" ] 2>/dev/null; then
+  log "immersive tap-mark OK: $L0 -> $L1 left"
+else
+  echo "[smoke] FAIL: immersive tap never marked a bead (${L0:-?} -> ${L1:-?})"
+  snap fail
+  exit 1
+fi
 snap immersive
 tap_text_still "Exit"
 sleep 1
