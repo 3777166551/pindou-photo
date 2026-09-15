@@ -938,10 +938,12 @@ adb shell run-as $PKG cp /data/local/tmp/v_board.png files/verify/board.png
 adb shell run-as $PKG cp /data/local/tmp/v_chart.json files/verify/chart.json
 adb shell am start -n $PKG/.VerifyActivity --es path /data/data/$PKG/files/verify/chart.json --es image /data/data/$PKG/files/verify/board.png
 sleep 3
-tap_text "Compare"             # 开始比对(EN 环境,程序化按钮无 id)
+# 精确匹配按钮(提示语里也含 Compare,模糊匹配会点到不可点的提示上)
+tap_text_exact "▶ Compare"
 sleep 4                         # 后台逐格采样比对 + 结果回填
 dump_ui
-grep -qE 'text="[^"]*Checked [1-9][0-9]* cells: ✗ wrong 0' ui.xml || {
+# 全对板走 verify_good 分支(✅ All correct),异常板才显示 wrong N
+grep -qE 'text="[^"]*(Checked [1-9][0-9]* cells: ✗ wrong 0|All correct)' ui.xml || {
   echo "[smoke] FAIL: verify self-test expected total>0 and wrong 0"
   snap fail
   exit 1
