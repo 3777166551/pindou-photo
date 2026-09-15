@@ -487,7 +487,7 @@
 
     <!-- 拼豆辅助怎么用:首次开启自动弹一次,工具行「怎么用」随时再看 -->
     <string name="assist_help_btn">怎么用?</string>
-    <string name="assist_help_card">怎么用?点这里 ▸</string>
+    <string name="assist_help_icon">?</string>
     <string name="assist_help_title">拼豆辅助怎么用</string>
     <string name="assist_help_body">图纸页直接点格子 = 标记已拼好（弹✓），再点一下取消；按住滑动可以连续刷。\n\n• 逐色辅助（默认）：只亮当前颜色，点「下一个颜色」切换\n• 按板拼：一次点亮一块 29×29 拼板，拼满自动跳下一块\n• 按行拼：一次点亮一行，拼完自动下一行\n• 沉浸拼豆：图纸铺满全屏专心拼，返回键退出\n• 对位投屏：打开相机，把图纸对准真实拼豆板照着摆\n• 📍定位未拼：直接跳到下一个还没拼的格子\n• 🔊语音播报：拼完一板/换色时开口报进度，拼豆不用低头看屏\n\n进度自动保存，退出重开都在。</string>
 

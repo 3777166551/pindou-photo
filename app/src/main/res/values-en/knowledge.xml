@@ -2,6 +2,7 @@
 <!-- Bead basics (English) -->
 <resources>
     <string-array name="knowledge_titles">
+        <item>How to use this app</item>
         <item>What are fuse beads?</item>
         <item>Bead sizes</item>
         <item>Pegboard basics</item>
@@ -13,6 +14,7 @@
         <item>Project ideas: small makes checklist</item>
     </string-array>
     <string-array name="knowledge_bodies">
+        <item>The full beading flow in this app:\n① Chart: tap Start a new pattern and pick a photo — the chart is generated automatically; adjust size (29–116), palette and style, then export PDF/PNG.\n② Bead-along: in the chart tab turn on Bead-along mode — only the current color lights up. Tap a cell to mark it placed (a ✓ pops up), tap again to undo, hold and drag to sweep a whole run; By board / By row light one board or row at a time and auto-advance when full.\n③ Focus: the Focus chip goes fullscreen — prop the phone beside the board and look down; 🔊 Voice speaks progress so your hands stay on the beads.\n④ Project: the camera pins the chart onto your real board with 4-point alignment — place beads along the ghost overlay.\n⑤ Inventory: log the beads you own, the list suggests substitutes for short colors, and the merged shopping list exports to CSV.\n⑥ Archive: finished works live in My projects and reopen anytime; the calendar tracks your beading days.\nThe ? button on the Bead-along card opens the detailed guide anytime.</item>
         <item>Fuse beads (Perler/Hama beads) are plastic tubes about 5mm across with a hole in the middle. Place beads on a pegboard following a chart, cover with ironing paper, and fuse them with a household iron. Once cooled you get a pixel-art piece — keychains, coasters, ornaments, frames and more.</item>
         <item>• Standard beads (5mm): the most common kind, most colors, cheap. Each cell is ~0.5cm; one 29×29 board makes about a 15×15cm piece.\n• Mini beads (2.6mm): finer detail for small designs, about half the finished size; harder on the eyes — tweezers recommended.\nNote: the two sizes have different peg spacing and can\'t be mixed on the same board.</item>
         <item>Square boards are the most common; a standard 5mm board has 29×29 pegs. Boards snap together for bigger works: 58×58 needs 4, 87×87 needs 9, 116×116 needs 16. Round, hexagon and heart boards are great for small ornaments. For big projects, fasten boards together with linking clips before placing beads.</item>

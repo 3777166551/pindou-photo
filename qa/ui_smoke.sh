@@ -758,10 +758,11 @@ back
 sleep 1
 ensure_home
 
-# ---------- 拼豆知识 ----------
+# ---------- 拼豆知识(首篇=APP 使用指南,v2.54) ----------
 tap_id btnKnowledge
 sleep 1.5
-check_text "What are fuse beads?"
+check_text "How to use this app"
+check_text "What are fuse beads?" 0   # 第二篇,视口边缘时软跳
 check_text "Project ideas" 0
 snap knowledge
 back
@@ -790,6 +791,11 @@ sleep 4
 check_text "Chart"
 snap editor
 log "editor opened"
+# ---------- v2.54:Bead-along 卡片行尾的 ? 帮助图标(Material 惯例) ----------
+tap_id btnAssistHelpCard 0
+sleep 1
+check_text "How bead-along works" 0
+tap_text_still "OK" 0
 
 # 画两笔
 adb shell input swipe 300 700 600 900 300
