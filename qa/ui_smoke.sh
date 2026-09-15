@@ -930,6 +930,26 @@ fi
 log "immersive flow OK"
 assist_off
 sleep 1
+# ---------- v2.54:拍照验收闭环(合成板照片与图纸同源,必须零错) ----------
+adb push qa/verify_data/board_8.png /data/local/tmp/v_board.png > /dev/null
+adb push qa/verify_data/chart_8.json /data/local/tmp/v_chart.json > /dev/null
+adb shell run-as $PKG mkdir -p files/verify
+adb shell run-as $PKG cp /data/local/tmp/v_board.png files/verify/board.png
+adb shell run-as $PKG cp /data/local/tmp/v_chart.json files/verify/chart.json
+adb shell am start -n $PKG/.VerifyActivity --es path /data/data/$PKG/files/verify/chart.json --es image /data/data/$PKG/files/verify/board.png
+sleep 3
+tap_text "Compare"             # 开始比对(EN 环境,程序化按钮无 id)
+sleep 4                         # 后台逐格采样比对 + 结果回填
+dump_ui
+grep -qE 'text="[^"]*Checked [1-9][0-9]* cells: ✗ wrong 0' ui.xml || {
+  echo "[smoke] FAIL: verify self-test expected total>0 and wrong 0"
+  snap fail
+  exit 1
+}
+log "photo verify self-test OK"
+snap verify_ok
+back
+sleep 1
 # 描摹行存在性(不真选图,避免文件选择器挂住流程)
 adb shell input swipe 540 1500 540 900 300; sleep 0.6
 tap_id btnTraceToggle 0

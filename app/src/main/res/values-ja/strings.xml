@@ -503,6 +503,20 @@
     <string name="fmt_voice_board">板 %1$d/%2$d、%3$d 個完成、のこり %4$d 個</string>
     <string name="fmt_voice_row">行 %1$d/%2$d、%3$d 個完成、のこり %4$d 個</string>
 
+    <!-- 撮影チェック:実際のボードを撮って 1 マスずつ図案と比較 -->
+    <string name="verify_btn_short">📸 チェック</string>
+    <string name="verify_title">撮影チェック</string>
+    <string name="verify_hint">ボードを真上から撮影し、4つの点を四隅に合わせて「比較」をタップ</string>
+    <string name="verify_take">📸 撮影</string>
+    <string name="verify_pick">🖼 アルバム</string>
+    <string name="verify_start">▶ 比較する</string>
+    <string name="verify_recheck">↺ 撮り直す</string>
+    <string name="verify_only_wrong">エラーのみ</string>
+    <string name="fmt_verify_result">%1$d マス比較:✗ 間違い %2$d・不足 %3$d・余分 %4$d</string>
+    <string name="verify_good">✅ 全部正解！アイロンOK！</string>
+    <string name="verify_need_photo">先に写真を撮ってください</string>
+    <string name="verify_bad_photo">この写真は読み取れません</string>
+
     <!-- AR体感プレビュー(疑似AR:カメラプレビュー + ジャイロ、閲覧専用) -->
     <string name="chip_ar">ARプレビュー</string>
     <string name="ar_recenter">再配置</string>

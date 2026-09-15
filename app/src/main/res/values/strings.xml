@@ -497,6 +497,20 @@
     <string name="fmt_voice_color">第%1$d种颜色，共%2$d种，还剩%3$d颗</string>
     <string name="fmt_voice_board">第%1$d块板，共%2$d块，已拼%3$d颗，剩%4$d颗</string>
     <string name="fmt_voice_row">第%1$d行，共%2$d行，已拼%3$d颗，剩%4$d颗</string>
+
+    <!-- 拍照验收:真实拼豆板拍照逐格比对图纸,熨烫前拦住错摆漏摆 -->
+    <string name="verify_btn_short">📸 验收</string>
+    <string name="verify_title">拍照验收</string>
+    <string name="verify_hint">俯拍整块拼豆板，拖动四个角点对齐板的四角，再点「开始比对」</string>
+    <string name="verify_take">📸 拍照</string>
+    <string name="verify_pick">🖼 相册</string>
+    <string name="verify_start">▶ 开始比对</string>
+    <string name="verify_recheck">↺ 重拍</string>
+    <string name="verify_only_wrong">只看错格</string>
+    <string name="fmt_verify_result">比对 %1$d 格：✗ 摆错 %2$d · 缺 %3$d · 多 %4$d</string>
+    <string name="verify_good">✅ 全部正确，可以熨烫啦！</string>
+    <string name="verify_need_photo">先拍照或从相册选一张</string>
+    <string name="verify_bad_photo">这张照片读不出来，换一张试试</string>
     <string name="cross_title">十字绣图纸 · Cross Stitch Chart</string>
     <string name="fmt_cross_info">%1$d×%2$d 格 · %3$,d 针 · %4$d 色 · 14ct 成品约 %5$.1f×%6$.1f cm</string>
     <string name="cross_legend">DMC 绣线清单</string>

@@ -279,7 +279,9 @@ public class EditorActivity extends Activity {
     private View chipAr;
     private View btnAssistLocate, btnAssistCalendar, btnBrushMirror;
     private View assistToolsRow;
-    private View btnAssistImmersive, btnAssistHelp, btnAssistVoice, btnAssistHelpCard;
+    private View btnAssistImmersive, btnAssistHelp, btnAssistVoice, btnAssistHelpCard, btnAssistVerify;
+    // 首页项目对话框「📸 验收」:打开存档生成图纸后自动进拍照验收
+    public static volatile boolean pendingAutoVerify = false;
     // 语音引导:本地 TTS 播报进度(零网络零权限),只在辅助开启期间工作
     private android.speech.tts.TextToSpeech voiceTts;
     private boolean voiceOn = false;
@@ -517,6 +519,7 @@ public class EditorActivity extends Activity {
         btnAssistHelp = findViewById(R.id.btnAssistHelp);
         btnAssistVoice = findViewById(R.id.btnAssistVoice);
         btnAssistHelpCard = findViewById(R.id.btnAssistHelpCard);
+        btnAssistVerify = findViewById(R.id.btnAssistVerify);
         btnAssistBoard = findViewById(R.id.btnAssistBoard);
         btnAssistRow = findViewById(R.id.btnAssistRow);
         btnAssistProject = findViewById(R.id.btnAssistProject);
@@ -787,6 +790,13 @@ public class EditorActivity extends Activity {
                     }
                     pendingVoice = null;
                 }
+            }
+        });
+        // 拍照验收:给真实拼豆板拍照,逐格比对图纸找出摆错/漏摆
+        btnAssistVerify.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                launchVerify();
             }
         });
         btnAssistNextBoard.setOnClickListener(new View.OnClickListener() {
@@ -1730,6 +1740,23 @@ public class EditorActivity extends Activity {
         }
     }
 
+    /** 拍照验收:图纸落分享格式缓存文件,进验收页逐格比对真实拼豆板 */
+    private void launchVerify() {
+        if (pattern == null || pattern.usedColors.isEmpty()) {
+            Toast.makeText(this, getString(R.string.err_not_ready), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            JSONObject o = PatternShare.build(pattern, null);
+            File f = new File(getCacheDir(), "verify_pattern.json");
+            Jsons.write(f, o);
+            startActivity(new Intent(this, VerifyActivity.class)
+                    .putExtra("path", f.getAbsolutePath()));
+        } catch (Exception e) {
+            Toast.makeText(this, getString(R.string.ar_load_failed), Toast.LENGTH_SHORT).show();
+        }
+    }
+
     /** 对位投屏:图纸落分享格式缓存文件,带上当前辅助色位置进对位页 */
     private void launchAlign() {
         if (pattern == null || pattern.usedColors.isEmpty()) {
@@ -2203,6 +2230,11 @@ public class EditorActivity extends Activity {
                         adapter.notifyDataSetChanged();
                         updateSummary();
                         updateEditsButton();
+                        // 首页「📸 验收」入口:存档图纸首次生成完成即自动进验收页
+                        if (pendingAutoVerify) {
+                            pendingAutoVerify = false;
+                            launchVerify();
+                        }
                         showLoading(false);
                         if (beadAssist) {
                             assistFocus = pattern.usedColors.isEmpty()

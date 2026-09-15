@@ -532,6 +532,23 @@ public class MainActivity extends Activity {
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT));
 
+            // 拍照验收:按存档打开项目,图纸生成完成后自动进验收页(v2.54)
+            TextView ver = new TextView(this);
+            ver.setText(getString(R.string.verify_btn_short));
+            ver.setTextColor(0xFF1E6BB8);
+            ver.setTextSize(12);
+            ver.setPadding(pad, pad, pad, pad);
+            ver.setClickable(true);
+            ver.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    verifyProject(e);
+                }
+            });
+            row.addView(ver, new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT));
+
             row.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -551,6 +568,19 @@ public class MainActivity extends Activity {
                 .setView(sc)
                 .setPositiveButton(getString(R.string.btn_close), null)
                 .show();
+    }
+
+    /** 拍照验收:按存档打开项目,图纸生成完成后自动进验收页 */
+    private void verifyProject(ProjectStore.Entry e) {
+        try {
+            byte[] raw = Jsons.readBytes(e.file);
+            EditorActivity.pendingProjectJson = new String(raw, "UTF-8");
+            EditorActivity.pendingAutoVerify = true;
+            startActivity(new Intent(MainActivity.this, EditorActivity.class));
+            overridePendingTransition(R.anim.enter_up, R.anim.exit_dim);
+        } catch (Exception ex) {
+            Toast.makeText(this, getString(R.string.proj_unreadable_del), Toast.LENGTH_LONG).show();
+        }
     }
 
     // ---------------- 合并采购单 ----------------

@@ -503,6 +503,20 @@
     <string name="fmt_voice_board">Board %1$d of %2$d, %3$d placed, %4$d left</string>
     <string name="fmt_voice_row">Row %1$d of %2$d, %3$d placed, %4$d left</string>
 
+    <!-- Photo check: compare a real board photo cell-by-cell against the chart -->
+    <string name="verify_btn_short">📸 Check</string>
+    <string name="verify_title">Photo check</string>
+    <string name="verify_hint">Shoot the board top-down, drag the 4 dots onto the board corners, then Compare</string>
+    <string name="verify_take">📸 Camera</string>
+    <string name="verify_pick">🖼 Gallery</string>
+    <string name="verify_start">▶ Compare</string>
+    <string name="verify_recheck">↺ Retake</string>
+    <string name="verify_only_wrong">Errors only</string>
+    <string name="fmt_verify_result">Checked %1$d cells: ✗ wrong %2$d · missing %3$d · extra %4$d</string>
+    <string name="verify_good">✅ All correct — ready to iron!</string>
+    <string name="verify_need_photo">Take or pick a photo first</string>
+    <string name="verify_bad_photo">Could not read this photo — try another</string>
+
     <!-- AR try-on (fake AR: camera viewfinder + gyroscope, view only) -->
     <string name="chip_ar">AR preview</string>
     <string name="ar_recenter">Re-center</string>
