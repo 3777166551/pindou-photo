@@ -256,11 +256,10 @@ public class PatternView extends View {
     private final Paint popRingPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint popCheckPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-    /** 标记完成反馈:格心弹一枚 ✓ 印章并给一次轻触感(点没点上,手和眼都有数) */
+    /** 标记完成反馈:格心弹一枚 ✓ 印章(纯视觉,无振动) */
     public void popCell(int gx, int gy) {
         if (popStamps.size() >= MAX_POPS) popStamps.remove(0);
         popStamps.add(new float[]{gx, gy, SystemClock.uptimeMillis()});
-        performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);
         postInvalidateOnAnimation();
     }
 
