@@ -333,3 +333,55 @@ removeCallbacks 掉上一个还没执行的待定标记**——`adb input tap` �
 修 bug 前先问这行清理 protect 的是什么;3) 涉及用户进度的路径必须有
 回归用例盯着,否则每次重构都在静默丢数据。
 
+## 27. cmd 管道里 %ERRORLEVEL% 是"旧值",本地编译通过可能是假象(v2.54 教训,CI 抓出)
+
+**现象**:VerifyActivity 导错包名(util.AppFileProvider 应为 provider.),本地
+`cmd /c compile_check.bat 2>&1 | findstr "error" & echo COMPILE:%ERRORLEVEL%`
+显示 COMPILE:0"通过",推到 CI Gradle 才炸 cannot find symbol。
+
+**原因**:①cmd 在**整行解析时**就展开 %ERRORLEVEL%,拿到的是本行执行前的
+旧值,跟编译结果无关;②findstr 过滤只看关键字,真正该看的是 bat 自己打的
+`COMPILE OK`/`[COMPILE CHECK FAILED]` 文本。
+
+**修法**:判断编译结果一律看输出文本(compile_check.bat 尾部会打 COMPILE OK);
+要拿真实退出码用 `call` 或分行执行。**教训**:本地绿灯不可信时,CI 是唯一
+真相——这也再次体现"CI 用 Gradle、本地用裸 aapt2"双构建互相暴露问题的价值。
+
+## 28. 裸 aapt2 管线不支持 lambda(v2.53 埋雷,v2.54 本地编译才炸)
+
+**现象**:EditorActivity 里 TTS 初始化用了 `status -> {...}` lambda,CI Gradle
+(JDK17)编译通过,本地 compile_check.bat 报"找不到方法 metafactory"。
+
+**原因**:bat 管线 `-source 1.8 -bootclasspath android.jar;core-lambda-stubs`
+组合对部分 android.jar 接口的 lambda 转译失败;项目代码历来全用匿名内部类
+正是这个原因(此前没写成文档,新代码踩雷)。
+
+**修法**:全项目约定**不写 lambda**,一律匿名内部类。教训:项目级的隐性
+编码约定必须写进文档,否则下一个写代码的人(包括 AI)必踩。
+
+## 29. smoke 脚本 tap_text 模糊匹配会点到"提示语"(v2.54 教训)
+
+**现象**:验收页冒烟 `tap_text "Compare"` 报告"tapped",但比对从未执行——
+页面提示语 "…then Compare" 里也含 Compare,模糊匹配正则命中**先出现的
+提示 TextView**(不可点),按钮根本没按。
+
+**修法**:可点控件用 `tap_text_exact`(全文相等);提示语与按钮同词时,
+写提示语文案刻意避开按钮词,或按钮改 resource-id。教训:文本定位的模糊
+匹配永远可能命中"提到这个词的地方",不只是按钮。
+
+## 30. 梯子(系统代理)的正确用法:curl/git 都要显式指定(v2.54 实测)
+
+**现象**:用户开了梯子后 curl 直连 commons.wikimedia.org 仍 Connection
+aborted;github push 也依旧抽风。
+
+**原因**:梯子是**系统代理模式**(注册表 ProxyServer=127.0.0.1:7890,
+Clash 系),浏览器/系统流量走它,**curl/git 不自动走**。
+
+**修法**:①curl 加 `-x http://127.0.0.1:7890`;②git 加
+`-c http.proxy=http://127.0.0.1:7890 push/fetch`,走代理后一次就通;
+③梯子关闭时 api.github.com 直连仍通,REST API 降级推送照旧
+(tools/api_push_fallback.ps1 已参数化:`-FilesCsv 'a; b; c' -Msg '...'`,
+注意 cmd 给 ps1 传数组参数会变成字面量字符串,用分号分隔字符串在脚本内
+split)。④batch 文件里 URL 的 %XX 百分号编码必须写 %%(cmd 会把 %XX%
+当变量吞掉,导致下载 404)——或干脆用 PowerShell 读列表逐条 curl。
+
