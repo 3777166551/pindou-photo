@@ -101,6 +101,7 @@
     <string name="sec_size">画幅尺寸(格数)</string>
     <string name="shape_rect">▭ 方形板</string>
     <string name="shape_round">⬤ 圆形板</string>
+    <string name="shape_hex">⬡ 六边形板</string>
     <string name="w_label">宽</string>
     <string name="h_label">高</string>
     <string name="sec_palette">色板与图纸风格</string>
@@ -247,7 +248,44 @@
     <string name="err_no_undo">没有可撤销的操作了</string>
     <string name="err_no_redo">没有可重做的操作了</string>
     <string name="fmt_board_round">圆形板直径 %1$d 格 · 成品约 %2$.0f cm</string>
+    <string name="fmt_board_hex">六边形板高 %1$d 格 · 成品约 %2$.0f × %3$.0f cm</string>
     <string name="fmt_board_rect">需要 29×29 拼板 %1$d 块 · 成品约 %2$.0f × %3$.0f cm</string>
+
+    <!-- 备份与恢复 -->
+    <string name="tool_backup">📦 备份与恢复</string>
+    <string name="tool_backup_desc">项目/豆仓/打卡/色板打包导出,换机不丢数据</string>
+    <string name="backup_title">备份与恢复</string>
+    <string name="backup_msg">导出会把项目存档、豆仓库存、打卡日历、自定义色板打包成一个备份文件,存到你选的位置(文件管理器、网盘均可)。\n\n导入恢复会用备份内容覆盖现有数据,操作前请先导出一份新备份。</string>
+    <string name="backup_btn_export">⬆️ 导出备份</string>
+    <string name="backup_btn_import">⬇️ 导入恢复</string>
+    <string name="backup_part_projects_fmt">%1$d 个项目</string>
+    <string name="backup_part_inventory">豆仓库存</string>
+    <string name="backup_part_calendar">打卡日历</string>
+    <string name="backup_part_palettes">自定义色板</string>
+    <string name="backup_ok_fmt">备份已导出:%1$s</string>
+    <string name="backup_nothing">没有可备份的数据,先拼一张图或登记豆仓吧</string>
+    <string name="backup_bad">这不是本 APP 导出的备份文件</string>
+    <string name="backup_err_export">备份导出失败:</string>
+    <string name="backup_err_import">恢复失败:</string>
+    <string name="backup_confirm_fmt">将从备份恢复并覆盖现有数据。\n\n备份内容:%1$s\n当前:%2$s\n\n确定继续吗?</string>
+    <string name="backup_cur_fmt">%1$d 个项目</string>
+    <string name="backup_done_fmt">恢复完成:%1$s</string>
+
+    <!-- 3D 把玩 -->
+    <string name="chip_play3d">🤹 3D 把玩</string>
+    <string name="play_exit">✕ 退出</string>
+    <string name="play_mode_hand">🖐 把玩</string>
+    <string name="play_mode_iron">🔥 熨烫</string>
+    <string name="play_hint_hand">拖动旋转 · 双指缩放 · 双击复位</string>
+    <string name="play_hint_iron">按住拖动熨斗,把豆豆烫连起来</string>
+    <string name="play_iron_progress_fmt">已烫 %1$d / %2$d</string>
+    <string name="play_iron_done">全部烫好!成品完成 🎉</string>
+    <string name="play_err_load">图纸还没准备好,先生成一张</string>
+    <string name="play_replay">▶ 重播</string>
+    <string name="play_export_gif">🎞 GIF</string>
+    <string name="play_gif_ok">生长动画 GIF 已导出 🎉</string>
+    <string name="play_gif_err">GIF 导出失败:</string>
+    <string name="play_gif_progress">正在渲染 GIF… %1$d%%</string>
     <string name="err_ghibli_blank">空白画布不需要风格化,先导入照片</string>
     <string name="ghibli_title">🎨 吉卜力风(AI 风格化)</string>
     <string name="style_strength">风格强度</string>
@@ -410,9 +448,11 @@
     <string name="sheet_title">拼豆图纸</string>
     <string name="fmt_sheet_info">%1$d×%2$d 格%3$s · %4$s · 共 %5$d 颗 · %6$s</string>
     <string name="sheet_round">(圆形板)</string>
+    <string name="sheet_hex">(六边形板)</string>
     <string name="fmt_sheet_boards">29×29 拼板 %d 块</string>
     <string name="sheet_official"> 官方色号</string>
     <string name="fmt_sheet_dia">直径约 %.0f cm</string>
+    <string name="fmt_sheet_hex">宽约 %1$.0f × 高 %2$.0f cm</string>
     <string name="sheet_bom_title">豆豆清单(按用量排序)</string>
     <string name="sheet_empty">空格(不放置)</string>
     <string name="fmt_sheet_footer">总计 %1$d 颗 / %2$d 种颜色 · 由「%3$s」生成 · 颜色为参考色,请以实物豆为准</string>

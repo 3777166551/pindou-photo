@@ -69,11 +69,16 @@ public final class PatternSheetRenderer {
         c.drawText(ctx.getString(R.string.sheet_title), margin, margin + 62, titleP);
         String info = String.format(Locale.CHINA,
                 ctx.getString(R.string.fmt_sheet_info),
-                cols, rows, p.round ? ctx.getString(R.string.sheet_round) : "",
+                cols, rows,
+                p.round ? ctx.getString(R.string.sheet_round)
+                        : p.hex ? ctx.getString(R.string.sheet_hex) : "",
                 paletteName, p.totalBeads,
                 p.round
                         ? String.format(Locale.CHINA, ctx.getString(R.string.fmt_sheet_dia),
                         cols * cm)
+                        : p.hex
+                        ? String.format(Locale.CHINA, ctx.getString(R.string.fmt_sheet_hex),
+                        cols * cm * 0.866f, cols * cm)
                         : String.format(Locale.CHINA,
                         ctx.getString(R.string.fmt_sheet_boards), p.boardsNeeded()))
                 + " · " + date;
@@ -113,17 +118,22 @@ public final class PatternSheetRenderer {
             }
         }
 
-        // 细网格线(圆形板画弦段)
+        // 细网格线(圆形/六边形板画板内弦段)
         Paint gridP = new Paint(Paint.ANTI_ALIAS_FLAG);
         gridP.setColor(0x33888888);
         gridP.setStrokeWidth(1f);
         float ccx = gx + gridW / 2f;
         float ccy = gy + gridH / 2f;
         float crad = Math.min(gridW, gridH) / 2f;
+        float[] span = new float[2];
         for (int x = 1; x < cols; x++) {
             float lx = gx + x * cell;
             if (p.round) {
                 chord(c, gridP, lx, ccy, ccx, crad, true, gy, gy + gridH);
+            } else if (p.hex) {
+                if (BeadPattern.hexChordV(gridW, gridH, x * cell, span)) {
+                    c.drawLine(lx, gy + span[0], lx, gy + span[1], gridP);
+                }
             } else {
                 c.drawLine(lx, gy, lx, gy + gridH, gridP);
             }
@@ -132,6 +142,10 @@ public final class PatternSheetRenderer {
             float ly = gy + y * cell;
             if (p.round) {
                 chord(c, gridP, ly, ccx, ccy, crad, false, gx, gx + gridW);
+            } else if (p.hex) {
+                if (BeadPattern.hexChordH(gridW, gridH, y * cell, span)) {
+                    c.drawLine(gx + span[0], ly, gx + span[1], ly, gridP);
+                }
             } else {
                 c.drawLine(gx, ly, gx + gridW, ly, gridP);
             }
@@ -146,6 +160,10 @@ public final class PatternSheetRenderer {
             float lx = gx + x * cell;
             if (p.round) {
                 chord(c, boardP, lx, ccy, ccx, crad, true, gy, gy + gridH);
+            } else if (p.hex) {
+                if (BeadPattern.hexChordV(gridW, gridH, x * cell, span)) {
+                    c.drawLine(lx, gy + span[0], lx, gy + span[1], boardP);
+                }
             } else {
                 c.drawLine(lx, gy, lx, gy + gridH, boardP);
             }
@@ -154,6 +172,10 @@ public final class PatternSheetRenderer {
             float ly = gy + y * cell;
             if (p.round) {
                 chord(c, boardP, ly, ccx, ccy, crad, false, gx, gx + gridW);
+            } else if (p.hex) {
+                if (BeadPattern.hexChordH(gridW, gridH, y * cell, span)) {
+                    c.drawLine(gx + span[0], ly, gx + span[1], ly, boardP);
+                }
             } else {
                 c.drawLine(gx, ly, gx + gridW, ly, boardP);
             }
@@ -163,6 +185,16 @@ public final class PatternSheetRenderer {
         borderP.setColor(0xFF5B534B);
         if (p.round) {
             c.drawCircle(ccx, ccy, crad - 1.5f, borderP);
+        } else if (p.hex) {
+            float[] v = new float[12];
+            BeadPattern.hexVertices(gridW, gridH, v);
+            android.graphics.Path hp = new android.graphics.Path();
+            hp.moveTo(gx + v[0], gy + v[1]);
+            for (int i = 2; i < 12; i += 2) {
+                hp.lineTo(gx + v[i], gy + v[i + 1]);
+            }
+            hp.close();
+            c.drawPath(hp, borderP);
         } else {
             c.drawRect(gx, gy, gx + gridW, gy + gridH, borderP);
         }

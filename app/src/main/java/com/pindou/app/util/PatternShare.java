@@ -64,6 +64,7 @@ public final class PatternShare {
         o.put("cols", p.cols);
         o.put("rows", p.rows);
         o.put("round", p.round);
+        o.put("hex", p.hex);
         o.put("colors", colors);
         o.put("cells", rle);
         return o;
@@ -107,12 +108,19 @@ public final class PatternShare {
             for (int k = 0; k < len; k++) cells[idx++] = v;
         }
         if (idx != cells.length) throw new Exception("格子数量与尺寸不符");
-        return assemble(cols, rows, palette, cells, o.optBoolean("round", false));
+        return assemble(cols, rows, palette, cells,
+                o.optBoolean("round", false), o.optBoolean("hex", false));
     }
 
     /** 由 cells 统计用量并组装 BeadPattern */
     public static BeadPattern assemble(int cols, int rows, List<BeadColor> palette,
                                        int[] cells, boolean round) {
+        return assemble(cols, rows, palette, cells, round, false);
+    }
+
+    /** 由 cells 统计用量并组装 BeadPattern(带六边形板标志) */
+    public static BeadPattern assemble(int cols, int rows, List<BeadColor> palette,
+                                       int[] cells, boolean round, boolean hex) {
         int n = palette.size();
         int[] counts = new int[Math.max(1, n)];
         int empty = 0;
@@ -130,7 +138,8 @@ public final class PatternShare {
             }
         }
         BeadPattern.sortByCountDesc(used);
-        return new BeadPattern(cols, rows, palette, cells, counts, used, total, empty, round);
+        return new BeadPattern(cols, rows, palette, cells, counts, used, total, empty,
+                round, hex);
     }
 
     /**
@@ -167,6 +176,7 @@ public final class PatternShare {
             opt.bgRemove = s.optBoolean("bgOn", false);
             opt.bgTolerance = s.optInt("bgTol", 45);
             opt.roundBoard = s.optBoolean("round", false);
+            opt.hexBoard = s.optBoolean("hex", false);
             opt.maxColors = new int[]{0, 12, 18, 26, 40}[Math.max(0,
                     Math.min(4, s.optInt("limitIdx", 0)))];
             opt.dominant = s.optBoolean("dominant", false);

@@ -101,6 +101,7 @@
     <string name="sec_size">Board size (pegs)</string>
     <string name="shape_rect">▭ Square</string>
     <string name="shape_round">⬤ Round</string>
+    <string name="shape_hex">⬡ Hexagon</string>
     <string name="w_label">W</string>
     <string name="h_label">H</string>
     <string name="sec_palette">Palette &amp; style</string>
@@ -247,7 +248,44 @@
     <string name="err_no_undo">Nothing to undo</string>
     <string name="err_no_redo">Nothing to redo</string>
     <string name="fmt_board_round">Round board %1$d pegs across · about %2$.0f cm</string>
+    <string name="fmt_board_hex">Hexagon %1$d pegs tall · about %2$.0f × %3$.0f cm</string>
     <string name="fmt_board_rect">Uses %1$d 29×29 boards · about %2$.0f × %3$.0f cm</string>
+
+    <!-- Backup & restore -->
+    <string name="tool_backup">📦 Backup &amp; restore</string>
+    <string name="tool_backup_desc">Pack projects, inventory, check-ins and palettes into one file</string>
+    <string name="backup_title">Backup &amp; restore</string>
+    <string name="backup_msg">Export packs your project archives, bead inventory, check-in calendar and custom palettes into a single backup file saved anywhere you choose (file manager, cloud drive, etc.).\n\nImporting a backup overwrites your current data — export a fresh backup first.</string>
+    <string name="backup_btn_export">⬆️ Export backup</string>
+    <string name="backup_btn_import">⬇️ Import &amp; restore</string>
+    <string name="backup_part_projects_fmt">%1$d projects</string>
+    <string name="backup_part_inventory">bead inventory</string>
+    <string name="backup_part_calendar">check-in calendar</string>
+    <string name="backup_part_palettes">custom palettes</string>
+    <string name="backup_ok_fmt">Backup exported: %1$s</string>
+    <string name="backup_nothing">Nothing to back up yet — make a pattern or log your beads first</string>
+    <string name="backup_bad">This is not a backup file exported by this app</string>
+    <string name="backup_err_export">Export failed: </string>
+    <string name="backup_err_import">Restore failed: </string>
+    <string name="backup_confirm_fmt">Restoring will overwrite your current data.\n\nBackup contains: %1$s\nCurrent: %2$s\n\nContinue?</string>
+    <string name="backup_cur_fmt">%1$d projects</string>
+    <string name="backup_done_fmt">Restored: %1$s</string>
+
+    <!-- Play in 3D -->
+    <string name="chip_play3d">🤹 Play in 3D</string>
+    <string name="play_exit">✕ Exit</string>
+    <string name="play_mode_hand">🖐 Rotate</string>
+    <string name="play_mode_iron">🔥 Iron</string>
+    <string name="play_hint_hand">Drag to rotate · Pinch to zoom · Double-tap to reset</string>
+    <string name="play_hint_iron">Press and drag the iron to fuse the beads</string>
+    <string name="play_iron_progress_fmt">%1$d / %2$d fused</string>
+    <string name="play_iron_done">All fused — the piece is done! 🎉</string>
+    <string name="play_err_load">Pattern is not ready yet</string>
+    <string name="play_replay">▶ Replay</string>
+    <string name="play_export_gif">🎞 GIF</string>
+    <string name="play_gif_ok">Build animation GIF exported 🎉</string>
+    <string name="play_gif_err">GIF export failed: </string>
+    <string name="play_gif_progress">Rendering GIF… %1$d%%</string>
     <string name="err_ghibli_blank">Blank canvas needs no stylizing, import a photo first</string>
     <string name="ghibli_title">🎨 Ghibli style (AI)</string>
     <string name="style_strength">Style strength</string>
@@ -410,9 +448,11 @@
     <string name="sheet_title">Bead Chart</string>
     <string name="fmt_sheet_info">%1$d×%2$d cells%3$s · %4$s · %5$d beads · %6$s</string>
     <string name="sheet_round"> (round)</string>
+    <string name="sheet_hex"> (hexagon)</string>
     <string name="fmt_sheet_boards">%d 29×29 boards</string>
     <string name="sheet_official"> official code</string>
     <string name="fmt_sheet_dia">⌀ about %.0f cm</string>
+    <string name="fmt_sheet_hex">about %1$.0f × %2$.0f cm (W×H)</string>
     <string name="sheet_bom_title">Bead list (by usage)</string>
     <string name="sheet_empty">Empty (no bead)</string>
     <string name="fmt_sheet_footer">%1$d beads total / %2$d colors · made with %3$s · colors are approximate, check real beads</string>

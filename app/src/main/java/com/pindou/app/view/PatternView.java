@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Typeface;
 import android.os.SystemClock;
 import android.util.AttributeSet;
@@ -804,7 +805,21 @@ public class PatternView extends View {
         c.drawLine(Math.max(min, cx - half), y, Math.min(max, cx + half), y, p);
     }
 
-    /** 效果图:仿真的拼豆圆豆 + 拼板底板(圆形板画圆盘) */
+    /** 尖顶正六边形路径(顶点朝上),r = 中心到顶点距离 */
+    private static Path hexPath(float cx, float cy, float r) {
+        Path path = new Path();
+        for (int i = 0; i < 6; i++) {
+            double a = Math.PI / 2 + i * Math.PI / 3;
+            float x = (float) (cx + r * Math.cos(a));
+            float y = (float) (cy - r * Math.sin(a));
+            if (i == 0) path.moveTo(x, y);
+            else path.lineTo(x, y);
+        }
+        path.close();
+        return path;
+    }
+
+    /** 效果图:仿真的拼豆圆豆 + 拼板底板(圆形板画圆盘,六边形板画六角盘) */
     private void drawEffect(Canvas canvas, float cell) {
         int cols = pattern.cols;
         int rows = pattern.rows;
@@ -814,6 +829,9 @@ public class PatternView extends View {
         if (pattern.round) {
             float r = cols * cell / 2f;
             canvas.drawCircle(cols * cell / 2f, rows * cell / 2f, r + m * 0.9f, boardPaint);
+        } else if (pattern.hex) {
+            canvas.drawPath(hexPath(cols * cell / 2f, rows * cell / 2f,
+                    cols * cell / 2f + m * 0.9f), boardPaint);
         } else {
             canvas.drawRoundRect(-m, -m, cols * cell + m, rows * cell + m,
                     Math.max(6f, m * 0.8f), Math.max(6f, m * 0.8f), boardPaint);
@@ -880,6 +898,12 @@ public class PatternView extends View {
             boardPaint.setColor(night ? 0xFF3A3346 : 0xFFEFEAE3);
             canvas.drawCircle(cols * cell / 2f, rows * cell / 2f,
                     r + m * 0.9f, boardPaint);
+        } else if (pattern.hex) {
+            canvas.drawPath(hexPath(cols * cell / 2f, rows * cell / 2f + thick,
+                    cols * cell / 2f + m * 0.9f), boardPaint);
+            boardPaint.setColor(night ? 0xFF3A3346 : 0xFFEFEAE3);
+            canvas.drawPath(hexPath(cols * cell / 2f, rows * cell / 2f,
+                    cols * cell / 2f + m * 0.9f), boardPaint);
         } else {
             float rr = Math.max(6f, m * 0.8f);
             canvas.drawRoundRect(-m, -m + thick, cols * cell + m, rows * cell + m + thick,
@@ -935,19 +959,22 @@ public class PatternView extends View {
         canvas.restore();
     }
 
-    /** 图纸:格子 + 网格线 + 29 格拼板分隔线 + 符号 + 坐标(圆形板画圆) */
+    /** 图纸:格子 + 网格线 + 29 格拼板分隔线 + 符号 + 坐标(圆形板画圆,六边形板画六角) */
     private void drawPatternGrid(Canvas canvas, float cell) {
         int cols = pattern.cols;
         int rows = pattern.rows;
         float w = cols * cell;
         float h = rows * cell;
         boolean round = pattern.round;
+        float[] span = new float[2];    // 六边形板弦段区间复用,避免循环里反复分配
 
-        // 白底(圆形板为圆面);夜间图纸纸面转暗
+        // 白底(圆形板为圆面,六边形板为六角面);夜间图纸纸面转暗
         cellPaint.setColor(night ? 0xFF2E2938 : Color.WHITE);
         if (round) {
             float r = Math.min(w, h) / 2f;
             canvas.drawCircle(w / 2f, h / 2f, r, cellPaint);
+        } else if (pattern.hex) {
+            canvas.drawPath(hexPath(w / 2f, h / 2f, Math.min(w, h) / 2f), cellPaint);
         } else {
             canvas.drawRect(-1, -1, w + 1, h + 1, cellPaint);
         }
@@ -956,13 +983,20 @@ public class PatternView extends View {
         if (traceBitmap != null && !traceBitmap.isRecycled() && traceVisible) {
             traceDst.set(0, 0, w, h);
             tracePaint.setAlpha(95);
-            canvas.drawBitmap(traceBitmap, null, traceDst, tracePaint);
+            if (pattern.hex) {
+                canvas.save();
+                canvas.clipPath(hexPath(w / 2f, h / 2f, Math.min(w, h) / 2f));
+                canvas.drawBitmap(traceBitmap, null, traceDst, tracePaint);
+                canvas.restore();
+            } else {
+                canvas.drawBitmap(traceBitmap, null, traceDst, tracePaint);
+            }
         }
 
         // 颜色格子
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < cols; x++) {
-                if (round && pattern.outsideShape(x, y)) continue;
+                if (pattern.outsideShape(x, y)) continue;
                 int idx = pattern.cellAt(x, y);
                 if (idx < 0) continue;
                 cellPaint.setColor(0xFF000000 | pattern.palette.get(idx).rgb);
@@ -988,7 +1022,7 @@ public class PatternView extends View {
             }
         }
 
-        // 细网格线(圆形板只画弦段);开关开就画,不再按缩放自动隐藏
+        // 细网格线(圆形/六边形板只画板内弦段);开关开就画,不再按缩放自动隐藏
         if (showGrid) {
             gridPaint.setColor(night ? 0x2EFFFFFF : 0x33888888);
             gridPaint.setStrokeWidth(1f);
@@ -996,6 +1030,10 @@ public class PatternView extends View {
                 if (round) {
                     chordV(canvas, gridPaint, x * cell, w / 2f, h / 2f,
                             Math.min(w, h) / 2f, 0f, h);
+                } else if (pattern.hex) {
+                    if (BeadPattern.hexChordV(w, h, x * cell, span)) {
+                        canvas.drawLine(x * cell, span[0], x * cell, span[1], gridPaint);
+                    }
                 } else {
                     canvas.drawLine(x * cell, 0, x * cell, h, gridPaint);
                 }
@@ -1004,6 +1042,10 @@ public class PatternView extends View {
                 if (round) {
                     chordH(canvas, gridPaint, y * cell, w / 2f, h / 2f,
                             Math.min(w, h) / 2f, 0f, w);
+                } else if (pattern.hex) {
+                    if (BeadPattern.hexChordH(w, h, y * cell, span)) {
+                        canvas.drawLine(span[0], y * cell, span[1], y * cell, gridPaint);
+                    }
                 } else {
                     canvas.drawLine(0, y * cell, w, y * cell, gridPaint);
                 }
@@ -1018,6 +1060,10 @@ public class PatternView extends View {
             if (round) {
                 chordV(canvas, boardLinePaint, x * cell, w / 2f, h / 2f,
                         Math.min(w, h) / 2f, 0f, h);
+            } else if (pattern.hex) {
+                if (BeadPattern.hexChordV(w, h, x * cell, span)) {
+                    canvas.drawLine(x * cell, span[0], x * cell, span[1], boardLinePaint);
+                }
             } else {
                 canvas.drawLine(x * cell, 0, x * cell, h, boardLinePaint);
             }
@@ -1026,6 +1072,10 @@ public class PatternView extends View {
             if (round) {
                 chordH(canvas, boardLinePaint, y * cell, w / 2f, h / 2f,
                         Math.min(w, h) / 2f, 0f, w);
+            } else if (pattern.hex) {
+                if (BeadPattern.hexChordH(w, h, y * cell, span)) {
+                    canvas.drawLine(span[0], y * cell, span[1], y * cell, boardLinePaint);
+                }
             } else {
                 canvas.drawLine(0, y * cell, w, y * cell, boardLinePaint);
             }
@@ -1036,6 +1086,8 @@ public class PatternView extends View {
         borderPaint.setStrokeWidth(2f);
         if (round) {
             canvas.drawCircle(w / 2f, h / 2f, Math.min(w, h) / 2f - 1f, borderPaint);
+        } else if (pattern.hex) {
+            canvas.drawPath(hexPath(w / 2f, h / 2f, Math.min(w, h) / 2f - 1f), borderPaint);
         } else {
             canvas.drawRect(0, 0, w, h, borderPaint);
         }
@@ -1081,7 +1133,7 @@ public class PatternView extends View {
         if (assistOn) {
             for (int y = 0; y < rows; y++) {
                 for (int x = 0; x < cols; x++) {
-                    if (round && pattern.outsideShape(x, y)) continue;
+                    if (pattern.outsideShape(x, y)) continue;
                     int idx = pattern.cellAt(x, y);
                     if (idx < 0) continue;
                     boolean outsideBand =

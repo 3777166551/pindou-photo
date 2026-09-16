@@ -175,13 +175,33 @@
                 android:textSize="12sp" />
 
             <TextView
-                android:id="@+id/chipAr"
+                android:id="@+id/chipPlay3d"
                 android:layout_width="wrap_content"
                 android:layout_height="32dp"
                 android:layout_gravity="end|top"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginTop="46dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_chip"
+                android:clickable="true"
+                android:elevation="6dp"
+                android:focusable="true"
+                android:gravity="center"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:text="@string/chip_play3d"
+                android:textColor="@color/text_chip"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/chipAr"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:layout_gravity="end|top"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginTop="84dp"
                 android:layout_marginBottom="8dp"
                 android:background="@drawable/bg_chip"
                 android:clickable="true"
@@ -921,6 +941,7 @@
                                 android:id="@+id/chipShapeRound"
                                 android:layout_width="0dp"
                                 android:layout_height="34dp"
+                                android:layout_marginEnd="7dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
@@ -928,6 +949,20 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="@string/shape_round"
+                                android:textColor="@color/text_chip"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:id="@+id/chipShapeHex"
+                                android:layout_width="0dp"
+                                android:layout_height="34dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_chip"
+                                android:clickable="true"
+                                android:elevation="2dp"
+                                android:focusable="true"
+                                android:gravity="center"
+                                android:text="@string/shape_hex"
                                 android:textColor="@color/text_chip"
                                 android:textSize="13sp" />
                         </LinearLayout>

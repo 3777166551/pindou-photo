@@ -43,6 +43,8 @@ public final class EffectRenderer {
         if (p.round) {
             float rad = Math.min(w, h) / 2f - 2;
             canvas.drawCircle(w / 2f, h / 2f, rad, bg);
+        } else if (p.hex) {
+            canvas.drawPath(hexPath(w / 2f, h / 2f, Math.min(w, h) / 2f - 2), bg);
         } else {
             canvas.drawRoundRect(0, 0, w, h, m * 0.9f, m * 0.9f, bg);
         }
@@ -80,6 +82,20 @@ public final class EffectRenderer {
             }
         }
         return bmp;
+    }
+
+    /** 尖顶正六边形路径(顶点朝上),r = 中心到顶点距离 */
+    private static android.graphics.Path hexPath(float cx, float cy, float r) {
+        android.graphics.Path path = new android.graphics.Path();
+        for (int i = 0; i < 6; i++) {
+            double a = Math.PI / 2 + i * Math.PI / 3;
+            float x = (float) (cx + r * Math.cos(a));
+            float y = (float) (cy - r * Math.sin(a));
+            if (i == 0) path.moveTo(x, y);
+            else path.lineTo(x, y);
+        }
+        path.close();
+        return path;
     }
 
     private EffectRenderer() {

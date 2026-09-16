@@ -96,6 +96,12 @@ public final class BeadInventory {
         save(c);
     }
 
+    /** 全量备份恢复后调用:丢弃内存缓存,下次访问从磁盘重读恢复的数据 */
+    public static synchronized void resetForRestore() {
+        COUNTS.clear();
+        loaded = false;
+    }
+
     private static synchronized void save(Context c) {
         try {
             JSONObject d = new JSONObject();

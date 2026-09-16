@@ -15,6 +15,7 @@
   "cols": 58,
   "rows": 58,
   "round": false,
+  "hex": false,
   "colors": [
     { "code": 1, "name": "白色", "rgb": 16777215 },
     { "code": 2, "name": "黑色", "rgb": 0 }
@@ -40,6 +41,7 @@
 | `savedAt` | long | | 保存时间戳(毫秒) |
 | `cols` / `rows` | int | ✔ | 网格宽高(4~400) |
 | `round` | bool | | 是否圆形板:`true` 时内切圆以外视为板外 |
+| `hex` | bool | | 是否六边形板:`true` 时尖顶正六边形以外视为板外(与 `round` 互斥) |
 | `colors` | array | ✔ | **自含色板**,按用量从多到少排序 |
 | `colors[].code` | int | | 该色在原品牌里的色号(整数,0 = 无) |
 | `colors[].name` | string | | 颜色名(展示用) |

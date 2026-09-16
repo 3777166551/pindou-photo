@@ -44,7 +44,7 @@ public final class PatternPatch {
         BeadPattern.sortByCountDesc(used);
 
         return new BeadPattern(p.cols, p.rows, p.palette, cells, counts,
-                used, total, empty, p.round);
+                used, total, empty, p.round, p.hex);
     }
 
     private PatternPatch() {

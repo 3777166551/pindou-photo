@@ -190,6 +190,14 @@ public final class ColorMath {
         return (r << 16) | (g << 8) | b;
     }
 
+    /** 提亮(factor > 1;钳制到 255),3D 把玩熔化豆的蜡面光泽用 */
+    public static int lighten(int rgb, float factor) {
+        int r = Math.min(255, (int) (((rgb >> 16) & 0xFF) * factor));
+        int g = Math.min(255, (int) (((rgb >> 8) & 0xFF) * factor));
+        int b = Math.min(255, (int) ((rgb & 0xFF) * factor));
+        return (r << 16) | (g << 8) | b;
+    }
+
     private ColorMath() {
     }
 }

@@ -55,6 +55,8 @@ public final class PatternEngine {
         public int bgTolerance = 55;
         /** 圆形拼板:内切圆以外的格子全部置空 */
         public boolean roundBoard = false;
+        /** 六边形拼板:尖顶正六边形以外的格子全部置空 */
+        public boolean hexBoard = false;
         /** 降色数:限制最终使用的颜色种数,0 = 不限制(贪心合并最相近的色) */
         public int maxColors = 0;
         /** 清晰轮廓:每格取主色(众数)而不是平均色,消颜色边界的灰色毛边 */
@@ -229,11 +231,14 @@ public final class PatternEngine {
         Arrays.fill(cells, -1);
         expandBricks(workCells, gw, gh, cells, cols, rows, b);
 
-        // 6.5 圆形板:内切圆以外的格子视为板外
-        if (o.roundBoard) {
+        // 6.5 圆形/六边形板:轮廓以外的格子视为板外
+        if (o.roundBoard || o.hexBoard) {
             for (int y = 0; y < rows; y++) {
                 for (int x = 0; x < cols; x++) {
-                    if (BeadPattern.isOutsideRound(cols, rows, x, y)) {
+                    boolean out = o.roundBoard
+                            ? BeadPattern.isOutsideRound(cols, rows, x, y)
+                            : BeadPattern.isOutsideHex(cols, rows, x, y);
+                    if (out) {
                         cells[y * cols + x] = -1;
                     }
                 }
@@ -272,7 +277,7 @@ public final class PatternEngine {
         BeadPattern.sortByCountDesc(used);
 
         return new BeadPattern(cols, rows, palette, cells, counts, used, total, empty,
-                o.roundBoard);
+                o.roundBoard, o.hexBoard);
     }
 
     /**

@@ -30,6 +30,7 @@ import android.widget.Toast;
 import com.pindou.app.bead.BeadPattern;
 import com.pindou.app.bead.Templates;
 import com.pindou.app.provider.AppFileProvider;
+import com.pindou.app.util.BackupManager;
 import com.pindou.app.util.Jsons;
 import com.pindou.app.util.PatternShare;
 import com.pindou.app.util.ProjectStore;
@@ -49,8 +50,13 @@ public class MainActivity extends Activity {
     private static final int REQ_TAKE_PHOTO = 2;
     private static final int REQ_SCAN_PATTERN = 3;
     private static final int REQ_ACTION_PICK = 4;
+    private static final int REQ_BACKUP_CREATE = 5;
+    private static final int REQ_BACKUP_OPEN = 6;
     /** 工具卡片(二次元/去水印)选图后要自动执行的动作 */
     private int nextAction = com.pindou.app.EditorActivity.PENDING_NONE;
+    /** 备份/恢复的zip 打包与解包走后台线程(项目存档可能几 MB 一份) */
+    private final java.util.concurrent.ExecutorService backupExec =
+            java.util.concurrent.Executors.newSingleThreadExecutor();
 
     private File cameraFile;
 
@@ -68,7 +74,7 @@ public class MainActivity extends Activity {
         int[] pressIds = {R.id.btnGallery, R.id.btnCamera, R.id.btnText,
                 R.id.btnBlank, R.id.btnTemplates, R.id.btnProjects,
                 R.id.btnScanPattern, R.id.cardWatermark, R.id.btnKnowledge,
-                R.id.btnInventoryHome};
+                R.id.btnInventoryHome, R.id.btnBackup};
         for (int id : pressIds) {
             com.pindou.app.util.Anim.pressScale(findViewById(id));
         }
@@ -76,8 +82,8 @@ public class MainActivity extends Activity {
         // 像手工贴上去的 —— 糖果贴纸风语言,角度压在 ±6° 内不碍阅读
         int[] cardIds = {R.id.cardWatermark, R.id.btnScanPattern, R.id.btnTemplates,
                 R.id.btnText, R.id.btnBlank, R.id.btnKnowledge, R.id.btnInventoryHome,
-                R.id.btnProjects};
-        float[] tilts = {-5f, 4f, -3f, 6f, -6f, 3f, -4f, 5f};
+                R.id.btnProjects, R.id.btnBackup};
+        float[] tilts = {-5f, 4f, -3f, 6f, -6f, 3f, -4f, 5f, 2f};
         for (int i = 0; i < cardIds.length; i++) {
             View card = findViewById(cardIds[i]);
             if (card instanceof ViewGroup && ((ViewGroup) card).getChildCount() > 0) {
@@ -162,6 +168,12 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, KnowledgeActivity.class));
                 overridePendingTransition(R.anim.enter_up, R.anim.exit_dim);
+            }
+        });
+        findViewById(R.id.btnBackup).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showBackupDialog();
             }
         });
     }
@@ -798,6 +810,231 @@ public class MainActivity extends Activity {
         }
     }
 
+    // ---------------- 备份与恢复(v2.56:项目+豆仓+日历+色板 打包 zip) ----------------
+
+    /** 入口弹窗:说明 + 二选一(导出 / 导入) */
+    private void showBackupDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.backup_title))
+                .setMessage(getString(R.string.backup_msg))
+                .setPositiveButton(getString(R.string.backup_btn_export),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                exportBackup();
+                            }
+                        })
+                .setNegativeButton(getString(R.string.backup_btn_import),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                importBackup();
+                            }
+                        })
+                .show();
+    }
+
+    /** 还有没有任何可备份的数据(四个存储全空就提前劝退) */
+    private boolean hasAnythingToBackup() {
+        File[] pros = new File(getFilesDir(), "projects").listFiles();
+        if (pros != null) {
+            for (File f : pros) {
+                if (f.isFile() && f.getName().endsWith(".json")) return true;
+            }
+        }
+        return new File(getFilesDir(), "inventory.json").isFile()
+                || new File(getFilesDir(), "calendar.json").isFile()
+                || new File(getFilesDir(), "custom_palettes.json").isFile();
+    }
+
+    private void exportBackup() {
+        if (!hasAnythingToBackup()) {
+            Toast.makeText(this, getString(R.string.backup_nothing),
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+        String name = "pindou_backup_"
+                + new SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA).format(new Date())
+                + ".zip";
+        Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("application/zip");
+        i.putExtra(Intent.EXTRA_TITLE, name);
+        try {
+            startActivityForResult(i, REQ_BACKUP_CREATE);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, getString(R.string.backup_err_export)
+                    + "no file picker", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void importBackup() {
+        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("application/zip");
+        try {
+            startActivityForResult(i, REQ_BACKUP_OPEN);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, getString(R.string.backup_err_import)
+                    + "no file picker", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /** 导出:把 zip 写到用户选的目标位置 */
+    private void doExport(final Uri uri) {
+        backupExec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    java.io.OutputStream out = getContentResolver().openOutputStream(uri, "w");
+                    if (out == null) throw new Exception("cannot open target");
+                    BackupManager.Result r;
+                    try {
+                        r = BackupManager.writeZip(getFilesDir(), out);
+                    } finally {
+                        out.close();
+                    }
+                    toast(getString(R.string.backup_ok_fmt, summary(r)));
+                } catch (Exception e) {
+                    toast(getString(R.string.backup_err_export) + e.getMessage());
+                }
+            }
+        });
+    }
+
+    /** 恢复第一步:后台校验备份 + 统计,再弹确认框(先看清会覆盖什么) */
+    private void previewRestore(final Uri uri) {
+        backupExec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    java.io.InputStream in = getContentResolver().openInputStream(uri);
+                    if (in == null) throw new Exception("cannot open file");
+                    BackupManager.Result r;
+                    try {
+                        r = BackupManager.readZip(in, getFilesDir(), false);
+                    } finally {
+                        in.close();
+                    }
+                    int cur = 0;
+                    File[] pros = new File(getFilesDir(), "projects").listFiles();
+                    if (pros != null) {
+                        for (File f : pros) {
+                            if (f.isFile() && f.getName().endsWith(".json")) cur++;
+                        }
+                    }
+                    final BackupManager.Result fr = r;
+                    final int curCount = cur;
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            confirmRestore(uri, fr, curCount);
+                        }
+                    });
+                } catch (Exception e) {
+                    final String msg = e.getMessage();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this,
+                                    "not_pindou_backup".equals(msg)
+                                            ? getString(R.string.backup_bad)
+                                            : getString(R.string.backup_err_import) + msg,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    /** 恢复确认框:写明备份内容与会被覆盖的现状 */
+    private void confirmRestore(final Uri uri, final BackupManager.Result r, int cur) {
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.backup_title))
+                .setMessage(getString(R.string.backup_confirm_fmt,
+                        summary(r), getString(R.string.backup_cur_fmt, cur)))
+                .setPositiveButton(getString(R.string.btn_save),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                doRestore(uri);
+                            }
+                        })
+                .setNegativeButton(getString(R.string.btn_cancel), null)
+                .show();
+    }
+
+    /** 恢复第二步:真正解包落盘,然后失效各存储的内存缓存 */
+    private void doRestore(final Uri uri) {
+        backupExec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    java.io.InputStream in = getContentResolver().openInputStream(uri);
+                    if (in == null) throw new Exception("cannot open file");
+                    BackupManager.Result r;
+                    try {
+                        r = BackupManager.readZip(in, getFilesDir(), true);
+                    } finally {
+                        in.close();
+                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            com.pindou.app.bead.BeadInventory.resetForRestore();
+                            com.pindou.app.util.BeadCalendar.resetForRestore();
+                            com.pindou.app.bead.CustomPalettes.load(MainActivity.this);
+                        }
+                    });
+                    toast(getString(R.string.backup_done_fmt, summary(r)));
+                } catch (Exception e) {
+                    final String msg = e.getMessage();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this,
+                                    "not_pindou_backup".equals(msg)
+                                            ? getString(R.string.backup_bad)
+                                            : getString(R.string.backup_err_import) + msg,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    /** "N 个项目 · 豆仓库存 · 打卡日历" 摘要;全空返回 "-" */
+    private String summary(BackupManager.Result r) {
+        StringBuilder sb = new StringBuilder();
+        if (r.projects > 0) {
+            sb.append(getString(R.string.backup_part_projects_fmt, r.projects));
+        }
+        if (r.inventory) {
+            if (sb.length() > 0) sb.append(" · ");
+            sb.append(getString(R.string.backup_part_inventory));
+        }
+        if (r.calendar) {
+            if (sb.length() > 0) sb.append(" · ");
+            sb.append(getString(R.string.backup_part_calendar));
+        }
+        if (r.palettes) {
+            if (sb.length() > 0) sb.append(" · ");
+            sb.append(getString(R.string.backup_part_palettes));
+        }
+        return sb.length() > 0 ? sb.toString() : "-";
+    }
+
+    private void toast(final String msg) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
     private void pickFromGallery() {
         Intent i = new Intent(Intent.ACTION_GET_CONTENT);
         i.addCategory(Intent.CATEGORY_OPENABLE);
@@ -877,6 +1114,14 @@ public class MainActivity extends Activity {
                 com.pindou.app.EditorActivity.pendingAction = nextAction;
                 nextAction = com.pindou.app.EditorActivity.PENDING_NONE;
                 openEditor(data.getData());
+            }
+        } else if (requestCode == REQ_BACKUP_CREATE) {
+            if (data != null && data.getData() != null) {
+                doExport(data.getData());
+            }
+        } else if (requestCode == REQ_BACKUP_OPEN) {
+            if (data != null && data.getData() != null) {
+                previewRestore(data.getData());
             }
         }
     }

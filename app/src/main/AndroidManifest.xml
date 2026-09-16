@@ -43,9 +43,30 @@
 
         <activity
             android:name=".EditorActivity"
-            android:exported="false"
+            android:exported="true"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustResize|stateHidden" />
+            android:windowSoftInputMode="adjustResize|stateHidden">
+            <!-- 外部打开图纸(v2.57):微信/QQ/文件管理器里点开 .json 图纸直达导入。
+                 content:// 为主(file:// 兼容老文件管理器);application/json 之外的
+                 二进制流(octet-stream)也声明——部分应用对 json 不给准确 MIME,
+                 导入时用 PatternShare.parse 严格校验,不对就提示并退出 -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="application/json" />
+                <data android:mimeType="application/octet-stream" />
+            </intent-filter>
+            <!-- 接收"以文件形式分享"的单张图纸(部分应用走 SEND 而不是 VIEW) -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/json" />
+                <data android:mimeType="application/octet-stream" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".KnowledgeActivity"
@@ -87,6 +108,11 @@
 
         <activity
             android:name=".VerifyActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".Play3DActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 

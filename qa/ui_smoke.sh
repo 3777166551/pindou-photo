@@ -454,6 +454,10 @@ adb shell input swipe 540 1600 540 2250 300; sleep 0.8
 tap_id chipShapeRound 0
 sleep 5
 snap photo_round
+tap_id chipShapeHex 0
+sleep 5
+snap photo_hex
+check_text "Hexagon"               # 硬断言:板子提示切成六边形文案
 tap_id chipShapeRect 0
 sleep 4
 

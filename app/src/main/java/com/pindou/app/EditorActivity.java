@@ -109,6 +109,8 @@ public class EditorActivity extends Activity {
     public static Bitmap pendingSource;
     /** 项目存档传递:MainActivity「我的项目」打开时放入,消费后置 null */
     public static String pendingProjectJson;
+    /** 3D 把玩传递:当前图纸的分享格式 JSON,Play3DActivity 消费后置 null */
+    public static String pendingPlay3DJson;
     /** 模板库建议画幅(边长),0 表示用默认 */
     public static int pendingSuggestedSize;
 
@@ -148,6 +150,8 @@ public class EditorActivity extends Activity {
     private int bgTolerance = 45;
     /** 圆形拼板 */
     private boolean roundBoard = false;
+    /** 六边形拼板 */
+    private boolean hexBoard = false;
     /** 豆子规格:false=标准豆 5mm,true=迷你豆 2.6mm(只影响尺寸/克重估算,不改格数) */
     private boolean miniBead = false;
     /** 线稿模式:描线灵敏度 0~100(黑豆描线 + 空格自己填色) */
@@ -265,7 +269,7 @@ public class EditorActivity extends Activity {
     private View excludedScroll;
     private LinearLayout excludedRow;
     /** 板子形状 */
-    private View chipShapeRect, chipShapeRound, customSizeRow;
+    private View chipShapeRect, chipShapeRound, chipShapeHex, customSizeRow;
     /** 撤销/重做 */
     private View btnUndo, btnRedo;
     /** 照片变换 */
@@ -275,6 +279,7 @@ public class EditorActivity extends Activity {
     private View btnStyleGhibli;
     private View btnCrop;
     private View chip3d;
+    private View chipPlay3d;
     private boolean effect3d = false;
     private View chipAr;
     private View btnAssistLocate, btnAssistCalendar, btnBrushMirror;
@@ -395,6 +400,16 @@ public class EditorActivity extends Activity {
         });
         updateUndoRedoButtons();
 
+        // 外部打开图纸(v2.57):微信/QQ/文件管理器 VIEW 或 SEND 过来的 .json
+        Uri external = null;
+        Intent incoming = getIntent();
+        if (Intent.ACTION_VIEW.equals(incoming.getAction())
+                && incoming.getData() != null) {
+            external = incoming.getData();
+        } else if (Intent.ACTION_SEND.equals(incoming.getAction())) {
+            external = incoming.getParcelableExtra(Intent.EXTRA_STREAM);
+        }
+
         String uriStr = getIntent().getStringExtra(EXTRA_PHOTO_URI);
         boolean blank = getIntent().getBooleanExtra(EXTRA_BLANK, false);
         if (pendingProjectJson != null) {
@@ -417,6 +432,9 @@ public class EditorActivity extends Activity {
                 syncSizeUi();
             }
             regenerate();
+        } else if (external != null) {
+            // intent filter 进来的图纸文件:解析失败(不是本格式)直接退出
+            importFromUri(external, true);
         } else if (uriStr == null) {
             Toast.makeText(this, getString(R.string.err_no_photo), Toast.LENGTH_SHORT).show();
             finish();
@@ -502,6 +520,7 @@ public class EditorActivity extends Activity {
         btnRotate90 = findViewById(R.id.btnRotate90);
         chipShapeRect = findViewById(R.id.chipShapeRect);
         chipShapeRound = findViewById(R.id.chipShapeRound);
+        chipShapeHex = findViewById(R.id.chipShapeHex);
         customSizeRow = findViewById(R.id.customSizeRow);
         btnUndo = findViewById(R.id.btnUndo);
         btnRedo = findViewById(R.id.btnRedo);
@@ -510,6 +529,7 @@ public class EditorActivity extends Activity {
         btnStyleGhibli = findViewById(R.id.btnStyleGhibli);
         btnCrop = findViewById(R.id.btnCrop);
         chip3d = findViewById(R.id.chip3d);
+        chipPlay3d = findViewById(R.id.chipPlay3d);
         chipAr = findViewById(R.id.chipAr);
         btnAssistLocate = findViewById(R.id.btnAssistLocate);
         btnAssistCalendar = findViewById(R.id.btnAssistCalendar);
@@ -598,9 +618,10 @@ public class EditorActivity extends Activity {
         int[] ids = {
                 R.id.tabEffect, R.id.tabPattern, R.id.tabList,
                 R.id.chipStyleReal, R.id.chipStyleAbs, R.id.chipStyleLine, R.id.chip3d,
+                R.id.chipPlay3d,
                 R.id.btnAssistRow,
                 R.id.chipBrickLight, R.id.chipBrickMid, R.id.chipBrickStrong, R.id.chipBrickSuper,
-                R.id.chipShapeRect, R.id.chipShapeRound,
+                R.id.chipShapeRect, R.id.chipShapeRound, R.id.chipShapeHex,
                 R.id.chipLimit0, R.id.chipLimit1, R.id.chipLimit2, R.id.chipLimit3, R.id.chipLimit4,
                 R.id.btnAiRestore, R.id.btnRemoveWatermark,
                 R.id.btnAssistNext, R.id.btnUndo, R.id.btnRedo,
@@ -677,15 +698,18 @@ public class EditorActivity extends Activity {
         chip87.setOnClickListener(preset);
         chip116.setOnClickListener(preset);
 
-        // 板子形状:方形 / 圆形
+        // 板子形状:方形 / 圆形 / 六边形
         View.OnClickListener shapeClick = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                setRound(v.getId() == R.id.chipShapeRound);
+                int id = v.getId();
+                setShape(id == R.id.chipShapeRound ? SHAPE_ROUND
+                        : id == R.id.chipShapeHex ? SHAPE_HEX : SHAPE_RECT);
             }
         };
         chipShapeRect.setOnClickListener(shapeClick);
         chipShapeRound.setOnClickListener(shapeClick);
+        chipShapeHex.setOnClickListener(shapeClick);
 
         // 豆子规格:标准豆 5mm / 迷你豆 2.6mm(只改尺寸与克重估算)
         View.OnClickListener beadSpecClick = new View.OnClickListener() {
@@ -1418,15 +1442,23 @@ public class EditorActivity extends Activity {
 
     // ---------------- 板子形状 ----------------
 
-    private void setRound(boolean round) {
-        if (roundBoard == round) return;
+    private static final int SHAPE_RECT = 0;
+    private static final int SHAPE_ROUND = 1;
+    private static final int SHAPE_HEX = 2;
+
+    private void setShape(int shape) {
+        boolean round = shape == SHAPE_ROUND;
+        boolean hex = shape == SHAPE_HEX;
+        if (roundBoard == round && hexBoard == hex) return;
         roundBoard = round;
-        if (round && rows != cols) {
+        hexBoard = hex;
+        if ((round || hex) && rows != cols) {
             cols = rows = Math.min(cols, rows);
         }
-        chipShapeRect.setSelected(!round);
+        chipShapeRect.setSelected(shape == SHAPE_RECT);
         chipShapeRound.setSelected(round);
-        customSizeRow.setVisibility(round ? View.GONE : View.VISIBLE);
+        chipShapeHex.setSelected(hex);
+        customSizeRow.setVisibility((round || hex) ? View.GONE : View.VISIBLE);
         invalidateEdits();
         structureChanged();
     }
@@ -1443,13 +1475,18 @@ public class EditorActivity extends Activity {
         chip87.setSelected(cols == 87 && rows == 87);
         chip116.setSelected(cols == 116 && rows == 116);
         if (chipShapeRect != null) {
-            chipShapeRect.setSelected(!roundBoard);
+            chipShapeRect.setSelected(!roundBoard && !hexBoard);
             chipShapeRound.setSelected(roundBoard);
+            chipShapeHex.setSelected(hexBoard);
         }
         if (roundBoard) {
             tvBoardHint.setText(String.format(Locale.CHINA,
                     getString(R.string.fmt_board_round),
                     cols, cols * cmPerBead()));
+        } else if (hexBoard) {
+            tvBoardHint.setText(String.format(Locale.CHINA,
+                    getString(R.string.fmt_board_hex),
+                    cols, cols * cmPerBead() * 0.866f, cols * cmPerBead()));
         } else {
             int boards = (int) (Math.ceil(cols / 29.0) * Math.ceil(rows / 29.0));
             tvBoardHint.setText(String.format(Locale.CHINA,
@@ -1626,8 +1663,10 @@ public class EditorActivity extends Activity {
             cols = rows = 29;   // 空白画布恢复到单板尺寸
         }
         roundBoard = false;
+        hexBoard = false;
         chipShapeRect.setSelected(true);
         chipShapeRound.setSelected(false);
+        chipShapeHex.setSelected(false);
         customSizeRow.setVisibility(View.VISIBLE);
         syncSizeUi();
         suppressSpinner = true;
@@ -1704,12 +1743,37 @@ public class EditorActivity extends Activity {
                 launchFakeAr();
             }
         });
+        // 3D 把玩:全屏旋转/缩放成品 + 虚拟熨烫彩蛋(v2.57)
+        chipPlay3d.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                launchPlay3D();
+            }
+        });
         btnCrop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showCropDialog();
             }
         });
+    }
+
+    /** 3D 把玩:当前图纸按分享格式 JSON 传给全屏把玩页 */
+    private void launchPlay3D() {
+        if (pattern == null) {
+            Toast.makeText(this, getString(R.string.gen_first_short),
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            pendingPlay3DJson = PatternShare.build(pattern, "").toString();
+        } catch (Exception e) {
+            Toast.makeText(this, getString(R.string.err_prefix_import) + e.getMessage(),
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        startActivity(new Intent(this, Play3DActivity.class));
+        overridePendingTransition(R.anim.enter_up, R.anim.exit_dim);
     }
 
     /** AR 试摆:效果图落缓存文件,按豆子规格换算物理尺寸后进假 AR 页 */
@@ -2173,6 +2237,7 @@ public class EditorActivity extends Activity {
         opt.bgRemove = bgRemove;
         opt.bgTolerance = bgTolerance;
         opt.roundBoard = roundBoard;
+        opt.hexBoard = hexBoard;
         opt.maxColors = COLOR_LIMITS[maxColorsIdx];
         opt.dominant = dominant;
         opt.denoise = denoise;
@@ -3658,6 +3723,11 @@ public class EditorActivity extends Activity {
     }
 
     private void importFromUri(final Uri uri) {
+        importFromUri(uri, false);
+    }
+
+    /** finishOnFail:外部 intent filter 打开的图纸解析失败时,提示后退出空页面 */
+    private void importFromUri(final Uri uri, final boolean finishOnFail) {
         exec.execute(new Runnable() {
             @Override
             public void run() {
@@ -3683,6 +3753,7 @@ public class EditorActivity extends Activity {
                         if (got == null) {
                             Toast.makeText(EditorActivity.this,
                                     getString(R.string.err_prefix_import) + err, Toast.LENGTH_LONG).show();
+                            if (finishOnFail) finish();
                             return;
                         }
                         applyImportedPattern(got);
@@ -4174,7 +4245,8 @@ public class EditorActivity extends Activity {
         Arrays.fill(cells, -1);
         List<BeadPattern.UsedColor> used = new ArrayList<>();
         return new BeadPattern(c, r, pal, cells,
-                new int[Math.max(1, pal.size())], used, 0, c * r);
+                new int[Math.max(1, pal.size())], used, 0, c * r,
+                roundBoard, hexBoard);
     }
 
     /** 用当前尺寸重建全空图纸(清掉引擎旧结果,手动修改由 editMap 叠加) */
@@ -4526,6 +4598,21 @@ public class EditorActivity extends Activity {
                             cols = rows;
                             rows = t;
                         }
+                        if (roundBoard || hexBoard) {
+                            // 圆形板对旋转/镜像不变;六边形板转 90° 会切到角,
+                            // 落到板外的手动修格直接丢弃,不让豆出现在板外
+                            java.util.Iterator<Map.Entry<Integer, Integer>> it =
+                                    editMap.entrySet().iterator();
+                            while (it.hasNext()) {
+                                Map.Entry<Integer, Integer> e = it.next();
+                                int x = e.getKey() % cols;
+                                int y = e.getKey() / cols;
+                                boolean out = roundBoard
+                                        ? BeadPattern.isOutsideRound(cols, rows, x, y)
+                                        : BeadPattern.isOutsideHex(cols, rows, x, y);
+                                if (out) it.remove();
+                            }
+                        }
                         if (blankCanvas || out == null) {
                             rebuildBlankRaw();
                         } else {
@@ -4624,6 +4711,7 @@ public class EditorActivity extends Activity {
                     s.put("bgOn", bgRemove);
                     s.put("bgTol", bgTolerance);
                     s.put("round", roundBoard);
+                    s.put("hex", hexBoard);
                     s.put("limitIdx", maxColorsIdx);
                     s.put("dominant", dominant);
                     s.put("denoise", denoise);
@@ -4719,6 +4807,7 @@ public class EditorActivity extends Activity {
                     ? clampInt(s.optInt("bgTol", 45), 0, 100)
                     : LEGACY_BG_TOL[Math.max(0, Math.min(2, s.optInt("bgIdx", 1)))];
             roundBoard = s.optBoolean("round", false);
+            hexBoard = s.optBoolean("hex", false);
             miniBead = s.optBoolean("mini", false);
             blankCanvas = o.optBoolean("blank", false);
             aiRunning = false;
@@ -4911,7 +5000,7 @@ public class EditorActivity extends Activity {
         if (blankCanvas) {
             hidePhotoOnlyCards();
         }
-        customSizeRow.setVisibility(roundBoard ? View.GONE : View.VISIBLE);
+        customSizeRow.setVisibility((roundBoard || hexBoard) ? View.GONE : View.VISIBLE);
         undoStack.clear();
         redoStack.clear();
         updateUndoRedoButtons();

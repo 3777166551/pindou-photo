@@ -36,7 +36,7 @@ echo === [1/6] aapt2 compile resources ===
 if errorlevel 1 goto :err
 
 echo === [2/6] aapt2 link ===
-"%BT%\aapt2.exe" link -o %OUT%\base.apk -I "%AJ%" --manifest %SRC%\AndroidManifest.xml -R %OUT%\res.zip --java %OUT%\gen -A %SRC%\assets --min-sdk-version 24 --target-sdk-version 34 --version-code 61 --version-name "2.50" --auto-add-overlay
+"%BT%\aapt2.exe" link -o %OUT%\base.apk -I "%AJ%" --manifest %SRC%\AndroidManifest.xml -R %OUT%\res.zip --java %OUT%\gen -A %SRC%\assets --min-sdk-version 24 --target-sdk-version 34 --version-code 65 --version-name "2.58" --auto-add-overlay
 if errorlevel 1 goto :err
 
 echo === [3/6] javac compile ===

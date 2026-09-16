@@ -40,6 +40,12 @@ public final class BeadCalendar {
         }
     }
 
+    /** 全量备份恢复后调用:丢弃内存缓存,下次访问从磁盘重读恢复的数据 */
+    public static synchronized void resetForRestore() {
+        data = null;
+        loaded = false;
+    }
+
     /** 记录今天完成的变化量(标记完成 +1,取消标记 -1,当天最少记 0) */
     public static synchronized void add(Context ctx, int delta) {
         load(ctx);
