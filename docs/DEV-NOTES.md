@@ -471,3 +471,21 @@ findstr "device"`(跳过表头,子串匹配,offline/unauthorized 不含
 PowerShell 管道会把 UTF-8 按 GBK 重解码,中文注释必失真——对比逻辑
 要么只比 ASCII 字面量,要么走字节级比较,否则全是假 DIFFERS。
 
+## 36. bg_pegboard.xml 名不副实四年:一直引用粉彩渐变大图（v2.59 视觉重制破案）
+
+**现象**：v2.59 两轮视觉重制后 CI 截图里页面背景仍是暖奶油/粉彩
+渐变,与新的 surface 底色完全对不上;解包 CI APK 验证 tile_pegboard.png
+颜色是新的——问题不在资源,在引用。
+
+**根因**：`drawable/bg_pegboard.xml` 自 v2.25 起 `android:src` 就指向
+`@drawable/bg_pastel`(660KB 的柔焦粉彩渐变大图,`gravity=fill`),
+名字叫 pegboard 实际从没平铺过点阵;GenPegboardTile 重生成 tile 全是
+白做,设计文档里"拼板点阵母题背景"从未真正生效。
+
+**修法**：bg_pegboard.xml 改回 `@drawable/tile_pegboard` +
+`tileModeX/Y=repeat`,窗口背景瞬间变成 surface 色点阵。
+
+**教训**：①**改视觉先核对 drawable 引用链**(资源文件本身对不对
+之外,引用它的包装 XML 也要查),别只看名字;②"文档说 X"不等于
+"代码是 X",四年前某次改版把引用换掉后文档没更新,后来者全被名字骗。
+
