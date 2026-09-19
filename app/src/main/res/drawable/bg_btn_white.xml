@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 白底按钮:用在 primary-container 英雄卡内(secondary-container 在紫卡上对比不足) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/card" />
+    <corners android:radius="20dp" />
+</shape>

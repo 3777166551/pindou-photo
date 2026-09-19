@@ -100,10 +100,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/bg_btn_secondary"
+                android:background="@drawable/bg_btn_white"
                 android:elevation="0dp"
                 android:text="@string/main_pick_camera"
-                android:textColor="@color/onSecondaryContainer" />
+                android:textColor="@color/textMain" />
         </LinearLayout>
 
         <!-- 工具区标题 -->

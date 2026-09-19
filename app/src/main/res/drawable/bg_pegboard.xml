@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 全屏柔焦粉彩底 -->
+<!-- 全屏拼板点阵母题:surface 底色 + 淡紫凸点无缝平铺
+     (2026-09-19 发现此文件此前一直引用 v2.25 的 bg_pastel 渐变大图,
+      点阵背景从未真正生效;现改回 tile 本义,与 M3 surface 对色) -->
 <bitmap xmlns:android="http://schemas.android.com/apk/res/android"
-    android:src="@drawable/bg_pastel"
-    android:gravity="fill" />
+    android:src="@drawable/tile_pegboard"
+    android:tileModeX="repeat"
+    android:tileModeY="repeat" />
