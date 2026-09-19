@@ -1,20 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 主操作按钮:紫粉渐变药丸 + 冷色软投影,无描边。按压反馈由
-     util/Anim.pressScale 的缩放动画承担(不要包 ripple 壳,API 30 会糊)。 -->
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:top="2dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/stickerShadow" />
-            <corners android:radius="30dp" />
-        </shape>
-    </item>
-    <item android:bottom="4dp">
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="270"
-                android:startColor="@color/gradStart"
-                android:endColor="@color/gradEnd" />
-            <corners android:radius="30dp" />
-        </shape>
-    </item>
-</layer-list>
+<!-- 主操作按钮:M3 filled button,40dp 全圆角实底紫,无渐变无贴片投影。
+     按压反馈由 util/Anim.pressScale 承担(不要包 ripple 壳,API 30 会糊)。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/primary" />
+    <corners android:radius="20dp" />
+</shape>

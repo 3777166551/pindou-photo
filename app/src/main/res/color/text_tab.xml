@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 分段标签文字:选中=on-secondary-container;未选=on-surface-variant(M3) -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_selected="true" android:color="#FFFFFF" />
+    <item android:state_selected="true" android:color="@color/onSecondaryContainer" />
     <item android:color="@color/textSub" />
 </selector>

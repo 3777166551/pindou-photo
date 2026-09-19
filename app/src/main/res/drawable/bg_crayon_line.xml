@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 标题下的品牌渐变条:紫→粉 -->
+<!-- 标题下品牌色条:主色短横(替代旧彩虹蜡笔线) -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <gradient
-        android:startColor="@color/gradStart"
-        android:endColor="@color/gradEnd"
-        android:angle="0" />
+    <solid android:color="@color/primary" />
     <corners android:radius="3dp" />
 </shape>

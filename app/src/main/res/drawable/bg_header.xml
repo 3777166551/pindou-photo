@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 顶栏:与页面底同色的半透明层,拉开与卡片的层次 -->
+<!-- 顶栏:M3 top app bar = surface 同底色 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="#F2F7F7FB" />
+    <solid android:color="@color/bg" />
 </shape>

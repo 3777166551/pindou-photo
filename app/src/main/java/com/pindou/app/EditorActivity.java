@@ -1904,7 +1904,7 @@ public class EditorActivity extends Activity {
         box.setPadding(pad, dp4(8), pad, 0);
         final TextView lab = new TextView(this);
         lab.setText(getString(R.string.style_strength) + ": " + strength[0] + "%");
-        lab.setTextColor(0xFF23212B);
+        lab.setTextColor(0xFF1D1B20);
         lab.setTextSize(14);
         box.addView(lab);
         SeekBar sb = new SeekBar(this);
@@ -2853,7 +2853,7 @@ public class EditorActivity extends Activity {
         int pad14 = Math.round(14 * den);
 
         android.widget.FrameLayout box = new android.widget.FrameLayout(this);
-        box.setBackgroundColor(nightMode ? 0xFF221E2C : 0xFFF0F1F7);
+        box.setBackgroundColor(nightMode ? 0xFF221E2C : 0xFFECE6F0);
 
         immersiveView = new PatternView(this);
         immersiveView.setMode(PatternView.MODE_PATTERN);
@@ -3244,7 +3244,7 @@ public class EditorActivity extends Activity {
 
                 TextView name = new TextView(EditorActivity.this);
                 name.setText(r.color.fullLabel());
-                name.setTextColor(0xFF23212B);
+                name.setTextColor(0xFF1D1B20);
                 name.setTextSize(13);
                 LinearLayout.LayoutParams nlp = new LinearLayout.LayoutParams(
                         0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
@@ -3460,7 +3460,7 @@ public class EditorActivity extends Activity {
             int have = BeadInventory.get(EditorActivity.this, uc.color.rgb);
             if (have < 0) {
                 inv.setText(getString(R.string.inv_unregistered));
-                inv.setTextColor(0xFF8E8B9C);
+                inv.setTextColor(0xFF49454F);
             } else if (have >= uc.count) {
                 inv.setText(getString(R.string.fmt_inv_enough, have - uc.count));
                 inv.setTextColor(0xFF35C98E);
@@ -3579,7 +3579,7 @@ public class EditorActivity extends Activity {
             void addHeader(String title) {
                 TextView h = new TextView(EditorActivity.this);
                 h.setText(title);
-                h.setTextColor(0xFF23212B);
+                h.setTextColor(0xFF1D1B20);
                 h.setTextSize(12);
                 h.setTypeface(null, android.graphics.Typeface.BOLD);
                 h.setPadding(densityPad / 2, densityPad, densityPad / 2, densityPad / 4);
@@ -3845,7 +3845,7 @@ public class EditorActivity extends Activity {
         title.setPadding(Math.round(14 * dm), 0, Math.round(14 * dm), 0);
         title.setText(String.format(Locale.CHINA, getString(R.string.fmt_cal_title),
                 year, month + 1));
-        title.setTextColor(0xFF23212B);
+        title.setTextColor(0xFF1D1B20);
         title.setTextSize(16);
         title.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         head.addView(prev);
@@ -3861,7 +3861,7 @@ public class EditorActivity extends Activity {
             TextView tv = new TextView(this);
             tv.setText(w);
             tv.setTextSize(11);
-            tv.setTextColor(0xFF8E8B9C);
+            tv.setTextColor(0xFF49454F);
             tv.setGravity(android.view.Gravity.CENTER);
             tv.setLayoutParams(new LinearLayout.LayoutParams(0,
                     LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
@@ -3903,7 +3903,7 @@ public class EditorActivity extends Activity {
             cell.setText(cnt > 0 ? d + "\n🔥" + cnt : String.valueOf(d));
             cell.setTextSize(10);
             if (thisMonth && d == today) {
-                cell.setTextColor(0xFF7C5CF4);
+                cell.setTextColor(0xFF21005D);
                 cell.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
             } else {
                 cell.setTextColor(cnt > 0 ? 0xFFE65100 : 0xFFB9BEC5);
@@ -3953,7 +3953,7 @@ public class EditorActivity extends Activity {
         tv.setTextSize(14);
         int cp = Math.round(12 * getResources().getDisplayMetrics().density);
         tv.setPadding(cp, 0, cp, 0);
-        tv.setTextColor(0xFF23212B);
+        tv.setTextColor(0xFF1D1B20);
         tv.setClickable(true);
         return tv;
     }
@@ -4453,7 +4453,7 @@ public class EditorActivity extends Activity {
         gd.setShape(GradientDrawable.OVAL);
         String label;
         if (eraseOn) {
-            gd.setColor(0xFFF0F1F7);
+            gd.setColor(0xFFECE6F0);
             label = getString(R.string.eraser_label);
         } else {
             ensureBrushDefault();

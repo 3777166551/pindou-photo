@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 选中 chip:电流紫实底药丸;未选:冷灰色调底。无描边(M3 tonal) -->
+<!-- 单选 chip:选中=M3 primary-container 色调填充;未选=surface-container-high。
+     文字色见 color/text_chip(选中 on-primary-container,未选 on-surface-variant) -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_selected="true">
         <shape android:shape="rectangle">
-            <solid android:color="@color/primary" />
+            <solid android:color="@color/primaryContainer" />
             <corners android:radius="20dp" />
         </shape>
     </item>
     <item android:state_checked="true">
         <shape android:shape="rectangle">
-            <solid android:color="@color/primary" />
+            <solid android:color="@color/primaryContainer" />
             <corners android:radius="20dp" />
         </shape>
     </item>

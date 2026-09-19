@@ -2,17 +2,17 @@
 <resources>
     <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:colorPrimary">@color/primary</item>
-        <item name="android:colorPrimaryDark">@color/primaryDark</item>
+        <item name="android:colorPrimaryDark">@color/bg</item>
         <item name="android:colorAccent">@color/primary</item>
         <item name="android:statusBarColor">@color/bg</item>
         <item name="android:navigationBarColor">@color/bg</item>
         <item name="android:windowBackground">@drawable/bg_pegboard</item>
         <item name="android:windowLightStatusBar">true</item>
-        <!-- 全局弹窗壳:白圆角贴纸卡 + 糖果粉按钮(所有 AlertDialog 自动生效) -->
+        <!-- 全局弹窗壳:M3 白 28dp 圆角(所有 AlertDialog 自动生效) -->
         <item name="android:alertDialogTheme">@style/CandyAlertDialog</item>
     </style>
 
-    <!-- 弹窗:贴纸圆角壳 + 墨字 + 糖果粉按钮 -->
+    <!-- 弹窗:白壳 + on-surface 字 + 主色按钮(M3 dialog 规格) -->
     <style name="CandyAlertDialog" parent="android:Theme.Material.Light.Dialog.Alert">
         <item name="android:windowBackground">@drawable/bg_dialog</item>
         <item name="android:colorAccent">@color/primary</item>
@@ -28,26 +28,26 @@
         <item name="android:navigationBarColor">@color/bg</item>
     </style>
 
-    <!-- 区块标题:糖果粉圆点 + 加粗 -->
+    <!-- 区块标题:M3 label-large(14sp medium) + 主色圆点 -->
     <style name="SecTitle">
-        <item name="android:textSize">13sp</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/textMain</item>
         <item name="android:drawableStart">@drawable/ic_dot_small</item>
         <item name="android:drawablePadding">7dp</item>
     </style>
 
-    <!-- 大按钮通用文字属性 -->
+    <!-- 大按钮:M3 filled button = 40dp + label-large -->
     <style name="BigBtn">
-        <item name="android:layout_height">54dp</item>
+        <item name="android:layout_height">40dp</item>
         <item name="android:gravity">center</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
     </style>
 
-    <!-- 首页工具贴纸卡 -->
+    <!-- 首页工具卡(M3 card 语言) -->
     <style name="ToolCard">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
@@ -55,7 +55,7 @@
         <item name="android:background">@drawable/bg_card_sketch</item>
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
-        <item name="android:elevation">0dp</item>
+        <item name="android:elevation">2dp</item>
         <item name="android:gravity">center_horizontal</item>
         <item name="android:orientation">vertical</item>
         <item name="android:paddingTop">14dp</item>
@@ -75,9 +75,9 @@
     <style name="ToolCardTitle">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:layout_marginTop">8dp</item>
         <item name="android:textColor">@color/textMain</item>
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">15sp</item>
         <item name="android:textStyle">bold</item>
     </style>
 
@@ -86,6 +86,6 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">2dp</item>
         <item name="android:textColor">@color/textSub</item>
-        <item name="android:textSize">10sp</item>
+        <item name="android:textSize">12sp</item>
     </style>
 </resources>

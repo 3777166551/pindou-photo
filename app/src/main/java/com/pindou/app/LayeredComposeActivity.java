@@ -70,7 +70,7 @@ public class LayeredComposeActivity extends Activity {
 
     private void buildUi() {
         ScrollView scroll = new ScrollView(this);
-        scroll.setBackgroundColor(0xFFF7F7FB);
+        scroll.setBackgroundColor(0xFFFEF7FF);
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         int pad = Math.round(16 * getResources().getDisplayMetrics().density);
@@ -78,14 +78,14 @@ public class LayeredComposeActivity extends Activity {
 
         TextView title = new TextView(this);
         title.setText(getString(R.string.layered_title));
-        title.setTextColor(0xFF23212B);
+        title.setTextColor(0xFF1D1B20);
         title.setTextSize(20);
         title.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         root.addView(title);
 
         TextView tip = new TextView(this);
         tip.setText(getString(R.string.layered_tip));
-        tip.setTextColor(0xFF8E8B9C);
+        tip.setTextColor(0xFF49454F);
         tip.setTextSize(13);
         tip.setPadding(0, pad / 2, 0, pad);
         root.addView(tip);
@@ -114,7 +114,7 @@ public class LayeredComposeActivity extends Activity {
 
             CheckBox cb = new CheckBox(this);
             cb.setTextSize(14);
-            cb.setTextColor(0xFF23212B);
+            cb.setTextColor(0xFF1D1B20);
             cb.setText(e.name);
             row.addView(cb, new LinearLayout.LayoutParams(
                     0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
@@ -352,7 +352,7 @@ public class LayeredComposeActivity extends Activity {
     private TextView chip(String text) {
         TextView t = new TextView(this);
         t.setText(text);
-        t.setTextColor(0xFF23212B);
+        t.setTextColor(0xFF1D1B20);
         t.setTextSize(13);
         t.setGravity(Gravity.CENTER);
         t.setBackgroundResource(R.drawable.bg_chip);
@@ -415,7 +415,7 @@ public class LayeredComposeActivity extends Activity {
 
         TextView head = new TextView(this);
         head.setText(getString(R.string.fmt_layered_bom_head, layers.size(), total));
-        head.setTextColor(0xFF23212B);
+        head.setTextColor(0xFF1D1B20);
         head.setTextSize(15);
         head.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         head.setPadding(0, 0, 0, pad);
@@ -434,7 +434,7 @@ public class LayeredComposeActivity extends Activity {
             TextView t = new TextView(this);
             t.setText(getString(R.string.fmt_layered_bom_row,
                     r[0], (Integer) r[2]));
-            t.setTextColor(0xFF23212B);
+            t.setTextColor(0xFF1D1B20);
             t.setTextSize(13);
             row.addView(t, new LinearLayout.LayoutParams(
                     0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));

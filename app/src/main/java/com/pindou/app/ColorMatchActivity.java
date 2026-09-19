@@ -229,13 +229,13 @@ public class ColorMatchActivity extends Activity {
             l1.setText(String.format(Locale.getDefault(), "%s %s%s",
                     m.brand, String.valueOf(m.color.code),
                     BeadColor.codeSuffix) + " · " + m.color.name);
-            l1.setTextColor(0xFF23212B);
+            l1.setTextColor(0xFF1D1B20);
             l1.setTextSize(14);
             l1.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
             TextView l2 = new TextView(this);
             l2.setText(String.format(Locale.getDefault(),
                     getString(R.string.match_de_fmt), m.deltaE));
-            l2.setTextColor(0xFF8E8B9C);
+            l2.setTextColor(0xFF49454F);
             l2.setTextSize(12);
             textCol.addView(l1);
             textCol.addView(l2);
@@ -295,7 +295,7 @@ public class ColorMatchActivity extends Activity {
     private TextView resultLabel(String text) {
         TextView tv = new TextView(this);
         tv.setText(text);
-        tv.setTextColor(0xFF23212B);
+        tv.setTextColor(0xFF1D1B20);
         tv.setTextSize(13);
         tv.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         tv.setPadding(dp(4), dp(2), dp(4), dp(2));

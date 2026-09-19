@@ -137,7 +137,7 @@ public class FakeArActivity extends Activity {
 
         TextView chipRecenter = new TextView(this);
         chipRecenter.setText(getString(R.string.ar_recenter));
-        chipRecenter.setTextColor(0xFF23212B);
+        chipRecenter.setTextColor(0xFF1D1B20);
         chipRecenter.setTextSize(13);
         chipRecenter.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         chipRecenter.setBackgroundResource(R.drawable.bg_chip);

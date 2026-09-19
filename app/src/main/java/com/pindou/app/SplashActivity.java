@@ -156,7 +156,7 @@ public class SplashActivity extends Activity {
 
         SplashView() {
             super(SplashActivity.this);
-            setBackgroundColor(0xFFF7F7FB);
+            setBackgroundColor(0xFFFEF7FF);
             setClickable(true);
             for (int i = 0; i < COLS * ROWS; i++) {
                 angles[i] = rnd.nextFloat() * 2f * (float) Math.PI;
@@ -188,7 +188,7 @@ public class SplashActivity extends Activity {
             float r = cell * 0.5f;
             canvas.drawRoundRect(ox - r, oy - r, ox + boardW + r, oy + boardH + r,
                     r * 1.6f, r * 1.6f, boardPaint);
-            pegPaint.setColor(0xFFE3E5F2);
+            pegPaint.setColor(0xFFEBE4F3);
             for (int y = 0; y < ROWS; y++) {
                 for (int x = 0; x < COLS; x++) {
                     canvas.drawCircle(ox + (x + 0.5f) * cell, oy + (y + 0.5f) * cell,

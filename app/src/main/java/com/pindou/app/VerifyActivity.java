@@ -245,7 +245,7 @@ public class VerifyActivity extends Activity {
     private TextView chip(String text) {
         TextView t = new TextView(this);
         t.setText(text);
-        t.setTextColor(0xFF23212B);
+        t.setTextColor(0xFF1D1B20);
         t.setTextSize(13);
         t.setGravity(Gravity.CENTER);
         t.setBackgroundResource(R.drawable.bg_chip);

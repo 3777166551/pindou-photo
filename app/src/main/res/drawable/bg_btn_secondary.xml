@@ -1,16 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 次按钮:白药丸 + 冷色软投影,无描边(不用 ripple 壳) -->
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:top="2dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/stickerShadow" />
-            <corners android:radius="30dp" />
-        </shape>
-    </item>
-    <item android:bottom="3.5dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/card" />
-            <corners android:radius="30dp" />
-        </shape>
-    </item>
-</layer-list>
+<!-- 次按钮:M3 tonal button,secondary-container 实底(不用 ripple 壳) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/secondaryContainer" />
+    <corners android:radius="20dp" />
+</shape>

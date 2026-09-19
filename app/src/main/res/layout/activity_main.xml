@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="28dp" />
 
-        <!-- 标题(手绘感:大字 + 蜡笔下划线) -->
+        <!-- 标题(M3 headline) -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -25,15 +25,8 @@
             android:letterSpacing="0.02"
             android:text="@string/app_name"
             android:textColor="@color/textMain"
-            android:textSize="30sp"
+            android:textSize="28sp"
             android:textStyle="bold" />
-
-        <View
-            android:layout_width="132dp"
-            android:layout_height="6dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="2dp"
-            android:background="@drawable/bg_crayon_line" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -85,7 +78,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="@string/main_new_desc"
-                        android:textColor="#993A3745"
+                        android:textColor="#9921005D"
                         android:textSize="11sp" />
                 </LinearLayout>
             </LinearLayout>
@@ -94,10 +87,10 @@
                 android:id="@+id/btnGallery"
                 style="@style/BigBtn"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
+                android:layout_height="40dp"
                 android:layout_marginTop="14dp"
                 android:background="@drawable/bg_btn_primary"
-                android:elevation="3dp"
+                android:elevation="0dp"
                 android:text="@string/main_pick_gallery"
                 android:textColor="#FFFFFF" />
 
@@ -105,12 +98,12 @@
                 android:id="@+id/btnCamera"
                 style="@style/BigBtn"
                 android:layout_width="match_parent"
-                android:layout_height="46dp"
+                android:layout_height="40dp"
                 android:layout_marginTop="10dp"
                 android:background="@drawable/bg_btn_secondary"
-                android:elevation="1dp"
+                android:elevation="0dp"
                 android:text="@string/main_pick_camera"
-                android:textColor="@color/textMain" />
+                android:textColor="@color/onSecondaryContainer" />
         </LinearLayout>
 
         <!-- 工具区标题 -->

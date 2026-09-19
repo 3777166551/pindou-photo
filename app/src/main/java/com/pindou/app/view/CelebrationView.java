@@ -204,7 +204,7 @@ public class CelebrationView extends View {
         paint.setStrokeWidth(size * 0.05f);
         c.drawRoundRect(rf, size * 0.24f, size * 0.24f, paint);
         paint.setStyle(Paint.Style.FILL);
-        textP.setColor(0xFF23212B);
+        textP.setColor(0xFF1D1B20);
         textP.setTextSize(size * 0.3f);
         textP.setFakeBoldText(true);
         Paint.FontMetrics fm = textP.getFontMetrics();

@@ -327,7 +327,7 @@ public class MainActivity extends Activity {
             chip.setText(cats.get(i).name);
             chip.setTextSize(13);
             chip.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
-            chip.setTextColor(0xFF7C5CF4);
+            chip.setTextColor(0xFF21005D);
             chip.setBackgroundResource(R.drawable.bg_chip);
             chip.setElevation(dp(2));
             chip.setPadding(dp(14), dp(8), dp(14), dp(8));
@@ -401,7 +401,7 @@ public class MainActivity extends Activity {
 
             TextView t = new TextView(MainActivity.this);
             t.setText(cat.items[position].name);
-            t.setTextColor(0xFF23212B);
+            t.setTextColor(0xFF1D1B20);
             t.setTextSize(11);
             t.setMaxLines(1);
             cell.addView(t);
@@ -459,7 +459,7 @@ public class MainActivity extends Activity {
 
         TextView mergeBtn = new TextView(this);
         mergeBtn.setText(getString(R.string.btn_merge_bom));
-        mergeBtn.setTextColor(0xFF7C5CF4);
+        mergeBtn.setTextColor(0xFF6750A4);
         mergeBtn.setTextSize(13);
         mergeBtn.setPadding(pad, pad, pad, pad);
         mergeBtn.setBackgroundResource(android.R.drawable.list_selector_background);
@@ -477,7 +477,7 @@ public class MainActivity extends Activity {
         // 立体组合:选 2~4 个存档堆成多层立体件(v2.50)
         TextView layerBtn = new TextView(this);
         layerBtn.setText(getString(R.string.btn_layered));
-        layerBtn.setTextColor(0xFF7C5CF4);
+        layerBtn.setTextColor(0xFF6750A4);
         layerBtn.setTextSize(13);
         int lpad = pad;
         layerBtn.setPadding(lpad, lpad / 2, lpad, lpad);
@@ -503,7 +503,7 @@ public class MainActivity extends Activity {
 
             ImageView iv = new ImageView(this);
             GradientDrawable bg = new GradientDrawable();
-            bg.setColor(0xFFF0F1F7);
+            bg.setColor(0xFFECE6F0);
             bg.setCornerRadius(8 * getResources().getDisplayMetrics().density);
             iv.setBackground(bg);
             iv.setImageBitmap(e.thumb);
@@ -522,7 +522,7 @@ public class MainActivity extends Activity {
             mid.addView(name);
             TextView meta = new TextView(this);
             meta.setText(fmt.format(new Date(e.savedAt)));
-            meta.setTextColor(0xFF8E8B9C);
+            meta.setTextColor(0xFF49454F);
             meta.setTextSize(11);
             mid.addView(meta);
             row.addView(mid, new LinearLayout.LayoutParams(
@@ -530,7 +530,7 @@ public class MainActivity extends Activity {
 
             TextView del = new TextView(this);
             del.setText(getString(R.string.btn_delete));
-            del.setTextColor(0xFFF0564A);
+            del.setTextColor(0xFFB3261E);
             del.setTextSize(13);
             del.setPadding(pad, pad, pad, pad);
             del.setClickable(true);
@@ -547,7 +547,7 @@ public class MainActivity extends Activity {
             // 拍照验收:按存档打开项目,图纸生成完成后自动进验收页(v2.54)
             TextView ver = new TextView(this);
             ver.setText(getString(R.string.verify_btn_short));
-            ver.setTextColor(0xFF7C5CF4);
+            ver.setTextColor(0xFF6750A4);
             ver.setTextSize(12);
             ver.setPadding(pad, pad, pad, pad);
             ver.setClickable(true);
@@ -735,7 +735,7 @@ public class MainActivity extends Activity {
         TextView sum = new TextView(this);
         sum.setText(String.format(Locale.CHINA,
                 "%d 个项目 · %d 种颜色 · 合计 %,d 颗", okProjects, keys.size(), total));
-        sum.setTextColor(0xFF8E8B9C);
+        sum.setTextColor(0xFF49454F);
         sum.setTextSize(12);
         sum.setPadding(0, pad, 0, 0);
         box.addView(sum);

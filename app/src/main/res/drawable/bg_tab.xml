@@ -1,19 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 选中 tab:紫粉渐变药丸 -->
+<!-- 分段式标签选中段:M3 segmented button,选中=secondary-container -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_selected="true">
         <shape android:shape="rectangle">
-            <gradient
-                android:angle="270"
-                android:startColor="@color/gradStart"
-                android:endColor="@color/gradEnd" />
-            <corners android:radius="20dp" />
+            <solid android:color="@color/secondaryContainer" />
+            <corners android:radius="18dp" />
         </shape>
     </item>
     <item>
         <shape android:shape="rectangle">
             <solid android:color="#00000000" />
-            <corners android:radius="20dp" />
+            <corners android:radius="18dp" />
         </shape>
     </item>
 </selector>

@@ -1,34 +1,69 @@
 # 路线图与交接文档 (ROADMAP & HANDOFF)
 
 > 本文档是项目的**持续交接入口**：当前状态、待办功能、开发约定、操作备忘。
-> 新会话/新开发者从这里开始读。最后更新：2026-09-16（v2.55 六边形板 +
-> v2.56 全量备份/恢复 + v2.57 intent filter & 3D 把玩 + v2.58 生长动画 &
-> GIF 导出,本地 qa 353 项全绿,待提交推送 + 真机走查后一起发版）
+> 新会话/新开发者从这里开始读。最后更新：2026-09-19（v2.59 视觉重制:
+> API 降级推送 15bf3f8,CI 验收进行中;**下一个会话接着跑「六、待办清单」
+> 第 1 项:GIF 导出尺寸 bug**）
 
-## 一、当前状态快照（2026-09-16,v2.55~v2.58 本地待推）
+## 一、当前状态快照（2026-09-19,v2.59 视觉重制已推,CI 验收中）
 
-- **v2.58 生长动画 + GIF 导出(2026-09-16,本地完成未推)**:传播位功能——
+- **v2.59 界面重制两轮(2026-09-19,用户反馈"风格落后"直答)**:
+  ①第一轮「清汽水」(冷白+电流紫渐变)已推 15bf3f8 并 **CI 全绿
+  (build 353 项+冒烟+AR 冒烟)**,用户看后仍嫌不好看,点名"参考
+  开源可商用 UI";②第二轮 **严格落地 Material 3 基线(Apache-2.0,
+  m3.material.io 官方令牌)**:色板全换官方角色值(surface #FEF7FF/
+  primary #6750A4/primary-container #EADDFF/secondary-container
+  #E8DEF8/outline-variant #CAC4D0/on-surface #1D1B20…),组件对齐
+  官方 spec——按钮 40dp 全圆角实底(去渐变去贴片投影)、分段标签=
+  M3 segmented button(outline 描边槽+secondary-container 选中段)、
+  chip 选中=primary-container、卡片 surface-container-low 16dp、
+  弹窗白底 28dp、首页英雄卡=primary-container 色调卡(删蜡笔下划线);
+  字体确认系统无衬线(Skin 自 v2.25 就是 no-op);修「有的卡片颜色
+  特别深」=英雄卡弃用旧糖果贴纸风 PNG(墨描边元凶)+点阵背景贴图
+  重生成(surface 底+淡紫点);修「按钮挤压」=45 处 34/36dp chip
+  统一 40dp、间距 6/7→8dp、字号 11/12→12/13sp(第一轮已 CI 验证)。
+  教训:自造配色(暖陶玫瑰/清汽水)两轮都不满意,**跟着成熟设计系统
+  的官方令牌走**才是正路;DEV-NOTES 35 记录 PowerShell 写 .java 被
+  钩子改坏(0→x)必须走 Edit 工具的坑。
+- **★ 下一个会话接着跑（按序,细节见「六」）**:
+  1. **GIF 导出尺寸 bug(最高优先)**:真机实测导出成功但尺寸 100×208
+     (预期长边 720),且帧内容空白——startGifExport() 的 playView
+     宽高来源可疑,修后同流程回归;
+  2. 空白画布 chip/hint 偶发 stale(58×58):startBlankCanvas 不调
+     syncSizeUi,补一行;
+  3. real_walk.bat 适配 Android 15+(am start 非导出被拦,见 DEV-NOTES 32);
+  4. 手机设置恢复(screen_off_timeout/stay_on_while_plugged_in);
+  5. 提醒用户吊销已用完的 PAT(2026-09-18 与 09-19 两把均已实际使用,
+     若尚未吊销尽快处理)。
+- **★ 2026-09-18 真机验证 session(vivo V2536A,OriginOS/Android 16,
+  无线调试)**:配对+连接+装包全通;七屏走查零 FATAL;**3D 把玩+生长动画
+  真机实测通过**(文字生成"BEAD"→进 3D 把玩,豆豆按批次落成,顶栏四
+  chip/透视/定位点全部正常,截图 qa\out\play3d_*.png);GIF 导出全链路
+  (SAF 选择器→下载目录)跑通,文件合法(GIF89a/76 帧/NETSCAPE 循环,
+  qa\out\pindou_build_20260918_2056.gif)但踩中尺寸 bug。
+  新踩坑:Android 16 拦 shell am start 非导出 Activity、OriginOS 锁屏
+  杀无线调试端口且端口轮换、adb 37.x CRLF 输出让 findstr $ 失效——
+  详录 DEV-NOTES 32/33/34;真机操作流(配对/点亮/常亮/点击驱动)已写进
+  ROADMAP「四」★ 真机走查条目。
+- **v2.58 生长动画 + GIF 导出(已发布)**:传播位功能——
   3D 把玩页进门自动播放「生长动画」(豆豆按颜色分批从空中落成整幅,
   「▶ 重播」随时再看),「🎞 GIF」chip 把整段动画离线渲成 GIF 分享:
-  纯 Java GIF89a 编码器(逐帧局部调色板+中位切分+LZW,GIFCOMPR 语义,
-  LZW 专利 2004 年已过期),UI 线程渲染/后台编码流水线,长边 720px、
-  48~160 帧、SAF 导出零新权限;TestGifEncoder 20 项(自带迷你 LZW
-  解码器做真往返:纯色/棋盘/渐变量化/表满 clear/多帧延时/循环扩展)。
-  **建议到此收手**:四个版本一起推 CI + 真机走查(插线跑 real_walk.bat)
-  后发版,别让本地全绿雪球滚大。
-- **v2.57 外部打开图纸 + 3D 把玩(2026-09-16,本地完成未推)**:ROADMAP
+  纯 Java GIF89a 编码器(逐帧局部调色板+中位切分+LZW,GIFCOMPR 语义),
+  UI 线程渲染/后台编码流水线,SAF 导出零新权限;TestGifEncoder 20 项
+  (自带迷你 LZW 解码器做真往返)。
+- **v2.57 外部打开图纸 + 3D 把玩(已发布)**:ROADMAP
   候选 #1 落地——EditorActivity 挂 VIEW/SEND intent filter(application/json
   + octet-stream),微信/QQ/文件管理器点开 .json 图纸直达导入,解析失败
-  提示即退;另做「🤹 3D 把玩」传播位功能——全屏旋转/缩放成品
+  提示即退;「🤹 3D 把玩」全屏旋转/缩放成品
   (Play3DProjector 正交投影纯数学 + TestPlay3D 12 项),彩蛋虚拟熨斗
   把豆豆烫连,烫满 100% 自动展示自转;入口 = 效果图页右上第三个 chip。
   顺带查证:本地 LICENSE 与 GitHub 仓库识别均为 AGPL-3.0,无偏差。
 
-- **v2.55 六边形板(2026-09-16,本地完成未推)**:ROADMAP 候选 #4 落地——
+- **v2.55 六边形板(已发布)**:ROADMAP 候选 #4 落地——
   形状三 chip(方/圆/六边形)+ 尖顶正六边形蒙版 + 全渲染链路(效果图 2D/3D/
   图纸/打印/PDF)+ 分享格式 hex 字段 + TestHexBoard 17 项;
   同网格蒙版方案,偏移网格(蜂窝错位)未含。
-- **v2.56 全量备份/恢复(2026-09-16,本地完成未推)**:ROADMAP 候选 #2 落地——
+- **v2.56 全量备份/恢复(已发布)**:ROADMAP 候选 #2 落地——
   首页「📦 备份与恢复」卡片:项目存档+豆仓+打卡日历+自定义色板打包成
   zip,SAF 导出/导入,零新权限;恢复前弹确认(写明覆盖内容),项目目录
   整目录替换、库文件缺了不动现状;BackupManager 纯 java.io/zip 可桌面
@@ -36,8 +71,9 @@
   BeadInventory/BeadCalendar 内存缓存 + CustomPalettes.load 重载。
   真机走查新工具 qa\real_walk.bat(adb 驱动七屏截图+logcat FATAL 扫描,
   用户只管插线)。
-- **最新代码**:`v2.54`(main=9a22b472,CI run 146 全绿)。功能版本索引见第五节
-  v2.51~v2.54 行;**可安装 APK 在每次绿色 run 的 Artifacts 里**
+- **最新代码**:`v2.58`(main=8a4109e,2026-09-16 推送,CI build+ar-smoke
+  全绿;Release v2.58 挂 PindouPhoto-v2.58.apk)。功能版本索引见第五节;
+  **可安装 APK 在每次绿色 run 的 Artifacts 里**
   (`PindouPhoto-debug`,下载需登录 GitHub;Artifact 下载接口必须带 token)。
 - **v2.54 拍照验收**(用户点名的头号亮点):真板俯拍照 → 拖四角校准 → 逐格
   透视采样读色(CIEDE2000,避开豆孔偏心采样)→ 高亮**摆错(红)/漏摆(黄)/
@@ -154,16 +190,25 @@ IoT/蓝牙硬件板。详见 docs/完整文档.md 开头的"发布渠道计划"�
   坑：CI 截图是 en 环境 + 模拟器 emoji 字体缺字（🧰 渲染成怪块），别当 bug；
   上滚手势起点必须在设置区内（y≥1200），起点在 y=600 会被 PatternView
   吃掉；AlertDialog 按钮点击默认 dismiss 对话框，脚本别重复点 Close。
-- **★ 真机走查 = 插线跑 real_walk.bat（2026-09-16 新增，零人力方案）**：
-  手机 USB 插电脑 + 开 USB 调试（手机屏幕上允许 RSA 指纹），任何会话里
-  说一句"手机插上了，跑走查"即可由 AI 执行 `qa\real_walk.bat [apk]`：
-  装 APK（可选参数）→ 七屏 activity 逐屏截图（adb exec-out screencap：
-  主页/空白画布编辑器/知识页/豆仓/色板/拍照对色/立体组合）→ logcat
-  FATAL 扫描 → 产物 `qa\real_shots\<时间>\`（report.txt + PNG + logcat）
-  逐张人眼审。用途：DEV-NOTES 20 类"只有真机暴露"的手势/机型差异、
-  116² 以上大图低端机性能的真机采样、拍照验收阈值真机校准的入口。
-  无设备时报错退出不挂起；adb 自动探测 tools\asdk\platform-tools。
-  用户无需在场，插上线即可离开。
+- **★ 真机走查 = real_walk.bat(2026-09-18 更新:无线调试已实战验证)**:
+  ①**连接**——手机开无线调试(无需数据线):开发者选项→无线调试→配对码
+  配对,`adb pair <配对IP:端口> <6位码>` 后 `adb connect <主页IP:端口>`;
+  **OriginOS 每次锁屏都会杀掉连接并轮换端口**,锁屏=重连,端口以手机
+  「无线调试」主页实时显示为准;连上第一件事
+  `settings put global stay_on_while_plugged_in 7` +
+  `settings put system screen_off_timeout 600000`(防灭屏,测完恢复);
+  跑脚本前 `set ANDROID_SERIAL=<IP:端口>`(无线设备在 adb 里有两个别名,
+  不钉住会 more than one device)。
+  ②**Android 15+ 限制**——shell `am start` 非导出 Activity 抛
+  SecurityException(DEV-NOTES 32),走查脚本的非导出页步骤在 Android 16
+  真机上半数失效;当前可用路径 = monkey 拉 LAUNCHER 进首页 + uiautomator
+  dump 解析 bounds 后 `input tap` 点击驱动(qa\out\uinfo.ps1 是现成的
+  dump 解析器);改造 walk 脚本 = 待办六-3。
+  ③**流程**——`set ANDROID_SERIAL=...&& qa\real_walk.bat [apk]`:装包
+  (可选)→ 逐屏截图(screencap)→ logcat FATAL 扫描 → 产物
+  `qa\real_shots\<时间>\`。2026-09-18 实测:零 FATAL,截图/报告齐全。
+  ④测试辅助件(本地 qa\out\,未入库):uinfo.ps1(dump 解析)、
+  heartbeat.bat(保活心跳,实测锁屏时救不了,仅减 少空闲断连)。
 - **Firecrawl**：插件已装，`firecrawl` CLI 需用户设置 FIRECRAWL_API_KEY
   后才可用（本机 IP 无 key 会被拒）。
 - **本机编码**：cmd 控制台是 GBK，UTF-8 中文输出会乱码但不影响实际数据；
@@ -227,3 +272,40 @@ IoT/蓝牙硬件板。详见 docs/完整文档.md 开头的"发布渠道计划"�
 | v2.56 | **全量备份/恢复（ROADMAP 候选 #2，换机刚需，2026-09-16）**：①**功能**——首页新增「📦 备份与恢复」卡片：项目存档+豆仓库存+打卡日历+自定义色板打包成一个 zip，经系统文件选择器（ACTION_CREATE_DOCUMENT / ACTION_OPEN_DOCUMENT）导出到任意位置（文件管理器/网盘均可）或从文件恢复，零新权限；②**恢复语义**——先在后台校验+统计再弹确认框（写明"备份内容 vs 将被覆盖的现有项目数"），确认后项目目录整目录替换（旧孤儿清除）、三个库文件有则覆盖/缺则不动现状（旧版备份兼容）；恢复完成失效 BeadInventory/BeadCalendar 内存缓存并 CustomPalettes.load 重载注册；③**实现**——util/BackupManager 纯 java.io/java.util.zip（manifest.json 首条目 + 白名单路径防 zip-slip + canonical 二次校验），桌面 JVM 可单测，Android 侧只拿 filesDir 与 SAF 流；④**测试**——qa 新增 TestBackup 13 项（zip 往返逐字节一致/inspect 不落盘/部分备份保留缺失库/空备份清项目/拒无 manifest·错 format·超版本/zip-slip 穿越/manifest 字段解析），全套 321 项全绿；⑤**真机验收工具**——qa\real_walk.bat（adb 驱动：装包可选→七屏 activity 逐屏截图→logcat FATAL 扫描→qa\real_shots\<ts>\report.txt），把"真机走查"降为"插线跑一条命令"；⑥**已知边界**——SAF 文件选择器在 CI 模拟器上自动化脆弱，备份/恢复暂未入 ui_smoke（JVM 测试+real_walk 兜底）；SharedPreferences（夜间模式等偏好）不在备份范围 |
 | v2.57 | **外部打开图纸 + 3D 把玩（候选 #1 + 传播位功能，2026-09-16）**：①**intent filter**——EditorActivity exported=true，挂 ACTION_VIEW（content/file + application/json + octet-stream）与 ACTION_SEND 两组 filter：微信/QQ/文件管理器里点开 .json 图纸直达导入（复用 importFromUri 管线，PatternShare.parse 严格校验，非本格式提示后退出空页；octet-stream 是因为部分应用对 json 不给准确 MIME，误开任何二进制文件也只是选择器里多一项且导入会礼貌拒绝）；②**3D 把玩**——「🤹 3D 把玩」chip（效果图页右上叠加第三枚）：全屏 Play3DActivity（纯代码 UI）+ Play3DView，拖动旋转（yaw/tilt）、双指缩放、双击复位、空闲自转；投影=正交（Play3DProjector 纯 Java：project/depthKey/逆投影 surfaceFromScreen，椭圆短轴=r·sinT），画家算法按 depthKey 升序（yaw 变化才重排，阈值 0.02 rad），LOD 两档（>6000 格省高光豆孔、>20000 省定位点）；图纸经 pendingPlay3DJson（分享格式 JSON）进程内传递；③**虚拟熨烫彩蛋**——顶栏切「🔥 熨烫」模式，按住拖动熨斗（逆投影定位板面坐标），半径 2.1 格内豆豆逐颗熔连（豆高 0.34→0.10、去孔、提亮蜡面光泽、邻格间补熔蜡连接面），冒蒸汽粒子，进度实时显示，烫满 100% 自动进入展示自转 + 🎉；④**测试**——qa 新增 TestPlay3D 12 项（正俯视退化/平视高度/深度语义/depthKey 与 project 一致性/中心豆手算/椭圆系数/逆投影互逆/平视奇异拒绝/tilt 钳制），全套 333 项全绿，compile_check 通过；⑤**杂项**——ColorMath 补 lighten（提亮钳制 255），全项目继续零 lambda 约定（排序用匿名 Comparator） |
 | v2.58 | **生长动画 + GIF 导出（传播位第二期，2026-09-16）**：①**生长动画**——3D 把玩页进门自动播放：豆豆按颜色分批（用量多先落）从空中 4.5 格高处二次 easing 落成整幅，批内按行序波浪推进，时长按豆数自适应（6~20s），「▶ 重播」chip 随时再看，动画未完不许熨烫、可随时旋转/缩放视角；②**GIF 导出**——「🎞 GIF」chip 走 ACTION_CREATE_DOCUMENT(image/gif)：util/GifEncoder 纯 Java GIF89a（逐帧局部调色板 ≤256 色，超了走中位切分 + 最近色映射；LZW 按 GIFCOMPR/free_ent>maxcode 语义增位，表满发 clear；NETSCAPE2.0 无限循环），UI 线程 view.draw 离屏渲染 + 后台线程编码的队列流水线，长边 720px、48~160 帧、延时 ≥2cs，进度文本实时更新，导出期间冻结自转/禁触摸/强制退出熨烫模式；③**测试**——qa 新增 TestGifEncoder 20 项，测试内实现迷你 LZW 解码器做真往返（纯色/双色棋盘/64² 渐变中位切分误差断言/100² 噪声图打满 4096 字典走 clear 分支/多帧延时与 NETSCAPE 扩展/结构断言），全套 353 项全绿；④**修复**——渲染缓冲改为每帧独立分配（共用数组会被 UI 下一帧覆盖正在编码的帧，竞态）；⑤**边界**——GIF 为逐帧全量帧（无帧间差分），文件偏大但对拼豆色块图很友好；透明帧不支持（渲染底色为米白） |
+
+
+## 六、待办清单（2026-09-18 真机 session 留下，下一个会话从这里接）
+
+按优先级：
+
+1. **GIF 导出尺寸 bug（最高优先，用户已亲测踩中）**——真机导出成功但
+   `pindou_build_*.gif` 是 100×208（预期长边 720），76 帧内容全是空白
+   米白底。文件本体合法（GIF89a/NETSCAPE），GifEncoder 编码无嫌疑
+   （TestGifEncoder 20 项往返全过），嫌疑集中在
+   Play3DActivity.startGifExport() 取宽高：playView.getWidth()/
+   getHeight() 在 SAF 选择器返回后执行，若 view 此时未布局/被重建会
+   拿到小值；帧全空白说明 playView.draw(canvas) 画的时候 view 未
+   attach 或 onDraw 早退。修法方向：导出前对 playView 显式
+   measure+layout 固定尺寸，或干脆按纯函数离屏渲染（Play3DProjector
+   是纯数学，直接按 720×(720·h/w) 构造帧，完全不依赖 view 生命周期，
+   更稳）。回归流程：文字生成"BEAD"→3D 把玩→🎞 GIF→保存到下载→
+   adb pull→本地解码验尺寸与帧内容（现成件：qa/out/uinfo.ps1 解析
+   dump、System.Drawing 逐帧导 PNG，2026-09-18 会话已趟通全程）。
+2. **空白画布 stale UI**——startBlankCanvas() 设 cols=rows=29 后不调
+   syncSizeUi()，尺寸 chip/hint 停留在进入前状态（真机 20:07 截图
+   实证：显示 58×58/拼板 4 块，网格本体是对的）；startBlankCanvas 里
+   补 syncSizeUi() 一行，compile_check + 真机截图回归。
+3. **real_walk.bat 适配 Android 15+**——shell am start 非导出
+   Activity 被 SecurityException（DEV-NOTES 32），现脚本在 Android 16
+   真机上非导出页步骤半数失效；改 monkey 拉 LAUNCHER + uiautomator
+   dump 解析 bounds 后 input tap 点击驱动；顺带把 qa/out/uinfo.ps1、
+   heartbeat.bat 收编进 qa/ 入库。
+4. **手机设置恢复**（下次连手机时）：screen_off_timeout 600000 恢复
+   120000；stay_on_while_plugged_in=7 恢复原值（原值未记录，先问
+   用户或按 vivo 默认处理）。
+5. **PAT 吊销提醒**：2026-09-18 会话所用 PAT 已完成推送+Release，
+   用户可能未吊销——新会话开场再提醒一次。
+6. **发版节奏**：以上 1~3 凑一个 v2.59 推 CI + Release（流程已趟熟：
+   直连推送/盯 run/artifact 下载/Release API 挂 APK；需用户临时 PAT，
+   只勾 Contents 读写即可，用完吊销）。
+
