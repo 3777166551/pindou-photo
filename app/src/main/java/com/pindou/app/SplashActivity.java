@@ -156,7 +156,7 @@ public class SplashActivity extends Activity {
 
         SplashView() {
             super(SplashActivity.this);
-            setBackgroundColor(0xFFFFF6ED);
+            setBackgroundColor(0xFFF7F7FB);
             setClickable(true);
             for (int i = 0; i < COLS * ROWS; i++) {
                 angles[i] = rnd.nextFloat() * 2f * (float) Math.PI;
@@ -188,7 +188,7 @@ public class SplashActivity extends Activity {
             float r = cell * 0.5f;
             canvas.drawRoundRect(ox - r, oy - r, ox + boardW + r, oy + boardH + r,
                     r * 1.6f, r * 1.6f, boardPaint);
-            pegPaint.setColor(0xFFF2DFD2);
+            pegPaint.setColor(0xFFE3E5F2);
             for (int y = 0; y < ROWS; y++) {
                 for (int x = 0; x < COLS; x++) {
                     canvas.drawCircle(ox + (x + 0.5f) * cell, oy + (y + 0.5f) * cell,
@@ -265,7 +265,7 @@ public class SplashActivity extends Activity {
         /** 白色墨描边贴纸:大→小过冲拍下 + 微旋转,拍定后高光斜扫 */
         private void drawSticker(Canvas c, float cx, float cy, float w) {
             String name = getString(R.string.app_name);
-            textPaint.setColor(0xFF40354E);
+            textPaint.setColor(0xFF2A2735);
             textPaint.setTextAlign(Paint.Align.CENTER);
             textPaint.setTextSize(w * 0.085f);
             textPaint.setFakeBoldText(true);
@@ -300,7 +300,7 @@ public class SplashActivity extends Activity {
             // 2dp 墨描边
             strokePaint.setStyle(Paint.Style.STROKE);
             strokePaint.setStrokeWidth(dp(2f));
-            strokePaint.setColor(0xFF40354E);
+            strokePaint.setColor(0xFF2A2735);
             strokePaint.setAlpha(Math.round(255 * alpha));
             c.drawRoundRect(card.left - cx, card.top - cy,
                     card.right - cx, card.bottom - cy, dp(16f), dp(16f), strokePaint);

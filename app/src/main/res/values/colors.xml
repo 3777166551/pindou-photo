@@ -1,42 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 暖陶玫瑰风(v2.52 重制):奶白底 + 无描边色调容器 + 玫瑰主操作 + 多巴胺点缀
-     对标 2026 Material 3 Expressive:大圆角/去硬描边/软层次/单主色 tonal。
-     改色保持"一个主色 + 中性暖灰 + 功能点缀色"的结构,别再加描边。 -->
+<!-- 清汽水风(v2.59 重制):冷调近白底 + 电流紫主操作 + 紫粉渐变 + 柔和冷影
+     对标 2026 清透玻璃渐变潮流:更大圆角/无描边/冷中性/单主色渐变。
+     改色保持"一个主色 + 冷中性灰 + 功能点缀色"的结构,别再加描边。 -->
 <resources>
     <!-- 墨色:仅存于代码级画布元素(框选/帧线),UI 容器一律不再描边 -->
-    <color name="ink">#3B3230</color>
-    <color name="inkSoft">#E7DCD2</color>
+    <color name="ink">#2A2735</color>
+    <color name="inkSoft">#E4E4EF</color>
 
     <!-- 底与卡 -->
-    <color name="bg">#FAF5EF</color>
+    <color name="bg">#F7F7FB</color>
     <color name="card">#FFFFFF</color>
-    <color name="subsurface">#F4EDE3</color>
-    <color name="line">#EFE5D8</color>
-    <color name="stickerShadow">#EADCCB</color>
+    <color name="subsurface">#F0F1F7</color>
+    <color name="line">#E9EAF2</color>
+    <color name="stickerShadow">#E2E4F0</color>
 
-    <!-- 主操作:玫瑰 -->
-    <color name="primary">#E85D75</color>
-    <color name="primaryDark">#CE4A62</color>
-    <color name="primaryLight">#FBE7EC</color>
-    <color name="gradStart">#F27890</color>
-    <color name="gradEnd">#E44F6C</color>
+    <!-- 主操作:电流紫 -->
+    <color name="primary">#7C5CF4</color>
+    <color name="primaryDark">#6547E0</color>
+    <color name="primaryLight">#EFEAFF</color>
+    <color name="gradStart">#8E6BFF</color>
+    <color name="gradEnd">#F25C9C</color>
 
     <!-- 文字 -->
-    <color name="textMain">#37302C</color>
-    <color name="textSub">#9A8F87</color>
+    <color name="textMain">#23212B</color>
+    <color name="textSub">#8E8B9C</color>
 
     <!-- 多巴胺点缀(图标盘/徽章/进度) -->
-    <color name="accentMint">#35C98E</color>
-    <color name="mintSoft">#DCF5E9</color>
-    <color name="butter">#FFCF56</color>
+    <color name="accentMint">#2BC98A</color>
+    <color name="mintSoft">#D9F5E8</color>
+    <color name="butter">#FFCE55</color>
     <color name="butterSoft">#FFF3D2</color>
     <color name="lilac">#A78BFA</color>
     <color name="lilacSoft">#ECE6FF</color>
-    <color name="sky">#56C2F7</color>
+    <color name="sky">#4FB8F5</color>
     <color name="skySoft">#DFF2FF</color>
-    <color name="peach">#FF9F6E</color>
+    <color name="peach">#FF9A6B</color>
     <color name="peachSoft">#FFE8DB</color>
     <color name="danger">#F0564A</color>
 
-    <color name="ic_launcher_bg">#FFC9DE</color>
+    <color name="ic_launcher_bg">#C9B4FF</color>
 </resources>

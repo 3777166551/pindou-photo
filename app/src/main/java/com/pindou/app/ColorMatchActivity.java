@@ -218,7 +218,7 @@ public class ColorMatchActivity extends Activity {
             GradientDrawable gd = new GradientDrawable();
             gd.setShape(GradientDrawable.OVAL);
             gd.setColor(0xFF000000 | m.color.rgb);
-            gd.setStroke(dp(2), 0xFF40354E);
+            gd.setStroke(dp(2), 0xFF2A2735);
             sw.setBackground(gd);
             row.addView(sw, new LinearLayout.LayoutParams(dp(30), dp(30)));
 
@@ -229,13 +229,13 @@ public class ColorMatchActivity extends Activity {
             l1.setText(String.format(Locale.getDefault(), "%s %s%s",
                     m.brand, String.valueOf(m.color.code),
                     BeadColor.codeSuffix) + " · " + m.color.name);
-            l1.setTextColor(0xFF3A3050);
+            l1.setTextColor(0xFF23212B);
             l1.setTextSize(14);
             l1.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
             TextView l2 = new TextView(this);
             l2.setText(String.format(Locale.getDefault(),
                     getString(R.string.match_de_fmt), m.deltaE));
-            l2.setTextColor(0xFF9A8FA6);
+            l2.setTextColor(0xFF8E8B9C);
             l2.setTextSize(12);
             textCol.addView(l1);
             textCol.addView(l2);
@@ -295,7 +295,7 @@ public class ColorMatchActivity extends Activity {
     private TextView resultLabel(String text) {
         TextView tv = new TextView(this);
         tv.setText(text);
-        tv.setTextColor(0xFF3A3050);
+        tv.setTextColor(0xFF23212B);
         tv.setTextSize(13);
         tv.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         tv.setPadding(dp(4), dp(2), dp(4), dp(2));

@@ -13,7 +13,7 @@ import android.graphics.RectF;
  */
 public class SelectionPainter {
 
-    public static final int INK = 0xFF40354E;
+    public static final int INK = 0xFF2A2735;
     public static final int BUTTER = 0xFFFFCF56;
     public static final int WHITE = 0xF2FFFFFF;
 

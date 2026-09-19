@@ -72,7 +72,7 @@
             <TextView
                 android:id="@+id/btnMenu"
                 android:layout_width="wrap_content"
-                android:layout_height="38dp"
+                android:layout_height="42dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="12dp"
                 android:background="@drawable/bg_btn_primary"
@@ -91,7 +91,7 @@
         <!-- 分段式标签 -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="42dp"
+            android:layout_height="48dp"
             android:layout_marginStart="14dp"
             android:layout_marginTop="12dp"
             android:layout_marginEnd="14dp"
@@ -104,39 +104,39 @@
             <TextView
                 android:id="@+id/tabEffect"
                 android:layout_width="0dp"
-                android:layout_height="34dp"
+                android:layout_height="40dp"
                 android:layout_marginEnd="4dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_tab"
                 android:gravity="center"
                 android:text="@string/tab_effect"
                 android:textColor="@color/text_tab"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tabPattern"
                 android:layout_width="0dp"
-                android:layout_height="34dp"
+                android:layout_height="40dp"
                 android:layout_marginEnd="4dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_tab"
                 android:gravity="center"
                 android:text="@string/tab_pattern"
                 android:textColor="@color/text_tab"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tabList"
                 android:layout_width="0dp"
-                android:layout_height="34dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_tab"
                 android:gravity="center"
                 android:text="@string/tab_list"
                 android:textColor="@color/text_tab"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -160,7 +160,7 @@
             <TextView
                 android:id="@+id/chip3d"
                 android:layout_width="wrap_content"
-                android:layout_height="32dp"
+                android:layout_height="36dp"
                 android:layout_gravity="end|top"
                 android:layout_margin="8dp"
                 android:background="@drawable/bg_chip"
@@ -172,16 +172,16 @@
                 android:paddingEnd="14dp"
                 android:text="@string/chip_3d"
                 android:textColor="@color/text_chip"
-                android:textSize="12sp" />
+                android:textSize="13sp" />
 
             <TextView
                 android:id="@+id/chipPlay3d"
                 android:layout_width="wrap_content"
-                android:layout_height="32dp"
+                android:layout_height="36dp"
                 android:layout_gravity="end|top"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
-                android:layout_marginTop="46dp"
+                android:layout_marginTop="56dp"
                 android:layout_marginBottom="8dp"
                 android:background="@drawable/bg_chip"
                 android:clickable="true"
@@ -192,16 +192,16 @@
                 android:paddingEnd="14dp"
                 android:text="@string/chip_play3d"
                 android:textColor="@color/text_chip"
-                android:textSize="12sp" />
+                android:textSize="13sp" />
 
             <TextView
                 android:id="@+id/chipAr"
                 android:layout_width="wrap_content"
-                android:layout_height="32dp"
+                android:layout_height="36dp"
                 android:layout_gravity="end|top"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
-                android:layout_marginTop="84dp"
+                android:layout_marginTop="102dp"
                 android:layout_marginBottom="8dp"
                 android:background="@drawable/bg_chip"
                 android:clickable="true"
@@ -212,7 +212,7 @@
                 android:paddingEnd="14dp"
                 android:text="@string/chip_ar"
                 android:textColor="@color/text_chip"
-                android:textSize="12sp" />
+                android:textSize="13sp" />
         </FrameLayout>
 
         <!-- 豆豆清单 -->
@@ -276,8 +276,8 @@
                     <TextView
                         android:id="@+id/chip29"
                         android:layout_width="0dp"
-                        android:layout_height="36dp"
-                        android:layout_marginEnd="7dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="8dp"
                         android:layout_weight="1"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
@@ -286,13 +286,13 @@
                         android:gravity="center"
                         android:text="29×29"
                         android:textColor="@color/text_chip"
-                        android:textSize="12sp" />
+                        android:textSize="13sp" />
 
                     <TextView
                         android:id="@+id/chip58"
                         android:layout_width="0dp"
-                        android:layout_height="36dp"
-                        android:layout_marginEnd="7dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="8dp"
                         android:layout_weight="1"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
@@ -301,13 +301,13 @@
                         android:gravity="center"
                         android:text="58×58"
                         android:textColor="@color/text_chip"
-                        android:textSize="12sp" />
+                        android:textSize="13sp" />
 
                     <TextView
                         android:id="@+id/chip87"
                         android:layout_width="0dp"
-                        android:layout_height="36dp"
-                        android:layout_marginEnd="7dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="8dp"
                         android:layout_weight="1"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
@@ -316,12 +316,12 @@
                         android:gravity="center"
                         android:text="87×87"
                         android:textColor="@color/text_chip"
-                        android:textSize="12sp" />
+                        android:textSize="13sp" />
 
                     <TextView
                         android:id="@+id/chip116"
                         android:layout_width="0dp"
-                        android:layout_height="36dp"
+                        android:layout_height="40dp"
                         android:layout_weight="1"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
@@ -330,7 +330,7 @@
                         android:gravity="center"
                         android:text="116×116"
                         android:textColor="@color/text_chip"
-                        android:textSize="12sp" />
+                        android:textSize="13sp" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -351,7 +351,7 @@
                     <TextView
                         android:id="@+id/btnWMinus"
                         android:layout_width="38dp"
-                        android:layout_height="32dp"
+                        android:layout_height="36dp"
                         android:layout_marginStart="8dp"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
@@ -376,7 +376,7 @@
                     <TextView
                         android:id="@+id/btnWPlus"
                         android:layout_width="38dp"
-                        android:layout_height="32dp"
+                        android:layout_height="36dp"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
                         android:elevation="2dp"
@@ -402,7 +402,7 @@
                     <TextView
                         android:id="@+id/btnHMinus"
                         android:layout_width="38dp"
-                        android:layout_height="32dp"
+                        android:layout_height="36dp"
                         android:layout_marginStart="8dp"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
@@ -427,7 +427,7 @@
                     <TextView
                         android:id="@+id/btnHPlus"
                         android:layout_width="38dp"
-                        android:layout_height="32dp"
+                        android:layout_height="36dp"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
                         android:elevation="2dp"
@@ -485,7 +485,7 @@
                         <TextView
                             android:id="@+id/chipLimit0"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
+                            android:layout_height="40dp"
                             android:layout_marginEnd="5dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
@@ -495,12 +495,12 @@
                             android:gravity="center"
                             android:text="@string/limit0"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/chipLimit1"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
+                            android:layout_height="40dp"
                             android:layout_marginEnd="5dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
@@ -510,12 +510,12 @@
                             android:gravity="center"
                             android:text="@string/limit1"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/chipLimit2"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
+                            android:layout_height="40dp"
                             android:layout_marginEnd="5dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
@@ -525,12 +525,12 @@
                             android:gravity="center"
                             android:text="@string/limit2"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/chipLimit3"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
+                            android:layout_height="40dp"
                             android:layout_marginEnd="5dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
@@ -540,12 +540,12 @@
                             android:gravity="center"
                             android:text="@string/limit3"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/chipLimit4"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
+                            android:layout_height="40dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
@@ -554,7 +554,7 @@
                             android:gravity="center"
                             android:text="@string/limit4"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
                     </LinearLayout>
 
                     <TextView
@@ -575,8 +575,8 @@
                         <TextView
                             android:id="@+id/chipStyleReal"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_marginEnd="7dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="8dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
@@ -590,8 +590,8 @@
                         <TextView
                             android:id="@+id/chipStyleAbs"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_marginEnd="7dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="8dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
@@ -605,7 +605,7 @@
                         <TextView
                             android:id="@+id/chipStyleLine"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
+                            android:layout_height="40dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
@@ -655,8 +655,8 @@
                         <TextView
                             android:id="@+id/chipBrickLight"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_marginEnd="6dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="8dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
@@ -665,13 +665,13 @@
                             android:gravity="center"
                             android:text="@string/brick0"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/chipBrickMid"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_marginEnd="6dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="8dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
@@ -680,13 +680,13 @@
                             android:gravity="center"
                             android:text="@string/brick1"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/chipBrickStrong"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_marginEnd="6dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="8dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
@@ -695,12 +695,12 @@
                             android:gravity="center"
                             android:text="@string/brick2"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/chipBrickSuper"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
+                            android:layout_height="40dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
@@ -709,7 +709,7 @@
                             android:gravity="center"
                             android:text="@string/brick3"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -925,8 +925,8 @@
                             <TextView
                                 android:id="@+id/chipShapeRect"
                                 android:layout_width="0dp"
-                                android:layout_height="34dp"
-                                android:layout_marginEnd="7dp"
+                                android:layout_height="40dp"
+                                android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
@@ -940,8 +940,8 @@
                             <TextView
                                 android:id="@+id/chipShapeRound"
                                 android:layout_width="0dp"
-                                android:layout_height="34dp"
-                                android:layout_marginEnd="7dp"
+                                android:layout_height="40dp"
+                                android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
@@ -955,7 +955,7 @@
                             <TextView
                                 android:id="@+id/chipShapeHex"
                                 android:layout_width="0dp"
-                                android:layout_height="34dp"
+                                android:layout_height="40dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
@@ -985,8 +985,8 @@
                             <TextView
                                 android:id="@+id/chipBeadStd"
                                 android:layout_width="0dp"
-                                android:layout_height="34dp"
-                                android:layout_marginEnd="7dp"
+                                android:layout_height="40dp"
+                                android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
@@ -995,12 +995,12 @@
                                 android:gravity="center"
                                 android:text="@string/bead_std"
                                 android:textColor="@color/text_chip"
-                                android:textSize="12sp" />
+                                android:textSize="13sp" />
 
                             <TextView
                                 android:id="@+id/chipBeadMini"
                                 android:layout_width="0dp"
-                                android:layout_height="34dp"
+                                android:layout_height="40dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
@@ -1009,7 +1009,7 @@
                                 android:gravity="center"
                                 android:text="@string/bead_mini"
                                 android:textColor="@color/text_chip"
-                                android:textSize="12sp" />
+                                android:textSize="13sp" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -1356,7 +1356,7 @@
                     <TextView
                         android:id="@+id/btnRemoveWatermark"
                         android:layout_width="match_parent"
-                        android:layout_height="34dp"
+                        android:layout_height="40dp"
                         android:layout_marginTop="8dp"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
@@ -1365,12 +1365,12 @@
                         android:gravity="center"
                         android:text="@string/btn_watermark"
                         android:textColor="@color/text_chip"
-                        android:textSize="11sp" />
+                        android:textSize="13sp" />
 
                     <TextView
                         android:id="@+id/btnStyleGhibli"
                         android:layout_width="match_parent"
-                        android:layout_height="34dp"
+                        android:layout_height="40dp"
                         android:layout_marginTop="8dp"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
@@ -1379,7 +1379,7 @@
                         android:gravity="center"
                         android:text="@string/btn_ghibli"
                         android:textColor="@color/text_chip"
-                        android:textSize="11sp" />
+                        android:textSize="13sp" />
 
                     <TextView
                         android:id="@+id/btnAiRestore"
@@ -1407,8 +1407,8 @@
                         <TextView
                             android:id="@+id/btnMirrorH"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_marginEnd="6dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="8dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
@@ -1417,13 +1417,13 @@
                             android:gravity="center"
                             android:text="@string/mirror_h"
                             android:textColor="@color/text_chip"
-                            android:textSize="11sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/btnMirrorV"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_marginEnd="6dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="8dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
@@ -1432,12 +1432,12 @@
                             android:gravity="center"
                             android:text="@string/mirror_v"
                             android:textColor="@color/text_chip"
-                            android:textSize="11sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/btnRotate90"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
+                            android:layout_height="40dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
@@ -1446,7 +1446,7 @@
                             android:gravity="center"
                             android:text="@string/rotate90"
                             android:textColor="@color/text_chip"
-                            android:textSize="11sp" />
+                            android:textSize="13sp" />
                     </LinearLayout>
 
                     <TextView
@@ -1460,7 +1460,7 @@
                     <TextView
                         android:id="@+id/btnCrop"
                         android:layout_width="match_parent"
-                        android:layout_height="34dp"
+                        android:layout_height="40dp"
                         android:layout_marginTop="8dp"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
@@ -1469,7 +1469,7 @@
                         android:gravity="center"
                         android:text="@string/btn_crop"
                         android:textColor="@color/text_chip"
-                        android:textSize="11sp" />
+                        android:textSize="13sp" />
 
                     </LinearLayout>
                 </LinearLayout>
@@ -1595,7 +1595,7 @@
                             android:layout_width="30dp"
                             android:layout_height="30dp"
                             android:layout_marginStart="8dp"
-                            android:layout_marginEnd="6dp"
+                            android:layout_marginEnd="8dp"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
                             android:elevation="2dp"
@@ -1643,7 +1643,7 @@
                         <TextView
                             android:id="@+id/btnAssistNext"
                             android:layout_width="wrap_content"
-                            android:layout_height="34dp"
+                            android:layout_height="40dp"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
                             android:elevation="2dp"
@@ -1653,7 +1653,7 @@
                             android:paddingEnd="12dp"
                             android:text="@string/assist_next"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
                     </LinearLayout>
 
                     <TextView
@@ -1682,8 +1682,8 @@
                             <TextView
                                 android:id="@+id/btnAssistLocate"
                                 android:layout_width="0dp"
-                                android:layout_height="34dp"
-                                android:layout_marginEnd="6dp"
+                                android:layout_height="40dp"
+                                android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
@@ -1693,13 +1693,13 @@
                                 android:maxLines="1"
                                 android:text="@string/assist_locate"
                                 android:textColor="@color/text_chip"
-                                android:textSize="12sp" />
+                                android:textSize="13sp" />
 
                             <TextView
                                 android:id="@+id/btnAssistCalendar"
                                 android:layout_width="0dp"
-                                android:layout_height="34dp"
-                                android:layout_marginEnd="6dp"
+                                android:layout_height="40dp"
+                                android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
@@ -1709,13 +1709,13 @@
                                 android:maxLines="1"
                                 android:text="@string/assist_calendar"
                                 android:textColor="@color/text_chip"
-                                android:textSize="12sp" />
+                                android:textSize="13sp" />
 
                             <TextView
                                 android:id="@+id/btnAssistImmersive"
                                 android:layout_width="0dp"
-                                android:layout_height="34dp"
-                                android:layout_marginEnd="6dp"
+                                android:layout_height="40dp"
+                                android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
@@ -1725,12 +1725,12 @@
                                 android:maxLines="1"
                                 android:text="@string/assist_immersive_btn"
                                 android:textColor="@color/text_chip"
-                                android:textSize="12sp" />
+                                android:textSize="13sp" />
 
                             <TextView
                                 android:id="@+id/btnAssistHelp"
                                 android:layout_width="0dp"
-                                android:layout_height="34dp"
+                                android:layout_height="40dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
@@ -1740,7 +1740,7 @@
                                 android:maxLines="1"
                                 android:text="@string/assist_help_btn"
                                 android:textColor="@color/text_chip"
-                                android:textSize="12sp" />
+                                android:textSize="13sp" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -1752,8 +1752,8 @@
                             <TextView
                                 android:id="@+id/btnAssistBoard"
                                 android:layout_width="0dp"
-                                android:layout_height="34dp"
-                                android:layout_marginEnd="6dp"
+                                android:layout_height="40dp"
+                                android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
@@ -1763,13 +1763,13 @@
                                 android:maxLines="1"
                                 android:text="@string/assist_board_btn"
                                 android:textColor="@color/text_chip"
-                                android:textSize="12sp" />
+                                android:textSize="13sp" />
 
                             <TextView
                                 android:id="@+id/btnAssistRow"
                                 android:layout_width="0dp"
-                                android:layout_height="34dp"
-                                android:layout_marginEnd="6dp"
+                                android:layout_height="40dp"
+                                android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
@@ -1779,13 +1779,13 @@
                                 android:maxLines="1"
                                 android:text="@string/assist_row_btn"
                                 android:textColor="@color/text_chip"
-                                android:textSize="12sp" />
+                                android:textSize="13sp" />
 
                             <TextView
                                 android:id="@+id/btnAssistProject"
                                 android:layout_width="0dp"
-                                android:layout_height="34dp"
-                                android:layout_marginEnd="6dp"
+                                android:layout_height="40dp"
+                                android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
@@ -1795,13 +1795,13 @@
                                 android:maxLines="1"
                                 android:text="@string/assist_project_btn"
                                 android:textColor="@color/text_chip"
-                                android:textSize="12sp" />
+                                android:textSize="13sp" />
 
                             <TextView
                                 android:id="@+id/btnAssistVerify"
                                 android:layout_width="0dp"
-                                android:layout_height="34dp"
-                                android:layout_marginEnd="6dp"
+                                android:layout_height="40dp"
+                                android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
@@ -1811,12 +1811,12 @@
                                 android:maxLines="1"
                                 android:text="@string/verify_btn_short"
                                 android:textColor="@color/text_chip"
-                                android:textSize="12sp" />
+                                android:textSize="13sp" />
 
                             <TextView
                                 android:id="@+id/btnAssistVoice"
                                 android:layout_width="0dp"
-                                android:layout_height="34dp"
+                                android:layout_height="40dp"
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
@@ -1826,7 +1826,7 @@
                                 android:maxLines="1"
                                 android:text="@string/assist_voice_btn"
                                 android:textColor="@color/text_chip"
-                                android:textSize="12sp" />
+                                android:textSize="13sp" />
                         </LinearLayout>
                     </LinearLayout>
 
@@ -1856,7 +1856,7 @@
                         <TextView
                             android:id="@+id/btnAssistNextBoard"
                             android:layout_width="wrap_content"
-                            android:layout_height="34dp"
+                            android:layout_height="40dp"
                             android:layout_marginStart="8dp"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
@@ -1867,7 +1867,7 @@
                             android:paddingEnd="12dp"
                             android:text="@string/assist_board_next"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -1901,7 +1901,7 @@
                         <TextView
                             android:id="@+id/btnPickBrush"
                             android:layout_width="wrap_content"
-                            android:layout_height="34dp"
+                            android:layout_height="40dp"
                             android:layout_marginStart="8dp"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
@@ -1912,13 +1912,13 @@
                             android:paddingEnd="12dp"
                             android:text="@string/brush_change"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/btnBrushEraser"
                             android:layout_width="wrap_content"
-                            android:layout_height="34dp"
-                            android:layout_marginStart="6dp"
+                            android:layout_height="40dp"
+                            android:layout_marginStart="8dp"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
                             android:elevation="2dp"
@@ -1928,13 +1928,13 @@
                             android:paddingEnd="12dp"
                             android:text="@string/brush_eraser"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/btnDropper"
                             android:layout_width="wrap_content"
-                            android:layout_height="34dp"
-                            android:layout_marginStart="6dp"
+                            android:layout_height="40dp"
+                            android:layout_marginStart="8dp"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
                             android:elevation="2dp"
@@ -1944,13 +1944,13 @@
                             android:paddingEnd="12dp"
                             android:text="@string/dropper_label"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/btnBrushMirror"
                             android:layout_width="wrap_content"
-                            android:layout_height="34dp"
-                            android:layout_marginStart="6dp"
+                            android:layout_height="40dp"
+                            android:layout_marginStart="8dp"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
                             android:elevation="2dp"
@@ -1960,13 +1960,13 @@
                             android:paddingEnd="10dp"
                             android:text="⇋"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/btnSym"
                             android:layout_width="wrap_content"
-                            android:layout_height="34dp"
-                            android:layout_marginStart="6dp"
+                            android:layout_height="40dp"
+                            android:layout_marginStart="8dp"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
                             android:elevation="2dp"
@@ -1976,7 +1976,7 @@
                             android:paddingEnd="10dp"
                             android:text="@string/sym_off"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -1990,8 +1990,8 @@
                         <TextView
                             android:id="@+id/btnTracePick"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_marginEnd="6dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="8dp"
                             android:layout_weight="1.3"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
@@ -2000,13 +2000,13 @@
                             android:gravity="center"
                             android:text="@string/trace_pick"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/btnTraceToggle"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_marginEnd="6dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="8dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
@@ -2015,12 +2015,12 @@
                             android:gravity="center"
                             android:text="@string/trace_hide"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
 
                         <TextView
                             android:id="@+id/btnTraceClear"
                             android:layout_width="0dp"
-                            android:layout_height="34dp"
+                            android:layout_height="40dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
@@ -2029,7 +2029,7 @@
                             android:gravity="center"
                             android:text="@string/trace_clear"
                             android:textColor="@color/text_chip"
-                            android:textSize="12sp" />
+                            android:textSize="13sp" />
                     </LinearLayout>
 
                     <TextView

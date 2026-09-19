@@ -75,9 +75,9 @@ public class PatternView extends View {
         // 完成 ✓ 印章:白圈衬底 + 黄油圆 + 墨勾(贴纸风,与选框/行框同语言)
         popHaloPaint.setColor(0xFFFFFFFF);
         popDiscPaint.setColor(0xFFFFCF56);
-        popRingPaint.setColor(0xFF40354E);
+        popRingPaint.setColor(0xFF2A2735);
         popRingPaint.setStyle(Paint.Style.STROKE);
-        popCheckPaint.setColor(0xFF40354E);
+        popCheckPaint.setColor(0xFF2A2735);
         popCheckPaint.setStrokeCap(Paint.Cap.ROUND);
         popCheckPaint.setStrokeJoin(Paint.Join.ROUND);
 
@@ -1166,7 +1166,7 @@ public class PatternView extends View {
             if (assistRowMode) {
                 boardFramePaint.setStyle(Paint.Style.STROKE);
                 float fr = Math.max(3f, cell * 0.14f);
-                boardFramePaint.setColor(0xFF40354E);
+                boardFramePaint.setColor(0xFF2A2735);
                 boardFramePaint.setStrokeWidth(fr * 2.2f);
                 canvas.drawRect(0, assistRow * cell, cols * cell,
                         (assistRow + 1) * cell, boardFramePaint);
@@ -1179,7 +1179,7 @@ public class PatternView extends View {
             if (assistBoardMode && assistBoardRect != null) {
                 boardFramePaint.setStyle(Paint.Style.STROKE);
                 float fr = Math.max(3f, cell * 0.14f);
-                boardFramePaint.setColor(0xFF40354E);
+                boardFramePaint.setColor(0xFF2A2735);
                 boardFramePaint.setStrokeWidth(fr * 2.2f);
                 canvas.drawRect(assistBoardRect.left * cell, assistBoardRect.top * cell,
                         assistBoardRect.right * cell, assistBoardRect.bottom * cell,

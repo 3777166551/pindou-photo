@@ -32,7 +32,7 @@
     <TextView
         android:id="@+id/btnInventory"
         android:layout_width="match_parent"
-        android:layout_height="38dp"
+        android:layout_height="42dp"
         android:layout_marginTop="10dp"
         android:background="@drawable/bg_chip"
         android:clickable="true"
@@ -41,13 +41,13 @@
         android:gravity="center"
         android:text="@string/btn_inventory"
         android:textColor="@color/text_chip"
-        android:textSize="12sp"
+        android:textSize="13sp"
         android:textStyle="bold" />
 
     <TextView
         android:id="@+id/btnPalettes"
         android:layout_width="match_parent"
-        android:layout_height="38dp"
+        android:layout_height="42dp"
         android:layout_marginTop="8dp"
         android:background="@drawable/bg_chip"
         android:clickable="true"
@@ -56,7 +56,7 @@
         android:gravity="center"
         android:text="@string/btn_palettes"
         android:textColor="@color/text_chip"
-        android:textSize="12sp"
+        android:textSize="13sp"
         android:textStyle="bold" />
 
     <HorizontalScrollView

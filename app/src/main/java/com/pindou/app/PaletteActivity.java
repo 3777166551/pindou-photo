@@ -174,7 +174,7 @@ public class PaletteActivity extends Activity {
             if (BeadBrandCharts.customCount() == 0) {
                 TextView empty = new TextView(PaletteActivity.this);
                 empty.setText(getString(R.string.palette_empty_hint));
-                empty.setTextColor(0xFF3A3050);
+                empty.setTextColor(0xFF23212B);
                 empty.setTextSize(14);
                 empty.setLineSpacing(dp(3), 1f);
                 row.setPadding(dp(18), dp(24), dp(18), dp(24));
@@ -216,7 +216,7 @@ public class PaletteActivity extends Activity {
 
             TextView name = new TextView(PaletteActivity.this);
             name.setText(c.name);
-            name.setTextColor(0xFF3A3050);
+            name.setTextColor(0xFF23212B);
             name.setTextSize(15);
             name.setTypeface(Typeface.DEFAULT_BOLD);
             name.setMaxLines(1);
@@ -226,14 +226,14 @@ public class PaletteActivity extends Activity {
             sub.setText(getString(R.string.palette_sub_fmt, c.colors.size(),
                     CustomPalettes.inventoryIndex() == position
                             ? getString(R.string.palette_auto_tag) : ""));
-            sub.setTextColor(0xFF9A8FA6);
+            sub.setTextColor(0xFF8E8B9C);
             sub.setTextSize(12);
             texts.addView(sub);
             row.addView(texts);
 
             TextView chev = new TextView(PaletteActivity.this);
             chev.setText("›");
-            chev.setTextColor(0xFF9A8FA6);
+            chev.setTextColor(0xFF8E8B9C);
             chev.setTextSize(22);
             row.addView(chev);
             return row;
@@ -329,7 +329,7 @@ public class PaletteActivity extends Activity {
 
         final TextView hint = new TextView(this);
         hint.setText(getString(R.string.edit_colors_hint));
-        hint.setTextColor(0xFF9A8FA6);
+        hint.setTextColor(0xFF8E8B9C);
         hint.setTextSize(12);
         hint.setPadding(0, dp(8), 0, dp(4));
         box.addView(hint);
@@ -444,7 +444,7 @@ public class PaletteActivity extends Activity {
             TextView label = new TextView(PaletteActivity.this);
             String tagPart = c.tag.isEmpty() ? "" : " · " + c.tag;
             label.setText(c.name + tagPart + "  " + PaletteShare.toHex(c.rgb));
-            label.setTextColor(0xFF3A3050);
+            label.setTextColor(0xFF23212B);
             label.setTextSize(14);
             label.setMaxLines(1);
             LinearLayout.LayoutParams llp = new LinearLayout.LayoutParams(
@@ -532,7 +532,7 @@ public class PaletteActivity extends Activity {
             r.setGravity(Gravity.CENTER_VERTICAL);
             TextView lab = new TextView(this);
             lab.setText(String.valueOf(ch[i]));
-            lab.setTextColor(0xFF3A3050);
+            lab.setTextColor(0xFF23212B);
             lab.setTextSize(13);
             lab.setTypeface(Typeface.DEFAULT_BOLD);
             r.addView(lab, new LinearLayout.LayoutParams(dp(24),
@@ -544,7 +544,7 @@ public class PaletteActivity extends Activity {
                     0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
             vals[i] = new TextView(this);
             vals[i].setText(String.valueOf(init[i]));
-            vals[i].setTextColor(0xFF9A8FA6);
+            vals[i].setTextColor(0xFF8E8B9C);
             vals[i].setTextSize(12);
             vals[i].setGravity(Gravity.CENTER);
             r.addView(vals[i], new LinearLayout.LayoutParams(dp(34),

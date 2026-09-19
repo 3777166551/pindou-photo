@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 选中 chip:玫瑰实底药丸;未选:暖砂色调底。无描边(M3 tonal) -->
+<!-- 选中 chip:电流紫实底药丸;未选:冷灰色调底。无描边(M3 tonal) -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_selected="true">
         <shape android:shape="rectangle">
             <solid android:color="@color/primary" />
-            <corners android:radius="16dp" />
+            <corners android:radius="20dp" />
         </shape>
     </item>
     <item android:state_checked="true">
         <shape android:shape="rectangle">
             <solid android:color="@color/primary" />
-            <corners android:radius="16dp" />
+            <corners android:radius="20dp" />
         </shape>
     </item>
     <item>
         <shape android:shape="rectangle">
             <solid android:color="@color/subsurface" />
-            <corners android:radius="16dp" />
+            <corners android:radius="20dp" />
         </shape>
     </item>
 </selector>

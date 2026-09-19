@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 次按钮:白药丸 + 暖色软投影,无描边(不用 ripple 壳) -->
+<!-- 次按钮:白药丸 + 冷色软投影,无描边(不用 ripple 壳) -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:top="1.5dp">
+    <item android:top="2dp">
         <shape android:shape="rectangle">
             <solid android:color="@color/stickerShadow" />
             <corners android:radius="30dp" />

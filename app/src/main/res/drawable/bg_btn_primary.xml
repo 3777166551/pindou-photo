@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 主操作按钮:玫瑰药丸 + 暖色软投影,无描边。按压反馈由
+<!-- 主操作按钮:紫粉渐变药丸 + 冷色软投影,无描边。按压反馈由
      util/Anim.pressScale 的缩放动画承担(不要包 ripple 壳,API 30 会糊)。 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:top="1.5dp">
+    <item android:top="2dp">
         <shape android:shape="rectangle">
             <solid android:color="@color/stickerShadow" />
             <corners android:radius="30dp" />

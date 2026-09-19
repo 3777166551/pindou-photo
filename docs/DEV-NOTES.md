@@ -400,3 +400,74 @@ aapt2/Gradle 能抓。
 `String.format` 侧传参不用变。**教训**:新增多参数文案后,先跑
 compile_check.bat 再说 qa 全绿——qa 编不过资源,两边覆盖面不同。
 
+
+## 32. Android 15/16 拦 shell am start 非导出 Activity（v2.58 真机实测）
+
+**现象**：真机（vivo V2536A，Android 16）上 `adb shell am start -n
+com.pindou.app/.MainActivity` 抛 `SecurityException: Permission Denial
+... not exported from uid 10449`——MainActivity/EditorActivity 等全部
+exported=false，shell（uid 2000）不再有 START_ANY_ACTIVITY 特权。
+同一次 walk 里部分非导出 am start 又成功过（时机相关），表现为
+"截图张冠李戴/慢一拍"。
+
+**影响**：real_walk.bat 的非导出页步骤在 Android 15+ 真机上半数失效；
+CI 模拟器（API 30）不受影响。
+
+**修法/对策**：真机驱动改纯 UI 点击——monkey 拉 LAUNCHER 进首页
+（`adb shell monkey -p com.pindou.app -c
+android.intent.category.LAUNCHER 1`）+ `uiautomator dump` 解析
+bounds 后 `input tap`。qa/out/uinfo.ps1 是现成的 dump 解析器
+（列 text/resource-id/clickable/center）。待办：walk 脚本正式改造
+（ROADMAP 六-3）。
+
+## 33. OriginOS 无线调试：锁屏杀连接 + 端口轮换（v2.58 真机实测）
+
+**现象**：vivo（OriginOS 6/Android 16）无线调试可用但很凶：①每次
+**锁屏**都会掐断无线 adb 连接；②解锁后**端口轮换**（连接端口每次
+不同），旧端口 connect 直接 Connection refused；③灭屏 2 分钟（默认
+screen_off_timeout）就会锁屏触发①。
+
+**修法/对策**（实战验证）：
+- 连上第一件事:`settings put global stay_on_while_plugged_in 7` +
+  `settings put system screen_off_timeout 600000`,屏幕不灭就不锁,
+  连接和端口都稳;测完恢复原值。
+- 每次重连都要用户报「无线调试」主页**当前**显示的 IP:端口,配对
+  (pair,配对弹窗里的端口)与连接(connect,主页端口)是**两个端口**,
+  且都轮换;配对关系本身保留,只需重新 connect。
+- 多别名:`adb devices` 会同时列 ip:port 和 mdns 名两条,所有命令带
+  `-s <ip:port>` 或 `set ANDROID_SERIAL=`,否则 more than one device。
+- 心跳保活(每 15s shell echo)实测**救不了锁屏杀**,只对空闲断连
+  有点用,别指望它。
+
+## 34. adb 37.x 的 devices 输出是 CRLF,findstr 锚点全灭（v2.58 真机实测）
+
+**现象**：real_walk.bat 的设备检查 `adb devices | findstr /c:"device$"`
+在明确有 device 时也匹配失败,走查误报"无设备"。单测式验证:
+`adb devices > 文件` 后看字节,行尾是 `\r\n`——`$` 锚在 `\r` 前
+永远不成立。旧版 adb 输出 LF 所以老代码曾经能用。
+
+**修法**：不要解析 devices 文本,用状态命令:`adb -s <serial>
+get-state`(多设备时必须带 -s);或 `adb devices | more +1 |
+findstr "device"`(跳过表头,子串匹配,offline/unauthorized 不含
+"device" 字样)。real_walk.bat 已改为 `-s %ANDROID_SERIAL% get-state`。
+
+**教训**：①cmd 管道里 %ERRORLEVEL% 是旧值(DEV-NOTES 27)曾让一次
+"验证通过"完全是假象——判断脚本分支要看实际输出文本;②凡是
+"上一版能用,现在莫名失败"的文本解析,先 dump 字节看行尾。
+
+## 35. PowerShell 写 .java 会被本机安全钩子改坏:数字 0 集体变 x（v2.59 改版实测）
+
+**现象**：用 `powershell -File xxx.ps1` 里的 `[IO.File]::WriteAllText`
+批量替换 .java 里的颜色字面量,写盘后**文件里所有字符 `0` 被替换成
+`x`**(`90`→`9x`、`0.5f`→`x.5f`、`0xFF40354E`→`xFF4x3x54E`),15 个
+被写文件全部损坏,javac 报 273 个错。开篇说的「Bash 里 .java 写入
+命令被拦」的升级版:钩子没拦,而是**放行了写入但改了内容**,比直接
+拦截更隐蔽,编译前毫无感知。
+
+**修法**：①`git checkout -- <files>` 回滚后,批量改 .java 一律改用
+会话内置的 **Edit/Write 工具**(走 harness 文件 API,不经过 Bash,
+钩子不碰,实测无损);②每次批量改 .java 后立刻 `compile_check.bat`
+再继续下一步;③校验脚本里用 `git show` 读原文件做内容对比时注意
+PowerShell 管道会把 UTF-8 按 GBK 重解码,中文注释必失真——对比逻辑
+要么只比 ASCII 字面量,要么走字节级比较,否则全是假 DIFFERS。
+

@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 标题下的糖果渐变条:粉→黄→薄荷 -->
+<!-- 标题下的品牌渐变条:紫→粉 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <gradient
-        android:startColor="#FF6E9C"
-        android:centerColor="#FFCF56"
-        android:endColor="#35C98E"
+        android:startColor="@color/gradStart"
+        android:endColor="@color/gradEnd"
         android:angle="0" />
     <corners android:radius="3dp" />
 </shape>

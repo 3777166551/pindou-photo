@@ -160,7 +160,7 @@ public class CelebrationView extends View {
         paint.setColor(0xFF56C2F7);
         rf.set(cx - s * 1.05f, cy + s * 0.15f, cx + s * 1.05f, cy + s * 0.6f);
         c.drawRoundRect(rf, s * 0.22f, s * 0.22f, paint);
-        paint.setColor(0xFF40354E);
+        paint.setColor(0xFF2A2735);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(s * 0.1f);
         c.drawRoundRect(rf, s * 0.22f, s * 0.22f, paint);
@@ -169,13 +169,13 @@ public class CelebrationView extends View {
         paint.setColor(0xFFFF8DB8);
         rf.set(cx - s * 0.85f, cy - s * 0.35f, cx + s * 0.7f, cy + s * 0.28f);
         c.drawRoundRect(rf, s * 0.3f, s * 0.3f, paint);
-        paint.setColor(0xFF40354E);
+        paint.setColor(0xFF2A2735);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(s * 0.1f);
         c.drawRoundRect(rf, s * 0.3f, s * 0.3f, paint);
         // 手柄
         paint.setStyle(Paint.Style.STROKE);
-        paint.setColor(0xFF40354E);
+        paint.setColor(0xFF2A2735);
         paint.setStrokeWidth(s * 0.16f);
         c.drawLine(cx - s * 0.55f, cy - s * 0.35f, cx - s * 0.2f, cy - s * 0.75f, paint);
         c.drawLine(cx - s * 0.2f, cy - s * 0.75f, cx + s * 0.45f, cy - s * 0.75f, paint);
@@ -193,18 +193,18 @@ public class CelebrationView extends View {
         c.translate(cx, cy);
         c.scale(scale, scale);
         float w = size * 1.9f, h = size;
-        paint.setColor(0xFF40354E);
+        paint.setColor(0xFF2A2735);
         rf.set(-w / 2f + 10, -h / 2f + 12, w / 2f + 10, h / 2f + 12);
         c.drawRoundRect(rf, size * 0.24f, size * 0.24f, paint);
         paint.setColor(Color.WHITE);
         rf.set(-w / 2f, -h / 2f, w / 2f, h / 2f);
         c.drawRoundRect(rf, size * 0.24f, size * 0.24f, paint);
         paint.setStyle(Paint.Style.STROKE);
-        paint.setColor(0xFF40354E);
+        paint.setColor(0xFF2A2735);
         paint.setStrokeWidth(size * 0.05f);
         c.drawRoundRect(rf, size * 0.24f, size * 0.24f, paint);
         paint.setStyle(Paint.Style.FILL);
-        textP.setColor(0xFF3A3050);
+        textP.setColor(0xFF23212B);
         textP.setTextSize(size * 0.3f);
         textP.setFakeBoldText(true);
         Paint.FontMetrics fm = textP.getFontMetrics();

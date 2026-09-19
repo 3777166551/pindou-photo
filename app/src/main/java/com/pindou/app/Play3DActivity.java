@@ -75,7 +75,7 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
         bar.setPadding(Math.round(8 * dm), Math.round(8 * dm),
                 Math.round(8 * dm), Math.round(8 * dm));
 
-        TextView exit = barChip(getString(R.string.play_exit), 0x33EFE9DC);
+        TextView exit = barChip(getString(R.string.play_exit), 0x33DFE1EE);
         exit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -84,7 +84,7 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
         });
         bar.addView(exit);
 
-        modeChip = barChip(modeLabel(), 0x33EFE9DC);
+        modeChip = barChip(modeLabel(), 0x33DFE1EE);
         modeChip.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -92,14 +92,14 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
                 ironMode = !ironMode;
                 modeChip.setText(modeLabel());
                 GradientDrawable bg = (GradientDrawable) modeChip.getBackground();
-                bg.setColor(ironMode ? 0xFFE85D75 : 0x33EFE9DC);
+                bg.setColor(ironMode ? 0xFFE85D75 : 0x33DFE1EE);
                 playView.setIronMode(ironMode);
                 progressText.setText(getString(ironMode
                         ? R.string.play_hint_iron : R.string.play_hint_hand));
             }
         });
         bar.addView(chipWithMargin(modeChip, dm));
-        TextView replay = barChip(getString(R.string.play_replay), 0x33EFE9DC);
+        TextView replay = barChip(getString(R.string.play_replay), 0x33DFE1EE);
         replay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -110,7 +110,7 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
         });
         bar.addView(chipWithMargin(replay, dm));
 
-        TextView gif = barChip(getString(R.string.play_export_gif), 0x33EFE9DC);
+        TextView gif = barChip(getString(R.string.play_export_gif), 0x33DFE1EE);
         gif.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -122,7 +122,7 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
 
         progressText = new TextView(this);
         progressText.setText(getString(R.string.play_hint_hand));
-        progressText.setTextColor(0xFF8A8178);
+        progressText.setTextColor(0xFF8E8B9C);
         progressText.setTextSize(11);
         LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(
                 0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
@@ -132,7 +132,7 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
         bar.addView(progressText);
 
         FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(0xFFF4EFE7);
+        root.setBackgroundColor(0xFFF7F7FB);
         root.addView(playView, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
@@ -164,7 +164,7 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
         TextView tv = new TextView(this);
         tv.setText(text);
         tv.setTextSize(13);
-        tv.setTextColor(0xFF40354E);
+        tv.setTextColor(0xFF2A2735);
         tv.setGravity(Gravity.CENTER);
         int p = Math.round(10 * getResources().getDisplayMetrics().density);
         tv.setPadding(p, Math.round(6 * getResources().getDisplayMetrics().density),
@@ -217,7 +217,7 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
             ironMode = false;
             modeChip.setText(modeLabel());
             GradientDrawable bg = (GradientDrawable) modeChip.getBackground();
-            bg.setColor(0x33EFE9DC);
+            bg.setColor(0x33DFE1EE);
             playView.setIronMode(false);
         }
         exporting = true;
@@ -324,7 +324,7 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
         }
         try {
             playView.setAnimTime(dur * i / (frames - 1L));
-            bmp.eraseColor(0xFFF4EFE7);
+            bmp.eraseColor(0xFFF7F7FB);
             playView.draw(canvas);
             int[] buf = new int[fw * fh];
             bmp.getPixels(buf, 0, fw, 0, 0, fw, fh);

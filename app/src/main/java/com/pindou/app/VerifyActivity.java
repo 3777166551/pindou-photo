@@ -245,7 +245,7 @@ public class VerifyActivity extends Activity {
     private TextView chip(String text) {
         TextView t = new TextView(this);
         t.setText(text);
-        t.setTextColor(0xFF3A3050);
+        t.setTextColor(0xFF23212B);
         t.setTextSize(13);
         t.setGravity(Gravity.CENTER);
         t.setBackgroundResource(R.drawable.bg_chip);
@@ -405,7 +405,7 @@ public class VerifyActivity extends Activity {
             gridP.setColor(0x30FFFFFF);
             gridP.setStrokeWidth(1f);
             handleP.setColor(0xFFFFFFFF);
-            handleEdge.setColor(0xFF40354E);
+            handleEdge.setColor(0xFF2A2735);
             handleEdge.setStyle(Paint.Style.STROKE);
             handleEdge.setStrokeWidth(3f);
         }
