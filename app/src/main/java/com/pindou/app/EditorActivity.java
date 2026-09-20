@@ -129,6 +129,7 @@ public class EditorActivity extends Activity {
     private static final int EXP_PDF = 4;
     private static final int EXP_FILE = 6;
     private static final int EXP_CROSS = 10;
+    private static final int EXP_MORE = 12;
 
     // 状态
     private Bitmap source;
@@ -169,6 +170,14 @@ public class EditorActivity extends Activity {
     private final Map<Integer, Integer> editMap = new HashMap<>();
     /** 引擎原始输出(未套手动修改) */
     private BeadPattern rawPattern;
+    /** 网格像素缓存(与色板无关的第 1~3 步产物):换色板/限色/抖动时秒级重映射 */
+    private PatternEngine.WorkGrid workGrid;
+    /** 产生 workGrid 时的"除色板外设置"指纹;不一致则全量重生成 */
+    private String workGridKey;
+    /** 草稿恢复/重开项目:图纸就绪后自动切图纸页并恢复辅助拼 */
+    private boolean pendingResumeAssist;
+    /** 重新生成中的非阻塞提示 pill(旧图纸保持可见可操作) */
+    private TextView regenPill;
     /** 原始照片备份(AI 转图前),用于还原 */
     private Bitmap originalSource;
     private volatile boolean aiRunning = false;
@@ -471,6 +480,23 @@ public class EditorActivity extends Activity {
         tabPattern = findViewById(R.id.tabPattern);
         tabList = findViewById(R.id.tabList);
         previewFrame = findViewById(R.id.previewFrame);
+        // 重新生成的非阻塞提示:小 pill 挂在预览下沿,旧图纸保持可见
+        float den = getResources().getDisplayMetrics().density;
+        regenPill = new TextView(this);
+        regenPill.setText("⋯ " + getString(R.string.regen_hint));
+        regenPill.setTextSize(12);
+        regenPill.setTextColor(getResources().getColor(R.color.textSub));
+        regenPill.setBackgroundResource(R.drawable.bg_chip);
+        regenPill.setGravity(Gravity.CENTER);
+        regenPill.setElevation(8 * den);
+        regenPill.setPadding(Math.round(14 * den), Math.round(6 * den),
+                Math.round(14 * den), Math.round(6 * den));
+        regenPill.setVisibility(View.GONE);
+        FrameLayout.LayoutParams pillLp = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+        pillLp.bottomMargin = Math.round(10 * den);
+        ((FrameLayout) previewFrame).addView(regenPill, pillLp);
         listFrame = findViewById(R.id.listFrame);
         controlsScroll = findViewById(R.id.controlsScroll);
         loadingOverlay = findViewById(R.id.loadingOverlay);
@@ -2215,6 +2241,15 @@ public class EditorActivity extends Activity {
         main.postDelayed(regenTask, 120);
     }
 
+        /** 网格缓存指纹:只含第 1~3 步入参(与色板无关),一致即可走秒切路径 */
+    private String gridFingerprint() {
+        return (source == null ? "null" : Integer.toString(System.identityHashCode(source)))
+                + "|" + cols + "|" + rows + "|" + brickIdx
+                + "|" + brightness + "|" + contrast + "|" + saturation
+                + "|" + style + "|" + bgRemove + "|" + bgTolerance
+                + "|" + dominant;
+    }
+
     private void regenerate() {
         if (imported) {
             Toast.makeText(this, getString(R.string.imported_note),
@@ -2222,7 +2257,12 @@ public class EditorActivity extends Activity {
             return;
         }
         if (source == null) return;
-        showLoading(true);
+        // 已有图纸时只挂"生成中"小 pill(旧图保持可见),首次生成才用整屏蒙层
+        if (pattern != null) {
+            if (regenPill != null) regenPill.setVisibility(View.VISIBLE);
+        } else {
+            showLoading(true);
+        }
         final int seq = ++genSeq;
         final PatternEngine.Options opt = new PatternEngine.Options();
         opt.cols = cols;
@@ -2259,15 +2299,30 @@ public class EditorActivity extends Activity {
             // 保底:全部被排除时当作用户没排除,避免生成空图
             beadPalette = kept.isEmpty() ? beadPalette0 : kept;
         }
+        // 色板秒切:除色板外的设置与上次完全一致时,复用网格像素只重跑就近匹配。
+        // 指纹只含第 1~3 步入参(源图/尺寸/砖块/画面调节/去背景等);
+        // 限色/抖动/精准配色/形状/杂色清理都在第 4 步之后,改它们同样秒出。
+        final String gridKey = gridFingerprint();
+        final boolean fastGrid = workGrid != null && gridKey.equals(workGridKey)
+                && style != PatternEngine.STYLE_LINEART && !blankCanvas;
+        final PatternEngine.WorkGrid sink = fastGrid ? null : new PatternEngine.WorkGrid();
+        final int fCols = cols;
+        final int fRows = rows;
         exec.execute(new Runnable() {
             @Override
             public void run() {
-                final BeadPattern np = PatternEngine.generate(source, beadPalette, opt);
+                final BeadPattern np = fastGrid
+                        ? PatternEngine.generateFromGrid(workGrid, beadPalette, opt, fCols, fRows)
+                        : PatternEngine.generate(source, beadPalette, opt, sink);
                 if (seq != genSeq) return;
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         rawPattern = np;
+                        if (!fastGrid) {
+                            workGrid = sink;         // 全量生成的网格像素留作秒切缓存
+                            workGridKey = gridKey;
+                        }
                         pattern = PatternPatch.apply(np, editMap);
                         patternView.setPattern(pattern);
                         if (immersiveView != null) immersiveView.setPattern(pattern);
@@ -2303,6 +2358,7 @@ public class EditorActivity extends Activity {
                             launchVerify();
                         }
                         showLoading(false);
+                        if (regenPill != null) regenPill.setVisibility(View.GONE);
                         if (beadAssist) {
                             assistFocus = pattern.usedColors.isEmpty()
                                     ? -1 : pattern.usedColors.get(0).index;
@@ -2310,6 +2366,14 @@ public class EditorActivity extends Activity {
                                     Math.max(0, pattern.boardsNeeded() - 1));
                             updateAssistUi();
                             applyAssistToView();
+                        }
+                        // 存档带着辅助进度重开:图纸就绪后自动回图纸页并恢复辅助拼
+                        if (pendingResumeAssist) {
+                            pendingResumeAssist = false;
+                            selectTab(1);
+                            if (!beadAssist) {
+                                swBeadAssist.setChecked(true);   // 触发监听 → setBeadAssist(true)
+                            }
                         }
                         // 首页工具卡片带入的自动动作:图纸就绪后执行一次
                         if (pendingAction != PENDING_NONE && !blankCanvas) {
@@ -4001,18 +4065,14 @@ public class EditorActivity extends Activity {
         return tv;
     }
 
+    /** 顶栏分享菜单:只留高频直达,导出类收进二级分组菜单(v2.59 交互简化) */
     private void showExportMenu(View anchor) {
         PopupMenu menu = new PopupMenu(this, anchor);
-        menu.getMenu().add(0, EXP_SHEET, 1, getString(R.string.menu_sheet));
-        menu.getMenu().add(0, EXP_EFFECT, 2, getString(R.string.menu_effect));
-        menu.getMenu().add(0, EXP_CARD, 3, getString(R.string.menu_card));
-        menu.getMenu().add(0, EXP_SHARE, 4, getString(R.string.menu_share));
-        menu.getMenu().add(0, EXP_PDF, 5, getString(R.string.menu_pdf));
-        menu.getMenu().add(0, EXP_CROSS, 6, getString(R.string.menu_cross));
-        menu.getMenu().add(0, EXP_FILE, 7, getString(R.string.menu_file));
-        menu.getMenu().add(0, 11, 8, "📂 导入图纸文件(.json)");
-        menu.getMenu().add(1, 5, 9, getString(R.string.save_proj_title));
-        android.view.MenuItem night = menu.getMenu().add(0, 9, 10,
+        menu.getMenu().add(0, EXP_SHARE, 1, getString(R.string.menu_share));
+        menu.getMenu().add(1, 5, 2, getString(R.string.save_proj_title));
+        menu.getMenu().add(0, EXP_MORE, 3, getString(R.string.menu_more_exports));
+        menu.getMenu().add(0, 11, 4, "?? 导入图纸文件(.json)");
+        android.view.MenuItem night = menu.getMenu().add(0, 9, 5,
                 nightMode ? R.string.menu_night_off : R.string.menu_night_on);
         night.setChecked(nightMode);
         night.setCheckable(true);
@@ -4021,6 +4081,8 @@ public class EditorActivity extends Activity {
             public boolean onMenuItemClick(android.view.MenuItem item) {
                 if (item.getItemId() == 5) {
                     saveProjectDialog();
+                } else if (item.getItemId() == EXP_MORE) {
+                    showExportSubmenu(anchor);
                 } else if (item.getItemId() == 11) {
                     importFile();
                 } else if (item.getItemId() == 9) {
@@ -4028,6 +4090,25 @@ public class EditorActivity extends Activity {
                 } else {
                     export(item.getItemId());
                 }
+                return true;
+            }
+        });
+        menu.show();
+    }
+
+    /** 二级导出菜单:图纸/效果图/长图卡/PDF/十字绣/.json 文件 */
+    private void showExportSubmenu(View anchor) {
+        PopupMenu menu = new PopupMenu(this, anchor);
+        menu.getMenu().add(0, EXP_SHEET, 1, getString(R.string.menu_sheet));
+        menu.getMenu().add(0, EXP_EFFECT, 2, getString(R.string.menu_effect));
+        menu.getMenu().add(0, EXP_CARD, 3, getString(R.string.menu_card));
+        menu.getMenu().add(0, EXP_PDF, 4, getString(R.string.menu_pdf));
+        menu.getMenu().add(0, EXP_CROSS, 5, getString(R.string.menu_cross));
+        menu.getMenu().add(0, EXP_FILE, 6, getString(R.string.menu_file));
+        menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(android.view.MenuItem item) {
+                export(item.getItemId());
                 return true;
             }
         });
@@ -4813,6 +4894,7 @@ public class EditorActivity extends Activity {
         o.put("beadDone", bd);
         o.put("beadDoneDay", beadDoneDay);
         o.put("beadDoneToday", beadDoneToday);
+        o.put("assistOn", beadAssist);   // 重开时自动回图纸页并恢复辅助拼
 
         // 排除色:重开项目后继续生效
         JSONArray ex = new JSONArray();
@@ -4955,6 +5037,8 @@ public class EditorActivity extends Activity {
             assistMode = o.optBoolean("assistBoardMode", false)
                     ? ASSIST_BOARD : ASSIST_COLOR;
             assistBoard = Math.max(0, o.optInt("assistBoard", 0));
+            // 辅助拼恢复:存档时辅助开着,或已有拼豆进度 → 图纸就绪后自动回图纸页
+            pendingResumeAssist = o.optBoolean("assistOn", false) || !beadDone.isEmpty();
 
             String photo = o.optString("photo", "");
             if (!photo.isEmpty()) {

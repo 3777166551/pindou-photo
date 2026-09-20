@@ -70,6 +70,20 @@ public final class PatternEngine {
     }
 
     public static BeadPattern generate(Bitmap source, List<BeadColor> beadPalette, Options o) {
+        return generate(source, beadPalette, o, null);
+    }
+
+    /** 工作网格像素缓存:与色板无关的第 1~3 步产物(裁剪/重采样/画面调节)。
+     *  换色板/限色/抖动等只影响第 4 步之后的设置,用它重映射毫秒级出图。 */
+    public static final class WorkGrid {
+        public int[] px;
+        public int gw;
+        public int gh;
+        public int brick;
+    }
+
+    public static BeadPattern generate(Bitmap source, List<BeadColor> beadPalette,
+                                       Options o, WorkGrid out) {
         int cols = Math.max(4, Math.min(200, o.cols));
         int rows = Math.max(4, Math.min(200, o.rows));
 
@@ -141,6 +155,33 @@ public final class PatternEngine {
                 px[i] = ColorMath.adjust(px[i], o.brightness, o.contrast, o.saturation);
             }
         }
+
+        if (out != null) {
+            out.px = px;
+            out.gw = gw;
+            out.gh = gh;
+            out.brick = b;
+        }
+        return finishGenerate(px, gw, gh, b, srcPx, pw, ph, beadPalette, o, cols, rows);
+    }
+
+    /** 网格缓存路径:跳过裁剪/重采样/调色,只重跑色板就近匹配及之后(换色板/限色秒出)。
+     *  不支持线稿模式——线稿就近匹配需要全分辨率源像素,请走 generate。 */
+    public static BeadPattern generateFromGrid(WorkGrid g, List<BeadColor> beadPalette,
+                                               Options o, int cols, int rows) {
+        if (o.style == STYLE_LINEART) {
+            throw new IllegalArgumentException("generateFromGrid does not support line art");
+        }
+        return finishGenerate(g.px, g.gw, g.gh, g.brick, null, 0, 0,
+                beadPalette, o, cols, rows);
+    }
+
+    private static BeadPattern finishGenerate(int[] px, int gw, int gh, int b,
+                                              int[] srcPx, int pw, int ph,
+                                              List<BeadColor> beadPalette, Options o,
+                                              int cols, int rows) {
+        boolean abs = o.style == STYLE_ABSTRACT;
+        boolean lineArt = o.style == STYLE_LINEART;
 
         // 4. 确定生效色板
         List<BeadColor> palette;

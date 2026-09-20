@@ -375,6 +375,8 @@
     <string name="menu_effect">プレビュー画像を保存</string>
     <string name="menu_share">図案を共有</string>
     <string name="menu_pdf">PDFで書き出し</string>
+    <string name="menu_more_exports">図案 / ファイルを書き出す…</string>
+    <string name="regen_hint">再生成中…</string>
     <string name="menu_file">図案ファイルを書き出し(.json、共有用)</string>
     <string name="err_not_ready">図案はまだ生成中です。少しお待ちください</string>
     <string name="working_pdf">PDFを生成中…</string>

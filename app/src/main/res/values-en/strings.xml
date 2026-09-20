@@ -375,6 +375,8 @@
     <string name="menu_effect">Save preview image</string>
     <string name="menu_share">Share chart</string>
     <string name="menu_pdf">Export PDF document</string>
+    <string name="menu_more_exports">Export chart / files…</string>
+    <string name="regen_hint">Regenerating…</string>
     <string name="menu_file">Export chart file (.json, for others to import)</string>
     <string name="err_not_ready">Chart isn\'t ready yet, one moment</string>
     <string name="working_pdf">Generating PDF…</string>

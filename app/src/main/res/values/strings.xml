@@ -375,6 +375,8 @@
     <string name="menu_effect">保存效果图</string>
     <string name="menu_share">分享图纸</string>
     <string name="menu_pdf">导出 PDF 文档</string>
+    <string name="menu_more_exports">导出图纸 / 文件…</string>
+    <string name="regen_hint">重新生成中…</string>
     <string name="menu_file">导出图纸文件(.json,发给别人导入)</string>
     <string name="err_not_ready">图纸还没生成好,稍等一下</string>
     <string name="working_pdf">正在生成 PDF…</string>

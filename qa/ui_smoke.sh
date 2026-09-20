@@ -512,8 +512,11 @@ tap_text "Night chart off" 0
 sleep 1.5
 
 # 10) 导出四件套:PNG 图纸(存相册+toast)/ PDF / JSON / 分享长图
+#     v2.59 起导出类收进二级菜单:先点「Export chart / files…」
 tap_id btnMenu
 sleep 1.5
+tap_text "Export chart" 0
+sleep 1
 tap_text "Save chart image"
 sleep 9
 snap photo_export_png
@@ -521,6 +524,8 @@ check_text "Saved to Pictures" 0
 
 tap_id btnMenu
 sleep 1.5
+tap_text "Export chart" 0
+sleep 1
 tap_text "Export PDF" 0
 sleep 14
 snap photo_share_pdf
@@ -529,6 +534,8 @@ sleep 1.5
 
 tap_id btnMenu
 sleep 1.5
+tap_text "Export chart" 0
+sleep 1
 tap_text ".json" 0
 sleep 9
 snap photo_share_json
@@ -537,6 +544,8 @@ sleep 1.5
 
 tap_id btnMenu
 sleep 1.5
+tap_text "Export chart" 0
+sleep 1
 tap_text "Share card" 0
 sleep 11
 snap photo_share_card

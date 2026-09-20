@@ -107,6 +107,64 @@ public class TestPatternEngine {
                         && PatternEngine.symbolFor(61).equals("9")
                         && PatternEngine.symbolFor(62).equals("AA"));
 
+        // ---- generateFromGrid:网格缓存路径(纯数组,不依赖 Bitmap;换色板秒切的基础) ----
+        java.util.List<com.pindou.app.bead.BeadColor> pal = new java.util.ArrayList<>();
+        pal.add(new com.pindou.app.bead.BeadColor(1, "R", 0xFFE53935));
+        pal.add(new com.pindou.app.bead.BeadColor(2, "G", 0xFF43A047));
+        pal.add(new com.pindou.app.bead.BeadColor(3, "B", 0xFF1E88E5));
+
+        PatternEngine.WorkGrid g = new PatternEngine.WorkGrid();
+        g.gw = 2;
+        g.gh = 2;
+        g.brick = 1;
+        g.px = new int[]{0xFFE53935, 0xFF43A047, 0xFF1E88E5, 0x00000000};
+
+        PatternEngine.Options og = new PatternEngine.Options();
+        og.cols = 2;
+        og.rows = 2;
+        og.dither = false;
+        com.pindou.app.bead.BeadPattern p1 = PatternEngine.generateFromGrid(g, pal, og, 2, 2);
+        check("generateFromGrid nearest match + transparent cell", p1 != null
+                && p1.cols == 2 && p1.rows == 2
+                && p1.cellAt(0, 0) == 0 && p1.cellAt(1, 0) == 1
+                && p1.cellAt(0, 1) == 2 && p1.cellAt(1, 1) == -1);
+        check("generateFromGrid usage stats", p1.usedColors.size() == 3 && p1.totalBeads == 3);
+
+        // 换色板重映射:同一网格像素,新色板秒出
+        java.util.List<com.pindou.app.bead.BeadColor> pal2 = new java.util.ArrayList<>();
+        pal2.add(new com.pindou.app.bead.BeadColor(11, "R2", 0xFFEF5350));
+        pal2.add(new com.pindou.app.bead.BeadColor(12, "P", 0xFFAB47BC));
+        com.pindou.app.bead.BeadPattern p2 = PatternEngine.generateFromGrid(g, pal2, og, 2, 2);
+        check("generateFromGrid remaps to new palette", p2 != null
+                && p2.usedColors.size() == 2
+                && p2.cellAt(0, 0) == 0 && p2.cellAt(1, 1) == -1);
+
+        // 圆形蒙版在缓存路径同样生效
+        PatternEngine.Options oround = new PatternEngine.Options();
+        oround.cols = 4;
+        oround.rows = 4;
+        oround.roundBoard = true;
+        g.gw = 4;
+        g.gh = 4;
+        g.px = new int[16];
+        java.util.Arrays.fill(g.px, 0xFFE53935);
+        com.pindou.app.bead.BeadPattern p3 = PatternEngine.generateFromGrid(g, pal, oround, 4, 4);
+        check("generateFromGrid round mask applied", p3 != null
+                && p3.cellAt(0, 0) == -1 && p3.cellAt(2, 2) >= 0);
+
+        // 线稿模式在缓存路径被明确拒绝(需要全分辨率源像素)
+        PatternEngine.Options oline = new PatternEngine.Options();
+        oline.cols = 2;
+        oline.rows = 2;
+        oline.style = PatternEngine.STYLE_LINEART;
+        boolean rejected = false;
+        try {
+            PatternEngine.generateFromGrid(g, pal, oline, 2, 2);
+        } catch (IllegalArgumentException e) {
+            rejected = true;
+        }
+        check("generateFromGrid rejects line art", rejected);
+
         System.out.println("TestPatternEngine: " + passed + " passed, " + failed + " failed");
         if (failed > 0) System.exit(1);
     }
