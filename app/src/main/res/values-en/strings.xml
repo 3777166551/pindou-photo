@@ -377,6 +377,7 @@
     <string name="menu_pdf">Export PDF document</string>
     <string name="menu_more_exports">Export chart / files…</string>
     <string name="menu_import_json">📥 Import chart file (.json)</string>
+    <string name="btn_start_beading">🧵 Start beading</string>
     <string name="regen_hint">Regenerating…</string>
     <!-- Accessibility: TalkBack descriptions and key announcements -->
     <string name="a11y_back">Back</string>

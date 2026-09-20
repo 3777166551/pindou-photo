@@ -377,6 +377,7 @@
     <string name="menu_pdf">PDFで書き出し</string>
     <string name="menu_more_exports">図案 / ファイルを書き出す…</string>
     <string name="menu_import_json">📥 図案ファイルを読み込む(.json)</string>
+    <string name="btn_start_beading">🧵 ビーズを始める</string>
     <string name="regen_hint">再生成中…</string>
     <!-- アクセシビリティ:TalkBack 用の説明と読み上げ -->
     <string name="a11y_back">戻る</string>

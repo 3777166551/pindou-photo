@@ -254,6 +254,23 @@
                 android:paddingEnd="16dp"
                 android:paddingBottom="20dp">
 
+                <!-- 一键开始拼豆(图纸就绪后出现,点按=切图纸页+开辅助+滚到辅助面板) -->
+                <TextView
+                    android:id="@+id/btnStartBeading"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_btn_primary"
+                    android:clickable="true"
+                    android:elevation="0dp"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="@string/btn_start_beading"
+                    android:textColor="@color/onPrimary"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
                 <TextView
                     style="@style/SecTitle"
                     android:layout_width="wrap_content"

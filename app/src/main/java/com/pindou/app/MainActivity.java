@@ -118,13 +118,13 @@ public class MainActivity extends Activity {
         });
         // 「更多工具」折叠开关:低频工具默认收起(希克定律改版),点开才展开
         final LinearLayout moreToolsBody = findViewById(R.id.moreToolsBody);
-        final TextView moreToolsArrow = findViewById(R.id.tvMoreToolsArrow);
+        final View moreToolsArrow = findViewById(R.id.tvMoreToolsArrow);
         findViewById(R.id.moreToolsHeader).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 boolean show = moreToolsBody.getVisibility() != View.VISIBLE;
                 moreToolsBody.setVisibility(show ? View.VISIBLE : View.GONE);
-                moreToolsArrow.setText(show ? "▾" : "▸");
+                moreToolsArrow.setRotation(show ? 90f : 0f);   // 右箭头转下=展开
             }
         });
         findViewById(R.id.btnScanPattern).setOnClickListener(new View.OnClickListener() {

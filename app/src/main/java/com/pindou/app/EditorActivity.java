@@ -198,6 +198,8 @@ public class EditorActivity extends Activity {
     private boolean pendingResumeAssist;
     /** 重新生成中的非阻塞提示 pill(旧图纸保持可见可操作) */
     private TextView regenPill;
+    /** 一键开始拼豆(图纸就绪且辅助未开时可见) */
+    private TextView btnStartBeading;
     /** 原始照片备份(AI 转图前),用于还原 */
     private Bitmap originalSource;
     private volatile boolean aiRunning = false;
@@ -248,7 +250,8 @@ public class EditorActivity extends Activity {
     // 视图
     private PatternView patternView;
     private TextView tabEffect, tabPattern, tabList;
-    private View previewFrame, listFrame, controlsScroll, loadingOverlay;
+    private View previewFrame, listFrame, loadingOverlay;
+    private android.widget.ScrollView controlsScroll;
     private TextView tvBoardHint, tvW, tvH, tvSummary;
     private TextView tvBright, tvContrast, tvSat;
     private View chip29, chip58, chip87, chip116;
@@ -500,6 +503,24 @@ public class EditorActivity extends Activity {
         tabPattern = findViewById(R.id.tabPattern);
         tabList = findViewById(R.id.tabList);
         previewFrame = findViewById(R.id.previewFrame);
+        // 一键开始拼豆(合同 §8 体验):图纸就绪后出现,一键=切图纸页+开辅助+滚到面板
+        btnStartBeading = findViewById(R.id.btnStartBeading);
+        btnStartBeading.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                selectTab(1);   // 拼豆在图纸页进行
+                if (!beadAssist) {
+                    swBeadAssist.setChecked(true);   // 触发监听(互斥画笔)→ setBeadAssist(true)
+                }
+                final View assistRow = (View) swBeadAssist.getParent();
+                controlsScroll.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        controlsScroll.smoothScrollTo(0, Math.max(0, assistRow.getTop()));
+                    }
+                });
+            }
+        });
         // 重新生成的非阻塞提示:小 pill 挂在预览下沿,旧图纸保持可见
         float den = getResources().getDisplayMetrics().density;
         regenPill = new TextView(this);
@@ -2398,6 +2419,9 @@ public class EditorActivity extends Activity {
                                 swBeadAssist.setChecked(true);   // 触发监听 → setBeadAssist(true)
                             }
                         }
+                        // 一键开始拼豆:图纸就绪且辅助未开时出现
+                        btnStartBeading.setVisibility(
+                                (pattern != null && !beadAssist) ? View.VISIBLE : View.GONE);
                         // 首页工具卡片带入的自动动作:图纸就绪后执行一次
                         if (pendingAction != PENDING_NONE && !blankCanvas) {
                             pendingAction = PENDING_NONE;
@@ -2424,6 +2448,9 @@ public class EditorActivity extends Activity {
 
     private void setBeadAssist(boolean on) {
         beadAssist = on;
+        if (btnStartBeading != null) {
+            btnStartBeading.setVisibility(on ? View.GONE : View.VISIBLE);
+        }
         if (on) {
             beadAssistPanel.setVisibility(View.VISIBLE);
             tvAssistProgress.setVisibility(View.VISIBLE);

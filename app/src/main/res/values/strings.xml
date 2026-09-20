@@ -377,6 +377,7 @@
     <string name="menu_pdf">导出 PDF 文档</string>
     <string name="menu_more_exports">导出图纸 / 文件…</string>
     <string name="menu_import_json">📥 导入图纸文件(.json)</string>
+    <string name="btn_start_beading">🧵 开始拼豆</string>
     <string name="regen_hint">重新生成中…</string>
     <!-- 无障碍:读屏(TalkBack)用描述与关键节点播报 -->
     <string name="a11y_back">返回</string>
