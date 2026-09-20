@@ -85,6 +85,17 @@
     <!-- 首页:我的项目 / 合并采购单 -->
     <string name="projects_title_fmt">我的项目 📂(%d)</string>
     <string name="no_projects">还没有项目存档。在编辑页右上方 ☰ 菜单里「保存项目存档」即可。</string>
+    <!-- 空状态引导(替代纯 Toast):给一张图就能开始 -->
+    <string name="empty_projects_title">这里还空空的 🧺</string>
+    <string name="empty_projects_msg">拼豆图纸会存在手机里,随时接着拼。\n选一张照片,30 秒就能出你的第一张图纸~</string>
+    <string name="empty_projects_go">📷 从相册选一张</string>
+    <string name="empty_projects_later">先逛逛</string>
+    <!-- 退出守护:有未保存的手动修改时,返回键先问一句 -->
+    <string name="exitguard_title">修改还没保存</string>
+    <string name="exitguard_msg">你改过这张图纸,直接离开的话这些修改不会保留。</string>
+    <string name="exitguard_save">存档</string>
+    <string name="exitguard_leave">直接离开</string>
+    <string name="exitguard_stay">继续拼</string>
     <string name="fmt_delete_confirm">确定删除「%s」吗?\n删除后不可恢复。</string>
     <string name="proj_unreadable_del">这个存档读不出来了,可以删掉它</string>
     <string name="merge_wait">按各项目保存的照片与参数重新计算用量,请稍等</string>

@@ -85,6 +85,17 @@
     <!-- home: projects / merged BOM -->
     <string name="projects_title_fmt">My projects 📂(%d)</string>
     <string name="no_projects">No saved projects yet. Use "Save project" in the editor\'s ☰ menu.</string>
+    <!-- Empty-state guidance (replaces plain toast) -->
+    <string name="empty_projects_title">Nothing here yet 🧺</string>
+    <string name="empty_projects_msg">Charts are saved on your phone, so you can continue anytime.\nPick a photo and get your first chart in 30 seconds~</string>
+    <string name="empty_projects_go">📷 Pick from gallery</string>
+    <string name="empty_projects_later">Browse around</string>
+    <!-- Back guard: ask once when manual edits are unsaved -->
+    <string name="exitguard_title">Unsaved changes</string>
+    <string name="exitguard_msg">You changed this chart. If you leave now, those edits won\'t be kept.</string>
+    <string name="exitguard_save">Save</string>
+    <string name="exitguard_leave">Leave</string>
+    <string name="exitguard_stay">Keep beading</string>
     <string name="fmt_delete_confirm">Delete "%s"?\nThis can\'t be undone.</string>
     <string name="proj_unreadable_del">This save file is unreadable, you can delete it</string>
     <string name="merge_wait">Recalculating usage from saved photos and settings…</string>

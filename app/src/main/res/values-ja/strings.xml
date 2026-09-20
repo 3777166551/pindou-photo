@@ -85,6 +85,17 @@
     <!-- ホーム: プロジェクト / まとめ買いリスト -->
     <string name="projects_title_fmt">マイプロジェクト 📂(%d)</string>
     <string name="no_projects">保存されたプロジェクトはまだありません。エディタ右上の ☰ メニューから「プロジェクトを保存」してください。</string>
+    <!-- 空状態ガイド(トースト置き換え) -->
+    <string name="empty_projects_title">まだ何もない 🧺</string>
+    <string name="empty_projects_msg">図案はスマホに保存されるので、いつでも続きから作れます。\n写真を1枚選べば、30秒で最初の図案ができます〜</string>
+    <string name="empty_projects_go">📷 ギャラリーから選ぶ</string>
+    <string name="empty_projects_later">あとで見る</string>
+    <!-- 退室ガード:未保存の編集があれば戻る前に確認 -->
+    <string name="exitguard_title">未保存の変更があります</string>
+    <string name="exitguard_msg">この図案を変更しています。このまま戻ると変更は消えてしまいます。</string>
+    <string name="exitguard_save">保存</string>
+    <string name="exitguard_leave">破棄して戻る</string>
+    <string name="exitguard_stay">続きを編集</string>
     <string name="fmt_delete_confirm">「%s」を削除しますか?\n元に戻せません。</string>
     <string name="proj_unreadable_del">この保存データは読み込めないため、削除できます</string>
     <string name="merge_wait">保存済みの写真と設定から使用量を再計算しています…</string>

@@ -219,7 +219,17 @@ gen_wait() {
   return 1
 }
 
-back() { adb shell input keyevent 4; sleep 1.5; }
+back() {
+  adb shell input keyevent 4; sleep 1.5
+  # 退出守护弹窗(编辑器内有未保存手改时出现):点 Leave 再补一次返回。
+  # 正常路径 btnReset 已清空 editMap 不弹;此处兜底 soft-miss 情况(三原则④硬失败兜底)。
+  if _tap_match "text=\"[^\"]*Leave without saving[^\"]*\"" 0; then
+    log "back-guard dialog: tapped Leave"
+    sleep 1.2
+    adb shell input keyevent 4
+    sleep 1.5
+  fi
+}
 
 # 硬失败退出(曾漏定义:toggle 六轮失败后 "die: command not found",
 # 脚本带病继续跑,辅助没开导致后续链条全乱,0914 run135 实锤)

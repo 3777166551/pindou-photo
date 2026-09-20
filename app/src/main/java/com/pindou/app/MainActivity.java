@@ -456,8 +456,19 @@ public class MainActivity extends Activity {
             items = new ArrayList<>();
         }
         if (items.isEmpty()) {
-            Toast.makeText(this, getString(R.string.no_projects),
-                    Toast.LENGTH_LONG).show();
+            // 空状态引导(替代纯 Toast):给一个直达主流程的动作,不让新手自己找路
+            new android.app.AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.empty_projects_title))
+                    .setMessage(getString(R.string.empty_projects_msg))
+                    .setPositiveButton(getString(R.string.empty_projects_go),
+                            new android.content.DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(android.content.DialogInterface d, int w) {
+                                    pickFromGallery();
+                                }
+                            })
+                    .setNegativeButton(getString(R.string.empty_projects_later), null)
+                    .show();
             return;
         }
         buildProjectsDialog(items);

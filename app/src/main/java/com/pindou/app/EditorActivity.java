@@ -3006,7 +3006,39 @@ public class EditorActivity extends Activity {
             exitImmersive();   // 沉浸页里按返回 = 先退沉浸,不关编辑器
             return;
         }
+        // 退出守护:手动修改与上次存档快照不一致时,先问一句再走(防误触丢失)
+        if (!editMap.equals(savedEditsSnapshot)) {
+            confirmLeave();
+            return;
+        }
         super.onBackPressed();
+    }
+
+    /** 上次成功存档时的手动修改快照;与 editMap 不一致 = 有未保存的改动 */
+    private java.util.Map<Integer, Integer> savedEditsSnapshot = new HashMap<>();
+
+    /** 退出守护:存档/直接离开/继续拼 三选;点对话框外 = 继续拼(默认取消) */
+    private void confirmLeave() {
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.exitguard_title))
+                .setMessage(getString(R.string.exitguard_msg))
+                .setPositiveButton(getString(R.string.exitguard_save),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface d, int w) {
+                                saveProjectDialog();   // 存档成功回调里置 editsSaved
+                            }
+                        })
+                .setNegativeButton(getString(R.string.exitguard_leave),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface d, int w) {
+                                d.dismiss();
+                                finish();
+                            }
+                        })
+                .setNeutralButton(getString(R.string.exitguard_stay), null)
+                .show();
     }
 
     // ---------------- 豆豆清单 ----------------
@@ -4760,6 +4792,7 @@ public class EditorActivity extends Activity {
                         @Override
                         public void run() {
                             showLoading(false);
+                            savedEditsSnapshot = new HashMap<>(editMap);   // 存档成功,刷新快照(退出守护基线)
                             Toast.makeText(EditorActivity.this,
                                     getString(R.string.fmt_saved_proj, name),
                                     Toast.LENGTH_LONG).show();
