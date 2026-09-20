@@ -342,9 +342,10 @@ public class EditorActivity extends Activity {
         setupList();
         setupAiControls();
         applyPressFeedback();
-        // 折叠区:高级设置 / 图片处理默认收起,常用参数前置,面板对小白更干净
+        // 折叠区:高级设置 / 图片处理 / 图片调整默认收起,常用参数前置,面板对小白更干净
         setupCollapse(R.id.btnAdvHeader, R.id.tvAdvArrow, R.id.advBody);
         setupCollapse(R.id.btnImgHeader, R.id.tvImgArrow, R.id.imgBody);
+        setupCollapse(R.id.btnAdjustHeader, R.id.tvAdjustArrow, R.id.adjustBody);
 
         // 去背景小模型(U2NetP)预加载;失败自动回退颜色统计算法
         MlSegmenter.init(getApplicationContext());

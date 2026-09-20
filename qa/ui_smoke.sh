@@ -174,6 +174,19 @@ check_text() {
   log "soft-miss text: $txt"
 }
 
+# 首页「更多工具」默认折叠(v2.59 希克定律改版):折叠区里的工具卡要先展开才可见。
+# 三原则①:先查门控子控件(btnScanPattern)在不在 dump,不在才点头按钮,
+# 盲点会把已展开的区段折回去。
+ensure_more_tools() {
+  dump_ui || true
+  if grep -q "btnScanPattern" ui.xml 2>/dev/null; then
+    log "more tools already expanded"
+    return 0
+  fi
+  tap_id moreToolsHeader 0 || true
+  sleep 0.6
+}
+
 # 点当前屏幕上第一个输入框(存档命名等对话框)
 tap_edittext() {
   local b x1 y1 x2 y2
@@ -755,6 +768,7 @@ ensure_home
 # 相机入口不点:CI 模拟器无摄像头但系统相机 APP 存在,拉起会把它自己
 # 崩掉(FATAL EXCEPTION 留在 logcat 缓冲,污染最终崩溃检查,还会连累
 # 我们的 Activity 栈)。识别图纸入口(DocumentsUI)安全,照常走查。
+ensure_more_tools
 tap_id btnScanPattern 0
 sleep 2
 snap scan_entry
@@ -763,6 +777,7 @@ sleep 1
 ensure_home
 
 # ---------- 拼豆知识(首篇=APP 使用指南,v2.54) ----------
+ensure_more_tools
 tap_id btnKnowledge
 sleep 1.5
 check_text "How to use this app"
@@ -790,6 +805,7 @@ sleep 1
 ensure_home
 
 # ---------- 空白画布进入编辑器 ----------
+ensure_more_tools
 tap_id btnBlank
 sleep 4
 check_text "Chart"
@@ -1010,6 +1026,7 @@ ensure_home
 sleep 1
 
 # ---------- 文字生成 ----------
+ensure_more_tools
 tap_id btnText 0
 sleep 1.5
 check_text "Text to bead pattern" 0
@@ -1031,6 +1048,7 @@ back
 ensure_home
 
 # ---------- v2.43:线稿模式(文字位图切风格,出黑豆描线图纸) ----------
+ensure_more_tools
 tap_id btnText 0
 sleep 1.5
 check_text "Text to bead pattern" 0

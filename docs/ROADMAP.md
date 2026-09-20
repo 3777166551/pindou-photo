@@ -31,7 +31,20 @@
   3fff48f8(15bf3f8 汽水轮 CI 全绿=几何改动验证;5b0b1ea M3 轮
   test/smoke/fuzz 全绿;3fff48f8 轮 test+smoke 绿,fuzz 收尾),
   截图存 qa\ci_shots_59b\。本地 git 因 github 直连断未能 fetch 对齐,
-  网络恢复后 `git fetch && git reset --hard origin/main`(内容一致只换 SHA)。
+  网络恢复后已 fetch+rebase 对齐(ed0c956)。
+- **v2.59 交互简化(希克定律改版,2026-09-20,用户点名"按钮越多用的人
+  越少")**:①首页信息架构重排——主界面从 ~12 个入口砍到 6 个:英雄卡
+  (选照片/拍照)→「我的项目」上移到第二位(回访最高频)→「模板库+豆仓」
+  常用两张→「🔧 更多工具」**默认折叠**(去水印/识别图纸/文字图纸/空白
+  画布/玩法知识/备份恢复收进去,控件 ID 全部不变,新增
+  moreToolsHeader/tvMoreToolsArrow/moreToolsBody);②编辑页「图片调整」
+  (亮度/对比/饱和)滑杆卡收进**默认折叠区**(btnAdjustHeader/tvAdjustArrow/
+  adjustBody,复用 setupCollapse)——主界面默认可见项=三个 tab+预览+
+  尺寸 chips+W/H+色板/限色/风格+三个折叠头+辅助开关;③ui_smoke.sh
+  适配:新增 ensure_more_tools 助手(三原则①:dump 里查门控子控件
+  btnScanPattern 不在才点 moreToolsHeader),5 处折叠区工具卡前插入;
+  编辑页滑杆冒烟本就无依赖,零改动。已验证:compile_check+qa 353 全绿
+  本地过,CImoke 验收见 ci_shots_59c。
 - **★ 下一个会话接着跑（按序,细节见「六」）**:
   1. **GIF 导出尺寸 bug(最高优先)**:真机实测导出成功但尺寸 100×208
      (预期长边 720),且帧内容空白——startGifExport() 的 playView

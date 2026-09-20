@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 首页 v2.59 交互简化(希克定律):主界面只留高频路径
+     选照片/拍照 → 我的项目 → 模板库/豆仓;低频工具收进「更多工具」折叠区。
+     控件 ID 全部保持不变(冒烟脚本按 id 定位)。 -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -37,7 +40,7 @@
             android:textColor="@color/textSub"
             android:textSize="13sp" />
 
-        <!-- 主卡片:核心流程(清汽水渐变英雄卡) -->
+        <!-- 主卡片:核心流程(M3 primary-container 英雄卡) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -106,161 +109,13 @@
                 android:textColor="@color/textMain" />
         </LinearLayout>
 
-        <!-- 工具区标题 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:layout_marginBottom="10dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/main_tools"
-                android:textColor="@color/textMain"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <View
-                android:layout_width="0dp"
-                android:layout_height="1.5dp"
-                android:layout_marginStart="10dp"
-                android:background="@color/line" />
-        </LinearLayout>
-
-        <!-- 工具卡片 2 列网格 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:id="@+id/cardWatermark"
-                style="@style/ToolCard"
-                android:layout_marginEnd="6dp">
-
-                <TextView style="@style/ToolCardIcon" android:text="🩹" android:background="@drawable/bg_icon_mint" />
-                <TextView style="@style/ToolCardTitle" android:text="@string/tool_watermark" />
-                <TextView style="@style/ToolCardDesc" android:text="@string/tool_watermark_desc" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:id="@+id/btnScanPattern"
-                style="@style/ToolCard"
-                android:layout_marginEnd="6dp">
-
-                <TextView style="@style/ToolCardIcon" android:text="📷" android:background="@drawable/bg_icon_sky" />
-                <TextView style="@style/ToolCardTitle" android:text="@string/tool_scan" />
-                <TextView style="@style/ToolCardDesc" android:text="@string/tool_scan_desc" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/btnTemplates"
-                style="@style/ToolCard"
-                android:layout_marginStart="6dp">
-
-                <TextView style="@style/ToolCardIcon" android:text="🧩" android:background="@drawable/bg_icon_lilac" />
-                <TextView style="@style/ToolCardTitle" android:text="@string/tool_templates" />
-                <TextView
-                    android:id="@+id/toolTemplatesDesc"
-                    style="@style/ToolCardDesc"
-                    android:text="@string/tool_templates_desc" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:id="@+id/btnText"
-                style="@style/ToolCard"
-                android:layout_marginEnd="6dp">
-
-                <TextView style="@style/ToolCardIcon" android:text="🔤" android:background="@drawable/bg_icon_butter" />
-                <TextView style="@style/ToolCardTitle" android:text="@string/tool_text" />
-                <TextView style="@style/ToolCardDesc" android:text="@string/tool_text_desc" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/btnBlank"
-                style="@style/ToolCard"
-                android:layout_marginStart="6dp">
-
-                <TextView style="@style/ToolCardIcon" android:text="✏️" android:background="@drawable/bg_icon_peach" />
-                <TextView style="@style/ToolCardTitle" android:text="@string/tool_blank" />
-                <TextView style="@style/ToolCardDesc" android:text="@string/tool_blank_desc" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:id="@+id/btnKnowledge"
-                style="@style/ToolCard"
-                android:layout_marginEnd="6dp">
-
-                <TextView style="@style/ToolCardIcon" android:text="📖" android:background="@drawable/bg_icon_pink" />
-                <TextView style="@style/ToolCardTitle" android:text="@string/tool_knowledge" />
-                <TextView style="@style/ToolCardDesc" android:text="@string/tool_knowledge_desc" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/btnInventoryHome"
-                style="@style/ToolCard"
-                android:layout_marginStart="6dp">
-
-                <TextView style="@style/ToolCardIcon" android:text="🎒" android:background="@drawable/bg_icon_mint" />
-                <TextView style="@style/ToolCardTitle" android:text="@string/tool_inventory" />
-                <TextView style="@style/ToolCardDesc" android:text="@string/tool_inventory_desc" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- 继续拼 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:layout_marginBottom="10dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/main_continue"
-                android:textColor="@color/textMain"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <View
-                android:layout_width="0dp"
-                android:layout_height="1.5dp"
-                android:layout_marginStart="10dp"
-                android:background="@color/line" />
-        </LinearLayout>
-
+        <!-- 继续拼:回访用户最高频动作,直接放主流程第二位 -->
         <LinearLayout
             android:id="@+id/btnProjects"
             style="@style/ToolCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="20dp"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
@@ -278,27 +133,178 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- 备份与恢复:全量数据打包导出/导入(换机刚需) -->
+        <!-- 常用两张:模板库 + 豆仓 -->
         <LinearLayout
-            android:id="@+id/btnBackup"
-            style="@style/ToolCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <TextView style="@style/ToolCardIcon" android:text="📦" android:background="@drawable/bg_icon_butter" />
+            android:orientation="horizontal">
 
             <LinearLayout
+                android:id="@+id/btnTemplates"
+                style="@style/ToolCard"
+                android:layout_marginEnd="6dp">
+
+                <TextView style="@style/ToolCardIcon" android:text="🧩" android:background="@drawable/bg_icon_lilac" />
+                <TextView style="@style/ToolCardTitle" android:text="@string/tool_templates" />
+                <TextView
+                    android:id="@+id/toolTemplatesDesc"
+                    style="@style/ToolCardDesc"
+                    android:text="@string/tool_templates_desc" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/btnInventoryHome"
+                style="@style/ToolCard"
+                android:layout_marginStart="6dp">
+
+                <TextView style="@style/ToolCardIcon" android:text="🎒" android:background="@drawable/bg_icon_mint" />
+                <TextView style="@style/ToolCardTitle" android:text="@string/tool_inventory" />
+                <TextView style="@style/ToolCardDesc" android:text="@string/tool_inventory_desc" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 更多工具:低频工具统一收进折叠区(默认收起,点开才展开) -->
+        <LinearLayout
+            android:id="@+id/moreToolsHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:background="@drawable/bg_card_sketch"
+            android:clickable="true"
+            android:elevation="2dp"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="13dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="13dp">
+
+            <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
                 android:layout_weight="1"
-                android:orientation="vertical">
+                android:text="@string/main_tools"
+                android:textColor="@color/textMain"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
-                <TextView style="@style/ToolCardTitle" android:text="@string/tool_backup" />
-                <TextView style="@style/ToolCardDesc" android:text="@string/tool_backup_desc" />
+            <TextView
+                android:id="@+id/tvMoreToolsArrow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="▸"
+                android:textColor="@color/textSub"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/moreToolsBody"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/cardWatermark"
+                style="@style/ToolCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView style="@style/ToolCardIcon" android:text="🩹" android:background="@drawable/bg_icon_mint" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView style="@style/ToolCardTitle" android:text="@string/tool_watermark" />
+                    <TextView style="@style/ToolCardDesc" android:text="@string/tool_watermark_desc" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:id="@+id/btnScanPattern"
+                    style="@style/ToolCard"
+                    android:layout_marginEnd="6dp">
+
+                    <TextView style="@style/ToolCardIcon" android:text="📷" android:background="@drawable/bg_icon_sky" />
+                    <TextView style="@style/ToolCardTitle" android:text="@string/tool_scan" />
+                    <TextView style="@style/ToolCardDesc" android:text="@string/tool_scan_desc" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/btnText"
+                    style="@style/ToolCard"
+                    android:layout_marginStart="6dp">
+
+                    <TextView style="@style/ToolCardIcon" android:text="🔤" android:background="@drawable/bg_icon_butter" />
+                    <TextView style="@style/ToolCardTitle" android:text="@string/tool_text" />
+                    <TextView style="@style/ToolCardDesc" android:text="@string/tool_text_desc" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:id="@+id/btnBlank"
+                    style="@style/ToolCard"
+                    android:layout_marginEnd="6dp">
+
+                    <TextView style="@style/ToolCardIcon" android:text="✏️" android:background="@drawable/bg_icon_peach" />
+                    <TextView style="@style/ToolCardTitle" android:text="@string/tool_blank" />
+                    <TextView style="@style/ToolCardDesc" android:text="@string/tool_blank_desc" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/btnKnowledge"
+                    style="@style/ToolCard"
+                    android:layout_marginStart="6dp">
+
+                    <TextView style="@style/ToolCardIcon" android:text="📖" android:background="@drawable/bg_icon_pink" />
+                    <TextView style="@style/ToolCardTitle" android:text="@string/tool_knowledge" />
+                    <TextView style="@style/ToolCardDesc" android:text="@string/tool_knowledge_desc" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 备份与恢复:全量数据打包导出/导入(换机刚需) -->
+            <LinearLayout
+                android:id="@+id/btnBackup"
+                style="@style/ToolCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView style="@style/ToolCardIcon" android:text="📦" android:background="@drawable/bg_icon_butter" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView style="@style/ToolCardTitle" android:text="@string/tool_backup" />
+                    <TextView style="@style/ToolCardDesc" android:text="@string/tool_backup_desc" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 

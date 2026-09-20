@@ -2048,12 +2048,47 @@
                         android:visibility="gone" />
                 </LinearLayout>
 
-                <TextView
-                    style="@style/SecTitle"
-                    android:layout_width="wrap_content"
+                <!-- 图片调整:默认折叠(希克定律改版:调参收进折叠区,主界面只留结果与主流程) -->
+                <LinearLayout
+                    android:id="@+id/btnAdjustHeader"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="18dp"
-                    android:text="@string/sec_adjust" />
+                    android:background="@drawable/bg_chip"
+                    android:clickable="true"
+                    android:elevation="2dp"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingTop="9dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="9dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/sec_adjust"
+                        android:textColor="@color/textMain"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvAdjustArrow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="▸"
+                        android:textColor="@color/textSub"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/adjustBody"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -2164,6 +2199,7 @@
                         android:layout_height="wrap_content"
                         android:max="200"
                         android:progress="100" />
+                </LinearLayout>
                 </LinearLayout>
 
                 <LinearLayout

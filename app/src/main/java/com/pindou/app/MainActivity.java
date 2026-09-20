@@ -74,7 +74,7 @@ public class MainActivity extends Activity {
         int[] pressIds = {R.id.btnGallery, R.id.btnCamera, R.id.btnText,
                 R.id.btnBlank, R.id.btnTemplates, R.id.btnProjects,
                 R.id.btnScanPattern, R.id.cardWatermark, R.id.btnKnowledge,
-                R.id.btnInventoryHome, R.id.btnBackup};
+                R.id.btnInventoryHome, R.id.btnBackup, R.id.moreToolsHeader};
         for (int id : pressIds) {
             com.pindou.app.util.Anim.pressScale(findViewById(id));
         }
@@ -109,6 +109,17 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 startActivity(new android.content.Intent(MainActivity.this,
                         InventoryActivity.class));
+            }
+        });
+        // 「更多工具」折叠开关:低频工具默认收起(希克定律改版),点开才展开
+        final LinearLayout moreToolsBody = findViewById(R.id.moreToolsBody);
+        final TextView moreToolsArrow = findViewById(R.id.tvMoreToolsArrow);
+        findViewById(R.id.moreToolsHeader).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean show = moreToolsBody.getVisibility() != View.VISIBLE;
+                moreToolsBody.setVisibility(show ? View.VISIBLE : View.GONE);
+                moreToolsArrow.setText(show ? "▾" : "▸");
             }
         });
         findViewById(R.id.btnScanPattern).setOnClickListener(new View.OnClickListener() {
