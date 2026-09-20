@@ -272,14 +272,14 @@ public class SplashActivity extends Activity {
         /** 白色墨描边贴纸:大→小过冲拍下 + 微旋转,拍定后高光斜扫 */
         private void drawSticker(Canvas c, float cx, float cy, float w) {
             String name = getString(R.string.app_name);
-            textPaint.setColor(0xFF2A2735);
+            textPaint.setColor(0xFF6750A4);   // 品牌文字:主紫(合同 §6)
             textPaint.setTextAlign(Paint.Align.CENTER);
             textPaint.setTextSize(w * 0.085f);
             textPaint.setFakeBoldText(true);
             float tw = textPaint.measureText(name);
             float th = textPaint.getTextSize();
             float sw = tw + dp(44f);
-            float sh = th + dp(30f);
+            float sh = th + dp(38f);
 
             // 拍击:scale 1.9→1(overshoot 会短暂压到 0.9x 再回弹),旋转 -14°→-4°
             float e = slapT;
@@ -294,23 +294,17 @@ public class SplashActivity extends Activity {
             c.translate(cx, cy);
             c.rotate(rot);
             c.scale(scale, scale);
-            // 墨色硬投影(贴纸语言)
-            stickerPaint.setColor(0x6640354E);
-            c.drawRoundRect(card.left - cx + dp(3f), card.top - cy + dp(4f),
-                    card.right - cx + dp(3f), card.bottom - cy + dp(4f),
-                    dp(16f), dp(16f), stickerPaint);
-            // 卡身
+            // 柔和投影(合同 §3:黑 8%,offset y2)
+            stickerPaint.setColor(0x14000000);
+            c.drawRoundRect(card.left - cx, card.top - cy + dp(2f),
+                    card.right - cx, card.bottom - cy + dp(2f),
+                    dp(20f), dp(20f), stickerPaint);
+            // 卡身(无描边,旧糖果贴纸的墨描边/硬投影已废弃)
             stickerPaint.setColor(0xFFFFFFFF);
             stickerPaint.setAlpha(Math.round(255 * alpha));
             c.drawRoundRect(card.left - cx, card.top - cy,
-                    card.right - cx, card.bottom - cy, dp(16f), dp(16f), stickerPaint);
-            // 2dp 墨描边
-            strokePaint.setStyle(Paint.Style.STROKE);
-            strokePaint.setStrokeWidth(dp(2f));
-            strokePaint.setColor(0xFF2A2735);
-            strokePaint.setAlpha(Math.round(255 * alpha));
-            c.drawRoundRect(card.left - cx, card.top - cy,
-                    card.right - cx, card.bottom - cy, dp(16f), dp(16f), strokePaint);
+                    card.right - cx, card.bottom - cy, dp(20f), dp(20f), stickerPaint);
+            strokePaint.setAlpha(0);
             // 高光斜扫(裁进卡身)
             if (shineT > 0f && shineT < 1f) {
                 float bandW = sw * 0.45f;
