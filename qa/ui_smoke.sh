@@ -323,6 +323,13 @@ ensure_home() {
   local n
   for n in 1 2 3; do
     dump_ui || true
+    # 首次启动引导(v2.60):CI 全新安装必弹,点 Skip 关掉(标题最唯一)
+    if grep -qi "Snap a photo, get a bead chart" ui.xml 2>/dev/null; then
+      log "onboarding present, skipping"
+      _tap_match "text=\"[^\"]*Skip[^\"]*\"" 0 || true
+      sleep 1.5
+      dump_ui || true
+    fi
     # 草稿恢复弹窗(自动草稿功能):测试路径不需要恢复,先点「Discard draft」
     if grep -qi "Unsaved draft found" ui.xml 2>/dev/null; then
       log "draft dialog present, discarding"
