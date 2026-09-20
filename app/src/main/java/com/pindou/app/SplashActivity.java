@@ -272,7 +272,7 @@ public class SplashActivity extends Activity {
         /** 白色墨描边贴纸:大→小过冲拍下 + 微旋转,拍定后高光斜扫 */
         private void drawSticker(Canvas c, float cx, float cy, float w) {
             String name = getString(R.string.app_name);
-            textPaint.setColor(0xFF6750A4);   // 品牌文字:主紫(合同 §6)
+            textPaint.setColor(0xFFFFFFFF);   // onPrimary:主紫卡上的白字
             textPaint.setTextAlign(Paint.Align.CENTER);
             textPaint.setTextSize(w * 0.085f);
             textPaint.setFakeBoldText(true);
@@ -299,12 +299,13 @@ public class SplashActivity extends Activity {
             c.drawRoundRect(card.left - cx, card.top - cy + dp(2f),
                     card.right - cx, card.bottom - cy + dp(2f),
                     dp(20f), dp(20f), stickerPaint);
-            // 卡身(无描边,旧糖果贴纸的墨描边/硬投影已废弃)
-            stickerPaint.setColor(0xFFFFFFFF);
+            // 卡身:主紫填充 + 白字(合同 §0 紫色只给主操作——品牌 logo 卡即主操作;
+            // 浅底上白卡对比不足,v2.60 曾因此"看不见动画")
+            stickerPaint.setColor(darkBg ? 0xFF4F378B : 0xFF6750A4);
             stickerPaint.setAlpha(Math.round(255 * alpha));
             c.drawRoundRect(card.left - cx, card.top - cy,
                     card.right - cx, card.bottom - cy, dp(20f), dp(20f), stickerPaint);
-            strokePaint.setAlpha(0);
+            textPaint.setAlpha(Math.round(255 * alpha));
             // 高光斜扫(裁进卡身)
             if (shineT > 0f && shineT < 1f) {
                 float bandW = sw * 0.45f;
