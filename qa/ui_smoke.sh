@@ -1072,9 +1072,13 @@ sleep 8
 snap textgen
 
 # ---------- v2.44:3D 效果预览(预览页右上角 chip) ----------
+tap_id fabFx 0
+sleep 1
 tap_id chip3d 0
 sleep 1.5
 snap effect3d
+tap_id fabFx 0
+sleep 1
 tap_id chip3d 0
 sleep 0.5
 back

@@ -217,6 +217,8 @@ for IMG in "${IMAGES[@]}"; do
   sleep 1
   adb shell dumpsys package $PKG 2>/dev/null | grep 'permission.CAMERA' | grep -q 'granted=true' \
     || log "soft-warn: CAMERA not granted in dumpsys"
+  tap_id fabFx 0   # 三视图入口收进 FAB(v2.60),先展开
+  sleep 1
   tap_id chipAr
   sleep 2.5
   log "resumed: $(adb shell 'dumpsys activity activities 2>/dev/null | grep -E "mResumedActivity" | head -1')"

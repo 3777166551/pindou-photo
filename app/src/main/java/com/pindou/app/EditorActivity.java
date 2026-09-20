@@ -200,6 +200,9 @@ public class EditorActivity extends Activity {
     private TextView regenPill;
     /** 一键开始拼豆(图纸就绪且辅助未开时可见) */
     private TextView btnStartBeading;
+    /** 预览右下角 FAB:展开 3D 预览/3D 把玩/AR 试摆三个入口(合同 §6 防遮挡) */
+    private TextView fabFx;
+    private boolean fxMenuOpen = false;
     /** 原始照片备份(AI 转图前),用于还原 */
     private Bitmap originalSource;
     private volatile boolean aiRunning = false;
@@ -505,20 +508,30 @@ public class EditorActivity extends Activity {
         previewFrame = findViewById(R.id.previewFrame);
         // 一键开始拼豆(合同 §8 体验):图纸就绪后出现,一键=切图纸页+开辅助+滚到面板
         btnStartBeading = findViewById(R.id.btnStartBeading);
+        // FAB 展开/收起三个视图入口(+ 旋转成 × 表示可收起)
+        fabFx = findViewById(R.id.fabFx);
+        final View chip3dV = findViewById(R.id.chip3d);
+        final View chipPlay3dV = findViewById(R.id.chipPlay3d);
+        final View chipArV = findViewById(R.id.chipAr);
+        fabFx.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                fxMenuOpen = !fxMenuOpen;
+                int vis = fxMenuOpen ? View.VISIBLE : View.GONE;
+                chip3dV.setVisibility(vis);
+                chipPlay3dV.setVisibility(vis);
+                chipArV.setVisibility(vis);
+                fabFx.setRotation(fxMenuOpen ? 45f : 0f);
+            }
+        });
         btnStartBeading.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                selectTab(1);   // 拼豆在图纸页进行
+                selectTab(1);   // 拼豆在图纸页进行(退出沉浸后停留于此)
                 if (!beadAssist) {
-                    swBeadAssist.setChecked(true);   // 触发监听(互斥画笔)→ setBeadAssist(true)
+                    swBeadAssist.setChecked(true);   // 触发监听(互斥画笔)→ setBeadAssist(true),首次弹用法说明
                 }
-                final View assistRow = (View) swBeadAssist.getParent();
-                controlsScroll.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        controlsScroll.smoothScrollTo(0, Math.max(0, assistRow.getTop()));
-                    }
-                });
+                enterImmersive();   // 直接进全屏沉浸拼豆(页内手势缩放,退出键/chip 退出)
             }
         });
         // 重新生成的非阻塞提示:小 pill 挂在预览下沿,旧图纸保持可见
