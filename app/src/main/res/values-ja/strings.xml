@@ -94,8 +94,15 @@
     <string name="exitguard_title">未保存の変更があります</string>
     <string name="exitguard_msg">この図案を変更しています。このまま戻ると変更は消えてしまいます。</string>
     <string name="exitguard_save">保存</string>
-    <string name="exitguard_leave">破棄して戻る</string>
+    <string name="exitguard_draft">下書き保存して戻る</string>
+    <string name="exitguard_leave">変更を破棄</string>
     <string name="exitguard_stay">続きを編集</string>
+    <!-- 自動下書き:編集のたびに保存,ホームから復元 -->
+    <string name="draft_name">未保存の下書き</string>
+    <string name="draft_found_title">未保存の下書きがあります 💾</string>
+    <string name="draft_found_msg">前回、未保存の変更がありました。下書きに残してあります。続きから始めますか?</string>
+    <string name="draft_restore">続きから始める</string>
+    <string name="draft_discard">下書きを捨てる</string>
     <string name="fmt_delete_confirm">「%s」を削除しますか?\n元に戻せません。</string>
     <string name="proj_unreadable_del">この保存データは読み込めないため、削除できます</string>
     <string name="merge_wait">保存済みの写真と設定から使用量を再計算しています…</string>

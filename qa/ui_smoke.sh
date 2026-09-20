@@ -221,12 +221,11 @@ gen_wait() {
 
 back() {
   adb shell input keyevent 4; sleep 1.5
-  # 退出守护弹窗(编辑器内有未保存手改时出现):点 Leave 再补一次返回。
-  # 正常路径 btnReset 已清空 editMap 不弹;此处兜底 soft-miss 情况(三原则④硬失败兜底)。
+  # 退出守护弹窗(编辑器内有未保存手改时出现):直接点「Discard changes」退出。
+  # 不能用返回键 dismiss——dismiss 后同屏再按返回会再次弹框(死循环)。
   if _tap_match "text=\"[^\"]*Leave without saving[^\"]*\"" 0; then
-    log "back-guard dialog: tapped Leave"
-    sleep 1.2
-    adb shell input keyevent 4
+    log "back-guard dialog: tapping Discard changes"
+    _tap_match "text=\"[^\"]*Discard changes[^\"]*\"" 0 || true
     sleep 1.5
   fi
 }
@@ -323,7 +322,15 @@ assist_off() {
 ensure_home() {
   local n
   for n in 1 2 3; do
-    dump_ui && grep -qi "text=\"[^\"]*Start a new pattern[^\"]*\"" ui.xml && {
+    dump_ui || true
+    # 草稿恢复弹窗(自动草稿功能):测试路径不需要恢复,先点「Discard draft」
+    if grep -qi "Unsaved draft found" ui.xml 2>/dev/null; then
+      log "draft dialog present, discarding"
+      _tap_match "text=\"[^\"]*Discard draft[^\"]*\"" 0 || true
+      sleep 1
+      dump_ui || true
+    fi
+    grep -qi "text=\"[^\"]*Start a new pattern[^\"]*\"" ui.xml && {
       log "home visible"; return 0
     }
     adb shell am start -n $PKG/.SplashActivity > /dev/null 2>&1

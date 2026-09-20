@@ -136,6 +136,44 @@ public class MainActivity extends Activity {
             }
         });
 
+        // 自动草稿:上次有改动没存档就离开了,问一下要不要继续(恢复走存档同款管道)
+        java.io.File autoDraft = new java.io.File(getFilesDir(), "autosave_draft.json");
+        if (autoDraft.exists() && autoDraft.length() > 0) {
+            try {
+                final byte[] rawDraft = com.pindou.app.util.Jsons.readBytes(autoDraft);
+                new AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.draft_found_title))
+                        .setMessage(getString(R.string.draft_found_msg))
+                        .setPositiveButton(getString(R.string.draft_restore),
+                                new android.content.DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(android.content.DialogInterface d, int w) {
+                                        try {
+                                            EditorActivity.pendingProjectJson =
+                                                    new String(rawDraft, "UTF-8");
+                                        } catch (java.io.UnsupportedEncodingException e) {
+                                            return;   // UTF-8 恒可用,防御性兜底
+                                        }
+                                        autoDraft.delete();   // 内容已交回编辑器
+                                        startActivity(new Intent(MainActivity.this,
+                                                EditorActivity.class));
+                                        overridePendingTransition(R.anim.enter_up,
+                                                R.anim.exit_dim);
+                                    }
+                                })
+                        .setNegativeButton(getString(R.string.draft_discard),
+                                new android.content.DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(android.content.DialogInterface d, int w) {
+                                        autoDraft.delete();
+                                    }
+                                })
+                        .show();
+            } catch (Exception ignored) {
+                // 草稿读不出来就当没有
+            }
+        }
+
         findViewById(R.id.btnGallery).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

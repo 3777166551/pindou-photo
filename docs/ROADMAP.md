@@ -57,6 +57,21 @@
   「📷 从相册选一张」直达主流程按钮(三语);③**触控目标**——W/H
   步进按钮 38×36→44×40dp。ui_smoke.sh back() 加守护弹窗兜底
   (dump 见 "Leave without saving" 就点 Leave 再补返回)。
+- **v2.59 自动草稿(2026-09-20,用户点名"每步存一下,不小心没了下次
+  打开还有")**:①**saveProjectNow 的 JSON 构造段抽成 buildProjectJson
+  (name,savedAt)**,正式存档与草稿共用一份格式(照片压缩/参数/手动修改/
+  拼豆进度/排除色/描摹底图全跟随);②**自动草稿落盘**——pushUndoState
+  (所有手动修改的统一入口)末尾挂 scheduleAutoSave:3 秒防抖(滚动合并
+  连续修改)写 filesDir/autosave_draft.json,失败静默;**onPause 兜底
+  强制落盘**(切后台/锁屏不丢);③**退出守护升级四选**——[存档][存草稿
+  并离开][不保存退出],「存草稿并离开」=先落草稿再 finish;「不保存
+  退出」才真删草稿;正式存档成功也清草稿;④**首页恢复**——onCreate
+  检测草稿文件存在即弹「发现上次没保存的草稿 💾」,[继续上次的]读字节
+  → pendingProjectJson → 存档同款管道进编辑器(完整状态还原),[丢弃
+  草稿]删文件;恢复点击时读出字节即删文件。⑤ui_smoke.sh:ensure_home
+  先检测 "Unsaved draft found" 弹窗点 Discard draft 再验首页;back()
+  兜底改点 "Discard changes" 按钮(返回键 dismiss 守护框会死循环,
+  已注释说明)。已验证 compile_check+qa 353 本地全绿。
 - **★ 下一个会话接着跑（按序,细节见「六」）**:
   1. **GIF 导出尺寸 bug(最高优先)**:真机实测导出成功但尺寸 100×208
      (预期长边 720),且帧内容空白——startGifExport() 的 playView

@@ -94,8 +94,15 @@
     <string name="exitguard_title">Unsaved changes</string>
     <string name="exitguard_msg">You changed this chart. If you leave now, those edits won\'t be kept.</string>
     <string name="exitguard_save">Save</string>
-    <string name="exitguard_leave">Leave</string>
+    <string name="exitguard_draft">Save draft &amp; leave</string>
+    <string name="exitguard_leave">Discard changes</string>
     <string name="exitguard_stay">Keep beading</string>
+    <!-- Auto draft: kept after every edit step, restorable from home -->
+    <string name="draft_name">Unsaved draft</string>
+    <string name="draft_found_title">Unsaved draft found 💾</string>
+    <string name="draft_found_msg">You left with unsaved changes last time — they are kept in a draft. Continue?</string>
+    <string name="draft_restore">Continue draft</string>
+    <string name="draft_discard">Discard draft</string>
     <string name="fmt_delete_confirm">Delete "%s"?\nThis can\'t be undone.</string>
     <string name="proj_unreadable_del">This save file is unreadable, you can delete it</string>
     <string name="merge_wait">Recalculating usage from saved photos and settings…</string>

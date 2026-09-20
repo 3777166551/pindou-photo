@@ -94,8 +94,15 @@
     <string name="exitguard_title">修改还没保存</string>
     <string name="exitguard_msg">你改过这张图纸,直接离开的话这些修改不会保留。</string>
     <string name="exitguard_save">存档</string>
-    <string name="exitguard_leave">直接离开</string>
+    <string name="exitguard_draft">存草稿并离开</string>
+    <string name="exitguard_leave">不保存退出</string>
     <string name="exitguard_stay">继续拼</string>
+    <!-- 自动草稿:每一步修改后自动留存,首页可恢复 -->
+    <string name="draft_name">未存档草稿</string>
+    <string name="draft_found_title">发现上次没保存的草稿 💾</string>
+    <string name="draft_found_msg">上次离开时有改动没存档,已经帮你留在草稿里了,要继续吗?</string>
+    <string name="draft_restore">继续上次的</string>
+    <string name="draft_discard">丢弃草稿</string>
     <string name="fmt_delete_confirm">确定删除「%s」吗?\n删除后不可恢复。</string>
     <string name="proj_unreadable_del">这个存档读不出来了,可以删掉它</string>
     <string name="merge_wait">按各项目保存的照片与参数重新计算用量,请稍等</string>

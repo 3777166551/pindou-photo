@@ -1407,6 +1407,7 @@ public class EditorActivity extends Activity {
         if (undoStack.size() > MAX_UNDO) undoStack.removeFirst();
         redoStack.clear();
         updateUndoRedoButtons();
+        scheduleAutoSave();   // 每一步手动修改 = 一次自动草稿机会(防抖合并)
     }
 
     private void undoEdit() {
@@ -3017,7 +3018,7 @@ public class EditorActivity extends Activity {
     /** 上次成功存档时的手动修改快照;与 editMap 不一致 = 有未保存的改动 */
     private java.util.Map<Integer, Integer> savedEditsSnapshot = new HashMap<>();
 
-    /** 退出守护:存档/直接离开/继续拼 三选;点对话框外 = 继续拼(默认取消) */
+    /** 退出守护:存档/存草稿并离开/不保存退出;点对话框外 = 继续拼(默认取消) */
     private void confirmLeave() {
         new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.exitguard_title))
@@ -3026,18 +3027,27 @@ public class EditorActivity extends Activity {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface d, int w) {
-                                saveProjectDialog();   // 存档成功回调里置 editsSaved
+                                saveProjectDialog();   // 存档成功回调里刷新快照并清草稿
                             }
                         })
-                .setNegativeButton(getString(R.string.exitguard_leave),
+                .setNegativeButton(getString(R.string.exitguard_draft),
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface d, int w) {
                                 d.dismiss();
+                                writeAutoDraft();   // 后台落草稿,下次首页可恢复
                                 finish();
                             }
                         })
-                .setNeutralButton(getString(R.string.exitguard_stay), null)
+                .setNeutralButton(getString(R.string.exitguard_leave),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface d, int w) {
+                                d.dismiss();
+                                autoDraftFile().delete();   // 明确不要了,草稿一并清掉
+                                finish();
+                            }
+                        })
                 .show();
     }
 
@@ -4722,68 +4732,7 @@ public class EditorActivity extends Activity {
             @Override
             public void run() {
                 try {
-                    JSONObject o = new JSONObject();
-                    o.put("name", name);
-                    o.put("savedAt", savedAt);
-                    o.put("blank", blankCanvas);
-
-                    JSONObject s = new JSONObject();
-                    s.put("cols", cols);
-                    s.put("rows", rows);
-                    s.put("tierIdx", tierIdx);
-                    s.put("dither", dither);
-                    s.put("brightness", brightness);
-                    s.put("contrast", contrast);
-                    s.put("saturation", saturation);
-                    s.put("style", style);
-                    s.put("lineSens", lineSensitivity);
-                    s.put("brickIdx", brickIdx);
-                    s.put("absUse", abstractUsePalette);
-                    s.put("absColors", abstractColors);
-                    s.put("absSnap", abstractSnap);
-                    s.put("bgOn", bgRemove);
-                    s.put("bgTol", bgTolerance);
-                    s.put("round", roundBoard);
-                    s.put("hex", hexBoard);
-                    s.put("limitIdx", maxColorsIdx);
-                    s.put("dominant", dominant);
-                    s.put("denoise", denoise);
-                    s.put("precise", preciseColor);
-                    s.put("mini", miniBead);
-                    o.put("settings", s);
-
-                    JSONArray ed = new JSONArray();
-                    for (Map.Entry<Integer, Integer> en : editMap.entrySet()) {
-                        JSONArray pair = new JSONArray();
-                        pair.put(en.getKey());
-                        pair.put(en.getValue());
-                        ed.put(pair);
-                    }
-                    o.put("edits", ed);
-                    if (imported && rawPattern != null) {
-                        // 导入图纸没有源照片,把完整格子数据存进项目才能再次打开
-                        o.put("share", PatternShare.build(rawPattern, name));
-                    }
-
-                    JSONArray bd = new JSONArray();
-                    for (int k : beadDone) bd.put(k);
-                    o.put("beadDone", bd);
-                    o.put("beadDoneDay", beadDoneDay);
-                    o.put("beadDoneToday", beadDoneToday);
-
-                    // 排除色:重开项目后继续生效
-                    JSONArray ex = new JSONArray();
-                    for (int rgb : excludedRgb) ex.put(rgb);
-                    o.put("excl", ex);
-
-                    if (!blankCanvas && source != null && !source.isRecycled()) {
-                        o.put("photo", Jsons.encodeBitmap(source, 1024, 85));
-                        o.put("thumb", Jsons.encodeBitmap(source, 160, 65));
-                    }
-                    // 描摹底图跟着项目存档,下次打开继续描
-                    if (traceBitmap != null && !traceBitmap.isRecycled()) {
-                        o.put("trace", Jsons.encodeBitmap(traceBitmap, 1024, 80));
-                    }
+                    JSONObject o = buildProjectJson(name, savedAt);
 
                     File f = ProjectStore.create(EditorActivity.this, name, savedAt);
                     Jsons.write(f, o);
@@ -4793,6 +4742,7 @@ public class EditorActivity extends Activity {
                         public void run() {
                             showLoading(false);
                             savedEditsSnapshot = new HashMap<>(editMap);   // 存档成功,刷新快照(退出守护基线)
+                            autoDraftFile().delete();   // 正式存档后草稿已完成使命
                             Toast.makeText(EditorActivity.this,
                                     getString(R.string.fmt_saved_proj, name),
                                     Toast.LENGTH_LONG).show();
@@ -4808,6 +4758,115 @@ public class EditorActivity extends Activity {
                                     Toast.LENGTH_LONG).show();
                         }
                     });
+                }
+            }
+        });
+    }
+
+    /** 构造项目存档 JSON(正式存档与自动草稿共用一份格式,v2.59) */
+    private JSONObject buildProjectJson(String name, long savedAt) throws Exception {
+        JSONObject o = new JSONObject();
+        o.put("name", name);
+        o.put("savedAt", savedAt);
+        o.put("blank", blankCanvas);
+
+        JSONObject s = new JSONObject();
+        s.put("cols", cols);
+        s.put("rows", rows);
+        s.put("tierIdx", tierIdx);
+        s.put("dither", dither);
+        s.put("brightness", brightness);
+        s.put("contrast", contrast);
+        s.put("saturation", saturation);
+        s.put("style", style);
+        s.put("lineSens", lineSensitivity);
+        s.put("brickIdx", brickIdx);
+        s.put("absUse", abstractUsePalette);
+        s.put("absColors", abstractColors);
+        s.put("absSnap", abstractSnap);
+        s.put("bgOn", bgRemove);
+        s.put("bgTol", bgTolerance);
+        s.put("round", roundBoard);
+        s.put("hex", hexBoard);
+        s.put("limitIdx", maxColorsIdx);
+        s.put("dominant", dominant);
+        s.put("denoise", denoise);
+        s.put("precise", preciseColor);
+        s.put("mini", miniBead);
+        o.put("settings", s);
+
+        JSONArray ed = new JSONArray();
+        for (Map.Entry<Integer, Integer> en : editMap.entrySet()) {
+            JSONArray pair = new JSONArray();
+            pair.put(en.getKey());
+            pair.put(en.getValue());
+            ed.put(pair);
+        }
+        o.put("edits", ed);
+        if (imported && rawPattern != null) {
+            // 导入图纸没有源照片,把完整格子数据存进项目才能再次打开
+            o.put("share", PatternShare.build(rawPattern, name));
+        }
+
+        JSONArray bd = new JSONArray();
+        for (int k : beadDone) bd.put(k);
+        o.put("beadDone", bd);
+        o.put("beadDoneDay", beadDoneDay);
+        o.put("beadDoneToday", beadDoneToday);
+
+        // 排除色:重开项目后继续生效
+        JSONArray ex = new JSONArray();
+        for (int rgb : excludedRgb) ex.put(rgb);
+        o.put("excl", ex);
+
+        if (!blankCanvas && source != null && !source.isRecycled()) {
+            o.put("photo", Jsons.encodeBitmap(source, 1024, 85));
+            o.put("thumb", Jsons.encodeBitmap(source, 160, 65));
+        }
+        // 描摹底图跟着项目存档,下次打开继续描
+        if (traceBitmap != null && !traceBitmap.isRecycled()) {
+            o.put("trace", Jsons.encodeBitmap(traceBitmap, 1024, 80));
+        }
+        return o;
+    }
+
+    // ---------------- 自动草稿(每一步修改后防抖落盘,手滑/被杀/没电都不丢) ----------------
+
+    private static final long AUTOSAVE_DEBOUNCE_MS = 3000L;
+    private final android.os.Handler autosaveHandler = new android.os.Handler();
+    private Runnable autosavePending;
+
+    private java.io.File autoDraftFile() {
+        return new java.io.File(getFilesDir(), "autosave_draft.json");
+    }
+
+    /** 每一步手动修改后调用:3 秒无新改动才落盘(滚动合并),切后台由 onPause 兜底 */
+    private void scheduleAutoSave() {
+        if (pattern == null) return;
+        if (autosavePending != null) autosaveHandler.removeCallbacks(autosavePending);
+        autosavePending = new Runnable() {
+            @Override
+            public void run() {
+                writeAutoDraft();
+            }
+        };
+        autosaveHandler.postDelayed(autosavePending, AUTOSAVE_DEBOUNCE_MS);
+    }
+
+    /** 立即落一份自动草稿(后台线程,失败静默——正式存档仍有退出守护兜底) */
+    private void writeAutoDraft() {
+        if (pattern == null) return;
+        if (blankCanvas && editMap.isEmpty()) return;   // 空画布没内容不存
+        final long now = System.currentTimeMillis();
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    JSONObject o = buildProjectJson(
+                            getString(R.string.draft_name), now);
+                    Jsons.write(autoDraftFile(), o);
+                } catch (Exception ignored) {
+                    // 草稿失败不惊扰用户
                 }
             }
         });
@@ -5060,6 +5119,17 @@ public class EditorActivity extends Activity {
             Toast.makeText(this, getString(R.string.err_no_storage), Toast.LENGTH_SHORT).show();
         }
         pendingExport = 0;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // 切后台/锁屏前兜底:把防抖里挂着的草稿立刻落盘
+        if (autosavePending != null) {
+            autosaveHandler.removeCallbacks(autosavePending);
+            autosavePending = null;
+            writeAutoDraft();
+        }
     }
 
     @Override
