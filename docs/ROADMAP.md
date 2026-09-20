@@ -44,7 +44,9 @@
   适配:新增 ensure_more_tools 助手(三原则①:dump 里查门控子控件
   btnScanPattern 不在才点 moreToolsHeader),5 处折叠区工具卡前插入;
   编辑页滑杆冒烟本就无依赖,零改动。已验证:compile_check+qa 353 全绿
-  本地过,CImoke 验收见 ci_shots_59c。
+  本地过,CI smoke 全绿(2cdadc9,截图 qa\ci_shots_59c\,首页一屏 6 入口
+  +编辑页折叠生效;ed0c956 docs 轮的 Hexagon 失败为冒烟时序 flake,
+  同代码 IA 轮同段全绿实证)。
 - **★ 下一个会话接着跑（按序,细节见「六」）**:
   1. **GIF 导出尺寸 bug(最高优先)**:真机实测导出成功但尺寸 100×208
      (预期长边 720),且帧内容空白——startGifExport() 的 playView
