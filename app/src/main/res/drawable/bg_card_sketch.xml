@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 工具小卡:与大卡同语言(surface-container-low + 16dp) -->
+<!-- 工具小卡:与大卡同语言(colorSurface + 24dp) -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="@color/surfaceContainerLow" />
-    <corners android:radius="16dp" />
+    <solid android:color="@color/colorSurface" />
+    <corners android:radius="24dp" />
 </shape>

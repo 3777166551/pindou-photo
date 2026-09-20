@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 大卡:M3 elevated card,surface-container-low 实底 + 16dp 圆角,
-     层次靠布局里的 elevation 属性(真投影),不用贴片。 -->
+<!-- 大卡(设计合同 §3):colorSurface + 24dp 圆角 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="@color/surfaceContainerLow" />
-    <corners android:radius="16dp" />
+    <solid android:color="@color/colorSurface" />
+    <corners android:radius="24dp" />
 </shape>

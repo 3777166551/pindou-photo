@@ -37,4 +37,17 @@
     <!-- 功能色 -->
     <color name="danger">#F2B8B5</color>
     <color name="tipAmber">#FFB74D</color>
+
+    <!-- ═══ 设计合同 token(深色) ═══ -->
+    <color name="colorPrimary">#D0BCFF</color>
+    <color name="colorPrimaryContainer">#4F378B</color>
+    <color name="colorBackground">#1C1B22</color>
+    <color name="colorSurface">#26232E</color>
+    <color name="colorStroke">#3A3547</color>
+    <color name="textPrimary">#E6E1E9</color>
+    <color name="textSecondary">#9A93A6</color>
+    <color name="colorSuccess">#6FCF9C</color>
+    <color name="colorWarning">#F0B35B</color>
+    <color name="colorDanger">#EF8A80</color>
+    <color name="onPrimaryContainerDim">#BFEADDFF</color>
 </resources>

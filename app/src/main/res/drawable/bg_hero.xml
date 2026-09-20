@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 首页英雄卡:M3 primary-container 色调卡,16dp 圆角,无描边无投影 -->
+<!-- 首页英雄卡(设计合同 §6/§8,用户拍板浅紫 container 底):
+     colorPrimaryContainer + 24dp 圆角,卡内次级文字用 onPrimaryContainerDim -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <solid android:color="@color/primaryContainer" />
-    <corners android:radius="16dp" />
+    <corners android:radius="24dp" />
 </shape>

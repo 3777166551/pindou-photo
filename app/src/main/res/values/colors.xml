@@ -52,4 +52,18 @@
     <color name="tipAmber">#A66300</color>
 
     <color name="ic_launcher_bg">#EADDFF</color>
+
+    <!-- ═══ 设计合同 token(docs/设计合同.md §1,逐页迁移,新代码只用这些) ═══ -->
+    <color name="colorPrimary">#6750A4</color>
+    <color name="colorPrimaryContainer">#EADDFF</color>
+    <color name="colorBackground">#FAF7FD</color>
+    <color name="colorSurface">#F3EFF9</color>
+    <color name="colorStroke">#E2D9F0</color>
+    <color name="textPrimary">#1D1B20</color>
+    <color name="textSecondary">#6B6577</color>
+    <color name="colorSuccess">#2E9E6B</color>
+    <color name="colorWarning">#E8A13D</color>
+    <color name="colorDanger">#C62828</color>
+    <!-- 主 CTA 卡片(浅紫 container 底)上的次级文字 -->
+    <color name="onPrimaryContainerDim">#BF21005D</color>
 </resources>

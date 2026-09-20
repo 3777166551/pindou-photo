@@ -37,11 +37,11 @@
         <item name="android:drawablePadding">7dp</item>
     </style>
 
-    <!-- 大按钮:M3 filled button = 40dp + label-large -->
+    <!-- 大按钮(设计合同 §6):高 52dp、正文档 17sp -->
     <style name="BigBtn">
-        <item name="android:layout_height">40dp</item>
+        <item name="android:layout_height">52dp</item>
         <item name="android:gravity">center</item>
-        <item name="android:textSize">15sp</item>
+        <item name="android:textSize">17sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:letterSpacing">0.02</item>
         <item name="android:clickable">true</item>
@@ -59,10 +59,18 @@
         <item name="android:elevation">2dp</item>
         <item name="android:gravity">center_horizontal</item>
         <item name="android:orientation">vertical</item>
-        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingRight">12dp</item>
         <item name="android:paddingBottom">12dp</item>
-        <item name="android:paddingStart">8dp</item>
-        <item name="android:paddingEnd">8dp</item>
+    </style>
+
+    <!-- 图标底板(设计合同 §4):48dp 线性图标盘,单色线性图标居中 -->
+    <style name="ToolCardIconPlate">
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:gravity">center</item>
     </style>
 
     <style name="ToolCardIcon">
@@ -77,7 +85,7 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">8dp</item>
-        <item name="android:textColor">@color/textMain</item>
+        <item name="android:textColor">@color/textPrimary</item>
         <item name="android:textSize">15sp</item>
         <item name="android:textStyle">bold</item>
     </style>
@@ -100,9 +108,9 @@
         <item name="android:elevation">2dp</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:orientation">horizontal</item>
-        <item name="android:paddingLeft">12dp</item>
-        <item name="android:paddingTop">10dp</item>
-        <item name="android:paddingRight">12dp</item>
-        <item name="android:paddingBottom">10dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:paddingBottom">12dp</item>
     </style>
 </resources>
