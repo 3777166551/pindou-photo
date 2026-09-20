@@ -32,7 +32,7 @@
     <TextView
         android:id="@+id/btnInventory"
         android:layout_width="match_parent"
-        android:layout_height="42dp"
+        android:layout_height="40dp"
         android:layout_marginTop="10dp"
         android:background="@drawable/bg_chip"
         android:clickable="true"
@@ -47,7 +47,7 @@
     <TextView
         android:id="@+id/btnPalettes"
         android:layout_width="match_parent"
-        android:layout_height="42dp"
+        android:layout_height="40dp"
         android:layout_marginTop="8dp"
         android:background="@drawable/bg_chip"
         android:clickable="true"
@@ -79,6 +79,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="@string/header_tip"
-        android:textColor="#B26A00"
+        android:textColor="@color/tipAmber"
         android:textSize="12sp" />
 </LinearLayout>

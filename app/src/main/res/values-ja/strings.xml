@@ -376,7 +376,33 @@
     <string name="menu_share">図案を共有</string>
     <string name="menu_pdf">PDFで書き出し</string>
     <string name="menu_more_exports">図案 / ファイルを書き出す…</string>
+    <string name="menu_import_json">📥 図案ファイルを読み込む(.json)</string>
     <string name="regen_hint">再生成中…</string>
+    <!-- アクセシビリティ:TalkBack 用の説明と読み上げ -->
+    <string name="a11y_back">戻る</string>
+    <string name="a11y_undo">元に戻す</string>
+    <string name="a11y_redo">やり直す</string>
+    <string name="a11y_w_minus">幅を減らす</string>
+    <string name="a11y_w_plus">幅を増やす</string>
+    <string name="a11y_h_minus">高さを減らす</string>
+    <string name="a11y_h_plus">高さを増やす</string>
+    <string name="a11y_assist_switch">ビーズアシスト</string>
+    <string name="a11y_board_canvas">図案キャンバス、タップして編集できます</string>
+    <string name="a11y_pattern_ready">図案が完成しました</string>
+    <string name="a11y_bead_complete">ビーズが完成しました、おめでとう!</string>
+    <!-- 初回起動 3 ページガイド -->
+    <string name="ob1_emoji">📷</string>
+    <string name="ob1_title">写真を撮って、図案に</string>
+    <string name="ob1_desc">写真を1枚選ぶだけ。30秒で印刷できる図案と買い物リスト、サイズも自動変換</string>
+    <string name="ob2_emoji">🧵</string>
+    <string name="ob2_title">図案どおり、一粒ずつ</string>
+    <string name="ob2_desc">色探し、板ごと、音声ガイド。完成したら写真で撮って、ミスをすぐチェック</string>
+    <string name="ob3_emoji">🔒</string>
+    <string name="ob3_title">完全オフライン、あなただけの作品</string>
+    <string name="ob3_desc">広告なし、アカウント不要、ネット接続なし。写真も図案もあなたのスマホの中だけ</string>
+    <string name="ob_next">次へ</string>
+    <string name="ob_skip">スキップ</string>
+    <string name="ob_done">ビーズを始める 🎉</string>
     <string name="menu_file">図案ファイルを書き出し(.json、共有用)</string>
     <string name="err_not_ready">図案はまだ生成中です。少しお待ちください</string>
     <string name="working_pdf">PDFを生成中…</string>

@@ -154,9 +154,16 @@ public class SplashActivity extends Activity {
         final float[] confDist = new float[14];
         final int[] confColor = new int[14];
 
+        /** 系统深色模式:底色/孔点颜色跟随(与窗口背景一致防闪色) */
+        private final boolean darkBg;
+
         SplashView() {
             super(SplashActivity.this);
-            setBackgroundColor(0xFFFEF7FF);
+            // 底色随系统深色模式(画布色与窗口背景保持一致防闪色)
+            int night = getResources().getConfiguration().uiMode
+                    & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+            darkBg = night == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+            setBackgroundColor(darkBg ? 0xFF141218 : 0xFFFEF7FF);
             setClickable(true);
             for (int i = 0; i < COLS * ROWS; i++) {
                 angles[i] = rnd.nextFloat() * 2f * (float) Math.PI;
@@ -183,12 +190,12 @@ public class SplashActivity extends Activity {
             float oy = (h - boardH) / 2f - h * 0.06f;
             float diag = (float) Math.sqrt(w * w + h * h);
 
-            // 拼板底 + 孔
-            boardPaint.setColor(0xFFFFFFFF);
+            // 拼板底 + 孔(深色模式下板底用卡片色)
+            boardPaint.setColor(darkBg ? 0xFF211F26 : 0xFFFFFFFF);
             float r = cell * 0.5f;
             canvas.drawRoundRect(ox - r, oy - r, ox + boardW + r, oy + boardH + r,
                     r * 1.6f, r * 1.6f, boardPaint);
-            pegPaint.setColor(0xFFEBE4F3);
+            pegPaint.setColor(darkBg ? 0xFF2B2833 : 0xFFEBE4F3);
             for (int y = 0; y < ROWS; y++) {
                 for (int x = 0; x < COLS; x++) {
                     canvas.drawCircle(ox + (x + 0.5f) * cell, oy + (y + 0.5f) * cell,

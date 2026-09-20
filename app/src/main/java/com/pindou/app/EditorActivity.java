@@ -94,6 +94,26 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * 编辑器(v2.60 维护导航图):全 APP 的核心工作台,约 5000 行。
+ * 按职责分块,找代码先看这里(自上而下大致顺序):
+ * ─ 常量与静态传递:pendingAction/pendingSource/pendingProjectJson(首页→编辑器)
+ * ─ 状态字段:图纸参数(cols/tierIdx/style…)/editMap 手动修改/beadDone 拼豆进度
+ * ─ onCreate/bindViews:视图绑定;setupTabs/setupControls/setupList 各面板装配
+ * ─ 生成管线:regenerate() 调 PatternEngine;workGrid 缓存 = 换色板秒切
+ *   (指纹 gridFingerprint 只含与色板无关的第 1~3 步入参);
+ *   showLoading 整屏蒙层仅首次,重生成用非阻塞 regenPill
+ * ─ 参数区:尺寸/色板/风格 chips 与折叠区(高级设置/图片处理/图片调整)
+ * ─ 拼豆辅助:setBeadAssist/toggleAssistCell/按板按行/沉浸层(immersive*)
+ * ─ 画笔:paintMode 与 brush 系列方法、吸管
+ * ─ 豆单:BeadAdapter/汇总/缺豆替代
+ * ─ 对话框族:导出菜单(showExportMenu 两级)/存档/价格/日历/替换色
+ * ─ 导出实现:export(int) 按常量分发(PNG/PDF/十字绣/分享…)
+ * ─ 持久化:buildProjectJson(存档与自动草稿共用格式)/loadProject/
+ *   DraftStore(草稿文件 IO)/savedEditsSnapshot(退出守护基线)
+ * 改动约定:布局 ID 不乱改(冒烟脚本按 resource-id 点击);
+ * 新增颜色一律走 values(-night)/colors.xml 的角色色,别写 0xFF 硬编码。
+ */
 public class EditorActivity extends Activity {
 
     public static final String EXTRA_PHOTO_URI = "photo_uri";
@@ -1932,7 +1952,7 @@ public class EditorActivity extends Activity {
         box.setPadding(pad, dp4(8), pad, 0);
         final TextView lab = new TextView(this);
         lab.setText(getString(R.string.style_strength) + ": " + strength[0] + "%");
-        lab.setTextColor(0xFF1D1B20);
+        lab.setTextColor(getColor(R.color.textMain));
         lab.setTextSize(14);
         box.addView(lab);
         SeekBar sb = new SeekBar(this);
@@ -2326,6 +2346,9 @@ public class EditorActivity extends Activity {
                         pattern = PatternPatch.apply(np, editMap);
                         patternView.setPattern(pattern);
                         if (immersiveView != null) immersiveView.setPattern(pattern);
+                        // 读屏用户的关键节点播报(无障碍)
+                        patternView.announceForAccessibility(
+                                getString(R.string.a11y_pattern_ready));
                         // 网格尺寸没变(仅调色/风格/品牌/规格等)时保留进度:
                         // 滑杆微调或重开项目都走 regenerate,无条件清空会把
                         // 用户标了几十格的进度抹掉;尺寸变了才清(索引全变)。
@@ -2477,6 +2500,10 @@ public class EditorActivity extends Activity {
             maybeCelebrate();
             // 庆祝动画在主界面,沉浸层开着会挡住它:拼满即退出沉浸页
             if (celebrated && immersiveOverlay != null) exitImmersive();
+        }
+        if (celebrated) {
+            patternView.announceForAccessibility(
+                    getString(R.string.a11y_bead_complete));
         }
     }
 
@@ -2654,7 +2681,7 @@ public class EditorActivity extends Activity {
         }
         TextView label = new TextView(this);
         label.setText(getString(R.string.excluded_bar, excludedRgb.size()));
-        label.setTextColor(0xFF666666);
+        label.setTextColor(getColor(R.color.textSub));
         label.setTextSize(12);
         label.setGravity(Gravity.CENTER_VERTICAL);
         label.setPadding(0, 0, 12, 0);
@@ -2727,7 +2754,7 @@ public class EditorActivity extends Activity {
             if (s.isEmpty()) continue;
             TextView tv = new TextView(this);
             tv.setText(s);
-            tv.setTextColor(0xFF333333);
+            tv.setTextColor(getColor(R.color.textMain));
             tv.setTextSize(13);
             tv.setGravity(Gravity.CENTER);
             tv.setPadding(0, pad / 2, 0, pad / 2);
@@ -2919,7 +2946,8 @@ public class EditorActivity extends Activity {
         int pad14 = Math.round(14 * den);
 
         android.widget.FrameLayout box = new android.widget.FrameLayout(this);
-        box.setBackgroundColor(nightMode ? 0xFF221E2C : 0xFFECE6F0);
+        box.setBackgroundColor(nightMode ? 0xFF221E2C
+                : getResources().getColor(R.color.subsurface));
 
         immersiveView = new PatternView(this);
         immersiveView.setMode(PatternView.MODE_PATTERN);
@@ -3351,7 +3379,7 @@ public class EditorActivity extends Activity {
 
                 TextView name = new TextView(EditorActivity.this);
                 name.setText(r.color.fullLabel());
-                name.setTextColor(0xFF1D1B20);
+                name.setTextColor(getColor(R.color.textMain));
                 name.setTextSize(13);
                 LinearLayout.LayoutParams nlp = new LinearLayout.LayoutParams(
                         0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
@@ -3567,7 +3595,7 @@ public class EditorActivity extends Activity {
             int have = BeadInventory.get(EditorActivity.this, uc.color.rgb);
             if (have < 0) {
                 inv.setText(getString(R.string.inv_unregistered));
-                inv.setTextColor(0xFF49454F);
+                inv.setTextColor(getColor(R.color.textSub));
             } else if (have >= uc.count) {
                 inv.setText(getString(R.string.fmt_inv_enough, have - uc.count));
                 inv.setTextColor(0xFF35C98E);
@@ -3686,7 +3714,7 @@ public class EditorActivity extends Activity {
             void addHeader(String title) {
                 TextView h = new TextView(EditorActivity.this);
                 h.setText(title);
-                h.setTextColor(0xFF1D1B20);
+                h.setTextColor(getColor(R.color.textMain));
                 h.setTextSize(12);
                 h.setTypeface(null, android.graphics.Typeface.BOLD);
                 h.setPadding(densityPad / 2, densityPad, densityPad / 2, densityPad / 4);
@@ -3952,7 +3980,7 @@ public class EditorActivity extends Activity {
         title.setPadding(Math.round(14 * dm), 0, Math.round(14 * dm), 0);
         title.setText(String.format(Locale.CHINA, getString(R.string.fmt_cal_title),
                 year, month + 1));
-        title.setTextColor(0xFF1D1B20);
+        title.setTextColor(getColor(R.color.textMain));
         title.setTextSize(16);
         title.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         head.addView(prev);
@@ -3968,7 +3996,7 @@ public class EditorActivity extends Activity {
             TextView tv = new TextView(this);
             tv.setText(w);
             tv.setTextSize(11);
-            tv.setTextColor(0xFF49454F);
+            tv.setTextColor(getColor(R.color.textSub));
             tv.setGravity(android.view.Gravity.CENTER);
             tv.setLayoutParams(new LinearLayout.LayoutParams(0,
                     LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
@@ -4010,7 +4038,7 @@ public class EditorActivity extends Activity {
             cell.setText(cnt > 0 ? d + "\n🔥" + cnt : String.valueOf(d));
             cell.setTextSize(10);
             if (thisMonth && d == today) {
-                cell.setTextColor(0xFF21005D);
+                cell.setTextColor(getResources().getColor(R.color.onPrimaryContainer));
                 cell.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
             } else {
                 cell.setTextColor(cnt > 0 ? 0xFFE65100 : 0xFFB9BEC5);
@@ -4060,7 +4088,7 @@ public class EditorActivity extends Activity {
         tv.setTextSize(14);
         int cp = Math.round(12 * getResources().getDisplayMetrics().density);
         tv.setPadding(cp, 0, cp, 0);
-        tv.setTextColor(0xFF1D1B20);
+        tv.setTextColor(getColor(R.color.textMain));
         tv.setClickable(true);
         return tv;
     }
@@ -4071,7 +4099,7 @@ public class EditorActivity extends Activity {
         menu.getMenu().add(0, EXP_SHARE, 1, getString(R.string.menu_share));
         menu.getMenu().add(1, 5, 2, getString(R.string.save_proj_title));
         menu.getMenu().add(0, EXP_MORE, 3, getString(R.string.menu_more_exports));
-        menu.getMenu().add(0, 11, 4, "?? 导入图纸文件(.json)");
+        menu.getMenu().add(0, 11, 4, getString(R.string.menu_import_json));
         android.view.MenuItem night = menu.getMenu().add(0, 9, 5,
                 nightMode ? R.string.menu_night_off : R.string.menu_night_on);
         night.setChecked(nightMode);
@@ -4577,7 +4605,7 @@ public class EditorActivity extends Activity {
         gd.setShape(GradientDrawable.OVAL);
         String label;
         if (eraseOn) {
-            gd.setColor(0xFFECE6F0);
+            gd.setColor(getResources().getColor(R.color.subsurface));
             label = getString(R.string.eraser_label);
         } else {
             ensureBrushDefault();
@@ -4919,7 +4947,7 @@ public class EditorActivity extends Activity {
     private Runnable autosavePending;
 
     private java.io.File autoDraftFile() {
-        return new java.io.File(getFilesDir(), "autosave_draft.json");
+        return com.pindou.app.util.DraftStore.file(this);
     }
 
     /** 每一步手动修改后调用:3 秒无新改动才落盘(滚动合并),切后台由 onPause 兜底 */
@@ -4946,7 +4974,8 @@ public class EditorActivity extends Activity {
                 try {
                     JSONObject o = buildProjectJson(
                             getString(R.string.draft_name), now);
-                    Jsons.write(autoDraftFile(), o);
+                    com.pindou.app.util.DraftStore.save(
+                            EditorActivity.this, o);
                 } catch (Exception ignored) {
                     // 草稿失败不惊扰用户
                 }

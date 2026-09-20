@@ -20,22 +20,29 @@
             android:layout_width="match_parent"
             android:layout_height="28dp" />
 
-        <!-- 标题(M3 headline) -->
+        <!-- 标题(M3 headline) + 品牌短条 -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:letterSpacing="0.02"
+            android:letterSpacing="0.03"
             android:text="@string/app_name"
             android:textColor="@color/textMain"
             android:textSize="28sp"
             android:textStyle="bold" />
 
+        <View
+            android:layout_width="40dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_crayon_line" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="10dp"
             android:text="@string/main_tagline"
             android:textColor="@color/textSub"
             android:textSize="13sp" />
@@ -44,10 +51,10 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="24dp"
             android:background="@drawable/bg_hero"
             android:orientation="vertical"
-            android:padding="18dp">
+            android:padding="20dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -90,18 +97,18 @@
                 android:id="@+id/btnGallery"
                 style="@style/BigBtn"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_marginTop="14dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="16dp"
                 android:background="@drawable/bg_btn_primary"
                 android:elevation="0dp"
                 android:text="@string/main_pick_gallery"
-                android:textColor="#FFFFFF" />
+                android:textColor="@color/onPrimary" />
 
             <TextView
                 android:id="@+id/btnCamera"
                 style="@style/BigBtn"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
+                android:layout_height="48dp"
                 android:layout_marginTop="10dp"
                 android:background="@drawable/bg_btn_white"
                 android:elevation="0dp"
@@ -112,12 +119,8 @@
         <!-- 继续拼:回访用户最高频动作,直接放主流程第二位 -->
         <LinearLayout
             android:id="@+id/btnProjects"
-            style="@style/ToolCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            style="@style/ToolCardWide"
+            android:layout_marginTop="16dp">
 
             <TextView style="@style/ToolCardIcon" android:text="🗂" android:background="@drawable/bg_icon_sky" />
 
@@ -209,11 +212,7 @@
 
             <LinearLayout
                 android:id="@+id/cardWatermark"
-                style="@style/ToolCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                style="@style/ToolCardWide">
 
                 <TextView style="@style/ToolCardIcon" android:text="🩹" android:background="@drawable/bg_icon_mint" />
 
@@ -286,12 +285,8 @@
             <!-- 备份与恢复:全量数据打包导出/导入(换机刚需) -->
             <LinearLayout
                 android:id="@+id/btnBackup"
-                style="@style/ToolCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                style="@style/ToolCardWide"
+                android:layout_marginTop="10dp">
 
                 <TextView style="@style/ToolCardIcon" android:text="📦" android:background="@drawable/bg_icon_butter" />
 

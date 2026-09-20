@@ -376,7 +376,33 @@
     <string name="menu_share">Share chart</string>
     <string name="menu_pdf">Export PDF document</string>
     <string name="menu_more_exports">Export chart / files…</string>
+    <string name="menu_import_json">📥 Import chart file (.json)</string>
     <string name="regen_hint">Regenerating…</string>
+    <!-- Accessibility: TalkBack descriptions and key announcements -->
+    <string name="a11y_back">Back</string>
+    <string name="a11y_undo">Undo</string>
+    <string name="a11y_redo">Redo</string>
+    <string name="a11y_w_minus">Decrease width</string>
+    <string name="a11y_w_plus">Increase width</string>
+    <string name="a11y_h_minus">Decrease height</string>
+    <string name="a11y_h_plus">Increase height</string>
+    <string name="a11y_assist_switch">Bead-along assist</string>
+    <string name="a11y_board_canvas">Bead chart canvas, tap cells to edit</string>
+    <string name="a11y_pattern_ready">Chart generated</string>
+    <string name="a11y_bead_complete">Beading complete, congratulations!</string>
+    <!-- First-run onboarding -->
+    <string name="ob1_emoji">📷</string>
+    <string name="ob1_title">Snap a photo, get a bead chart</string>
+    <string name="ob1_desc">Pick any photo — a printable chart and shopping list in 30 seconds, sizes auto-converted</string>
+    <string name="ob2_emoji">🧵</string>
+    <string name="ob2_title">Follow along, bead by bead</string>
+    <string name="ob2_desc">Color locating, per-board mode, voice guidance; snap a photo when done to spot mistakes instantly</string>
+    <string name="ob3_emoji">🔒</string>
+    <string name="ob3_title">Fully offline, yours only</string>
+    <string name="ob3_desc">No ads, no account, no internet needed; photos and charts stay on your phone only</string>
+    <string name="ob_next">Next</string>
+    <string name="ob_skip">Skip</string>
+    <string name="ob_done">Start beading 🎉</string>
     <string name="menu_file">Export chart file (.json, for others to import)</string>
     <string name="err_not_ready">Chart isn\'t ready yet, one moment</string>
     <string name="working_pdf">Generating PDF…</string>

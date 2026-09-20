@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 深色主题(v2.60):Material 3 深色基线角色值,跟随系统深色模式自动生效。
+     只覆盖与浅色不同的颜色;未定义的名字(如 ic_launcher_bg/各点缀色)
+     自动回落到 values/colors.xml——启动器图标与多巴胺点缀不随主题变。 -->
+<resources>
+    <!-- 墨色:仅存于代码级画布元素(框选/帧线),深色下用浅灰紫 -->
+    <color name="ink">#B9B3C7</color>
+    <color name="inkSoft">#49454F</color>
+
+    <!-- 底与卡(M3 深色 surface 层级) -->
+    <color name="bg">#141218</color>
+    <color name="card">#211F26</color>
+    <color name="subsurface">#2B2930</color>
+    <color name="line">#49454F</color>
+    <color name="stickerShadow">#0B090F</color>
+    <color name="surfaceContainerLow">#1D1B20</color>
+    <color name="primaryContainer">#4F378B</color>
+    <color name="onPrimaryContainer">#EADDFF</color>
+    <color name="secondaryContainer">#4A4458</color>
+    <color name="onSecondaryContainer">#E8DEF8</color>
+
+    <!-- 顶栏(半透明,随底色) -->
+    <color name="headerBg">#F2141218</color>
+
+    <!-- 主操作:深色下用浅紫(M3 dark primary),按钮文字切 onPrimary 深紫 -->
+    <color name="primary">#D0BCFF</color>
+    <color name="onPrimary">#381E72</color>
+    <color name="primaryDark">#4F378B</color>
+    <color name="primaryLight">#4F378B</color>
+    <color name="gradStart">#D0BCFF</color>
+    <color name="gradEnd">#D0BCFF</color>
+
+    <!-- 文字(M3 dark on-surface) -->
+    <color name="textMain">#E6E0E9</color>
+    <color name="textSub">#CAC4D0</color>
+
+    <!-- 功能色 -->
+    <color name="danger">#F2B8B5</color>
+    <color name="tipAmber">#FFB74D</color>
+</resources>

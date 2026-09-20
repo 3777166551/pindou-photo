@@ -89,6 +89,25 @@
   (pendingResumeAssist 在 regen 回调执行);ui_smoke.sh 导出四件套
   适配二级菜单(先点 Export chart)。已验证 compile_check+qa 358
   本地全绿。
+- **v2.60 无障碍+深色模式+引导+维护(2026-09-20,用户点名"三个都做+
+  维护 EditorActivity,暂不推 CI")**:①**深色模式**——values-night
+  M3 深色角色全套(bg #141218/primary #D0BCFF/onPrimary #381E72 等,
+  跟随系统深浅自动切换),夜间点阵贴图 drawable-night-nodpi
+  (GenPegboardTile 参数化),onPrimary 按钮角色色替换硬编码白字,
+  Java 约 40 处硬编码主题色全部资源化;相机三页(FakeAr/Verify/
+  ProjectAlign)恒定深底设计不随主题;深浅切换会重建 Activity,
+  编辑器内改动由自动草稿兜底;②**无障碍**——字形按钮(返回/撤销/
+  重做/宽高步进)与辅助开关、图纸画布补 contentDescription 三语,
+  生成完成/拼豆完成两处 announceForAccessibility 播报;③**新手
+  引导**——OnboardingActivity 三页(拍照出图纸/跟着拼/离线私密),
+  首启弹一次(prefs onboard_done),纯代码构建跟随主题,Manifest 已注册;
+  ④**维护**——DraftStore 工具类收口草稿文件 IO;删死资产
+  bg_pastel.png(660KB)+bg_hero_pastel.png(共减包约 670KB);
+  EditorActivity 类顶导航图注释;排版美化:首页品牌短条+hero 按钮
+  48dp+ToolCardWide 宽卡样式(修宽卡空旷毛边)+8dp 网格间距,
+  编辑页顶栏 58→64dp,豆单头按钮 40dp,提示琥珀色资源化
+  (tipAmber 双主题),导入菜单 i18n(原硬编码中文+?? 乱码)。
+  已验证 compile_check+qa 363 本地全绿;**暂未推 CI(用户要求先看)**。
 - **★ 下一个会话接着跑（按序,细节见「六」）**:
   1. **GIF 导出尺寸 bug(最高优先)**:真机实测导出成功但尺寸 100×208
      (预期长边 720),且帧内容空白——startGifExport() 的 playView

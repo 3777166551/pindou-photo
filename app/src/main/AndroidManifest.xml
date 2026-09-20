@@ -41,6 +41,12 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
+        <!-- 首次启动三页引导(v2.60) -->
+        <activity
+            android:name=".OnboardingActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
         <activity
             android:name=".EditorActivity"
             android:exported="true"

@@ -9,10 +9,10 @@
         android:background="@drawable/bg_pegboard"
         android:orientation="vertical">
 
-        <!-- 渐变顶栏 -->
+        <!-- 顶栏(M3 top app bar 64dp) -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="58dp"
+            android:layout_height="64dp"
             android:background="@drawable/bg_header"
             android:elevation="6dp"
             android:gravity="center_vertical"
@@ -27,6 +27,7 @@
                 android:gravity="center"
                 android:paddingStart="16dp"
                 android:paddingEnd="8dp"
+                android:contentDescription="@string/a11y_back"
                 android:text="‹"
                 android:textColor="@color/textMain"
                 android:textSize="30sp"
@@ -50,6 +51,7 @@
                 android:gravity="center"
                 android:paddingStart="10dp"
                 android:paddingEnd="6dp"
+                android:contentDescription="@string/a11y_undo"
                 android:text="↺"
                 android:textColor="@color/textMain"
                 android:textSize="22sp"
@@ -64,6 +66,7 @@
                 android:gravity="center"
                 android:paddingStart="6dp"
                 android:paddingEnd="8dp"
+                android:contentDescription="@string/a11y_redo"
                 android:text="↪"
                 android:textColor="@color/textMain"
                 android:textSize="22sp"
@@ -83,7 +86,7 @@
                 android:paddingStart="18dp"
                 android:paddingEnd="18dp"
                 android:text="@string/btn_share"
-                android:textColor="@android:color/white"
+                android:textColor="@color/onPrimary"
                 android:textSize="14sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -155,7 +158,8 @@
             <com.pindou.app.view.PatternView
                 android:id="@+id/patternView"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:contentDescription="@string/a11y_board_canvas" />
 
             <TextView
                 android:id="@+id/chip3d"
@@ -352,6 +356,7 @@
                         android:id="@+id/btnWMinus"
                         android:layout_width="44dp"
                         android:layout_height="40dp"
+                        android:contentDescription="@string/a11y_w_minus"
                         android:layout_marginStart="8dp"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
@@ -377,6 +382,7 @@
                         android:id="@+id/btnWPlus"
                         android:layout_width="44dp"
                         android:layout_height="40dp"
+                        android:contentDescription="@string/a11y_w_plus"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
                         android:elevation="2dp"
@@ -403,6 +409,7 @@
                         android:id="@+id/btnHMinus"
                         android:layout_width="44dp"
                         android:layout_height="40dp"
+                        android:contentDescription="@string/a11y_h_minus"
                         android:layout_marginStart="8dp"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
@@ -428,6 +435,7 @@
                         android:id="@+id/btnHPlus"
                         android:layout_width="44dp"
                         android:layout_height="40dp"
+                        android:contentDescription="@string/a11y_h_plus"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
                         android:elevation="2dp"
@@ -1609,7 +1617,8 @@
                         <Switch
                             android:id="@+id/swBeadAssist"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            android:contentDescription="@string/a11y_assist_switch" />
                     </LinearLayout>
 
                     <LinearLayout

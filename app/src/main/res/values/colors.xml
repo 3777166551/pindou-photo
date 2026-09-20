@@ -21,8 +21,12 @@
     <color name="secondaryContainer">#E8DEF8</color>
     <color name="onSecondaryContainer">#1D192B</color>
 
-    <!-- 主操作:M3 基线紫 -->
+    <!-- 顶栏(半透明,随底色) -->
+    <color name="headerBg">#F2F7F7FB</color>
+
+    <!-- 主操作:M3 基线紫;onPrimary = 主按钮上的文字色(深色主题切深紫) -->
     <color name="primary">#6750A4</color>
+    <color name="onPrimary">#FFFFFF</color>
     <color name="primaryDark">#4F378A</color>
     <color name="primaryLight">#EADDFF</color>
     <color name="gradStart">#6750A4</color>
@@ -44,6 +48,8 @@
     <color name="peach">#FF9A6B</color>
     <color name="peachSoft">#FFE8DB</color>
     <color name="danger">#B3261E</color>
+    <!-- 提示文字的琥珀色(浅底深琥珀/深底浅琥珀) -->
+    <color name="tipAmber">#A66300</color>
 
     <color name="ic_launcher_bg">#EADDFF</color>
 </resources>

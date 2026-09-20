@@ -376,7 +376,33 @@
     <string name="menu_share">分享图纸</string>
     <string name="menu_pdf">导出 PDF 文档</string>
     <string name="menu_more_exports">导出图纸 / 文件…</string>
+    <string name="menu_import_json">📥 导入图纸文件(.json)</string>
     <string name="regen_hint">重新生成中…</string>
+    <!-- 无障碍:读屏(TalkBack)用描述与关键节点播报 -->
+    <string name="a11y_back">返回</string>
+    <string name="a11y_undo">撤销</string>
+    <string name="a11y_redo">重做</string>
+    <string name="a11y_w_minus">宽度减一</string>
+    <string name="a11y_w_plus">宽度加一</string>
+    <string name="a11y_h_minus">高度减一</string>
+    <string name="a11y_h_plus">高度加一</string>
+    <string name="a11y_assist_switch">拼豆辅助</string>
+    <string name="a11y_board_canvas">拼豆图纸画布,可用手指点格修改</string>
+    <string name="a11y_pattern_ready">图纸生成完成</string>
+    <string name="a11y_bead_complete">拼豆完成,恭喜你!</string>
+    <!-- 首次启动三页引导 -->
+    <string name="ob1_emoji">📷</string>
+    <string name="ob1_title">拍张照片,变成拼豆图纸</string>
+    <string name="ob1_desc">选一张照片,30 秒生成可打印的图纸和购买清单,尺寸自动换算</string>
+    <string name="ob2_emoji">🧵</string>
+    <string name="ob2_title">跟着图纸,一颗一颗拼</string>
+    <string name="ob2_desc">逐色定位、按板拼、语音报色;拼完了拍张照,摆错漏拼一眼就能查</string>
+    <string name="ob3_emoji">🔒</string>
+    <string name="ob3_title">完全离线,作品只属于你</string>
+    <string name="ob3_desc">无广告、无账号、不需要网络;照片和图纸都只存在你自己的手机里</string>
+    <string name="ob_next">下一步</string>
+    <string name="ob_skip">跳过</string>
+    <string name="ob_done">开始拼豆 🎉</string>
     <string name="menu_file">导出图纸文件(.json,发给别人导入)</string>
     <string name="err_not_ready">图纸还没生成好,稍等一下</string>
     <string name="working_pdf">正在生成 PDF…</string>
