@@ -73,13 +73,20 @@ public final class PatternEngine {
         return generate(source, beadPalette, o, null);
     }
 
-    /** 工作网格像素缓存:与色板无关的第 1~3 步产物(裁剪/重采样/画面调节)。
-     *  换色板/限色/抖动等只影响第 4 步之后的设置,用它重映射毫秒级出图。 */
+    /** 工作网格缓存(先配后投路径):每格的源像素清单 + 自动提亮门控参数。
+     *  换色板/限色只影响"投"的阶段,用它重投票秒级出图。 */
     public static final class WorkGrid {
-        public int[] px;
+        /** 每格源像素按格序拼接 */
+        public int[] cellPix;
+        /** cellStart[格下标] 起、cellStart[格下标+1] 止(半开区间) */
+        public int[] cellStart;
         public int gw;
         public int gh;
         public int brick;
+        /** 自动提亮增益(V11 照片欠曝门控);1.0 = 不干预 */
+        public float gateGain = 1f;
+        /** 门控激活时的饱和增益 */
+        public float gateSat = 1f;
     }
 
     public static BeadPattern generate(Bitmap source, List<BeadColor> beadPalette,
@@ -137,9 +144,17 @@ public final class PatternEngine {
         }
         if (cropped != source) cropped.recycle();
 
-        // 2.5 工作网格像素:盒式面积平均降采样(块内所有源像素都参与,
-        //     不像双线性大比例缩小只采零星几个点);开去背景时先在高分辨率上
-        //     求掩码,再按覆盖率逐格加权平均--背景色不混进主体边缘
+        // 2.5 取色管线二分(调研 04 §8:先配后投为写实默认;均值族保留给
+        //     抖动/去背景/众数/抽象路径):
+        //     先配后投 = 逐像素先配豆(LUT)再格内多数票——幻影混合色机制上不存在;
+        //     均值路径 = 盒平均出格色再就近配豆(承载 FS 抖动语义)。
+        boolean votePath = !abs && !lineArt && !o.dither && !o.bgRemove && !o.dominant;
+        if (votePath) {
+            WorkGrid grid = (out != null) ? out : new WorkGrid();
+            buildVoteGrid(srcPx, pw, ph, gw, gh, b, grid);
+            return finishVote(grid, beadPalette, o, cols, rows);
+        }
+
         int[] px;
         if (o.bgRemove) {
             px = gridWithBackground(srcPx, pw, ph, gw, gh, o.bgTolerance);
@@ -155,25 +170,23 @@ public final class PatternEngine {
                 px[i] = ColorMath.adjust(px[i], o.brightness, o.contrast, o.saturation);
             }
         }
-
-        if (out != null) {
-            out.px = px;
-            out.gw = gw;
-            out.gh = gh;
-            out.brick = b;
-        }
         return finishGenerate(px, gw, gh, b, srcPx, pw, ph, beadPalette, o, cols, rows);
     }
 
-    /** 网格缓存路径:跳过裁剪/重采样/调色,只重跑色板就近匹配及之后(换色板/限色秒出)。
-     *  不支持线稿模式——线稿就近匹配需要全分辨率源像素,请走 generate。 */
+    /** 网格缓存路径:只重跑"投"的阶段(重建 LUT+重投票,换色板/限色秒出)。
+     *  仅支持写实非抖动(先配后投);线稿/抖动走 generate。 */
     public static BeadPattern generateFromGrid(WorkGrid g, List<BeadColor> beadPalette,
                                                Options o, int cols, int rows) {
         if (o.style == STYLE_LINEART) {
             throw new IllegalArgumentException("generateFromGrid does not support line art");
         }
-        return finishGenerate(g.px, g.gw, g.gh, g.brick, null, 0, 0,
-                beadPalette, o, cols, rows);
+        if (o.dither) {
+            throw new IllegalArgumentException("generateFromGrid does not support dither");
+        }
+        if (g.cellPix == null) {
+            throw new IllegalStateException("WorkGrid has no cell pixels (vote path only)");
+        }
+        return finishVote(g, beadPalette, o, cols, rows);
     }
 
     private static BeadPattern finishGenerate(int[] px, int gw, int gh, int b,
@@ -198,7 +211,6 @@ public final class PatternEngine {
         // 5. 工作网格逐块匹配最近豆色(可选 FS 抖动在块层面扩散);
         //    线稿模式不走最近色匹配,直接由梯度描线得出格子
         int[] workCells;
-        int[] counts = new int[Math.max(1, n)];
         if (lineArt) {
             // 亮度/对比度/饱和度先作用于全分辨率像素(对比度直接影响梯度强度)
             int[] src = srcPx;
@@ -267,6 +279,16 @@ public final class PatternEngine {
             Arrays.fill(workCells, -1);
         }
 
+        return finishPattern(workCells, gw, gh, b, palette, o, cols, rows);
+    }
+
+    /** 尾段:展开画幅 → 形状蒙版 → 杂色清理 → 限色 → 统计(投票/均值两路径共用) */
+    private static BeadPattern finishPattern(int[] workCells, int gw, int gh, int b,
+                                             List<BeadColor> palette, Options o,
+                                             int cols, int rows) {
+        int n = palette.size();
+        int[] counts = new int[Math.max(1, n)];
+
         // 6. 展开成最终画幅(一块填满 b×b 颗豆),并统计用量
         int[] cells = new int[cols * rows];
         Arrays.fill(cells, -1);
@@ -319,6 +341,138 @@ public final class PatternEngine {
 
         return new BeadPattern(cols, rows, palette, cells, counts, used, total, empty,
                 o.roundBoard, o.hexBoard);
+    }
+
+    // ---------------- 先配后投(调研 04:V6/V11,写实默认路径) ----------------
+
+    private static int clamp8(int v) {
+        return v < 0 ? 0 : (v > 255 ? 255 : v);
+    }
+
+    /** 逐像素配豆查找表:RGB 各 4 位量化 → 豆下标(4096 项,配一次投全图) */
+    private static int[] buildLut(List<BeadColor> palette, boolean precise) {
+        int[] lut = new int[4096];
+        double[][] labs = new double[Math.max(1, palette.size())][];
+        for (int i = 0; i < palette.size(); i++) {
+            labs[i] = ColorMath.rgbToLab(palette.get(i).rgb);
+        }
+        for (int key = 0; key < 4096; key++) {
+            int r = ((key >> 8) & 0xF) * 17 + 8;   // 桶中心
+            int g = ((key >> 4) & 0xF) * 17 + 8;
+            int b = (key & 0xF) * 17 + 8;
+            double[] lab = ColorMath.rgbToLab(0xFF000000 | (r << 16) | (g << 8) | b);
+            lut[key] = palette.isEmpty() ? -1
+                    : (precise ? nearestPrecise(labs, lab[0], lab[1], lab[2])
+                               : nearest(labs, lab[0], lab[1], lab[2]));
+        }
+        return lut;
+    }
+
+    /** 构建每格源像素清单 + 自动提亮门控(V11:图形/照片二分,只提亮不压暗)。
+     *  门控判据 = 4bit 色桶数(≥64 判照片)且平均亮度 <125;增益 ≤1.35、饱和 ×1.10。
+     *  桶阈值 64 为初版,待真机图库标定(报告 §8)。 */
+    private static void buildVoteGrid(int[] srcPx, int pw, int ph,
+                                      int gw, int gh, int b, WorkGrid grid) {
+        int cells = gw * gh;
+        int[] cellOf = new int[srcPx.length];
+        int[] cnt = new int[cells];
+        for (int y = 0; y < ph; y++) {
+            int cy = (int) ((long) y * gh / ph);
+            if (cy >= gh) cy = gh - 1;
+            int rowBase = y * pw;
+            for (int x = 0; x < pw; x++) {
+                int cx = (int) ((long) x * gw / pw);
+                if (cx >= gw) cx = gw - 1;
+                int c = cy * gw + cx;
+                cellOf[rowBase + x] = c;
+                cnt[c]++;
+            }
+        }
+        int[] start = new int[cells + 1];
+        for (int i = 0; i < cells; i++) start[i + 1] = start[i] + cnt[i];
+        int[] pix = new int[srcPx.length];
+        int[] cur = new int[cells];
+        System.arraycopy(start, 0, cur, 0, cells);
+        long lumSum = 0;
+        int opaque = 0;
+        java.util.BitSet buckets = new java.util.BitSet(4096);
+        for (int i = 0; i < srcPx.length; i++) {
+            int p = srcPx[i];
+            pix[cur[cellOf[i]]++] = p;
+            if ((p >>> 24) >= 128) {
+                opaque++;
+                int r = (p >> 16) & 0xFF, g = (p >> 8) & 0xFF, bl = p & 0xFF;
+                lumSum += (r * 299 + g * 587 + bl * 114) / 1000;
+                buckets.set(((r >> 4) << 8) | ((g >> 4) << 4) | (bl >> 4));
+            }
+        }
+        grid.cellPix = pix;
+        grid.cellStart = start;
+        grid.gw = gw;
+        grid.gh = gh;
+        grid.brick = b;
+        grid.gateGain = 1f;
+        grid.gateSat = 1f;
+        if (opaque > 0) {
+            int meanLum = (int) (lumSum / opaque);
+            if (buckets.cardinality() >= 64 && meanLum < 125) {
+                grid.gateGain = Math.min(1.35f, 125f / Math.max(1, meanLum));
+                grid.gateSat = 1.10f;
+            }
+        }
+    }
+
+    /** 投:逐像素 LUT 配豆后格内多数票——同一片纯色的格子投同一颗豆,
+     *  边缘混合色被多数票吸收,幻影杂色机制上不存在(调研 04 §三) */
+    private static BeadPattern finishVote(WorkGrid g, List<BeadColor> beadPalette,
+                                          Options o, int cols, int rows) {
+        List<BeadColor> palette = beadPalette;
+        int n = palette.size();
+        int[] lut = buildLut(palette, o.preciseColor);
+        boolean gate = g.gateGain > 1f;
+        int cells = g.gw * g.gh;
+        int[] workCells = new int[cells];
+        int[] hist = new int[Math.max(1, n)];
+        boolean adjust = o.brightness != 0 || o.contrast != 0 || o.saturation != 0;
+        for (int c = 0; c < cells; c++) {
+            int s = g.cellStart[c], e = g.cellStart[c + 1];
+            int total = e - s;
+            int opaque = 0;
+            if (n > 0) Arrays.fill(hist, 0, n, 0);
+            for (int i = s; i < e; i++) {
+                int p = g.cellPix[i];
+                if (((p >>> 24) & 0xFF) < 128) continue;
+                opaque++;
+                int r = (p >> 16) & 0xFF, gr = (p >> 8) & 0xFF, bl = p & 0xFF;
+                if (gate) {
+                    r = clamp8(Math.round(r * g.gateGain));
+                    gr = clamp8(Math.round(gr * g.gateGain));
+                    bl = clamp8(Math.round(bl * g.gateGain));
+                    int gray = (r * 299 + gr * 587 + bl * 114) / 1000;
+                    r = clamp8(gray + Math.round((r - gray) * g.gateSat));
+                    gr = clamp8(gray + Math.round((gr - gray) * g.gateSat));
+                    bl = clamp8(gray + Math.round((bl - gray) * g.gateSat));
+                }
+                if (adjust) {
+                    p = ColorMath.adjust(0xFF000000 | (r << 16) | (gr << 8) | bl,
+                            o.brightness, o.contrast, o.saturation);
+                    r = (p >> 16) & 0xFF;
+                    gr = (p >> 8) & 0xFF;
+                    bl = p & 0xFF;
+                }
+                hist[lut[((r >> 4) << 8) | ((gr >> 4) << 4) | (bl >> 4)]]++;
+            }
+            if (n == 0 || opaque * 2 < total) {
+                workCells[c] = -1;   // 不透明不足半数 = 空格(与盒平均 alpha 阈值同语义)
+                continue;
+            }
+            int best = 0;
+            for (int i = 1; i < n; i++) {
+                if (hist[i] > hist[best]) best = i;
+            }
+            workCells[c] = best;
+        }
+        return finishPattern(workCells, g.gw, g.gh, g.brick, palette, o, cols, rows);
     }
 
     /**

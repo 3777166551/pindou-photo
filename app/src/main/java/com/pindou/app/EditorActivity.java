@@ -2301,7 +2301,7 @@ public class EditorActivity extends Activity {
                 + "|" + cols + "|" + rows + "|" + brickIdx
                 + "|" + brightness + "|" + contrast + "|" + saturation
                 + "|" + style + "|" + bgRemove + "|" + bgTolerance
-                + "|" + dominant;
+                + "|" + dominant + "|" + dither;
     }
 
     private void regenerate() {
@@ -2357,8 +2357,11 @@ public class EditorActivity extends Activity {
         // 指纹只含第 1~3 步入参(源图/尺寸/砖块/画面调节/去背景等);
         // 限色/抖动/精准配色/形状/杂色清理都在第 4 步之后,改它们同样秒出。
         final String gridKey = gridFingerprint();
-        final boolean fastGrid = workGrid != null && gridKey.equals(workGridKey)
-                && style != PatternEngine.STYLE_LINEART && !blankCanvas;
+        // 快路径 = 先配后投缓存有效(写实非抖动/非去背景/非众数;这些开关切均值路径)
+        final boolean fastGrid = workGrid != null && workGrid.cellPix != null
+                && gridKey.equals(workGridKey)
+                && style != PatternEngine.STYLE_LINEART && !blankCanvas
+                && !dither && !bgRemove && !dominant;
         final PatternEngine.WorkGrid sink = fastGrid ? null : new PatternEngine.WorkGrid();
         final int fCols = cols;
         final int fRows = rows;

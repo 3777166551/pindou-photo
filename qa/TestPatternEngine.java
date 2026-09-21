@@ -107,7 +107,7 @@ public class TestPatternEngine {
                         && PatternEngine.symbolFor(61).equals("9")
                         && PatternEngine.symbolFor(62).equals("AA"));
 
-        // ---- generateFromGrid:网格缓存路径(纯数组,不依赖 Bitmap;换色板秒切的基础) ----
+        // ---- generateFromGrid:先配后投(逐像素 LUT 配豆 + 格内多数票) ----
         java.util.List<com.pindou.app.bead.BeadColor> pal = new java.util.ArrayList<>();
         pal.add(new com.pindou.app.bead.BeadColor(1, "R", 0xFFE53935));
         pal.add(new com.pindou.app.bead.BeadColor(2, "G", 0xFF43A047));
@@ -117,40 +117,74 @@ public class TestPatternEngine {
         g.gw = 2;
         g.gh = 2;
         g.brick = 1;
-        g.px = new int[]{0xFFE53935, 0xFF43A047, 0xFF1E88E5, 0x00000000};
+        // 每格 1 像素(4 格):红/绿/蓝/全透明
+        g.cellPix = new int[]{0xFFE53935, 0xFF43A047, 0xFF1E88E5, 0x00000000};
+        g.cellStart = new int[]{0, 1, 2, 3, 4};
 
         PatternEngine.Options og = new PatternEngine.Options();
         og.cols = 2;
         og.rows = 2;
         og.dither = false;
         com.pindou.app.bead.BeadPattern p1 = PatternEngine.generateFromGrid(g, pal, og, 2, 2);
-        check("generateFromGrid nearest match + transparent cell", p1 != null
+        check("generateFromGrid vote match + transparent cell", p1 != null
                 && p1.cols == 2 && p1.rows == 2
                 && p1.cellAt(0, 0) == 0 && p1.cellAt(1, 0) == 1
                 && p1.cellAt(0, 1) == 2 && p1.cellAt(1, 1) == -1);
         check("generateFromGrid usage stats", p1.usedColors.size() == 3 && p1.totalBeads == 3);
 
-        // 换色板重映射:同一网格像素,新色板秒出
+        // 多数票定义性测试:一格 3 红 1 蓝 → 投红(均值法会混合出幻影色)
+        PatternEngine.WorkGrid g2 = new PatternEngine.WorkGrid();
+        g2.gw = 1;
+        g2.gh = 1;
+        g2.brick = 2;
+        g2.cellPix = new int[]{0xFFE53935, 0xFFE53935, 0xFFE53935, 0xFF1E88E5};
+        g2.cellStart = new int[]{0, 4};
+        com.pindou.app.bead.BeadPattern p2 = PatternEngine.generateFromGrid(g2, pal, og, 2, 2);
+        check("generateFromGrid majority vote keeps dominant color", p2 != null
+                && p2.usedColors.size() == 1
+                && p2.cellAt(0, 0) == 0 && p2.cellAt(1, 1) == 0 && p2.totalBeads == 4);
+
+        // 不透明不足半数 = 空格(1 红配 3 透明)
+        PatternEngine.WorkGrid g3 = new PatternEngine.WorkGrid();
+        g3.gw = 1;
+        g3.gh = 1;
+        g3.brick = 2;
+        g3.cellPix = new int[]{0xFFE53935, 0x00000000, 0x00000000, 0x00000000};
+        g3.cellStart = new int[]{0, 4};
+        com.pindou.app.bead.BeadPattern p3 = PatternEngine.generateFromGrid(g3, pal, og, 2, 2);
+        check("generateFromGrid minority opaque -> empty cell", p3 != null
+                && p3.totalBeads == 0 && p3.cellAt(0, 0) == -1);
+
+        // 换色板重映射:同一网格像素,新色板秒出(全红单色格 → 唯一红珠)
         java.util.List<com.pindou.app.bead.BeadColor> pal2 = new java.util.ArrayList<>();
         pal2.add(new com.pindou.app.bead.BeadColor(11, "R2", 0xFFEF5350));
-        pal2.add(new com.pindou.app.bead.BeadColor(12, "P", 0xFFAB47BC));
-        com.pindou.app.bead.BeadPattern p2 = PatternEngine.generateFromGrid(g, pal2, og, 2, 2);
-        check("generateFromGrid remaps to new palette", p2 != null
-                && p2.usedColors.size() == 2
-                && p2.cellAt(0, 0) == 0 && p2.cellAt(1, 1) == -1);
+        PatternEngine.WorkGrid g4 = new PatternEngine.WorkGrid();
+        g4.gw = 1;
+        g4.gh = 1;
+        g4.brick = 2;
+        g4.cellPix = new int[]{0xFFE53935, 0xFFE53935, 0xFFE53935, 0xFFE53935};
+        g4.cellStart = new int[]{0, 4};
+        com.pindou.app.bead.BeadPattern p4 = PatternEngine.generateFromGrid(g4, pal2, og, 2, 2);
+        check("generateFromGrid remaps to new palette", p4 != null
+                && p4.usedColors.size() == 1
+                && p4.usedColors.get(0).color.code == 11 && p4.totalBeads == 4);
 
-        // 圆形蒙版在缓存路径同样生效
+        // 圆形蒙版在投票路径同样生效
         PatternEngine.Options oround = new PatternEngine.Options();
         oround.cols = 4;
         oround.rows = 4;
         oround.roundBoard = true;
-        g.gw = 4;
-        g.gh = 4;
-        g.px = new int[16];
-        java.util.Arrays.fill(g.px, 0xFFE53935);
-        com.pindou.app.bead.BeadPattern p3 = PatternEngine.generateFromGrid(g, pal, oround, 4, 4);
-        check("generateFromGrid round mask applied", p3 != null
-                && p3.cellAt(0, 0) == -1 && p3.cellAt(2, 2) >= 0);
+        PatternEngine.WorkGrid g5 = new PatternEngine.WorkGrid();
+        g5.gw = 4;
+        g5.gh = 4;
+        g5.brick = 1;
+        g5.cellPix = new int[16];
+        java.util.Arrays.fill(g5.cellPix, 0xFFE53935);
+        g5.cellStart = new int[17];
+        for (int i = 0; i <= 16; i++) g5.cellStart[i] = i;
+        com.pindou.app.bead.BeadPattern p5 = PatternEngine.generateFromGrid(g5, pal, oround, 4, 4);
+        check("generateFromGrid round mask applied", p5 != null
+                && p5.cellAt(0, 0) == -1 && p5.cellAt(2, 2) >= 0);
 
         // 线稿模式在缓存路径被明确拒绝(需要全分辨率源像素)
         PatternEngine.Options oline = new PatternEngine.Options();
