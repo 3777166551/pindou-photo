@@ -585,6 +585,7 @@ public class MainActivity extends Activity {
             mid.addView(meta);
             row.addView(mid, new LinearLayout.LayoutParams(
                     0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+            ((LinearLayout.LayoutParams) mid.getLayoutParams()).rightMargin = pad;   // 与删除钮留 8dp 间距
 
             TextView del = new TextView(this);
             del.setText(getString(R.string.btn_delete));

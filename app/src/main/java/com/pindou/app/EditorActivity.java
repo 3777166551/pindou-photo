@@ -3091,7 +3091,7 @@ public class EditorActivity extends Activity {
         tv.setBackgroundResource(R.drawable.bg_chip);
         tv.setElevation(2f * getResources().getDisplayMetrics().density);
         int px = Math.round(12 * getResources().getDisplayMetrics().density);
-        int py = Math.round(7 * getResources().getDisplayMetrics().density);
+        int py = Math.round(10 * getResources().getDisplayMetrics().density);   // 触控高度 ≥40dp(原 7dp 过小)
         tv.setPadding(px, py, px, py);
         tv.setClickable(true);
         tv.setFocusable(true);
@@ -4127,7 +4127,8 @@ public class EditorActivity extends Activity {
         tv.setText(text);
         tv.setTextSize(14);
         int cp = Math.round(12 * getResources().getDisplayMetrics().density);
-        tv.setPadding(cp, 0, cp, 0);
+        int py = Math.round(8 * getResources().getDisplayMetrics().density);   // 翻月钮触控高度 ≥40dp(原 0)
+        tv.setPadding(cp, py, cp, py);
         tv.setTextColor(getColor(R.color.textMain));
         tv.setClickable(true);
         return tv;

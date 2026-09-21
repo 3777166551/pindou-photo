@@ -389,10 +389,10 @@
 
                     <TextView
                         android:id="@+id/btnWMinus"
-                        android:layout_width="44dp"
+                        android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:contentDescription="@string/a11y_w_minus"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="6dp"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
                         android:elevation="2dp"
@@ -405,7 +405,7 @@
 
                     <TextView
                         android:id="@+id/tvW"
-                        android:layout_width="44dp"
+                        android:layout_width="36dp"
                         android:layout_height="wrap_content"
                         android:gravity="center"
                         android:text="58"
@@ -442,10 +442,10 @@
 
                     <TextView
                         android:id="@+id/btnHMinus"
-                        android:layout_width="44dp"
+                        android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:contentDescription="@string/a11y_h_minus"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="6dp"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
                         android:elevation="2dp"
@@ -458,7 +458,7 @@
 
                     <TextView
                         android:id="@+id/tvH"
-                        android:layout_width="44dp"
+                        android:layout_width="36dp"
                         android:layout_height="wrap_content"
                         android:gravity="center"
                         android:text="58"
@@ -1635,8 +1635,8 @@
                         <!-- Material 帮助图标惯例:功能行尾的圆形 ?,点按弹使用说明 -->
                         <TextView
                             android:id="@+id/btnAssistHelpCard"
-                            android:layout_width="34dp"
-                            android:layout_height="34dp"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
                             android:layout_marginStart="12dp"
                             android:layout_marginEnd="12dp"
                             android:background="@drawable/bg_chip"
@@ -1735,6 +1735,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
+                                android:ellipsize="end"
                                 android:text="@string/assist_locate"
                                 android:textColor="@color/text_chip"
                                 android:textSize="13sp" />
@@ -1751,6 +1752,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
+                                android:ellipsize="end"
                                 android:text="@string/assist_calendar"
                                 android:textColor="@color/text_chip"
                                 android:textSize="13sp" />
@@ -1767,6 +1769,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
+                                android:ellipsize="end"
                                 android:text="@string/assist_immersive_btn"
                                 android:textColor="@color/text_chip"
                                 android:textSize="13sp" />
@@ -1782,6 +1785,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
+                                android:ellipsize="end"
                                 android:text="@string/assist_help_btn"
                                 android:textColor="@color/text_chip"
                                 android:textSize="13sp" />
@@ -1805,6 +1809,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
+                                android:ellipsize="end"
                                 android:text="@string/assist_board_btn"
                                 android:textColor="@color/text_chip"
                                 android:textSize="13sp" />
@@ -1821,6 +1826,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
+                                android:ellipsize="end"
                                 android:text="@string/assist_row_btn"
                                 android:textColor="@color/text_chip"
                                 android:textSize="13sp" />
@@ -1837,6 +1843,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
+                                android:ellipsize="end"
                                 android:text="@string/assist_project_btn"
                                 android:textColor="@color/text_chip"
                                 android:textSize="13sp" />
@@ -1853,6 +1860,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
+                                android:ellipsize="end"
                                 android:text="@string/verify_btn_short"
                                 android:textColor="@color/text_chip"
                                 android:textSize="13sp" />
@@ -1868,6 +1876,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
+                                android:ellipsize="end"
                                 android:text="@string/assist_voice_btn"
                                 android:textColor="@color/text_chip"
                                 android:textSize="13sp" />
@@ -1920,107 +1929,116 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:background="@drawable/bg_subsurface"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
+                        android:orientation="vertical"
                         android:padding="10dp"
                         android:visibility="gone">
 
-                        <View
-                            android:id="@+id/brushSwatch"
-                            android:layout_width="24dp"
-                            android:layout_height="24dp" />
-
-                        <TextView
-                            android:id="@+id/tvBrushName"
-                            android:layout_width="0dp"
+                        <!-- 第一行:当前画笔(名称被 chip 挤压时仍有 60dp 保底) -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="10dp"
-                            android:layout_weight="1"
-                            android:singleLine="true"
-                            android:ellipsize="end"
-                            android:text="@string/brush_default_name"
-                            android:textColor="@color/textMain"
-                            android:textSize="13sp" />
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
 
-                        <TextView
-                            android:id="@+id/btnPickBrush"
-                            android:layout_width="wrap_content"
-                            android:layout_height="40dp"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_chip"
-                            android:clickable="true"
-                            android:elevation="2dp"
-                            android:focusable="true"
-                            android:gravity="center"
-                            android:paddingStart="12dp"
-                            android:paddingEnd="12dp"
-                            android:text="@string/brush_change"
-                            android:textColor="@color/text_chip"
-                            android:textSize="13sp" />
+                            <View
+                                android:id="@+id/brushSwatch"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp" />
 
-                        <TextView
-                            android:id="@+id/btnBrushEraser"
-                            android:layout_width="wrap_content"
-                            android:layout_height="40dp"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_chip"
-                            android:clickable="true"
-                            android:elevation="2dp"
-                            android:focusable="true"
-                            android:gravity="center"
-                            android:paddingStart="12dp"
-                            android:paddingEnd="12dp"
-                            android:text="@string/brush_eraser"
-                            android:textColor="@color/text_chip"
-                            android:textSize="13sp" />
+                            <TextView
+                                android:id="@+id/tvBrushName"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+                                android:layout_weight="1"
+                                android:singleLine="true"
+                                android:ellipsize="end"
+                                android:text="@string/brush_default_name"
+                                android:textColor="@color/textMain"
+                                android:textSize="13sp" />
 
-                        <TextView
-                            android:id="@+id/btnDropper"
-                            android:layout_width="wrap_content"
-                            android:layout_height="40dp"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_chip"
-                            android:clickable="true"
-                            android:elevation="2dp"
-                            android:focusable="true"
-                            android:gravity="center"
-                            android:paddingStart="12dp"
-                            android:paddingEnd="12dp"
-                            android:text="@string/dropper_label"
-                            android:textColor="@color/text_chip"
-                            android:textSize="13sp" />
+                            <TextView
+                                android:id="@+id/btnBrushMirror"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/bg_chip"
+                                android:clickable="true"
+                                android:elevation="2dp"
+                                android:focusable="true"
+                                android:gravity="center"
+                                android:text="⇋"
+                                android:textColor="@color/text_chip"
+                                android:textSize="15sp" />
 
-                        <TextView
-                            android:id="@+id/btnBrushMirror"
-                            android:layout_width="wrap_content"
-                            android:layout_height="40dp"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_chip"
-                            android:clickable="true"
-                            android:elevation="2dp"
-                            android:focusable="true"
-                            android:gravity="center"
-                            android:paddingStart="10dp"
-                            android:paddingEnd="10dp"
-                            android:text="⇋"
-                            android:textColor="@color/text_chip"
-                            android:textSize="13sp" />
+                            <TextView
+                                android:id="@+id/btnPickBrush"
+                                android:layout_width="wrap_content"
+                                android:layout_height="40dp"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/bg_chip"
+                                android:clickable="true"
+                                android:elevation="2dp"
+                                android:focusable="true"
+                                android:gravity="center"
+                                android:paddingStart="14dp"
+                                android:paddingEnd="14dp"
+                                android:text="@string/brush_change"
+                                android:textColor="@color/text_chip"
+                                android:textSize="13sp" />
+                        </LinearLayout>
 
-                        <TextView
-                            android:id="@+id/btnSym"
-                            android:layout_width="wrap_content"
-                            android:layout_height="40dp"
-                            android:layout_marginStart="8dp"
-                            android:background="@drawable/bg_chip"
-                            android:clickable="true"
-                            android:elevation="2dp"
-                            android:focusable="true"
-                            android:gravity="center"
-                            android:paddingStart="10dp"
-                            android:paddingEnd="10dp"
-                            android:text="@string/sym_off"
-                            android:textColor="@color/text_chip"
-                            android:textSize="13sp" />
+                        <!-- 第二行:橡皮/吸管/对称(修 brushPanel 单行溢出裁掉 btnSym) -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/btnBrushEraser"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp"
+                                android:layout_marginEnd="6dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_chip"
+                                android:clickable="true"
+                                android:elevation="2dp"
+                                android:focusable="true"
+                                android:gravity="center"
+                                android:text="@string/brush_eraser"
+                                android:textColor="@color/text_chip"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:id="@+id/btnDropper"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp"
+                                android:layout_marginEnd="6dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_chip"
+                                android:clickable="true"
+                                android:elevation="2dp"
+                                android:focusable="true"
+                                android:gravity="center"
+                                android:text="@string/dropper_label"
+                                android:textColor="@color/text_chip"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:id="@+id/btnSym"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp"
+                                android:layout_weight="1.2"
+                                android:background="@drawable/bg_chip"
+                                android:clickable="true"
+                                android:elevation="2dp"
+                                android:focusable="true"
+                                android:gravity="center"
+                                android:text="@string/sym_off"
+                                android:textColor="@color/text_chip"
+                                android:textSize="13sp" />
+                        </LinearLayout>
                     </LinearLayout>
 
                     <LinearLayout
@@ -2314,7 +2332,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="@string/generating"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/textPrimary"
                 android:textSize="13sp" />
         </LinearLayout>
     </FrameLayout>
