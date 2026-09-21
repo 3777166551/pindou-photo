@@ -80,5 +80,5 @@
         android:layout_marginTop="8dp"
         android:text="@string/header_tip"
         android:textColor="@color/tipAmber"
-        android:textSize="12sp" />
+        android:textSize="13sp" />
 </LinearLayout>

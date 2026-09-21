@@ -30,7 +30,7 @@
                 android:contentDescription="@string/a11y_back"
                 android:text="‹"
                 android:textColor="@color/textMain"
-                android:textSize="30sp"
+                android:textSize="28sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -39,7 +39,7 @@
                 android:layout_weight="1"
                 android:text="@string/editor_title"
                 android:textColor="@color/textMain"
-                android:textSize="18sp"
+                android:textSize="17sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -87,7 +87,7 @@
                 android:paddingEnd="18dp"
                 android:text="@string/btn_share"
                 android:textColor="@color/onPrimary"
-                android:textSize="14sp"
+                android:textSize="15sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -114,7 +114,7 @@
                 android:gravity="center"
                 android:text="@string/tab_effect"
                 android:textColor="@color/text_tab"
-                android:textSize="14sp"
+                android:textSize="15sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -127,7 +127,7 @@
                 android:gravity="center"
                 android:text="@string/tab_pattern"
                 android:textColor="@color/text_tab"
-                android:textSize="14sp"
+                android:textSize="15sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -139,7 +139,7 @@
                 android:gravity="center"
                 android:text="@string/tab_list"
                 android:textColor="@color/text_tab"
-                android:textSize="14sp"
+                android:textSize="15sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -303,7 +303,7 @@
                     android:layout_marginTop="3dp"
                     android:text=""
                     android:textColor="@color/textSub"
-                    android:textSize="11sp" />
+                    android:textSize="13sp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -400,7 +400,7 @@
                         android:gravity="center"
                         android:text="−"
                         android:textColor="@color/text_chip"
-                        android:textSize="16sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -410,7 +410,7 @@
                         android:gravity="center"
                         android:text="58"
                         android:textColor="@color/textMain"
-                        android:textSize="14sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -425,7 +425,7 @@
                         android:gravity="center"
                         android:text="+"
                         android:textColor="@color/text_chip"
-                        android:textSize="16sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <Space
@@ -453,7 +453,7 @@
                         android:gravity="center"
                         android:text="−"
                         android:textColor="@color/text_chip"
-                        android:textSize="16sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -463,7 +463,7 @@
                         android:gravity="center"
                         android:text="58"
                         android:textColor="@color/textMain"
-                        android:textSize="14sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -478,7 +478,7 @@
                         android:gravity="center"
                         android:text="+"
                         android:textColor="@color/text_chip"
-                        android:textSize="16sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -509,7 +509,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/palette_label"
                             android:textColor="@color/textMain"
-                            android:textSize="14sp" />
+                            android:textSize="15sp" />
 
                         <Spinner
                             android:id="@+id/paletteSpinner"
@@ -606,7 +606,7 @@
                         android:layout_marginTop="4dp"
                         android:text="@string/limit_hint"
                         android:textColor="@color/textSub"
-                        android:textSize="10sp" />
+                        android:textSize="13sp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -678,7 +678,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/abs_degree"
                         android:textColor="@color/textMain"
-                        android:textSize="14sp" />
+                        android:textSize="15sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -686,7 +686,7 @@
                         android:layout_marginTop="2dp"
                         android:text="@string/abs_degree_hint"
                         android:textColor="@color/textSub"
-                        android:textSize="11sp" />
+                        android:textSize="13sp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -773,7 +773,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/abs_limited"
                                 android:textColor="@color/textMain"
-                                android:textSize="14sp" />
+                                android:textSize="15sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -781,7 +781,7 @@
                                 android:layout_marginTop="2dp"
                                 android:text="@string/abs_limited_hint"
                                 android:textColor="@color/textSub"
-                                android:textSize="11sp" />
+                                android:textSize="13sp" />
                         </LinearLayout>
 
                         <Switch
@@ -810,7 +810,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/abs_colors"
                                     android:textColor="@color/textMain"
-                                    android:textSize="14sp" />
+                                    android:textSize="15sp" />
 
                                 <TextView
                                     android:layout_width="wrap_content"
@@ -818,7 +818,7 @@
                                     android:layout_marginTop="2dp"
                                     android:text="@string/abs_colors_hint"
                                     android:textColor="@color/textSub"
-                                    android:textSize="11sp" />
+                                    android:textSize="13sp" />
                             </LinearLayout>
 
                             <Spinner
@@ -846,7 +846,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/abs_snap"
                                     android:textColor="@color/textMain"
-                                    android:textSize="14sp" />
+                                    android:textSize="15sp" />
 
                                 <TextView
                                     android:layout_width="wrap_content"
@@ -854,7 +854,7 @@
                                     android:layout_marginTop="2dp"
                                     android:text="@string/abs_snap_hint"
                                     android:textColor="@color/textSub"
-                                    android:textSize="11sp" />
+                                    android:textSize="13sp" />
                             </LinearLayout>
 
                             <Switch
@@ -881,7 +881,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/line_sens"
                             android:textColor="@color/textMain"
-                            android:textSize="14sp" />
+                            android:textSize="15sp" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -889,7 +889,7 @@
                             android:layout_marginTop="2dp"
                             android:text="@string/line_hint"
                             android:textColor="@color/textSub"
-                            android:textSize="11sp" />
+                            android:textSize="13sp" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -939,7 +939,7 @@
                             android:layout_weight="1"
                             android:text="@string/adv_section"
                             android:textColor="@color/textMain"
-                            android:textSize="14sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -948,7 +948,7 @@
                             android:layout_height="wrap_content"
                             android:text="▸"
                             android:textColor="@color/textSub"
-                            android:textSize="14sp" />
+                            android:textSize="15sp" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -1023,7 +1023,7 @@
                                 android:layout_marginEnd="8dp"
                                 android:text="@string/bead_spec"
                                 android:textColor="@color/textSub"
-                                android:textSize="12sp" />
+                                android:textSize="13sp" />
 
                             <TextView
                                 android:id="@+id/chipBeadStd"
@@ -1073,7 +1073,7 @@
                                     android:layout_height="wrap_content"
                                     android:text="@string/dither"
                                     android:textColor="@color/textMain"
-                                    android:textSize="14sp" />
+                                    android:textSize="15sp" />
 
                                 <TextView
                                     android:layout_width="wrap_content"
@@ -1081,7 +1081,7 @@
                                     android:layout_marginTop="2dp"
                                     android:text="@string/dither_hint"
                                     android:textColor="@color/textSub"
-                                    android:textSize="11sp" />
+                                    android:textSize="13sp" />
                             </LinearLayout>
 
                             <Switch
@@ -1108,7 +1108,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/dominant"
                                 android:textColor="@color/textMain"
-                                android:textSize="14sp" />
+                                android:textSize="15sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -1116,7 +1116,7 @@
                                 android:layout_marginTop="2dp"
                                 android:text="@string/dominant_hint"
                                 android:textColor="@color/textSub"
-                                android:textSize="11sp" />
+                                android:textSize="13sp" />
                         </LinearLayout>
 
                         <Switch
@@ -1143,7 +1143,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/precise"
                                 android:textColor="@color/textMain"
-                                android:textSize="14sp" />
+                                android:textSize="15sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -1151,7 +1151,7 @@
                                 android:layout_marginTop="2dp"
                                 android:text="@string/precise_hint"
                                 android:textColor="@color/textSub"
-                                android:textSize="11sp" />
+                                android:textSize="13sp" />
                         </LinearLayout>
 
                         <Switch
@@ -1178,7 +1178,7 @@
                                 android:layout_weight="1"
                                 android:text="@string/denoise"
                                 android:textColor="@color/textMain"
-                                android:textSize="14sp" />
+                                android:textSize="15sp" />
 
                             <TextView
                                 android:id="@+id/tvDenoise"
@@ -1205,7 +1205,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/denoise_hint"
                             android:textColor="@color/textSub"
-                            android:textSize="10sp" />
+                            android:textSize="13sp" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -1221,7 +1221,7 @@
                             android:layout_weight="1"
                             android:text="@string/symbols"
                             android:textColor="@color/textMain"
-                            android:textSize="14sp" />
+                            android:textSize="15sp" />
 
                         <Switch
                             android:id="@+id/swSymbols"
@@ -1243,7 +1243,7 @@
                             android:layout_weight="1"
                             android:text="@string/grid_lines"
                             android:textColor="@color/textMain"
-                            android:textSize="14sp" />
+                            android:textSize="15sp" />
 
                         <Switch
                             android:id="@+id/swGrid"
@@ -1293,7 +1293,7 @@
                             android:layout_weight="1"
                             android:text="@string/img_section"
                             android:textColor="@color/textMain"
-                            android:textSize="14sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -1302,7 +1302,7 @@
                             android:layout_height="wrap_content"
                             android:text="▸"
                             android:textColor="@color/textSub"
-                            android:textSize="14sp" />
+                            android:textSize="15sp" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -1329,7 +1329,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/bg_auto"
                                 android:textColor="@color/textMain"
-                                android:textSize="14sp" />
+                                android:textSize="15sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -1337,7 +1337,7 @@
                                 android:layout_marginTop="2dp"
                                 android:text="@string/bg_auto_hint"
                                 android:textColor="@color/textSub"
-                                android:textSize="11sp" />
+                                android:textSize="13sp" />
                         </LinearLayout>
 
                         <Switch
@@ -1366,7 +1366,7 @@
                                 android:layout_weight="1"
                                 android:text="@string/bg_tol"
                                 android:textColor="@color/textMain"
-                                android:textSize="14sp" />
+                                android:textSize="15sp" />
 
                             <TextView
                                 android:id="@+id/tvBgTol"
@@ -1393,7 +1393,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/bg_tol_hint"
                             android:textColor="@color/textSub"
-                            android:textSize="10sp" />
+                            android:textSize="13sp" />
                     </LinearLayout>
 
                     <TextView
@@ -1498,7 +1498,7 @@
                         android:layout_marginTop="6dp"
                         android:text="@string/transform_hint"
                         android:textColor="@color/textSub"
-                        android:textSize="10sp" />
+                        android:textSize="13sp" />
 
                     <TextView
                         android:id="@+id/btnCrop"
@@ -1551,7 +1551,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/edit_cell"
                                 android:textColor="@color/textMain"
-                                android:textSize="14sp" />
+                                android:textSize="15sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -1559,7 +1559,7 @@
                                 android:layout_marginTop="2dp"
                                 android:text="@string/edit_cell_hint"
                                 android:textColor="@color/textSub"
-                                android:textSize="11sp" />
+                                android:textSize="13sp" />
                         </LinearLayout>
 
                         <Switch
@@ -1586,7 +1586,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/paint_mode"
                                 android:textColor="@color/textMain"
-                                android:textSize="14sp" />
+                                android:textSize="15sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -1594,7 +1594,7 @@
                                 android:layout_marginTop="2dp"
                                 android:text="@string/paint_mode_hint"
                                 android:textColor="@color/textSub"
-                                android:textSize="11sp" />
+                                android:textSize="13sp" />
                         </LinearLayout>
 
                         <Switch
@@ -1621,7 +1621,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/bead_assist"
                                 android:textColor="@color/textMain"
-                                android:textSize="14sp" />
+                                android:textSize="15sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -1629,7 +1629,7 @@
                                 android:layout_marginTop="2dp"
                                 android:text="@string/bead_assist_hint"
                                 android:textColor="@color/textSub"
-                                android:textSize="11sp" />
+                                android:textSize="13sp" />
                         </LinearLayout>
 
                         <!-- Material 帮助图标惯例:功能行尾的圆形 ?,点按弹使用说明 -->
@@ -1707,7 +1707,7 @@
                         android:layout_marginTop="4dp"
                         android:text="@string/assist_progress_default"
                         android:textColor="@color/textSub"
-                        android:textSize="11sp"
+                        android:textSize="13sp"
                         android:visibility="gone" />
 
                     <LinearLayout
@@ -2133,7 +2133,7 @@
                         android:layout_weight="1"
                         android:text="@string/sec_adjust"
                         android:textColor="@color/textMain"
-                        android:textSize="14sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -2142,7 +2142,7 @@
                         android:layout_height="wrap_content"
                         android:text="▸"
                         android:textColor="@color/textSub"
-                        android:textSize="14sp" />
+                        android:textSize="15sp" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -2173,7 +2173,7 @@
                             android:layout_weight="1"
                             android:text="@string/brightness"
                             android:textColor="@color/textMain"
-                            android:textSize="14sp" />
+                            android:textSize="15sp" />
 
                         <TextView
                             android:id="@+id/tvBright"
@@ -2207,7 +2207,7 @@
                             android:layout_weight="1"
                             android:text="@string/contrast"
                             android:textColor="@color/textMain"
-                            android:textSize="14sp" />
+                            android:textSize="15sp" />
 
                         <TextView
                             android:id="@+id/tvContrast"
@@ -2241,7 +2241,7 @@
                             android:layout_weight="1"
                             android:text="@string/saturation"
                             android:textColor="@color/textMain"
-                            android:textSize="14sp" />
+                            android:textSize="15sp" />
 
                         <TextView
                             android:id="@+id/tvSat"
@@ -2283,7 +2283,7 @@
                         android:gravity="center"
                         android:text="@string/btn_reset"
                         android:textColor="@color/text_chip"
-                        android:textSize="14sp" />
+                        android:textSize="15sp" />
 
                     <TextView
                         android:id="@+id/btnChangePhoto"
@@ -2298,7 +2298,7 @@
                         android:gravity="center"
                         android:text="@string/btn_change_photo"
                         android:textColor="@color/primary"
-                        android:textSize="14sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>

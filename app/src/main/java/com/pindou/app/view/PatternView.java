@@ -825,7 +825,7 @@ public class PatternView extends View {
         int rows = pattern.rows;
         float m = marginRatio() * cell;
 
-        boardPaint.setColor(night ? 0xFF3A3346 : 0xFFEFEAE3);
+        boardPaint.setColor(night ? 0xFF3A3346 : 0xFFF3EFF9);
         if (pattern.round) {
             float r = cols * cell / 2f;
             canvas.drawCircle(cols * cell / 2f, rows * cell / 2f, r + m * 0.9f, boardPaint);
@@ -837,7 +837,7 @@ public class PatternView extends View {
                     Math.max(6f, m * 0.8f), Math.max(6f, m * 0.8f), boardPaint);
         }
 
-        pegPaint.setColor(night ? 0x55FFFFFF : 0xFFD8D2C9);
+        pegPaint.setColor(night ? 0x55FFFFFF : 0xFFE2D9F0);
         beadPaint.setStyle(Paint.Style.FILL);
         float ringW = Math.max(1f, cell * 0.06f);
         ringPaint.setStrokeWidth(ringW);
@@ -890,29 +890,29 @@ public class PatternView extends View {
 
         // 底板厚度(深色) + 顶面
         float thick = Math.max(3f, cell * 0.22f);
-        boardPaint.setColor(night ? 0xFF2A2534 : 0xFFCFC6BA);
+        boardPaint.setColor(night ? 0xFF2A2534 : 0xFFDFD9EC);
         if (pattern.round) {
             float r = cols * cell / 2f;
             canvas.drawCircle(cols * cell / 2f, rows * cell / 2f + thick,
                     r + m * 0.9f, boardPaint);
-            boardPaint.setColor(night ? 0xFF3A3346 : 0xFFEFEAE3);
+            boardPaint.setColor(night ? 0xFF3A3346 : 0xFFF3EFF9);
             canvas.drawCircle(cols * cell / 2f, rows * cell / 2f,
                     r + m * 0.9f, boardPaint);
         } else if (pattern.hex) {
             canvas.drawPath(hexPath(cols * cell / 2f, rows * cell / 2f + thick,
                     cols * cell / 2f + m * 0.9f), boardPaint);
-            boardPaint.setColor(night ? 0xFF3A3346 : 0xFFEFEAE3);
+            boardPaint.setColor(night ? 0xFF3A3346 : 0xFFF3EFF9);
             canvas.drawPath(hexPath(cols * cell / 2f, rows * cell / 2f,
                     cols * cell / 2f + m * 0.9f), boardPaint);
         } else {
             float rr = Math.max(6f, m * 0.8f);
             canvas.drawRoundRect(-m, -m + thick, cols * cell + m, rows * cell + m + thick,
                     rr, rr, boardPaint);
-            boardPaint.setColor(night ? 0xFF3A3346 : 0xFFEFEAE3);
+            boardPaint.setColor(night ? 0xFF3A3346 : 0xFFF3EFF9);
             canvas.drawRoundRect(-m, -m, cols * cell + m, rows * cell + m, rr, rr, boardPaint);
         }
 
-        pegPaint.setColor(night ? 0x55FFFFFF : 0xFFD8D2C9);
+        pegPaint.setColor(night ? 0x55FFFFFF : 0xFFE2D9F0);
         beadPaint.setStyle(Paint.Style.FILL);
         float ringW = Math.max(1f, cell * 0.06f);
         ringPaint.setStrokeWidth(ringW);

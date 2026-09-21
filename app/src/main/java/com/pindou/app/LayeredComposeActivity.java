@@ -539,7 +539,7 @@ public class LayeredComposeActivity extends Activity {
                 tmp.lineTo(r.right, r.bottom + thick);
                 tmp.lineTo(r.left, r.bottom + thick);
                 tmp.close();
-                bmpP.setColor(0xFFB9AE9C);
+                bmpP.setColor(0xFFC9C2DC);
                 c.drawPath(tmp, bmpP);
                 // 层面
                 bmpP.setColor(0xFFFFFFFF);
@@ -602,7 +602,7 @@ public class LayeredComposeActivity extends Activity {
             int w = maxDim, h = Math.round(maxDim * 1.15f);
             Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
             Canvas c = new Canvas(bmp);
-            c.drawColor(0xFFF0EAE2);
+            c.drawColor(0xFFF3EFF9);
             bmpP.setShadowLayer(0, 0, 0, 0);
             float[] lift = new float[1];
             for (int i = 0; i < layers.size(); i++) {
@@ -615,7 +615,7 @@ public class LayeredComposeActivity extends Activity {
                 tmp.lineTo(r.right, r.bottom + thick);
                 tmp.lineTo(r.left, r.bottom + thick);
                 tmp.close();
-                bmpP.setColor(0xFFB9AE9C);
+                bmpP.setColor(0xFFC9C2DC);
                 c.drawPath(tmp, bmpP);
                 bmpP.setColor(0xFFFFFFFF);
                 c.drawBitmap(l.effect, null, r, bmpP);

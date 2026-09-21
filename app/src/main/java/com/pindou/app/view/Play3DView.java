@@ -346,7 +346,7 @@ public final class Play3DView extends View {
             else tmpPath.lineTo(px, py);
         }
         tmpPath.close();
-        plateEdgePaint.setColor(0xFFB9AE9E);
+        plateEdgePaint.setColor(0xFFC9C2DC);
         c.drawPath(tmpPath, plateEdgePaint);
         // 顶面
         tmpPath.reset();
@@ -358,7 +358,7 @@ public final class Play3DView extends View {
             else tmpPath.lineTo(px, py);
         }
         tmpPath.close();
-        platePaint.setColor(0xFFEFEAE3);
+        platePaint.setColor(0xFFF3EFF9);
         c.drawPath(tmpPath, platePaint);
     }
 

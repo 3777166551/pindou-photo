@@ -39,7 +39,7 @@ public final class EffectRenderer {
         Canvas canvas = new Canvas(bmp);
 
         Paint bg = new Paint(Paint.ANTI_ALIAS_FLAG);
-        bg.setColor(0xFFF0EAE2);
+        bg.setColor(0xFFF3EFF9);
         if (p.round) {
             float rad = Math.min(w, h) / 2f - 2;
             canvas.drawCircle(w / 2f, h / 2f, rad, bg);
@@ -50,7 +50,7 @@ public final class EffectRenderer {
         }
 
         Paint peg = new Paint(Paint.ANTI_ALIAS_FLAG);
-        peg.setColor(arMode ? 0x8CD8D2C9 : 0xFFD8D2C9);
+        peg.setColor(arMode ? 0x8CE2D9F0 : 0xFFE2D9F0);
 
         Paint bead = new Paint(Paint.ANTI_ALIAS_FLAG);
         Paint ring = new Paint(Paint.ANTI_ALIAS_FLAG);
