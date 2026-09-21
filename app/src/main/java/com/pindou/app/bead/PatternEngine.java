@@ -422,28 +422,41 @@ public final class PatternEngine {
         }
     }
 
-    /** 投:逐像素 LUT 配豆后格内多数票——同一片纯色的格子投同一颗豆,
-     *  边缘混合色被多数票吸收,幻影杂色机制上不存在(调研 04 §三) */
+    /** 投:逐像素 LUT 配豆后格内多数票;带"线条救援"——亮色低彩底上 4%~45%
+     *  像素是深豆时,改投深豆众数(细线/文字不被多数票抹掉,350 张基准实测定稿) */
     private static BeadPattern finishVote(WorkGrid g, List<BeadColor> beadPalette,
                                           Options o, int cols, int rows) {
         List<BeadColor> palette = beadPalette;
         int n = palette.size();
         int[] lut = buildLut(palette, o.preciseColor);
+        double[][] labs = new double[Math.max(1, n)][];
+        boolean[] dark = new boolean[Math.max(1, n)];
+        for (int i = 0; i < n; i++) {
+            labs[i] = ColorMath.rgbToLab(palette.get(i).rgb);
+            dark[i] = labs[i][0] < 45;
+        }
         boolean gate = g.gateGain > 1f;
         int cells = g.gw * g.gh;
         int[] workCells = new int[cells];
         int[] hist = new int[Math.max(1, n)];
+        int[] darkHist = new int[Math.max(1, n)];
         boolean adjust = o.brightness != 0 || o.contrast != 0 || o.saturation != 0;
         for (int c = 0; c < cells; c++) {
             int s = g.cellStart[c], e = g.cellStart[c + 1];
             int total = e - s;
             int opaque = 0;
+            int darkCount = 0;
+            int sumR = 0, sumG = 0, sumB = 0;
             if (n > 0) Arrays.fill(hist, 0, n, 0);
+            if (n > 0) Arrays.fill(darkHist, 0, n, 0);
             for (int i = s; i < e; i++) {
                 int p = g.cellPix[i];
                 if (((p >>> 24) & 0xFF) < 128) continue;
                 opaque++;
                 int r = (p >> 16) & 0xFF, gr = (p >> 8) & 0xFF, bl = p & 0xFF;
+                sumR += r;
+                sumG += gr;
+                sumB += bl;
                 if (gate) {
                     r = clamp8(Math.round(r * g.gateGain));
                     gr = clamp8(Math.round(gr * g.gateGain));
@@ -460,7 +473,12 @@ public final class PatternEngine {
                     gr = (p >> 8) & 0xFF;
                     bl = p & 0xFF;
                 }
-                hist[lut[((r >> 4) << 8) | ((gr >> 4) << 4) | (bl >> 4)]]++;
+                int idx = lut[((r >> 4) << 8) | ((gr >> 4) << 4) | (bl >> 4)];
+                hist[idx]++;
+                if (dark[idx]) {
+                    darkHist[idx]++;
+                    darkCount++;
+                }
             }
             if (n == 0 || opaque * 2 < total) {
                 workCells[c] = -1;   // 不透明不足半数 = 空格(与盒平均 alpha 阈值同语义)
@@ -471,6 +489,25 @@ public final class PatternEngine {
                 if (hist[i] > hist[best]) best = i;
             }
             workCells[c] = best;
+            // 线条救援:平均色亮(L*>60)且低彩(C*<20) = 纸样底;深豆占 4%~45% = 有线
+            if (opaque >= 8) {
+                int mR = sumR / opaque, mG = sumG / opaque, mB = sumB / opaque;
+                double[] labMean = ColorMath.rgbToLab(
+                        0xFF000000 | (mR << 16) | (mG << 8) | mB);
+                double chroma = Math.sqrt(labMean[1] * labMean[1]
+                        + labMean[2] * labMean[2]);
+                if (labMean[0] > 60 && chroma < 20) {
+                    int dk = darkCount * 100;
+                    if (dk >= opaque * 10 && dk <= opaque * 45) {
+                        int dBest = -1;
+                        int darkN = 0;
+                        for (int i = 0; i < n; i++) {
+                            if (darkHist[i] > darkN) { darkN = darkHist[i]; dBest = i; }
+                        }
+                        if (dBest >= 0) workCells[c] = dBest;
+                    }
+                }
+            }
         }
         return finishPattern(workCells, g.gw, g.gh, g.brick, palette, o, cols, rows);
     }

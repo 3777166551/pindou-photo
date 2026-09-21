@@ -34,3 +34,5 @@ harmony/.idea/
 harmony/.hvigor/
 harmony/oh_modules/
 qa/ci_shots*/  
+"拼豆算法调研/probes/datasets/"  
+"拼豆算法调研/probes/__pycache__/"  
