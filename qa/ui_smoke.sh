@@ -92,6 +92,8 @@ tap_id() {
   if [ "$must" = "1" ]; then
     echo "[smoke] FAIL: id not found: $1"
     snap fail
+    adb logcat -d > shots/idfail_logcat.txt 2> /dev/null || true
+    adb logcat -d -b crash > shots/idfail_crash.txt 2> /dev/null || true
     exit 1
   fi
   log "soft-miss id: $1"
@@ -112,6 +114,8 @@ tap_text() {
   if [ "$must" = "1" ]; then
     echo "[smoke] FAIL: text not found: $txt"
     snap fail
+    adb logcat -d > shots/textfail_logcat.txt 2> /dev/null || true
+    adb logcat -d -b crash > shots/textfail_crash.txt 2> /dev/null || true
     exit 1
   fi
   log "soft-miss text: $txt"
