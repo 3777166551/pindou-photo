@@ -59,6 +59,84 @@ public class PatternView extends View {
     private final Paint emptyPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint hintPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
+    // ---- 照片变拼豆变形动画(M3 motion)----
+    // 源照片先铺满板幅,拼豆沿对角线逐格弹入覆盖照片;
+    // 缓动 = M3 emphasized decelerate(0.05,0.7,0.1,1),单珠弹出时长占比 30%,
+    // 整体 950ms(M3 大型过渡量级),同一张照片重新生成不重播。
+    private static final long REVEAL_MS = 950L;
+    private final android.view.animation.Interpolator revealEase =
+            new android.view.animation.PathInterpolator(0.05f, 0.7f, 0.1f, 1f);
+    private final Paint photoPaint = new Paint(Paint.ANTI_ALIAS_FLAG
+            | Paint.FILTER_BITMAP_FLAG);
+    private Bitmap revealPhoto;      // 降采样+按板幅比中心裁剪的源照片
+    private long revealStart;
+    private boolean revealing;
+
+    /** 新照片首次生成完成:播放"照片→拼豆"变形(同照片重生成不重播由调用方判) */
+    public void startPhotoReveal(Bitmap src) {
+        endReveal();
+        if (src == null || src.isRecycled() || effect3d
+                || pattern == null || pattern.cols == 0) {
+            return;
+        }
+        int pw = src.getWidth();
+        int ph = src.getHeight();
+        // 中心裁剪到板幅宽高比,再降采样到 ~640px,保证逐帧铺图的绘制成本
+        float boardAspect = pattern.cols / (float) pattern.rows;
+        int cw, ch;
+        if (pw / (float) ph > boardAspect) {
+            ch = ph;
+            cw = (int) (ph * boardAspect);
+        } else {
+            cw = pw;
+            ch = (int) (pw / boardAspect);
+        }
+        Bitmap crop = Bitmap.createBitmap(src,
+                (pw - cw) / 2, (ph - ch) / 2, cw, ch);
+        int target = Math.max(cw, ch);
+        float sc = target > 640 ? 640f / target : 1f;
+        revealPhoto = sc < 1f
+                ? Bitmap.createScaledBitmap(crop,
+                        Math.max(1, Math.round(cw * sc)),
+                        Math.max(1, Math.round(ch * sc)), true)
+                : crop;
+        if (revealPhoto != crop) crop.recycle();
+        revealStart = SystemClock.uptimeMillis();
+        revealing = true;
+        postInvalidateOnAnimation();
+    }
+
+    private void endReveal() {
+        if (revealPhoto != null) {
+            revealPhoto.recycle();
+            revealPhoto = null;
+        }
+        revealing = false;
+    }
+
+    /** 单格变形进度 0..1:0=还是照片,1=豆已就位;对角线 stagger */
+    private float revealK(int gx, int gy) {
+        if (!revealing) {
+            return 1f;
+        }
+        float p = (SystemClock.uptimeMillis() - revealStart) / (float) REVEAL_MS;
+        if (p >= 1f) {
+            endReveal();
+            return 1f;
+        }
+        int span = pattern.cols + pattern.rows - 2;
+        float d = span > 0 ? (gx + gy) / (float) span : 0f;
+        float local = (p - d * 0.70f) / 0.30f;
+        if (local <= 0f) {
+            return 0f;
+        }
+        if (local >= 1f) {
+            return 1f;
+        }
+        return revealEase.getInterpolation(local);
+    }
+
+
     public PatternView(Context context) {
         this(context, null);
     }
@@ -152,6 +230,7 @@ public class PatternView extends View {
     public void setMode(int mode) {
         if (this.mode == mode) return;
         this.mode = mode;
+        endReveal();   // 切到图纸页/清单页时变形动画立即结束
         zoom = 1f;
         offX = 0f;
         offY = 0f;
@@ -731,6 +810,7 @@ public class PatternView extends View {
         canvas.translate(offX + m, offY + m);
         if (mode == MODE_EFFECT) {
             if (effect3d) {
+                endReveal();   // 3D 预览不播变形,避免动画残留
                 drawEffect3D(canvas, cell);
             } else {
                 drawEffect(canvas, cell);
@@ -842,27 +922,60 @@ public class PatternView extends View {
         float ringW = Math.max(1f, cell * 0.06f);
         ringPaint.setStrokeWidth(ringW);
 
+        // 变形动画:底板上先铺源照片,已扫到的格子逐格弹出豆子盖住照片
+        if (revealing && revealPhoto != null) {
+            canvas.save();
+            canvas.clipPath(platePath(cols, rows, cell, m));
+            canvas.drawBitmap(revealPhoto, null,
+                    new android.graphics.RectF(-m, -m,
+                            cols * cell + m, rows * cell + m), photoPaint);
+            canvas.restore();
+        }
+
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < cols; x++) {
                 if (pattern.outsideShape(x, y)) continue;
+                float k = revealing ? revealK(x, y) : 1f;
+                if (k <= 0f) continue;   // 未扫到:这一格还是照片
                 int idx = pattern.cellAt(x, y);
                 float cx = (x + 0.5f) * cell;
                 float cy = (y + 0.5f) * cell;
+                float r = cell * 0.46f * (0.55f + 0.45f * k);
                 if (idx < 0) {
-                    canvas.drawCircle(cx, cy, cell * 0.15f, pegPaint);
+                    canvas.drawCircle(cx, cy, cell * 0.15f * k, pegPaint);
                     continue;
                 }
                 int rgb = pattern.palette.get(idx).rgb;
                 beadPaint.setColor(0xFF000000 | rgb);
-                canvas.drawCircle(cx, cy, cell * 0.46f, beadPaint);
+                canvas.drawCircle(cx, cy, r, beadPaint);
                 ringPaint.setColor(0xFF000000 | ColorMath.darken(rgb, 0.72f));
-                canvas.drawCircle(cx, cy, cell * 0.46f - ringW * 0.5f, ringPaint);
+                canvas.drawCircle(cx, cy, r - ringW * 0.5f, ringPaint);
                 if (cell > dp(16)) {
                     glossPaint.setColor(0x46FFFFFF);
-                    canvas.drawCircle(cx - cell * 0.14f, cy - cell * 0.16f, cell * 0.11f, glossPaint);
+                    canvas.drawCircle(cx - cell * 0.14f, cy - cell * 0.16f,
+                            cell * 0.11f * k, glossPaint);
                 }
             }
         }
+        if (revealing) {
+            postInvalidateOnAnimation();
+        }
+    }
+
+    /** 底板轮廓(圆形/六角/圆角矩形),变形动画用它在铺照片时裁出板形 */
+    private Path platePath(int cols, int rows, float cell, float m) {
+        Path p = new Path();
+        if (pattern.round) {
+            p.addCircle(cols * cell / 2f, rows * cell / 2f,
+                    cols * cell / 2f + m * 0.9f, Path.Direction.CW);
+        } else if (pattern.hex) {
+            p.addPath(hexPath(cols * cell / 2f, rows * cell / 2f,
+                    cols * cell / 2f + m * 0.9f));
+        } else {
+            p.addRoundRect(-m, -m, cols * cell + m, rows * cell + m,
+                    Math.max(6f, m * 0.8f), Math.max(6f, m * 0.8f), Path.Direction.CW);
+        }
+        return p;
     }
 
     /** 效果图 3D 预览:俯视 3/4 透视 + 圆豆圆柱光影(纯 Canvas 伪 3D,v2.44) */

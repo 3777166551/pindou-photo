@@ -4,19 +4,19 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_selected="true">
         <shape android:shape="rectangle">
-            <solid android:color="@color/primaryContainer" />
+            <solid android:color="?attr/primaryContainer" />
             <corners android:radius="20dp" />
         </shape>
     </item>
     <item android:state_checked="true">
         <shape android:shape="rectangle">
-            <solid android:color="@color/primaryContainer" />
+            <solid android:color="?attr/primaryContainer" />
             <corners android:radius="20dp" />
         </shape>
     </item>
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@color/subsurface" />
+            <solid android:color="?attr/subsurface" />
             <corners android:radius="20dp" />
         </shape>
     </item>

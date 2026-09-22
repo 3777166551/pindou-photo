@@ -1,0 +1,26 @@
+building LUTs...
+LUT ready
+v12 selfcheck 软线: V11 L*=31.5 V12 L*=17.5 (V12 应 >= V11)
+v12 selfcheck 红盘用色: V11=2 V12=2 (V12 应 <= V11)
+rgb_lab_np verified, max_err=1.14e-13
+DONE cartoons 49
+DONE lineart 50
+E:\crawl4ai\venv\Lib\site-packages\PIL\Image.py:1136: UserWarning: Palette images with Transparency expressed in bytes should be converted to RGBA images
+  warnings.warn(
+DONE pixelart 49
+DONE landscape 50
+DONE portrait 50
+DONE food 49
+DONE random 50
+
+cat          n     ol_o/n    cout_o/n     f2_o/n   col_o/n de_o/n(ngDelta)  dark_r gate%  better/equal/worse
+cartoons    49 31.1/ 0.0   8.5/ 60.3 11.7/11.4  5.01/ 9.61(+4.20)  1.14   12%  46/1/2 PASS
+lineart     50 84.5/ 0.0   2.7/182.7 10.1/10.3  4.60/13.93(+9.32)  2.52    0%  47/3/0 PASS
+pixelart    49 73.2/ 0.0  49.6/ 94.2 34.4/38.3  8.10/15.86(+5.18)  0.90   65%  48/1/0 PASS
+landscape   50 16.4/ 0.0  33.8/ 78.2 23.4/30.4  8.27/14.20(+3.53)  0.91   50%  33/17/0 PASS
+portrait    50 28.6/ 0.0  31.5/162.3 24.1/33.1  7.87/14.25(+3.18)  0.91   66%  38/12/0 PASS
+food        49 37.4/ 0.0  24.7/ 66.6 37.4/46.6  8.44/15.36(+4.07)  0.89   51%  48/1/0 PASS
+random      50 14.3/ 0.0  31.6/150.7 21.5/29.6  8.28/14.83(+3.54)  0.95   54%  29/21/0 PASS
+
+WORSE-PILE 2/347 (0.6%)  CI=PASS
+ALL-DONE rows=347

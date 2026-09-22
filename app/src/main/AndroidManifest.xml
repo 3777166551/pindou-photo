@@ -14,6 +14,18 @@
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
+
+    <!-- Android 11+ 包可见性过滤:不声明 <queries> 时拍照 Intent 解析不到任何
+         相机应用,startActivityForResult 直接抛 ActivityNotFoundException,
+         真机上表现为点"拍一张照片"弹"没有可用的相机应用"(v2.61 修复) -->
+    <queries>
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+        <intent>
+            <action android:name="android.media.action.STILL_IMAGE_CAMERA" />
+        </intent>
+    </queries>
     <!-- v2.26 起云端 AI 已移除:全 APP 纯离线运行,无网络权限 -->
 
     <application

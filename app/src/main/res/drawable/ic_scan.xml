@@ -7,31 +7,31 @@
     android:viewportHeight="24">
     <path
         android:pathData="M3,8 V5 A2,2 0 0 1 5,3 H8"
-        android:strokeColor="@color/textPrimary"
+        android:strokeColor="?attr/textPrimary"
         android:strokeWidth="2"
         android:strokeLineCap="round"
         android:fillColor="#00000000" />
     <path
         android:pathData="M16,3 H19 A2,2 0 0 1 21,5 V8"
-        android:strokeColor="@color/textPrimary"
+        android:strokeColor="?attr/textPrimary"
         android:strokeWidth="2"
         android:strokeLineCap="round"
         android:fillColor="#00000000" />
     <path
         android:pathData="M21,16 V19 A2,2 0 0 1 19,21 H16"
-        android:strokeColor="@color/textPrimary"
+        android:strokeColor="?attr/textPrimary"
         android:strokeWidth="2"
         android:strokeLineCap="round"
         android:fillColor="#00000000" />
     <path
         android:pathData="M8,21 H5 A2,2 0 0 1 3,19 V16"
-        android:strokeColor="@color/textPrimary"
+        android:strokeColor="?attr/textPrimary"
         android:strokeWidth="2"
         android:strokeLineCap="round"
         android:fillColor="#00000000" />
     <path
         android:pathData="M3,12 H21"
-        android:strokeColor="@color/textPrimary"
+        android:strokeColor="?attr/textPrimary"
         android:strokeWidth="2"
         android:strokeLineCap="round"
         android:fillColor="#00000000" />

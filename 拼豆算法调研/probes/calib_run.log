@@ -1,0 +1,25 @@
+building LUT...
+self-check OK (param vote == batch vote @10/45)
+=== gate scan: random x50 ===
+gate bucket=32    gate= 54% gatedLum= 90.9 lift=+9.11 miss=3
+gate bucket=48    gate= 54% gatedLum= 90.9 lift=+9.11 miss=3
+gate bucket=64    gate= 54% gatedLum= 90.9 lift=+9.11 miss=3
+gate bucket=96    gate= 54% gatedLum= 90.9 lift=+9.11 miss=3
+gate bucket=128   gate= 54% gatedLum= 90.9 lift=+9.11 miss=3
+gate lum=100      gate= 28% gatedLum= 72.6 lift=+8.77 miss=2
+gate lum=112      gate= 44% gatedLum= 84.9 lift=+8.65 miss=2
+gate lum=125      gate= 54% gatedLum= 90.9 lift=+9.11 miss=3
+gate lum=138      gate= 66% gatedLum= 98.4 lift=+9.33 miss=4
+gate lum=150      gate= 82% gatedLum=107.3 lift=+9.46 miss=4
+=== rescue scan: lineart+cartoons x99 ===
+rescue lo=4     f2   4.5-> 34.6 dark 637.3->1076.5 de  4.81->12.59
+rescue lo=7     f2   4.5-> 28.9 dark 637.3->1023.3 de  4.81->12.02
+rescue lo=10    f2   4.5-> 25.5 dark 637.3->976.6 de  4.81->11.55
+rescue lo=15    f2   4.5-> 20.7 dark 637.3->900.7 de  4.81->10.80
+rescue lo=20    f2   4.5-> 14.5 dark 637.3->844.3 de  4.81->10.27
+rescue hi=30    f2   4.5-> 24.7 dark 637.3->952.3 de  4.81->11.44
+rescue hi=40    f2   4.5-> 25.6 dark 637.3->975.3 de  4.81->11.55
+rescue hi=45    f2   4.5-> 25.5 dark 637.3->976.6 de  4.81->11.55
+rescue hi=50    f2   4.5-> 25.5 dark 637.3->976.8 de  4.81->11.55
+rescue hi=60    f2   4.5-> 25.5 dark 637.3->976.8 de  4.81->11.55
+ALL-DONE

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- chip 文字(Material You):选中=on-primary-container;未选=on-surface-variant。
+     框架色板随深浅模式自动翻转,无需 night 变体 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true" android:color="@android:color/system_accent1_1000" />
+    <item android:color="@android:color/system_neutral1_700" />
+</selector>

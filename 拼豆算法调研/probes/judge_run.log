@@ -1,0 +1,23 @@
+building LUTs...
+LUT ready
+DONE cartoons 49
+DONE lineart 50
+E:\crawl4ai\venv\Lib\site-packages\PIL\Image.py:1136: UserWarning: Palette images with Transparency expressed in bytes should be converted to RGBA images
+  warnings.warn(
+DONE pixelart 49
+DONE landscape 50
+DONE portrait 50
+DONE food 49
+DONE random 50
+
+cat          n  frag_o  frag_n   ratio    col_o    col_n     de_o     de_n  better/equal/worse
+cartoons    49   335.7   227.8    0.68     11.7     11.4     5.01     9.61  33/9/7 gate=12% PASS
+lineart     50   483.0   402.3    0.83     10.1     10.3     4.60    13.93  28/3/19 gate=0% FAIL
+pixelart    49   541.8   440.1    0.81     34.4     38.3     8.10    15.86  18/11/20 gate=65% FAIL
+landscape   50   433.9   511.3    1.18     23.4     30.4     8.27    14.20  0/0/50 gate=50% FAIL
+portrait    50   401.8   463.1    1.15     24.1     33.1     7.87    14.25  0/0/50 gate=66% FAIL
+food        49   776.5   741.7    0.96     37.4     46.6     8.44    15.36  0/0/49 gate=51% FAIL
+random      50   404.5   437.9    1.08     21.5     29.6     8.28    14.83  0/0/50 gate=54% FAIL
+
+WORSE-PILE 245/347 (70.6%)  CI=FAIL:lineart,pixelart,landscape,portrait,food,random
+ALL-DONE rows=347

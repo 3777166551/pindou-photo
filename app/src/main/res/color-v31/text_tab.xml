@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 分段标签文字(Material You):选中=on-secondary-container;未选=on-surface-variant -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true" android:color="@android:color/system_accent2_1000" />
+    <item android:color="@android:color/system_neutral1_700" />
+</selector>

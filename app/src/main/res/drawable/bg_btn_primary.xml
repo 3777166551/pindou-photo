@@ -3,6 +3,6 @@
      按压反馈由 util/Anim.pressScale 承担(不要包 ripple 壳,API 30 会糊)。 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="@color/primary" />
+    <solid android:color="?attr/primary" />
     <corners android:radius="26dp" />
 </shape>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Material You 动态取色(2026-09-21,v2.61):
+     语义色从 @color 硬引用升级为 ?attr 主题属性;
+     AppTheme 在 values/(静态紫回退)与 values-v31/(Android 12+ 框架
+     system_accent/neutral 壁纸色板)各提供一套取值,夜间由 -night 限定符自动切换。
+     仅"铬色"(界面铬件)进属性;点缀马卡龙/状态色/画布色保持静态 token。 -->
+<resources>
+    <attr name="textMain" format="color" />
+    <attr name="textPrimary" format="color" />
+    <attr name="textSub" format="color" />
+    <attr name="textSecondary" format="color" />
+    <attr name="text_chip" format="color" />
+    <attr name="text_tab" format="color" />
+    <attr name="primary" format="color" />
+    <attr name="colorPrimary" format="color" />
+    <attr name="onPrimary" format="color" />
+    <attr name="primaryContainer" format="color" />
+    <attr name="onPrimaryContainer" format="color" />
+    <attr name="onPrimaryContainerDim" format="color" />
+    <attr name="colorSurface" format="color" />
+    <attr name="surfaceContainerLow" format="color" />
+    <attr name="secondaryContainer" format="color" />
+    <attr name="onSecondaryContainer" format="color" />
+    <attr name="subsurface" format="color" />
+    <attr name="line" format="color" />
+    <attr name="colorStroke" format="color" />
+    <attr name="card" format="color" />
+    <attr name="bg" format="color" />
+</resources>

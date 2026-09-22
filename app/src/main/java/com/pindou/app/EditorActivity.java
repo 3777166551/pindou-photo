@@ -255,6 +255,8 @@ public class EditorActivity extends Activity {
     private TextView tabEffect, tabPattern, tabList;
     private View previewFrame, listFrame, loadingOverlay;
     private android.widget.ScrollView controlsScroll;
+    /** 照片变拼豆动画判重:同一张照片(同一 Bitmap 实例)只播一次 */
+    private int revealSrcKey;
     private TextView tvBoardHint, tvW, tvH, tvSummary;
     private TextView tvBright, tvContrast, tvSat;
     private View chip29, chip58, chip87, chip116;
@@ -2382,6 +2384,13 @@ public class EditorActivity extends Activity {
                         }
                         pattern = PatternPatch.apply(np, editMap);
                         patternView.setPattern(pattern);
+                        // 照片变拼豆变形动画(M3 motion):仅新照片首次生成播放,
+                        // 同一张照片的调色/限色重生成不重播(identityHashCode 判别)
+                        if (source != null && !blankCanvas
+                                && System.identityHashCode(source) != revealSrcKey) {
+                            revealSrcKey = System.identityHashCode(source);
+                            patternView.startPhotoReveal(source);
+                        }
                         if (immersiveView != null) immersiveView.setPattern(pattern);
                         // 读屏用户的关键节点播报(无障碍)
                         patternView.announceForAccessibility(

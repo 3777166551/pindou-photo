@@ -15,7 +15,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/summary_title"
-        android:textColor="@color/textMain"
+        android:textColor="?attr/textMain"
         android:textSize="15sp"
         android:textStyle="bold" />
 
@@ -26,7 +26,7 @@
         android:layout_marginTop="6dp"
         android:lineSpacingExtra="4dp"
         android:text=""
-        android:textColor="@color/textSub"
+        android:textColor="?attr/textSub"
         android:textSize="13sp" />
 
     <TextView
@@ -40,7 +40,7 @@
         android:focusable="true"
         android:gravity="center"
         android:text="@string/btn_inventory"
-        android:textColor="@color/text_chip"
+        android:textColor="?attr/text_chip"
         android:textSize="13sp"
         android:textStyle="bold" />
 
@@ -55,7 +55,7 @@
         android:focusable="true"
         android:gravity="center"
         android:text="@string/btn_palettes"
-        android:textColor="@color/text_chip"
+        android:textColor="?attr/text_chip"
         android:textSize="13sp"
         android:textStyle="bold" />
 

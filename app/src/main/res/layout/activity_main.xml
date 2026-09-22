@@ -26,7 +26,7 @@
             android:layout_marginTop="32dp"
             android:letterSpacing="0.03"
             android:text="@string/app_name"
-            android:textColor="@color/textPrimary"
+            android:textColor="?attr/textPrimary"
             android:textSize="28sp"
             android:textStyle="bold" />
 
@@ -36,7 +36,7 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="4dp"
             android:text="@string/main_footer"
-            android:textColor="@color/textSecondary"
+            android:textColor="?attr/textSecondary"
             android:textSize="13sp" />
 
         <!-- 主 CTA 大卡片(合同 §6/§8:浅紫 container 底 + 24dp 圆角) -->
@@ -60,7 +60,7 @@
                     android:layout_height="32dp"
                     android:contentDescription="@null"
                     android:src="@drawable/ic_camera"
-                    android:tint="@color/onPrimaryContainer" />
+                    android:tint="?attr/onPrimaryContainer" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -73,7 +73,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/main_new_title"
-                        android:textColor="@color/onPrimaryContainer"
+                        android:textColor="?attr/onPrimaryContainer"
                         android:textSize="22sp"
                         android:textStyle="bold" />
 
@@ -82,7 +82,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="@string/main_new_desc"
-                        android:textColor="@color/onPrimaryContainerDim"
+                        android:textColor="?attr/onPrimaryContainerDim"
                         android:textSize="13sp" />
                 </LinearLayout>
             </LinearLayout>
@@ -97,7 +97,7 @@
                 android:background="@drawable/bg_btn_primary"
                 android:elevation="0dp"
                 android:text="@string/main_pick_gallery"
-                android:textColor="@color/onPrimary" />
+                android:textColor="?attr/onPrimary" />
 
             <!-- 次按钮:colorSurface 底 + colorStroke 描边 pill,colorPrimary 字 -->
             <TextView
@@ -109,7 +109,7 @@
                 android:background="@drawable/bg_btn_secondary"
                 android:elevation="0dp"
                 android:text="@string/main_pick_camera"
-                android:textColor="@color/colorPrimary" />
+                android:textColor="?attr/colorPrimary" />
         </LinearLayout>
 
         <!-- 我的项目:回访用户最高频动作 -->
@@ -123,7 +123,7 @@
                 android:contentDescription="@null"
                 android:background="@drawable/bg_icon_sky"
                 android:src="@drawable/ic_folder"
-                android:tint="@color/textPrimary" />
+                android:tint="?attr/textPrimary" />
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -154,7 +154,7 @@
                     android:contentDescription="@null"
                     android:background="@drawable/bg_icon_lilac"
                     android:src="@drawable/ic_grid"
-                    android:tint="@color/textPrimary" />
+                    android:tint="?attr/textPrimary" />
 
                 <TextView style="@style/ToolCardTitle" android:text="@string/tool_templates" />
                 <TextView
@@ -173,7 +173,7 @@
                     android:contentDescription="@null"
                     android:background="@drawable/bg_icon_mint"
                     android:src="@drawable/ic_bag"
-                    android:tint="@color/textPrimary" />
+                    android:tint="?attr/textPrimary" />
 
                 <TextView style="@style/ToolCardTitle" android:text="@string/tool_inventory" />
                 <TextView style="@style/ToolCardDesc" android:text="@string/tool_inventory_desc" />
@@ -202,7 +202,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/main_tools"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/textPrimary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
@@ -231,7 +231,7 @@
                     android:contentDescription="@null"
                     android:background="@drawable/bg_icon_mint"
                     android:src="@drawable/ic_eraser"
-                    android:tint="@color/textPrimary" />
+                    android:tint="?attr/textPrimary" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -261,7 +261,7 @@
                         android:contentDescription="@null"
                         android:background="@drawable/bg_icon_sky"
                         android:src="@drawable/ic_scan"
-                        android:tint="@color/textPrimary" />
+                        android:tint="?attr/textPrimary" />
 
                     <TextView style="@style/ToolCardTitle" android:text="@string/tool_scan" />
                     <TextView style="@style/ToolCardDesc" android:text="@string/tool_scan_desc" />
@@ -277,7 +277,7 @@
                         android:contentDescription="@null"
                         android:background="@drawable/bg_icon_butter"
                         android:src="@drawable/ic_type"
-                        android:tint="@color/textPrimary" />
+                        android:tint="?attr/textPrimary" />
 
                     <TextView style="@style/ToolCardTitle" android:text="@string/tool_text" />
                     <TextView style="@style/ToolCardDesc" android:text="@string/tool_text_desc" />
@@ -300,7 +300,7 @@
                         android:contentDescription="@null"
                         android:background="@drawable/bg_icon_peach"
                         android:src="@drawable/ic_pencil"
-                        android:tint="@color/textPrimary" />
+                        android:tint="?attr/textPrimary" />
 
                     <TextView style="@style/ToolCardTitle" android:text="@string/tool_blank" />
                     <TextView style="@style/ToolCardDesc" android:text="@string/tool_blank_desc" />
@@ -316,7 +316,7 @@
                         android:contentDescription="@null"
                         android:background="@drawable/bg_icon_pink"
                         android:src="@drawable/ic_book"
-                        android:tint="@color/textPrimary" />
+                        android:tint="?attr/textPrimary" />
 
                     <TextView style="@style/ToolCardTitle" android:text="@string/tool_knowledge" />
                     <TextView style="@style/ToolCardDesc" android:text="@string/tool_knowledge_desc" />
@@ -334,7 +334,7 @@
                     android:contentDescription="@null"
                     android:background="@drawable/bg_icon_butter"
                     android:src="@drawable/ic_archive"
-                    android:tint="@color/textPrimary" />
+                    android:tint="?attr/textPrimary" />
 
                 <LinearLayout
                     android:layout_width="0dp"

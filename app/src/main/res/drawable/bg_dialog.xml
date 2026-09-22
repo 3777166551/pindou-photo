@@ -2,6 +2,6 @@
 <!-- 弹窗壳(M3 dialog = 28dp extra-large 圆角,白色底) -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="@color/card" />
+    <solid android:color="?attr/card" />
     <corners android:radius="28dp" />
 </shape>

@@ -1,0 +1,21 @@
+building LUTs...
+LUT ready
+rgb_lab_np verified, max_err=1.14e-13
+DONE cartoons 49
+DONE lineart 50
+E:\crawl4ai\venv\Lib\site-packages\PIL\Image.py:1136: UserWarning: Palette images with Transparency expressed in bytes should be converted to RGBA images
+  warnings.warn(
+DONE pixelart 49
+DONE landscape 50
+DONE portrait 50
+DONE food 49
+DONE random 50
+
+cat          n     ol_o/n    cout_o/n     f2_o/n   col_o/n de_o/n(ngDelta)  dark_r gate%  better/equal/worse
+Traceback (most recent call last):
+  File "F:\delete\PDAPP\拼豆算法调研\probes\auto_judge.py", line 466, in <module>
+    main()
+  File "F:\delete\PDAPP\拼豆算法调研\probes\auto_judge.py", line 413, in main
+    print('%-10s %3d %4.1f/%4.1f %5.1f/%5.1f %4.1f/%4.1f %4.1f/%4.1f %5.2f/%5.2f(%+5.2f) %5.2f %4.0f%%  %d/%d/%d %s'
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: %d format: a real number is required, not str

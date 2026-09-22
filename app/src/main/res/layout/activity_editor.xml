@@ -29,7 +29,7 @@
                 android:paddingEnd="8dp"
                 android:contentDescription="@string/a11y_back"
                 android:text="‹"
-                android:textColor="@color/textMain"
+                android:textColor="?attr/textMain"
                 android:textSize="28sp"
                 android:textStyle="bold" />
 
@@ -38,7 +38,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/editor_title"
-                android:textColor="@color/textMain"
+                android:textColor="?attr/textMain"
                 android:textSize="17sp"
                 android:textStyle="bold" />
 
@@ -53,7 +53,7 @@
                 android:paddingEnd="12dp"
                 android:contentDescription="@string/a11y_undo"
                 android:text="↺"
-                android:textColor="@color/textMain"
+                android:textColor="?attr/textMain"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
@@ -68,7 +68,7 @@
                 android:paddingEnd="8dp"
                 android:contentDescription="@string/a11y_redo"
                 android:text="↪"
-                android:textColor="@color/textMain"
+                android:textColor="?attr/textMain"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
@@ -86,7 +86,7 @@
                 android:paddingStart="18dp"
                 android:paddingEnd="18dp"
                 android:text="@string/btn_share"
-                android:textColor="@color/onPrimary"
+                android:textColor="?attr/onPrimary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -113,7 +113,7 @@
                 android:background="@drawable/bg_tab"
                 android:gravity="center"
                 android:text="@string/tab_effect"
-                android:textColor="@color/text_tab"
+                android:textColor="?attr/text_tab"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
@@ -126,7 +126,7 @@
                 android:background="@drawable/bg_tab"
                 android:gravity="center"
                 android:text="@string/tab_pattern"
-                android:textColor="@color/text_tab"
+                android:textColor="?attr/text_tab"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
@@ -138,7 +138,7 @@
                 android:background="@drawable/bg_tab"
                 android:gravity="center"
                 android:text="@string/tab_list"
-                android:textColor="@color/text_tab"
+                android:textColor="?attr/text_tab"
                 android:textSize="15sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -151,6 +151,7 @@
             android:layout_marginStart="10dp"
             android:layout_marginTop="10dp"
             android:layout_marginEnd="10dp"
+            android:layout_marginBottom="8dp"
             android:layout_weight="1"
             android:background="@drawable/bg_panel_preview"
             android:elevation="5dp">
@@ -177,7 +178,7 @@
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
                 android:text="@string/chip_3d"
-                android:textColor="@color/text_chip"
+                android:textColor="?attr/text_chip"
                 android:textSize="13sp"
                 android:visibility="gone" />
 
@@ -196,7 +197,7 @@
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
                 android:text="@string/chip_play3d"
-                android:textColor="@color/text_chip"
+                android:textColor="?attr/text_chip"
                 android:textSize="13sp"
                 android:visibility="gone" />
 
@@ -215,7 +216,7 @@
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
                 android:text="@string/chip_ar"
-                android:textColor="@color/text_chip"
+                android:textColor="?attr/text_chip"
                 android:textSize="13sp"
                 android:visibility="gone" />
 
@@ -232,7 +233,7 @@
                 android:focusable="true"
                 android:gravity="center"
                 android:text="+"
-                android:textColor="@color/onPrimary"
+                android:textColor="?attr/onPrimary"
                 android:textSize="22sp"
                 android:textStyle="bold" />
         </FrameLayout>
@@ -284,7 +285,7 @@
                     android:focusable="true"
                     android:gravity="center"
                     android:text="@string/btn_start_beading"
-                    android:textColor="@color/onPrimary"
+                    android:textColor="?attr/onPrimary"
                     android:textSize="17sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
@@ -302,7 +303,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="3dp"
                     android:text=""
-                    android:textColor="@color/textSub"
+                    android:textColor="?attr/textSub"
                     android:textSize="13sp" />
 
                 <LinearLayout
@@ -324,7 +325,7 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:text="29×29"
-                        android:textColor="@color/text_chip"
+                        android:textColor="?attr/text_chip"
                         android:textSize="13sp" />
 
                     <TextView
@@ -339,7 +340,7 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:text="58×58"
-                        android:textColor="@color/text_chip"
+                        android:textColor="?attr/text_chip"
                         android:textSize="13sp" />
 
                     <TextView
@@ -354,7 +355,7 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:text="87×87"
-                        android:textColor="@color/text_chip"
+                        android:textColor="?attr/text_chip"
                         android:textSize="13sp" />
 
                     <TextView
@@ -368,7 +369,7 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:text="116×116"
-                        android:textColor="@color/text_chip"
+                        android:textColor="?attr/text_chip"
                         android:textSize="13sp" />
                 </LinearLayout>
 
@@ -384,7 +385,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/w_label"
-                        android:textColor="@color/textSub"
+                        android:textColor="?attr/textSub"
                         android:textSize="13sp" />
 
                     <TextView
@@ -399,7 +400,7 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:text="−"
-                        android:textColor="@color/text_chip"
+                        android:textColor="?attr/text_chip"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -409,7 +410,7 @@
                         android:layout_height="wrap_content"
                         android:gravity="center"
                         android:text="58"
-                        android:textColor="@color/textMain"
+                        android:textColor="?attr/textMain"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -424,7 +425,7 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:text="+"
-                        android:textColor="@color/text_chip"
+                        android:textColor="?attr/text_chip"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -436,8 +437,9 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
                         android:text="@string/h_label"
-                        android:textColor="@color/textSub"
+                        android:textColor="?attr/textSub"
                         android:textSize="13sp" />
 
                     <TextView
@@ -452,7 +454,7 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:text="−"
-                        android:textColor="@color/text_chip"
+                        android:textColor="?attr/text_chip"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -462,7 +464,7 @@
                         android:layout_height="wrap_content"
                         android:gravity="center"
                         android:text="58"
-                        android:textColor="@color/textMain"
+                        android:textColor="?attr/textMain"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -477,7 +479,7 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:text="+"
-                        android:textColor="@color/text_chip"
+                        android:textColor="?attr/text_chip"
                         android:textSize="15sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -508,7 +510,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/palette_label"
-                            android:textColor="@color/textMain"
+                            android:textColor="?attr/textMain"
                             android:textSize="15sp" />
 
                         <Spinner
@@ -537,7 +539,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/limit0"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
 
                         <TextView
@@ -552,7 +554,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/limit1"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
 
                         <TextView
@@ -567,7 +569,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/limit2"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
 
                         <TextView
@@ -582,7 +584,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/limit3"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
 
                         <TextView
@@ -596,7 +598,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/limit4"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
                     </LinearLayout>
 
@@ -605,7 +607,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="@string/limit_hint"
-                        android:textColor="@color/textSub"
+                        android:textColor="?attr/textSub"
                         android:textSize="13sp" />
 
                     <LinearLayout
@@ -627,7 +629,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/style_real"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
 
                         <TextView
@@ -642,7 +644,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/style_abs"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
 
                         <TextView
@@ -656,7 +658,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/style_line"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
                     </LinearLayout>
 
@@ -677,7 +679,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/abs_degree"
-                        android:textColor="@color/textMain"
+                        android:textColor="?attr/textMain"
                         android:textSize="15sp" />
 
                     <TextView
@@ -685,7 +687,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="@string/abs_degree_hint"
-                        android:textColor="@color/textSub"
+                        android:textColor="?attr/textSub"
                         android:textSize="13sp" />
 
                     <LinearLayout
@@ -707,7 +709,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/brick0"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
 
                         <TextView
@@ -722,7 +724,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/brick1"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
 
                         <TextView
@@ -737,7 +739,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/brick2"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
 
                         <TextView
@@ -751,7 +753,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/brick3"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
                     </LinearLayout>
 
@@ -772,7 +774,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/abs_limited"
-                                android:textColor="@color/textMain"
+                                android:textColor="?attr/textMain"
                                 android:textSize="15sp" />
 
                             <TextView
@@ -780,7 +782,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:text="@string/abs_limited_hint"
-                                android:textColor="@color/textSub"
+                                android:textColor="?attr/textSub"
                                 android:textSize="13sp" />
                         </LinearLayout>
 
@@ -809,7 +811,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/abs_colors"
-                                    android:textColor="@color/textMain"
+                                    android:textColor="?attr/textMain"
                                     android:textSize="15sp" />
 
                                 <TextView
@@ -817,7 +819,7 @@
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
                                     android:text="@string/abs_colors_hint"
-                                    android:textColor="@color/textSub"
+                                    android:textColor="?attr/textSub"
                                     android:textSize="13sp" />
                             </LinearLayout>
 
@@ -845,7 +847,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/abs_snap"
-                                    android:textColor="@color/textMain"
+                                    android:textColor="?attr/textMain"
                                     android:textSize="15sp" />
 
                                 <TextView
@@ -853,7 +855,7 @@
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
                                     android:text="@string/abs_snap_hint"
-                                    android:textColor="@color/textSub"
+                                    android:textColor="?attr/textSub"
                                     android:textSize="13sp" />
                             </LinearLayout>
 
@@ -880,7 +882,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/line_sens"
-                            android:textColor="@color/textMain"
+                            android:textColor="?attr/textMain"
                             android:textSize="15sp" />
 
                         <TextView
@@ -888,7 +890,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:text="@string/line_hint"
-                            android:textColor="@color/textSub"
+                            android:textColor="?attr/textSub"
                             android:textSize="13sp" />
 
                         <LinearLayout
@@ -912,7 +914,7 @@
                                 android:minWidth="40dp"
                                 android:gravity="end"
                                 android:text="50%"
-                                android:textColor="@color/textMain"
+                                android:textColor="?attr/textMain"
                                 android:textSize="13sp" />
                         </LinearLayout>
                     </LinearLayout>
@@ -938,7 +940,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/adv_section"
-                            android:textColor="@color/textMain"
+                            android:textColor="?attr/textMain"
                             android:textSize="15sp"
                             android:textStyle="bold" />
 
@@ -947,7 +949,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="▸"
-                            android:textColor="@color/textSub"
+                            android:textColor="?attr/textSub"
                             android:textSize="15sp" />
                     </LinearLayout>
 
@@ -977,7 +979,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="@string/shape_rect"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
 
                             <TextView
@@ -992,7 +994,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="@string/shape_round"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
 
                             <TextView
@@ -1006,7 +1008,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="@string/shape_hex"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
                         </LinearLayout>
 
@@ -1022,7 +1024,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginEnd="8dp"
                                 android:text="@string/bead_spec"
-                                android:textColor="@color/textSub"
+                                android:textColor="?attr/textSub"
                                 android:textSize="13sp" />
 
                             <TextView
@@ -1037,7 +1039,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="@string/bead_std"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
 
                             <TextView
@@ -1051,7 +1053,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="@string/bead_mini"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
                         </LinearLayout>
 
@@ -1072,7 +1074,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="@string/dither"
-                                    android:textColor="@color/textMain"
+                                    android:textColor="?attr/textMain"
                                     android:textSize="15sp" />
 
                                 <TextView
@@ -1080,7 +1082,7 @@
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
                                     android:text="@string/dither_hint"
-                                    android:textColor="@color/textSub"
+                                    android:textColor="?attr/textSub"
                                     android:textSize="13sp" />
                             </LinearLayout>
 
@@ -1107,7 +1109,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/dominant"
-                                android:textColor="@color/textMain"
+                                android:textColor="?attr/textMain"
                                 android:textSize="15sp" />
 
                             <TextView
@@ -1115,7 +1117,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:text="@string/dominant_hint"
-                                android:textColor="@color/textSub"
+                                android:textColor="?attr/textSub"
                                 android:textSize="13sp" />
                         </LinearLayout>
 
@@ -1142,7 +1144,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/precise"
-                                android:textColor="@color/textMain"
+                                android:textColor="?attr/textMain"
                                 android:textSize="15sp" />
 
                             <TextView
@@ -1150,7 +1152,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:text="@string/precise_hint"
-                                android:textColor="@color/textSub"
+                                android:textColor="?attr/textSub"
                                 android:textSize="13sp" />
                         </LinearLayout>
 
@@ -1177,7 +1179,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="@string/denoise"
-                                android:textColor="@color/textMain"
+                                android:textColor="?attr/textMain"
                                 android:textSize="15sp" />
 
                             <TextView
@@ -1187,7 +1189,7 @@
                                 android:minWidth="40dp"
                                 android:gravity="end"
                                 android:text="@string/dn_off"
-                                android:textColor="@color/primary"
+                                android:textColor="?attr/primary"
                                 android:textSize="13sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -1204,7 +1206,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/denoise_hint"
-                            android:textColor="@color/textSub"
+                            android:textColor="?attr/textSub"
                             android:textSize="13sp" />
                     </LinearLayout>
 
@@ -1220,7 +1222,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/symbols"
-                            android:textColor="@color/textMain"
+                            android:textColor="?attr/textMain"
                             android:textSize="15sp" />
 
                         <Switch
@@ -1242,7 +1244,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/grid_lines"
-                            android:textColor="@color/textMain"
+                            android:textColor="?attr/textMain"
                             android:textSize="15sp" />
 
                         <Switch
@@ -1292,7 +1294,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/img_section"
-                            android:textColor="@color/textMain"
+                            android:textColor="?attr/textMain"
                             android:textSize="15sp"
                             android:textStyle="bold" />
 
@@ -1301,7 +1303,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="▸"
-                            android:textColor="@color/textSub"
+                            android:textColor="?attr/textSub"
                             android:textSize="15sp" />
                     </LinearLayout>
 
@@ -1328,7 +1330,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/bg_auto"
-                                android:textColor="@color/textMain"
+                                android:textColor="?attr/textMain"
                                 android:textSize="15sp" />
 
                             <TextView
@@ -1336,7 +1338,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:text="@string/bg_auto_hint"
-                                android:textColor="@color/textSub"
+                                android:textColor="?attr/textSub"
                                 android:textSize="13sp" />
                         </LinearLayout>
 
@@ -1365,7 +1367,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="@string/bg_tol"
-                                android:textColor="@color/textMain"
+                                android:textColor="?attr/textMain"
                                 android:textSize="15sp" />
 
                             <TextView
@@ -1375,7 +1377,7 @@
                                 android:minWidth="40dp"
                                 android:gravity="end"
                                 android:text="45%"
-                                android:textColor="@color/primary"
+                                android:textColor="?attr/primary"
                                 android:textSize="13sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
@@ -1392,7 +1394,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/bg_tol_hint"
-                            android:textColor="@color/textSub"
+                            android:textColor="?attr/textSub"
                             android:textSize="13sp" />
                     </LinearLayout>
 
@@ -1407,7 +1409,7 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:text="@string/btn_watermark"
-                        android:textColor="@color/text_chip"
+                        android:textColor="?attr/text_chip"
                         android:textSize="13sp" />
 
                     <TextView
@@ -1421,7 +1423,7 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:text="@string/btn_ghibli"
-                        android:textColor="@color/text_chip"
+                        android:textColor="?attr/text_chip"
                         android:textSize="13sp" />
 
                     <TextView
@@ -1435,7 +1437,7 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:text="@string/btn_restore"
-                        android:textColor="@color/text_chip"
+                        android:textColor="?attr/text_chip"
                         android:textSize="13sp"
                         android:visibility="gone" />
 
@@ -1459,7 +1461,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/mirror_h"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
 
                         <TextView
@@ -1474,7 +1476,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/mirror_v"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
 
                         <TextView
@@ -1488,7 +1490,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/rotate90"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
                     </LinearLayout>
 
@@ -1497,7 +1499,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
                         android:text="@string/transform_hint"
-                        android:textColor="@color/textSub"
+                        android:textColor="?attr/textSub"
                         android:textSize="13sp" />
 
                     <TextView
@@ -1511,7 +1513,7 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:text="@string/btn_crop"
-                        android:textColor="@color/text_chip"
+                        android:textColor="?attr/text_chip"
                         android:textSize="13sp" />
 
                     </LinearLayout>
@@ -1550,7 +1552,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/edit_cell"
-                                android:textColor="@color/textMain"
+                                android:textColor="?attr/textMain"
                                 android:textSize="15sp" />
 
                             <TextView
@@ -1558,7 +1560,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:text="@string/edit_cell_hint"
-                                android:textColor="@color/textSub"
+                                android:textColor="?attr/textSub"
                                 android:textSize="13sp" />
                         </LinearLayout>
 
@@ -1585,7 +1587,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/paint_mode"
-                                android:textColor="@color/textMain"
+                                android:textColor="?attr/textMain"
                                 android:textSize="15sp" />
 
                             <TextView
@@ -1593,7 +1595,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:text="@string/paint_mode_hint"
-                                android:textColor="@color/textSub"
+                                android:textColor="?attr/textSub"
                                 android:textSize="13sp" />
                         </LinearLayout>
 
@@ -1620,7 +1622,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/bead_assist"
-                                android:textColor="@color/textMain"
+                                android:textColor="?attr/textMain"
                                 android:textSize="15sp" />
 
                             <TextView
@@ -1628,7 +1630,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:text="@string/bead_assist_hint"
-                                android:textColor="@color/textSub"
+                                android:textColor="?attr/textSub"
                                 android:textSize="13sp" />
                         </LinearLayout>
 
@@ -1645,7 +1647,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/assist_help_icon"
-                            android:textColor="@color/textMain"
+                            android:textColor="?attr/textMain"
                             android:textSize="15sp"
                             android:textStyle="bold" />
 
@@ -1681,7 +1683,7 @@
                             android:ellipsize="end"
                             android:singleLine="true"
                             android:text="@string/assist_color_default"
-                            android:textColor="@color/textMain"
+                            android:textColor="?attr/textMain"
                             android:textSize="13sp" />
 
                         <TextView
@@ -1696,7 +1698,7 @@
                             android:paddingStart="12dp"
                             android:paddingEnd="12dp"
                             android:text="@string/assist_next"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
                     </LinearLayout>
 
@@ -1706,7 +1708,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="@string/assist_progress_default"
-                        android:textColor="@color/textSub"
+                        android:textColor="?attr/textSub"
                         android:textSize="13sp"
                         android:visibility="gone" />
 
@@ -1737,7 +1739,7 @@
                                 android:maxLines="1"
                                 android:ellipsize="end"
                                 android:text="@string/assist_locate"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
 
                             <TextView
@@ -1754,7 +1756,7 @@
                                 android:maxLines="1"
                                 android:ellipsize="end"
                                 android:text="@string/assist_calendar"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
 
                             <TextView
@@ -1771,7 +1773,7 @@
                                 android:maxLines="1"
                                 android:ellipsize="end"
                                 android:text="@string/assist_immersive_btn"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
 
                             <TextView
@@ -1787,7 +1789,7 @@
                                 android:maxLines="1"
                                 android:ellipsize="end"
                                 android:text="@string/assist_help_btn"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
                         </LinearLayout>
 
@@ -1811,7 +1813,7 @@
                                 android:maxLines="1"
                                 android:ellipsize="end"
                                 android:text="@string/assist_board_btn"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
 
                             <TextView
@@ -1828,7 +1830,7 @@
                                 android:maxLines="1"
                                 android:ellipsize="end"
                                 android:text="@string/assist_row_btn"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
 
                             <TextView
@@ -1845,7 +1847,7 @@
                                 android:maxLines="1"
                                 android:ellipsize="end"
                                 android:text="@string/assist_project_btn"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
 
                             <TextView
@@ -1862,7 +1864,7 @@
                                 android:maxLines="1"
                                 android:ellipsize="end"
                                 android:text="@string/verify_btn_short"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
 
                             <TextView
@@ -1878,7 +1880,7 @@
                                 android:maxLines="1"
                                 android:ellipsize="end"
                                 android:text="@string/assist_voice_btn"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
                         </LinearLayout>
                     </LinearLayout>
@@ -1903,7 +1905,7 @@
                             android:singleLine="true"
                             android:ellipsize="end"
                             android:text="@string/fmt_assist_board"
-                            android:textColor="@color/textMain"
+                            android:textColor="?attr/textMain"
                             android:textSize="13sp" />
 
                         <TextView
@@ -1919,7 +1921,7 @@
                             android:paddingStart="12dp"
                             android:paddingEnd="12dp"
                             android:text="@string/assist_board_next"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
                     </LinearLayout>
 
@@ -1954,7 +1956,7 @@
                                 android:singleLine="true"
                                 android:ellipsize="end"
                                 android:text="@string/brush_default_name"
-                                android:textColor="@color/textMain"
+                                android:textColor="?attr/textMain"
                                 android:textSize="13sp" />
 
                             <TextView
@@ -1968,7 +1970,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="⇋"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="15sp" />
 
                             <TextView
@@ -1984,7 +1986,7 @@
                                 android:paddingStart="14dp"
                                 android:paddingEnd="14dp"
                                 android:text="@string/brush_change"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
                         </LinearLayout>
 
@@ -2007,7 +2009,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="@string/brush_eraser"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
 
                             <TextView
@@ -2022,7 +2024,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="@string/dropper_label"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
 
                             <TextView
@@ -2036,7 +2038,7 @@
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="@string/sym_off"
-                                android:textColor="@color/text_chip"
+                                android:textColor="?attr/text_chip"
                                 android:textSize="13sp" />
                         </LinearLayout>
                     </LinearLayout>
@@ -2061,7 +2063,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/trace_pick"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
 
                         <TextView
@@ -2076,7 +2078,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/trace_hide"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
 
                         <TextView
@@ -2090,7 +2092,7 @@
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/trace_clear"
-                            android:textColor="@color/text_chip"
+                            android:textColor="?attr/text_chip"
                             android:textSize="13sp" />
                     </LinearLayout>
 
@@ -2105,7 +2107,7 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:text="@string/clear_edits"
-                        android:textColor="@color/text_chip"
+                        android:textColor="?attr/text_chip"
                         android:textSize="13sp"
                         android:visibility="gone" />
                 </LinearLayout>
@@ -2132,7 +2134,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/sec_adjust"
-                        android:textColor="@color/textMain"
+                        android:textColor="?attr/textMain"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -2141,7 +2143,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="▸"
-                        android:textColor="@color/textSub"
+                        android:textColor="?attr/textSub"
                         android:textSize="15sp" />
                 </LinearLayout>
 
@@ -2172,7 +2174,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/brightness"
-                            android:textColor="@color/textMain"
+                            android:textColor="?attr/textMain"
                             android:textSize="15sp" />
 
                         <TextView
@@ -2182,7 +2184,7 @@
                             android:minWidth="40dp"
                             android:gravity="end"
                             android:text="0"
-                            android:textColor="@color/primary"
+                            android:textColor="?attr/primary"
                             android:textSize="13sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -2206,7 +2208,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/contrast"
-                            android:textColor="@color/textMain"
+                            android:textColor="?attr/textMain"
                             android:textSize="15sp" />
 
                         <TextView
@@ -2216,7 +2218,7 @@
                             android:minWidth="40dp"
                             android:gravity="end"
                             android:text="0"
-                            android:textColor="@color/primary"
+                            android:textColor="?attr/primary"
                             android:textSize="13sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -2240,7 +2242,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/saturation"
-                            android:textColor="@color/textMain"
+                            android:textColor="?attr/textMain"
                             android:textSize="15sp" />
 
                         <TextView
@@ -2250,7 +2252,7 @@
                             android:minWidth="40dp"
                             android:gravity="end"
                             android:text="0"
-                            android:textColor="@color/primary"
+                            android:textColor="?attr/primary"
                             android:textSize="13sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -2282,7 +2284,7 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:text="@string/btn_reset"
-                        android:textColor="@color/text_chip"
+                        android:textColor="?attr/text_chip"
                         android:textSize="15sp" />
 
                     <TextView
@@ -2297,7 +2299,7 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:text="@string/btn_change_photo"
-                        android:textColor="@color/primary"
+                        android:textColor="?attr/primary"
                         android:textSize="15sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -2332,7 +2334,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="@string/generating"
-                android:textColor="@color/textPrimary"
+                android:textColor="?attr/textPrimary"
                 android:textSize="13sp" />
         </LinearLayout>
     </FrameLayout>

@@ -10,6 +10,28 @@
         <item name="android:windowLightStatusBar">true</item>
         <!-- 全局弹窗壳:M3 白 28dp 圆角(所有 AlertDialog 自动生效) -->
         <item name="android:alertDialogTheme">@style/CandyAlertDialog</item>
+        <!-- Material You 语义色(静态紫回退;Android 12+ 由 values-v31 动态覆盖) -->
+        <item name="textMain">@color/textMain</item>
+        <item name="textPrimary">@color/textPrimary</item>
+        <item name="textSub">@color/textSub</item>
+        <item name="textSecondary">@color/textSecondary</item>
+        <item name="text_chip">@color/text_chip</item>
+        <item name="text_tab">@color/text_tab</item>
+        <item name="primary">@color/primary</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="onPrimary">@color/onPrimary</item>
+        <item name="primaryContainer">@color/primaryContainer</item>
+        <item name="onPrimaryContainer">@color/onPrimaryContainer</item>
+        <item name="onPrimaryContainerDim">@color/onPrimaryContainerDim</item>
+        <item name="colorSurface">@color/colorSurface</item>
+        <item name="surfaceContainerLow">@color/surfaceContainerLow</item>
+        <item name="secondaryContainer">@color/secondaryContainer</item>
+        <item name="onSecondaryContainer">@color/onSecondaryContainer</item>
+        <item name="subsurface">@color/subsurface</item>
+        <item name="line">@color/line</item>
+        <item name="colorStroke">@color/colorStroke</item>
+        <item name="card">@color/card</item>
+        <item name="bg">@color/bg</item>
     </style>
 
     <!-- 弹窗:白壳 + on-surface 字 + 主色按钮(M3 dialog 规格) -->
@@ -32,7 +54,7 @@
     <style name="SecTitle">
         <item name="android:textSize">14sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/textMain</item>
+        <item name="android:textColor">?attr/textMain</item>
         <item name="android:drawableStart">@drawable/ic_dot_small</item>
         <item name="android:drawablePadding">7dp</item>
     </style>
@@ -85,7 +107,7 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">8dp</item>
-        <item name="android:textColor">@color/textPrimary</item>
+        <item name="android:textColor">?attr/textPrimary</item>
         <item name="android:textSize">15sp</item>
         <item name="android:textStyle">bold</item>
     </style>
@@ -94,7 +116,7 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">2dp</item>
-        <item name="android:textColor">@color/textSub</item>
+        <item name="android:textColor">?attr/textSub</item>
         <item name="android:textSize">12sp</item>
     </style>
 

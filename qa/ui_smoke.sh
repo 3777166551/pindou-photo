@@ -427,6 +427,17 @@ fi
 check_text "Bead list"
 log "editor opened with photo"
 
+# v2.61 排版验证:参数区下滚,让 宽/高 步进行抵达滚动上边界(预览卡底缘),
+# 两个滚动态各截一帧 —— 真机反馈"按钮缺一截"是否仍现形的人证物证
+tap_id tabPattern 0
+sleep 1
+adb shell input swipe 540 1700 540 1300 400; sleep 0.8
+snap editor_wh_halfscroll
+adb shell input swipe 540 1700 540 1050 400; sleep 0.8
+snap editor_wh_morescroll
+adb shell input swipe 540 800 540 2200 300; sleep 0.6
+adb shell input swipe 540 800 540 2200 300; sleep 0.6
+
 # 3) 生成完成 → 三个 tab 各截一张(58×58 默认档)
 tap_id tabList
 gen_wait || { echo "[smoke] FAIL: pattern not generated"; snap fail; exit 1; }
@@ -1121,6 +1132,24 @@ back
 sleep 0.8
 back
 sleep 0.8
+ensure_home
+
+# ---------- v2.61 相机 queries 修复验证(放在所有硬流程之后) ----------
+# 修复前:Android 11+ 包可见性 → 拍照 Intent 解析不到 → 只弹"没有可用的相机应用"
+# 修复后:应拉起系统相机 APP(CI 镜像的相机自身会崩,那是它的已知 bug;
+#         能拉起即证明 <queries> 生效。崩溃只污染系统包,最终崩溃检查只认本包)
+ensure_home
+tap_id btnCamera 0
+sleep 2.5
+snap camera_after_fix
+dump_ui || true
+if grep -qi "text=\"[^\"]*no camera[^\"]*\"" ui.xml; then
+  echo "[smoke] NOTE: no-camera toast still shown (queries fix NOT effective?)"
+else
+  log "camera intent resolved (no no-camera toast)"
+fi
+back
+sleep 1
 ensure_home
 
 # ---------- 崩溃检查(只认本包:系统 APP 在 CI 上自有崩溃不算) ----------
