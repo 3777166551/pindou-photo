@@ -227,7 +227,7 @@ public class MainActivity extends Activity {
 
     /** 文字生成:把名字/词语渲染成黑字透明底位图,交给编辑器变成拼豆图纸 */
     private void showTextDialog() {
-        final EditText input = new EditText(this);
+        final EditText input = new com.pindou.app.view.M3EditText(this);
         input.setHint(getString(R.string.textgen_hint));
         input.setFilters(new InputFilter[]{new InputFilter.LengthFilter(12)});
         new AlertDialog.Builder(this)

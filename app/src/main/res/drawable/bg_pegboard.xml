@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 全屏拼板点阵母题:surface 底色 + 淡紫凸点无缝平铺
-     (2026-09-19 发现此文件此前一直引用 v2.25 的 bg_pastel 渐变大图,
-      点阵背景从未真正生效;现改回 tile 本义,与 M3 surface 对色) -->
-<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
-    android:src="@drawable/tile_pegboard"
-    android:tileModeX="repeat"
-    android:tileModeY="repeat" />
+<!-- 全屏拼板点阵母题(v2.61 动态化):底色 = ?attr/bg(随 Material You 壁纸),
+     点阵 = 透明底低透明度墨点平铺(night 变体自动换浅点)。
+     此前为 bg+点烘死的 PNG,壁纸换色时点阵残留淡紫与此冲突 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="?attr/bg" />
+    <item>
+        <bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+            android:src="@drawable/tile_pegboard"
+            android:tileModeX="repeat"
+            android:tileModeY="repeat" />
+    </item>
+</layer-list>

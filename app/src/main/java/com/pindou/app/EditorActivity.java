@@ -3448,7 +3448,7 @@ public class EditorActivity extends Activity {
                 nlp.leftMargin = pad;
                 row.addView(name, nlp);
 
-                final EditText et = new EditText(EditorActivity.this);
+                final EditText et = new com.pindou.app.view.M3EditText(EditorActivity.this);
                 et.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
                 et.setText(r.draft);
                 et.setHint("0");
@@ -3540,7 +3540,7 @@ public class EditorActivity extends Activity {
 
     /** 修改每颗豆单价,豆单里的参考成本随之刷新 */
     private void showPriceDialog() {
-        final EditText et = new EditText(this);
+        final EditText et = new com.pindou.app.view.M3EditText(this);
         et.setInputType(android.text.InputType.TYPE_CLASS_NUMBER
                 | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
         et.setText(String.valueOf(beadUnitPrice()));
@@ -4874,7 +4874,7 @@ public class EditorActivity extends Activity {
         String def = getString(R.string.def_proj_name_fmt,
                 new SimpleDateFormat("MMdd_HHmm", Locale.CHINA)
                         .format(new Date()));
-        final EditText input = new EditText(this);
+        final EditText input = new com.pindou.app.view.M3EditText(this);
         input.setText(def);
         input.setSelection(def.length());
         new AlertDialog.Builder(this)

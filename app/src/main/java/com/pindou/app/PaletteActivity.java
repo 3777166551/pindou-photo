@@ -281,7 +281,7 @@ public class PaletteActivity extends Activity {
 
     private void showRenameDialog(final int idx) {
         final BeadBrandCharts.Chart c = BeadBrandCharts.customAt(idx);
-        final EditText et = new EditText(this);
+        final EditText et = new com.pindou.app.view.M3EditText(this);
         et.setInputType(InputType.TYPE_CLASS_TEXT);
         et.setText(c.name);
         et.setSelection(et.getText().length());
@@ -320,7 +320,7 @@ public class PaletteActivity extends Activity {
         int p = dp(20);
         box.setPadding(p, dp(8), p, 0);
 
-        final EditText etName = new EditText(this);
+        final EditText etName = new com.pindou.app.view.M3EditText(this);
         etName.setInputType(InputType.TYPE_CLASS_TEXT);
         etName.setHint(getString(R.string.hint_palette_name));
         etName.setText(src == null ? getString(R.string.default_palette_name) : src.name);
@@ -491,13 +491,13 @@ public class PaletteActivity extends Activity {
         int p = dp(20);
         box.setPadding(p, dp(8), p, 0);
 
-        final EditText etName = new EditText(this);
+        final EditText etName = new com.pindou.app.view.M3EditText(this);
         etName.setInputType(InputType.TYPE_CLASS_TEXT);
         etName.setHint(getString(R.string.hint_color_name));
         etName.setText(cur == null ? "" : cur.name);
         box.addView(etName);
 
-        final EditText etTag = new EditText(this);
+        final EditText etTag = new com.pindou.app.view.M3EditText(this);
         etTag.setInputType(InputType.TYPE_CLASS_TEXT);
         etTag.setHint(getString(R.string.hint_color_tag));
         etTag.setText(cur == null ? "" : cur.tag);
@@ -511,7 +511,7 @@ public class PaletteActivity extends Activity {
         box.addView(preview, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(40)));
 
-        final EditText etHex = new EditText(this);
+        final EditText etHex = new com.pindou.app.view.M3EditText(this);
         etHex.setInputType(InputType.TYPE_CLASS_TEXT);
         etHex.setMaxLines(1);
         etHex.setHint("#RRGGBB");

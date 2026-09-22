@@ -265,7 +265,7 @@ public class ColorMatchActivity extends Activity {
 
     /** 登记进豆仓:弹数量输入,默认 50 颗 */
     private void askRegister(final Match m) {
-        final EditText et = new EditText(this);
+        final EditText et = new com.pindou.app.view.M3EditText(this);
         et.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
         et.setText("50");
         et.setSelection(et.getText().length());

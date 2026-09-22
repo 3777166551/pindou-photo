@@ -234,7 +234,7 @@ public class InventoryActivity extends Activity {
             cntLabel.setTextSize(11);
             row.addView(cntLabel);
 
-            final EditText et = new EditText(InventoryActivity.this);
+            final EditText et = new com.pindou.app.view.M3EditText(InventoryActivity.this);
             et.setInputType(InputType.TYPE_CLASS_NUMBER);
             et.setMinLines(1);
             et.setMaxLines(1);
@@ -281,7 +281,7 @@ public class InventoryActivity extends Activity {
         box.addView(preview, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(40)));
 
-        final EditText etHex = new EditText(this);
+        final EditText etHex = new com.pindou.app.view.M3EditText(this);
         etHex.setInputType(InputType.TYPE_CLASS_TEXT);
         etHex.setMaxLines(1);
         etHex.setHint("#RRGGBB");
@@ -289,7 +289,7 @@ public class InventoryActivity extends Activity {
         etHex.setTextSize(13);
         box.addView(etHex);
 
-        final EditText etCount = new EditText(this);
+        final EditText etCount = new com.pindou.app.view.M3EditText(this);
         etCount.setInputType(InputType.TYPE_CLASS_NUMBER);
         etCount.setMaxLines(1);
         etCount.setHint(getString(R.string.inv_count_hint));

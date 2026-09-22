@@ -17,6 +17,7 @@
     <attr name="primaryContainer" format="color" />
     <attr name="onPrimaryContainer" format="color" />
     <attr name="onPrimaryContainerDim" format="color" />
+    <attr name="tertiaryContainer" format="color" />
     <attr name="colorSurface" format="color" />
     <attr name="surfaceContainerLow" format="color" />
     <attr name="secondaryContainer" format="color" />

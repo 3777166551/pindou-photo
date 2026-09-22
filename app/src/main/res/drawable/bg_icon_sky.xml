@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 图标盘·天空蓝 -->
+<!-- 图标盘(M3 neutral 容器,随壁纸) ·天空蓝 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:top="1dp">
         <shape android:shape="oval">
@@ -8,7 +8,7 @@
     </item>
     <item android:bottom="2dp">
         <shape android:shape="oval">
-            <solid android:color="@color/skySoft" />
+            <solid android:color="?attr/subsurface" />
         </shape>
     </item>
 </layer-list>

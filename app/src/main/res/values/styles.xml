@@ -22,6 +22,7 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="onPrimary">@color/onPrimary</item>
         <item name="primaryContainer">@color/primaryContainer</item>
+        <item name="tertiaryContainer">@color/tertiaryContainer</item>
         <item name="onPrimaryContainer">@color/onPrimaryContainer</item>
         <item name="onPrimaryContainerDim">@color/onPrimaryContainerDim</item>
         <item name="colorSurface">@color/colorSurface</item>
