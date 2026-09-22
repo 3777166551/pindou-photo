@@ -93,6 +93,11 @@ public class PatternView extends View {
         }
         Bitmap crop = Bitmap.createBitmap(src,
                 (pw - cw) / 2, (ph - ch) / 2, cw, ch);
+        if (crop == src) {
+            // createBitmap 对全幅裁剪返回原对象:绝不能让 revealPhoto 别名
+            // APP 的 source 位图(endReveal 会 recycle 它,毁掉后续重新生成)
+            crop = crop.copy(Bitmap.Config.ARGB_8888, false);
+        }
         int target = Math.max(cw, ch);
         float sc = target > 640 ? 640f / target : 1f;
         revealPhoto = sc < 1f
@@ -100,7 +105,11 @@ public class PatternView extends View {
                         Math.max(1, Math.round(cw * sc)),
                         Math.max(1, Math.round(ch * sc)), true)
                 : crop;
-        if (revealPhoto != crop) crop.recycle();
+        if (revealPhoto != crop && !crop.isRecycled()) crop.recycle();
+        if (revealPhoto == src) {
+            // createScaledBitmap 同尺寸也可能返回原对象,再兜一道
+            revealPhoto = revealPhoto.copy(Bitmap.Config.ARGB_8888, false);
+        }
         revealStart = SystemClock.uptimeMillis();
         revealing = true;
         postInvalidateOnAnimation();
