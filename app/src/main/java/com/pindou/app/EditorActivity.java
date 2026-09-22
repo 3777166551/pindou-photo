@@ -2535,7 +2535,11 @@ public class EditorActivity extends Activity {
      * 新标记的格子在其来源画布上弹 ✓ 印章,点没点上手眼都有数。
      */
     private void toggleAssistCell(int cellX, int cellY, PatternView src) {
-        if (pattern == null || pattern.outsideShape(cellX, cellY)) return;
+        if (pattern == null || cellX < 0 || cellY < 0
+                || cellX >= pattern.cols || cellY >= pattern.rows
+                || pattern.outsideShape(cellX, cellY)) {
+            return;   // 过期坐标防御(双击延迟窗内的重生成会把格坐标作废)
+        }
         int idx = pattern.cellAt(cellX, cellY);
         if (idx < 0) return;
         int key = cellY * pattern.cols + cellX;

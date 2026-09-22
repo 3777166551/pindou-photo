@@ -573,6 +573,12 @@ public class PatternView extends View {
                     @Override
                     public void run() {
                         pendingTap = null;
+                        // 捕获后的 260ms 里图纸可能已重新生成(尺寸变化):
+                        // 过期坐标直接丢弃,否则 cellAt 数组越界(猴子测试实锤)
+                        if (pattern == null || fx >= pattern.cols
+                                || fy >= pattern.rows) {
+                            return;
+                        }
                         if (tapListener != null) tapListener.onCellTap(fx, fy);
                     }
                 };
