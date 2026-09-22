@@ -2410,7 +2410,9 @@ public class EditorActivity extends Activity {
                                 int k = it.next();
                                 int x = k % pattern.cols;
                                 int y = k / pattern.cols;
-                                if (pattern.outsideShape(x, y)
+                                // y 越界防御:快速换尺寸的窗口里 beadDone 可能
+                                // 带着更大网格的键(猴子测试 cellAt 越界实锤)
+                                if (y >= pattern.rows || pattern.outsideShape(x, y)
                                         || pattern.cellAt(x, y) < 0) {
                                     it.remove();
                                 }
