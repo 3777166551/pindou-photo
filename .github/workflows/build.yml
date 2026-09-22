@@ -111,7 +111,7 @@ jobs:
           bash qa/ui_smoke.sh
 
       - name: Commit smoke shots (debug evidence, v2.61 排版/相机验证)
-        if: always()
+        if: failure()
         run: |
           git config user.name "ci-shots-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
