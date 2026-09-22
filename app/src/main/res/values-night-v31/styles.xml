@@ -5,11 +5,12 @@
     <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:colorPrimary">@android:color/system_accent1_600</item>
         <item name="android:colorPrimaryDark">@android:color/system_neutral1_0</item>
-        <item name="android:colorAccent">@android:color/system_accent1_600</item>
+        <item name="android:colorAccent">?attr/colorPrimary</item>
         <item name="android:statusBarColor">@android:color/system_neutral1_0</item>
         <item name="android:navigationBarColor">@android:color/system_neutral1_0</item>
         <item name="android:windowBackground">@drawable/bg_pegboard</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowAnimationStyle">@style/M3WindowAnim</item>
         <item name="android:alertDialogTheme">@style/CandyAlertDialog</item>
         <item name="textMain">@android:color/system_neutral1_1000</item>
         <item name="textPrimary">@android:color/system_neutral1_1000</item>
@@ -32,5 +33,34 @@
         <item name="colorStroke">@android:color/system_neutral1_200</item>
         <item name="card">@android:color/system_neutral1_10</item>
         <item name="bg">@android:color/system_neutral1_0</item>
+    </style>
+
+    <style name="CandyTokens" parent="android:Theme.Material.Dialog.Alert">
+        <item name="textMain">@android:color/system_neutral1_1000</item>
+        <item name="textPrimary">@android:color/system_neutral1_1000</item>
+        <item name="textSub">@android:color/system_neutral1_700</item>
+        <item name="textSecondary">@android:color/system_neutral1_600</item>
+        <item name="text_chip">@color/text_chip</item>
+        <item name="text_tab">@color/text_tab</item>
+        <item name="primary">@android:color/system_accent1_600</item>
+        <item name="colorPrimary">@android:color/system_accent1_600</item>
+        <item name="onPrimary">@android:color/system_accent1_0</item>
+        <item name="primaryContainer">@android:color/system_accent1_100</item>
+        <item name="onPrimaryContainer">@android:color/system_accent1_1000</item>
+        <item name="onPrimaryContainerDim">@android:color/system_accent1_700</item>
+        <item name="colorSurface">@android:color/system_neutral1_0</item>
+        <item name="surfaceContainerLow">@android:color/system_neutral1_10</item>
+        <item name="secondaryContainer">@android:color/system_accent2_50</item>
+        <item name="onSecondaryContainer">@android:color/system_accent2_1000</item>
+        <item name="subsurface">@android:color/system_neutral2_50</item>
+        <item name="line">@android:color/system_neutral1_400</item>
+        <item name="colorStroke">@android:color/system_neutral1_200</item>
+        <item name="card">@android:color/system_neutral1_10</item>
+        <item name="bg">@android:color/system_neutral1_0</item>
+        <item name="android:colorAccent">?attr/colorPrimary</item>
+        <item name="android:textColorPrimary">?attr/textMain</item>
+        <item name="android:textColorSecondary">?attr/textSub</item>
+        <item name="android:buttonBarButtonStyle">@style/M3DialogTextButton</item>
+        <item name="android:windowMinWidthMinor">85%</item>
     </style>
 </resources>

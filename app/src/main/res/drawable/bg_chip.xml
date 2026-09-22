@@ -1,23 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 单选 chip:选中=M3 primary-container 色调填充;未选=surface-container-high。
-     文字色见 color/text_chip(选中 on-primary-container,未选 on-surface-variant) -->
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_selected="true">
-        <shape android:shape="rectangle">
-            <solid android:color="?attr/primaryContainer" />
-            <corners android:radius="20dp" />
-        </shape>
-    </item>
-    <item android:state_checked="true">
-        <shape android:shape="rectangle">
-            <solid android:color="?attr/primaryContainer" />
-            <corners android:radius="20dp" />
-        </shape>
-    </item>
+     文字色见 color/text_chip(选中 on-primary-container,未选 on-surface-variant)。
+     v2.61 包 M3 水波纹(primary 色)提供规范按压反馈 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/primary">
     <item>
-        <shape android:shape="rectangle">
-            <solid android:color="?attr/subsurface" />
-            <corners android:radius="20dp" />
-        </shape>
+        <selector>
+            <item android:state_selected="true">
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/primaryContainer" />
+                    <corners android:radius="20dp" />
+                </shape>
+            </item>
+            <item android:state_checked="true">
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/primaryContainer" />
+                    <corners android:radius="20dp" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/subsurface" />
+                    <corners android:radius="20dp" />
+                </shape>
+            </item>
+        </selector>
     </item>
-</selector>
+</ripple>

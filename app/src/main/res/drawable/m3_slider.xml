@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- M3 滑杆轨道:未扫段 surface 灰 16dp 全圆角,已扫段 primary(拖动把手处由
+     竖条拇指自然收口;clip 的方切边被拇指盖住) -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background"
+        android:gravity="center_vertical"
+        android:height="16dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="8dp" />
+            <solid android:color="?attr/subsurface" />
+        </shape>
+    </item>
+    <item android:id="@android:id/progress"
+        android:gravity="center_vertical"
+        android:height="16dp">
+        <clip>
+            <shape android:shape="rectangle">
+                <corners android:radius="8dp" />
+                <solid android:color="?attr/colorPrimary" />
+            </shape>
+        </clip>
+    </item>
+</layer-list>

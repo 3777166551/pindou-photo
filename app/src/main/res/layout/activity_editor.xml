@@ -514,6 +514,7 @@
                             android:textSize="15sp" />
 
                         <Spinner
+                            android:background="@drawable/m3_dropdown"
                             android:id="@+id/paletteSpinner"
                             android:layout_width="0dp"
                             android:layout_height="42dp"
@@ -786,7 +787,7 @@
                                 android:textSize="13sp" />
                         </LinearLayout>
 
-                        <Switch
+                        <com.pindou.app.view.M3Switch
                             android:id="@+id/swKmeans"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -824,6 +825,7 @@
                             </LinearLayout>
 
                             <Spinner
+                                android:background="@drawable/m3_dropdown"
                                 android:id="@+id/abstractColorSpinner"
                                 android:layout_width="96dp"
                                 android:layout_height="42dp" />
@@ -859,7 +861,7 @@
                                     android:textSize="13sp" />
                             </LinearLayout>
 
-                            <Switch
+                            <com.pindou.app.view.M3Switch
                                 android:id="@+id/swSnap"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -901,6 +903,9 @@
                             android:orientation="horizontal">
 
                             <SeekBar
+                                android:progressDrawable="@drawable/m3_slider"
+                                android:thumb="@drawable/m3_slider_thumb"
+                                android:thumbOffset="2dp"
                                 android:id="@+id/sbLineSens"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
@@ -1086,7 +1091,7 @@
                                     android:textSize="13sp" />
                             </LinearLayout>
 
-                            <Switch
+                            <com.pindou.app.view.M3Switch
                                 android:id="@+id/swDither"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content" />
@@ -1121,7 +1126,7 @@
                                 android:textSize="13sp" />
                         </LinearLayout>
 
-                        <Switch
+                        <com.pindou.app.view.M3Switch
                             android:id="@+id/swDominant"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
@@ -1156,7 +1161,7 @@
                                 android:textSize="13sp" />
                         </LinearLayout>
 
-                        <Switch
+                        <com.pindou.app.view.M3Switch
                             android:id="@+id/swPrecise"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
@@ -1195,6 +1200,9 @@
                         </LinearLayout>
 
                         <SeekBar
+                            android:progressDrawable="@drawable/m3_slider"
+                            android:thumb="@drawable/m3_slider_thumb"
+                            android:thumbOffset="2dp"
                             android:id="@+id/sbDenoise"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -1225,7 +1233,7 @@
                             android:textColor="?attr/textMain"
                             android:textSize="15sp" />
 
-                        <Switch
+                        <com.pindou.app.view.M3Switch
                             android:id="@+id/swSymbols"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -1247,7 +1255,7 @@
                             android:textColor="?attr/textMain"
                             android:textSize="15sp" />
 
-                        <Switch
+                        <com.pindou.app.view.M3Switch
                             android:id="@+id/swGrid"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -1342,7 +1350,7 @@
                                 android:textSize="13sp" />
                         </LinearLayout>
 
-                        <Switch
+                        <com.pindou.app.view.M3Switch
                             android:id="@+id/swEditBg"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
@@ -1383,6 +1391,9 @@
                         </LinearLayout>
 
                         <SeekBar
+                            android:progressDrawable="@drawable/m3_slider"
+                            android:thumb="@drawable/m3_slider_thumb"
+                            android:thumbOffset="2dp"
                             android:id="@+id/sbBgTol"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -1564,7 +1575,7 @@
                                 android:textSize="13sp" />
                         </LinearLayout>
 
-                        <Switch
+                        <com.pindou.app.view.M3Switch
                             android:id="@+id/swEditCell"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
@@ -1599,7 +1610,7 @@
                                 android:textSize="13sp" />
                         </LinearLayout>
 
-                        <Switch
+                        <com.pindou.app.view.M3Switch
                             android:id="@+id/swPaint"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content" />
@@ -1651,7 +1662,7 @@
                             android:textSize="15sp"
                             android:textStyle="bold" />
 
-                        <Switch
+                        <com.pindou.app.view.M3Switch
                             android:id="@+id/swBeadAssist"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -2190,6 +2201,9 @@
                     </LinearLayout>
 
                     <SeekBar
+                        android:progressDrawable="@drawable/m3_slider"
+                        android:thumb="@drawable/m3_slider_thumb"
+                        android:thumbOffset="2dp"
                         android:id="@+id/sbBright"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -2224,6 +2238,9 @@
                     </LinearLayout>
 
                     <SeekBar
+                        android:progressDrawable="@drawable/m3_slider"
+                        android:thumb="@drawable/m3_slider_thumb"
+                        android:thumbOffset="2dp"
                         android:id="@+id/sbContrast"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -2258,6 +2275,9 @@
                     </LinearLayout>
 
                     <SeekBar
+                        android:progressDrawable="@drawable/m3_slider"
+                        android:thumb="@drawable/m3_slider_thumb"
+                        android:thumbOffset="2dp"
                         android:id="@+id/sbSat"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

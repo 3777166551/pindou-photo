@@ -3,11 +3,12 @@
     <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:colorPrimary">@color/primary</item>
         <item name="android:colorPrimaryDark">@color/bg</item>
-        <item name="android:colorAccent">@color/primary</item>
+        <item name="android:colorAccent">?attr/colorPrimary</item>
         <item name="android:statusBarColor">@color/bg</item>
         <item name="android:navigationBarColor">@color/bg</item>
         <item name="android:windowBackground">@drawable/bg_pegboard</item>
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowAnimationStyle">@style/M3WindowAnim</item>
         <!-- 全局弹窗壳:M3 白 28dp 圆角(所有 AlertDialog 自动生效) -->
         <item name="android:alertDialogTheme">@style/CandyAlertDialog</item>
         <!-- Material You 语义色(静态紫回退;Android 12+ 由 values-v31 动态覆盖) -->
@@ -34,13 +35,62 @@
         <item name="bg">@color/bg</item>
     </style>
 
-    <!-- 弹窗:白壳 + on-surface 字 + 主色按钮(M3 dialog 规格) -->
-    <style name="CandyAlertDialog" parent="android:Theme.Material.Light.Dialog.Alert">
-        <item name="android:windowBackground">@drawable/bg_dialog</item>
-        <item name="android:colorAccent">@color/primary</item>
-        <item name="android:textColorPrimary">@color/textMain</item>
-        <item name="android:textColorSecondary">@color/textSub</item>
+    <!-- 弹窗:M3 白壳 28dp + 动态语义色(text/主按钮色随 Material You)。
+         CandyTokens = 语义色 token 集(四套配置:values/night/v31/night-v31) -->
+    <style name="CandyTokens" parent="android:Theme.Material.Light.Dialog.Alert">
+        <item name="textMain">@color/textMain</item>
+        <item name="textPrimary">@color/textPrimary</item>
+        <item name="textSub">@color/textSub</item>
+        <item name="textSecondary">@color/textSecondary</item>
+        <item name="text_chip">@color/text_chip</item>
+        <item name="text_tab">@color/text_tab</item>
+        <item name="primary">@color/primary</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="onPrimary">@color/onPrimary</item>
+        <item name="primaryContainer">@color/primaryContainer</item>
+        <item name="onPrimaryContainer">@color/onPrimaryContainer</item>
+        <item name="onPrimaryContainerDim">@color/onPrimaryContainerDim</item>
+        <item name="colorSurface">@color/colorSurface</item>
+        <item name="surfaceContainerLow">@color/surfaceContainerLow</item>
+        <item name="secondaryContainer">@color/secondaryContainer</item>
+        <item name="onSecondaryContainer">@color/onSecondaryContainer</item>
+        <item name="subsurface">@color/subsurface</item>
+        <item name="line">@color/line</item>
+        <item name="colorStroke">@color/colorStroke</item>
+        <item name="card">@color/card</item>
+        <item name="bg">@color/bg</item>
+        <item name="android:colorAccent">?attr/colorPrimary</item>
+        <item name="android:textColorPrimary">?attr/textMain</item>
+        <item name="android:textColorSecondary">?attr/textSub</item>
+        <item name="android:buttonBarButtonStyle">@style/M3DialogTextButton</item>
         <item name="android:windowMinWidthMinor">85%</item>
+    </style>
+
+    <style name="CandyAlertDialog" parent="CandyTokens">
+        <item name="android:windowBackground">@drawable/bg_dialog</item>
+    </style>
+
+    <!-- M3 弹窗文字按钮:无边框、primary 色、14sp 加粗、48dp 触达 -->
+    <style name="M3DialogTextButton"
+        parent="android:Widget.Material.Light.Button.Borderless.Colored">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:minWidth">64dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:background">?android:attr/selectableItemBackgroundBorderless</item>
+    </style>
+
+    <!-- M3 窗口转场(淡入淡出+轻缩放,emphasized 时长) -->
+    <style name="M3WindowAnim">
+        <item name="android:activityOpenEnterAnimation">@anim/m3_open_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/m3_open_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/m3_close_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/m3_close_exit</item>
+        <item name="android:taskOpenEnterAnimation">@anim/m3_open_enter</item>
+        <item name="android:taskOpenExitAnimation">@anim/m3_open_exit</item>
+        <item name="android:taskCloseEnterAnimation">@anim/m3_close_enter</item>
+        <item name="android:taskCloseExitAnimation">@anim/m3_close_exit</item>
     </style>
 
     <!-- 开屏:与动画画布同底色,避免闪屏 -->

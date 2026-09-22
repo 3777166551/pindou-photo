@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- M3 Expressive 滑杆把手:4×44dp 竖条(2025 形态),primary 实色 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:width="4dp" android:height="44dp" android:gravity="center">
+        <shape android:shape="rectangle">
+            <corners android:radius="2dp" />
+            <solid android:color="?attr/colorPrimary" />
+        </shape>
+    </item>
+</layer-list>

@@ -953,6 +953,8 @@ public class EditorActivity extends Activity {
                 android.R.layout.simple_spinner_item, BeadPalettes.selNames());
         paletteAdapter.setDropDownViewResource(
                 android.R.layout.simple_spinner_dropdown_item);
+        paletteSpinner.setPopupBackgroundDrawable(
+                getResources().getDrawable(R.drawable.bg_dialog, getTheme()));
         paletteSpinner.setAdapter(paletteAdapter);
         suppressSpinner = true;
         paletteSpinner.setSelection(tierIdx);
@@ -1322,6 +1324,8 @@ public class EditorActivity extends Activity {
                 android.R.layout.simple_spinner_item, absLabels);
         absAdapter.setDropDownViewResource(
                 android.R.layout.simple_spinner_dropdown_item);
+        abstractColorSpinner.setPopupBackgroundDrawable(
+                getResources().getDrawable(R.drawable.bg_dialog, getTheme()));
         abstractColorSpinner.setAdapter(absAdapter);
         int absDefault = 2; // 8 色
         suppressAbsSpinner = true;
@@ -4269,6 +4273,8 @@ public class EditorActivity extends Activity {
                 android.R.layout.simple_spinner_item, BeadPalettes.selNames());
         paletteAdapter.setDropDownViewResource(
                 android.R.layout.simple_spinner_dropdown_item);
+        paletteSpinner.setPopupBackgroundDrawable(
+                getResources().getDrawable(R.drawable.bg_dialog, getTheme()));
         paletteSpinner.setAdapter(paletteAdapter);
         if (selectIdx >= 0) {
             int target = Math.min(BeadPalettes.selCount() - 1,

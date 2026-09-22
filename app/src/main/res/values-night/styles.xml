@@ -5,11 +5,12 @@
     <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:colorPrimary">@color/primary</item>
         <item name="android:colorPrimaryDark">@color/bg</item>
-        <item name="android:colorAccent">@color/primary</item>
+        <item name="android:colorAccent">?attr/colorPrimary</item>
         <item name="android:statusBarColor">@color/bg</item>
         <item name="android:navigationBarColor">@color/bg</item>
         <item name="android:windowBackground">@drawable/bg_pegboard</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowAnimationStyle">@style/M3WindowAnim</item>
         <item name="android:alertDialogTheme">@style/CandyAlertDialog</item>
         <!-- Material You 语义色(深色静态回退) -->
         <item name="textMain">@color/textMain</item>
@@ -33,6 +34,39 @@
         <item name="colorStroke">@color/colorStroke</item>
         <item name="card">@color/card</item>
         <item name="bg">@color/bg</item>
+    </style>
+
+    <style name="CandyTokens" parent="android:Theme.Material.Dialog.Alert">
+        <item name="textMain">@color/textMain</item>
+        <item name="textPrimary">@color/textPrimary</item>
+        <item name="textSub">@color/textSub</item>
+        <item name="textSecondary">@color/textSecondary</item>
+        <item name="text_chip">@color/text_chip</item>
+        <item name="text_tab">@color/text_tab</item>
+        <item name="primary">@color/primary</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="onPrimary">@color/onPrimary</item>
+        <item name="primaryContainer">@color/primaryContainer</item>
+        <item name="onPrimaryContainer">@color/onPrimaryContainer</item>
+        <item name="onPrimaryContainerDim">@color/onPrimaryContainerDim</item>
+        <item name="colorSurface">@color/colorSurface</item>
+        <item name="surfaceContainerLow">@color/surfaceContainerLow</item>
+        <item name="secondaryContainer">@color/secondaryContainer</item>
+        <item name="onSecondaryContainer">@color/onSecondaryContainer</item>
+        <item name="subsurface">@color/subsurface</item>
+        <item name="line">@color/line</item>
+        <item name="colorStroke">@color/colorStroke</item>
+        <item name="card">@color/card</item>
+        <item name="bg">@color/bg</item>
+        <item name="android:colorAccent">?attr/colorPrimary</item>
+        <item name="android:textColorPrimary">?attr/textMain</item>
+        <item name="android:textColorSecondary">?attr/textSub</item>
+        <item name="android:buttonBarButtonStyle">@style/M3DialogTextButton</item>
+        <item name="android:windowMinWidthMinor">85%</item>
+    </style>
+
+    <style name="CandyAlertDialog" parent="CandyTokens">
+        <item name="android:windowBackground">@drawable/bg_dialog</item>
     </style>
 
     <style name="SplashTheme" parent="android:Theme.Material.Light.NoActionBar">
