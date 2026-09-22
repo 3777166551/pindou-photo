@@ -169,6 +169,8 @@ check_text() {
   if [ "$must" = "1" ]; then
     echo "[smoke] FAIL: expected text missing: $txt"
     snap fail
+    adb logcat -d > shots/textfail_logcat.txt 2> /dev/null || true
+    adb logcat -d -b crash > shots/textfail_crash.txt 2> /dev/null || true
     exit 1
   fi
   log "soft-miss text: $txt"
@@ -231,8 +233,12 @@ back() {
 }
 
 # 硬失败退出(曾漏定义:toggle 六轮失败后 "die: command not found",
-# 脚本带病继续跑,辅助没开导致后续链条全乱,0914 run135 实锤)
-die() { echo "[smoke] FAIL: $*"; snap fail; exit 1; }
+# 脚本带病继续跑,辅助没开导致后续链条全乱,0914 实锤)
+# 失败时顺带存 logcat(含 crash 缓冲):CI 上进程死亡/ANR 的唯一现场
+die() { echo "[smoke] FAIL: $*"; snap fail
+  adb logcat -d > shots/die_logcat.txt 2> /dev/null || true
+  adb logcat -d -b crash > shots/die_crash.txt 2> /dev/null || true
+  exit 1; }
 
 # ---------- 拼豆辅助开关:以 checked 状态为准的确定性拨动 ----------
 # 设置面板的滚动位置在导出/分享/重开项目后会漂移,盲点坐标会落到邻格
