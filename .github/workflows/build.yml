@@ -108,6 +108,15 @@ jobs:
           export ANDROID_HOME=/usr/local/lib/android/sdk
           bash qa/ui_smoke.sh
 
+      - name: Commit smoke shots (debug evidence, v2.61 排版/相机验证)
+        if: always()
+        run: |
+          git config user.name "ci-shots-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add shots || true
+          git commit -m "ci: smoke shots [skip ci]" || echo "nothing to commit"
+          git push || echo "push failed (permissions)"
+
       - name: Upload smoke screenshots
         uses: actions/upload-artifact@v4
         if: always()
