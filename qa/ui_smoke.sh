@@ -435,8 +435,10 @@ adb shell input swipe 540 1700 540 1300 400; sleep 0.8
 snap editor_wh_halfscroll
 adb shell input swipe 540 1700 540 1050 400; sleep 0.8
 snap editor_wh_morescroll
-adb shell input swipe 540 800 540 2200 300; sleep 0.6
-adb shell input swipe 540 800 540 2200 300; sleep 0.6
+# 回顶:起点必须在设置区内(y>=1600),落在画布上会被 PatternView 吃成平移
+adb shell input swipe 540 1600 540 2250 300; sleep 0.5
+adb shell input swipe 540 1600 540 2250 300; sleep 0.5
+adb shell input swipe 540 1600 540 2250 300; sleep 0.6
 
 # 3) 生成完成 → 三个 tab 各截一张(58×58 默认档)
 tap_id tabList
@@ -505,7 +507,19 @@ snap photo_round
 tap_id chipShapeHex 0
 sleep 5
 snap photo_hex
-check_text "Hexagon"               # 硬断言:板子提示切成六边形文案
+# 板提示(tvBoardHint)在参数区顶部:tap_id 自动滚找 chipShapeHex 会把面板
+# 滚到中下部,提示节点出 dump 视野 → 硬断言必挂(2026-09-22 run 实锤)。
+# 先把面板滚回顶,再断言(此时必在视野内,确定性通过)
+adb shell input swipe 540 1600 540 2250 300; sleep 0.5
+adb shell input swipe 540 1600 540 2250 300; sleep 0.5
+adb shell input swipe 540 1600 540 2250 300; sleep 0.8
+check_text "Hexagon" 0 || {
+  adb logcat -d -b crash > shots/hex_crash.txt 2> /dev/null || true
+  adb logcat -d > shots/hex_logcat.txt 2> /dev/null || true
+  echo "[smoke] FAIL: expected text missing: Hexagon"
+  snap fail
+  exit 1
+}
 tap_id chipShapeRect 0
 sleep 4
 
