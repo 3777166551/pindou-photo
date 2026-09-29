@@ -34,6 +34,14 @@ harmony/.idea/
 harmony/.hvigor/
 harmony/oh_modules/
 qa/ci_shots*/  
-"Æ´¶¹Ëã·¨µ÷ÑÐ/probes/datasets/"  
-"Æ´¶¹Ëã·¨µ÷ÑÐ/probes/__pycache__/"  
+"Æ´ï¿½ï¿½ï¿½ã·¨ï¿½ï¿½ï¿½ï¿½/probes/datasets/"  
+"Æ´ï¿½ï¿½ï¿½ã·¨ï¿½ï¿½ï¿½ï¿½/probes/__pycache__/"  
 qaout_inventory/
+proto_sanc/out/  
+proto_sanc/me_girl.jpg  
+proto_sanc/__pycache__/  
+proto_sanc/dbg_doll.py  
+build_err.txt  
+build_final.txt  
+qa_run.log  
+qa/qa_full_run.log  

@@ -67,6 +67,20 @@
   经逐个核实:2 处为单参数 %d≡%1$d 风格漂移(已统一成位置写法)+
   fmt_replace_title 英文位置参数重排=合法(测试改为按位号+种类比较)。
   **qa 20 套 490 项全绿。**
+- **★ v2.62 预埋⑦(2026-09-29,本地):三转二终局落地启动——纸娃娃模式原型
+  闭环(proto_sanc/)**——①部件库 v1 定版:parts_gen.py 参数化生成
+  72 眼型(睫四形态×瞳渐层×双高光×睫毛尖,豆矩阵渲染)+11 日漫发型
+  (呆毛/空气刘海/公主切/丸子/双丸子/长直…)+4 嘴,全量入库不筛(挑选
+  =APP 内乐趣);②pipe_doll.py 照片→豆偶闭环:PSY.prep(U²-Net+ParseNet)
+  →YuNet→detect_attrs 取色(发/肤/唇/衣,90 色板下标)→face_grid_v2
+  部件换色(瞳=发色渐层派生/腮红=肤派生)→豆板三联图,me_girl 首图成功;
+  ③双马尾检测修复:long 加发量兜底(hair.sum()>0.6*fw*fh,白衣稀释实测
+  0.314 救回);④开源结论(网络核实):DiceBear 库 MIT 但各风格各自
+  license(pixel-art 风格待核);日漫风分层部件库**不存在**(Picrew 版权
+  封闭/DOT ILLUST 禁ジェネレーター+加工物再配布/hpgpixer 需邮件许可
+  ——全部出局),自产参数化=唯一主力且合规干净(零第三方素材入库,无 IP
+  形象,程序绘图不属生成式 AI 服务监管);⑤隐私边界:proto_sanc/out/ 与
+  me_girl.jpg 已 gitignore(真人照不入公开仓库)。
 - **★ v2.61 = M3 Expressive 化大版本(2026-09-21/22,全部 CI 模拟器实证)**:
   ①Material You 动态取色(Android 12+ 配色跟壁纸,语义色 @color→?attr 22 token
   214+ 处,AppTheme/CandyTokens 四套变体,API<12 静态紫回退);②M3 控件全面化:
