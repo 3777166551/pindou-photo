@@ -134,6 +134,12 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
+        <!-- 上墙预览(非 AR):相册照片+效果图透视贴合,恒定深底 -->
+        <activity
+            android:name=".WallPreviewActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
         <!-- 极简文件提供器:用于拍照临时文件与分享图片 -->
         <provider
             android:name=".provider.AppFileProvider"

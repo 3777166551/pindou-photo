@@ -594,6 +594,18 @@ snap photo_share_card
 back
 sleep 1.5
 
+# 10b) 立牌方案:摘要弹窗打开+关闭(底座几何/配色/用量有 TestStandee 25 项单测兜底)
+tap_id btnMenu
+sleep 1.5
+tap_text "Export chart" 0
+sleep 1
+tap_text "Standee" 0
+sleep 1.5
+check_text "Export PDF" 0        # 摘要弹窗出现(主图/底座统计+示意图)
+snap standee_dialog
+tap_text "Close" 0
+sleep 1
+
 # 11) 真图纸上的拼豆辅助:打卡日历 + 查漏(开关态硬断言)
 adb shell input swipe 540 1700 540 500 300; sleep 0.8
 toggle_assist_on

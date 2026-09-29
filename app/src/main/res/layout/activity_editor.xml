@@ -162,7 +162,26 @@
                 android:layout_height="match_parent"
                 android:contentDescription="@string/a11y_board_canvas" />
 
-            <!-- 三视图入口收进右下角单个 FAB 展开菜单(合同 §6:画布禁止常驻按钮遮挡) -->
+            <!-- 四视图入口收进右下角单个 FAB 展开菜单(合同 §6:画布禁止常驻按钮遮挡) -->
+            <TextView
+                android:id="@+id/chipWall"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_gravity="end|bottom"
+                android:layout_marginEnd="12dp"
+                android:layout_marginBottom="200dp"
+                android:background="@drawable/bg_chip"
+                android:clickable="true"
+                android:elevation="6dp"
+                android:focusable="true"
+                android:gravity="center"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:text="@string/chip_wall"
+                android:textColor="?attr/text_chip"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
             <TextView
                 android:id="@+id/chip3d"
                 android:layout_width="wrap_content"

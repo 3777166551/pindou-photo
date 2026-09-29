@@ -2,9 +2,9 @@
 
 > 本文档是项目的**持续交接入口**：当前状态、待办功能、开发约定、操作备忘。
 > 新会话/新开发者从这里开始读。最后更新：2026-09-29（**v2.61 后补:①两真机
-> bug 修复(GIF 导出尺寸/空白帧+空白画布 stale UI);②新功能「查漏高亮」
-> (拼豆辅助一键总览所有未拼豆,M3 colorWarning)**;本地 compile+qa 371 全绿,
-> 未推 CI,随 v2.62 出包;v2.61 M3 Expressive 化详见 09-22 快照)
+> bug 修复;②查漏高亮;③3D 熨烫两连;④立牌方案一键生成;⑤上墙预览(非 AR)**
+> ;本地 compile+qa 396 全绿(16 套,新增 TestStandee 25;run_tests.sh 顺手补上
+> 一直漏掉的 TestVerify),未推 CI,随 v2.62 出包)
 
 ## 一、当前状态快照（2026-09-22,v2.61 M3 化完成,远端 main=483bafc 之后）
 
@@ -16,6 +16,30 @@
   (边拼边掉数字);关=恢复正常辅助渲染。编辑页/沉浸页共用
   (applyAssistParamsTo 透传);帮助弹窗补条目;三语;冒烟加 chip selected
   双向断言+截图。核心:PatternView.setMissCheck + missStats/toggleMissCheck。
+- **★ v2.62 预埋②(2026-09-29,本地绿)**:**3D 熨烫手感两连(用户反馈直答)**
+  ——①熨斗半径随板幅自适应 2.6~5 格(旧固定 1.9,29 板面积≈翻倍,116 板
+  ≈7 倍),熨斗视觉尺寸同步变大;②拖动采样点间按半步长插值补烫(快拖不留
+  漏豆缝);③**烫到 90% 自动收尾**:余豆按离熨斗距离升序,1.5s 由近及远
+  波及式烫完(蒸汽照冒),进度行先报「烫到 90% 啦…」,完成照常 🎉+自转;
+  GIF 导出冻结时收尾波瞬完保证帧一致;ironDone 守护完成回调只发一次。
+  核心:Play3DView ironRadius/viewScale/moveIronSegment/meltAt/
+  evalIronProgress/startAutoFinish/advanceFinish + Listener.onIronAutoFinish。
+- **★ v2.62 预埋③(2026-09-29,本地绿)**:**立牌方案一键生成**(踩 2026 立体
+  堆叠热趋势,竞品差距清单"立体分层"轻量版)——导出二级菜单新增「🪧 立牌
+  方案」→ 摘要弹窗(主图/底座统计+底座色块+装配示意图+提示,三按钮):
+  ①导出 PDF=装配说明封面(剖面示意图,与弹窗共用 drawAssemblyDiagram)+
+  主图图纸分页+底座图纸页+合并豆单(主图/底座/合计分列);②存底座为项目
+  (blank+share 结构,cols/rows≥4 兼容性靠底座深 ≥4 保证),重开可用辅助拼。
+  核心:bead/StandeeKit(纯 Java,底座宽=主图+2 取奇≥5,深=3+高/8 钳 [4,8],
+  插槽正中 1 格留空到背排、背排实心连通一次可熨,底座色=最低非空行众数)
+  +TestStandee 25 项。
+- **★ v2.62 预埋④(2026-09-29,本地绿)**:**上墙预览(非 AR,竞品差距清单
+  收尾)**——FAB 菜单第四 chip「🧱 上墙」→ WallPreviewActivity(纯代码,
+  相机族恒定深底):进门自动拉相册选房间/墙面照片(EXIF 摆正+采样 ≤2048),
+  效果图 Matrix.setPolyToPoly 四点透视贴合,拖角对位(就近吸附,同对位
+  投屏手势),透明度滑杆,顶栏成品实际厘米尺寸 chip,保存 2x 预览图入相册;
+  零新权限。效果图经缓存文件传入(同 AR 页,1024 宽防 OOM)。
+  **run_tests.sh 修复:TestVerify 一直漏登(本地 bat 有/CI sh 没有),已补。**
 - **★ v2.61 = M3 Expressive 化大版本(2026-09-21/22,全部 CI 模拟器实证)**:
   ①Material You 动态取色(Android 12+ 配色跟壁纸,语义色 @color→?attr 22 token
   214+ 处,AppTheme/CandyTokens 四套变体,API<12 静态紫回退);②M3 控件全面化:

@@ -617,4 +617,35 @@
     <string name="ar_need_camera">ARプレビューにはカメラ権限が必要です(映像は保存・送信されません)</string>
     <string name="ar_no_gyro">姿勢センサーがないため、板は視点に追従しません</string>
     <string name="ar_load_failed">効果画像の読み込みに失敗しました</string>
+
+    <!-- 立て看板プラン(本体+溝付き台座) -->
+    <string name="menu_standee">🪧 立て看板</string>
+    <string name="standee_title">立て看板プラン</string>
+    <string name="fmt_standee_stat_sprite">本体 %1$d×%2$d · %3$d 個</string>
+    <string name="fmt_standee_stat_base">台座 %1$d×%2$d · %3$d 個(溝は自動で中央)</string>
+    <string name="fmt_standee_stat_total">合計 %1$d 個 · 約 %2$d g(%3$s)</string>
+    <string name="fmt_standee_base_color">台座の色: %1$s</string>
+    <string name="fmt_standee_assembled_size">組み立て後 ≈ %1$.0f × %2$.0f cm(幅×高)</string>
+    <string name="standee_step1">① 本体と台座をそれぞれアイロンで固定(溝は開けたまま、奥の列は埋める)</string>
+    <string name="standee_step2">② 本体を立てて溝に奥まで差し込む</string>
+    <string name="standee_step3">③ 接合部を軽く追加でアイロンすると丈夫に</string>
+    <string name="standee_dialog_hint">台座の奥行は本体の高さから自動計算、溝の幅は 1 マス。差し込むだけで立ちます。PDF 一式を出力するか、台座をプロジェクトとして保存してアシスト付きで作れます。</string>
+    <string name="standee_export_pdf">PDF を出力</string>
+    <string name="standee_save_base">台座を保存</string>
+    <string name="standee_proj_prefix">台座_</string>
+    <string name="file_standee_prefix">立て看板_</string>
+    <string name="standee_bom_title">立て看板 材料リスト(本体+台座)</string>
+    <string name="pdf_col_sprite">本体</string>
+    <string name="pdf_col_base">台座</string>
+    <string name="pdf_col_total">合計</string>
+
+    <!-- 壁飾りプレビュー(非 AR):写真+透視で重ね合わせ -->
+    <string name="chip_wall">🧱 壁飾り</string>
+    <string name="wall_pick_hint">部屋や壁の写真を選んで、作品を置いた印象を確認しましょう</string>
+    <string name="wall_btn_photo">🖼 写真</string>
+    <string name="wall_btn_save">💾 保存</string>
+    <string name="wall_btn_done">✓ 完了</string>
+    <string name="wall_size_fmt">出来上がり ≈ %1$.0f × %2$.0f cm</string>
+    <string name="wall_opacity">図案の不透明度</string>
+    <string name="file_wall_prefix">壁飾りプレビュー_</string>
 </resources>

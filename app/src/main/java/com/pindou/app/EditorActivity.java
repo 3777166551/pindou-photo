@@ -150,6 +150,7 @@ public class EditorActivity extends Activity {
     private static final int EXP_FILE = 6;
     private static final int EXP_CROSS = 10;
     private static final int EXP_MORE = 12;
+    private static final int EXP_STANDEE = 13;
 
     // 状态
     private Bitmap source;
@@ -513,11 +514,12 @@ public class EditorActivity extends Activity {
         previewFrame = findViewById(R.id.previewFrame);
         // 一键开始拼豆(合同 §8 体验):图纸就绪后出现,一键=切图纸页+开辅助+滚到面板
         btnStartBeading = findViewById(R.id.btnStartBeading);
-        // FAB 展开/收起三个视图入口(+ 旋转成 × 表示可收起)
+        // FAB 展开/收起四个视图入口(+ 旋转成 × 表示可收起)
         fabFx = findViewById(R.id.fabFx);
         final View chip3dV = findViewById(R.id.chip3d);
         final View chipPlay3dV = findViewById(R.id.chipPlay3d);
         final View chipArV = findViewById(R.id.chipAr);
+        final View chipWallV = findViewById(R.id.chipWall);
         fabFx.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -526,7 +528,14 @@ public class EditorActivity extends Activity {
                 chip3dV.setVisibility(vis);
                 chipPlay3dV.setVisibility(vis);
                 chipArV.setVisibility(vis);
+                chipWallV.setVisibility(vis);
                 fabFx.setRotation(fxMenuOpen ? 45f : 0f);
+            }
+        });
+        chipWallV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                launchWallPreview();
             }
         });
         btnStartBeading.setOnClickListener(new View.OnClickListener() {
@@ -1902,6 +1911,33 @@ public class EditorActivity extends Activity {
         }
     }
 
+    /** 上墙预览(非 AR):效果图落缓存,选房间照片做透视贴合看上墙效果 */
+    private void launchWallPreview() {
+        if (pattern == null) {
+            Toast.makeText(this, getString(R.string.gen_first_short),
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            // 1024 宽贴图足够(同 AR 页,全尺寸渲染大图纸会 OOM)
+            Bitmap bmp = EffectRenderer.render(pattern, 1024, true);
+            File f = new File(getCacheDir(), "wall_effect.png");
+            java.io.FileOutputStream fo = new java.io.FileOutputStream(f);
+            bmp.compress(Bitmap.CompressFormat.PNG, 90, fo);
+            fo.close();
+            bmp.recycle();
+            float mm = miniBead ? 2.6f : 5f;
+            startActivity(new Intent(this, WallPreviewActivity.class)
+                    .putExtra("path", f.getAbsolutePath())
+                    .putExtra("wm", pattern.cols * mm / 1000f)
+                    .putExtra("hm", pattern.rows * mm / 1000f));
+            overridePendingTransition(R.anim.enter_up, R.anim.exit_dim);
+        } catch (Throwable e) {
+            Toast.makeText(this,
+                    getString(R.string.ar_load_failed), Toast.LENGTH_SHORT).show();
+        }
+    }
+
     /** 拍照验收:图纸落分享格式缓存文件,进验收页逐格比对真实拼豆板 */
     private void launchVerify() {
         if (pattern == null || pattern.usedColors.isEmpty()) {
@@ -1920,8 +1956,7 @@ public class EditorActivity extends Activity {
     }
 
     /** 对位投屏:图纸落分享格式缓存文件,带上当前辅助色位置进对位页 */
-    private void launchAlign() {
-        if (pattern == null || pattern.usedColors.isEmpty()) {
+    private void launchAlign() {        if (pattern == null || pattern.usedColors.isEmpty()) {
             Toast.makeText(this, getString(R.string.err_not_ready), Toast.LENGTH_SHORT).show();
             return;
         }
@@ -4272,7 +4307,7 @@ public class EditorActivity extends Activity {
         menu.show();
     }
 
-    /** 二级导出菜单:图纸/效果图/长图卡/PDF/十字绣/.json 文件 */
+    /** 二级导出菜单:图纸/效果图/长图卡/PDF/十字绣/立牌方案/.json 文件 */
     private void showExportSubmenu(View anchor) {
         PopupMenu menu = new PopupMenu(this, anchor);
         menu.getMenu().add(0, EXP_SHEET, 1, getString(R.string.menu_sheet));
@@ -4280,7 +4315,8 @@ public class EditorActivity extends Activity {
         menu.getMenu().add(0, EXP_CARD, 3, getString(R.string.menu_card));
         menu.getMenu().add(0, EXP_PDF, 4, getString(R.string.menu_pdf));
         menu.getMenu().add(0, EXP_CROSS, 5, getString(R.string.menu_cross));
-        menu.getMenu().add(0, EXP_FILE, 6, getString(R.string.menu_file));
+        menu.getMenu().add(0, EXP_STANDEE, 6, getString(R.string.menu_standee));
+        menu.getMenu().add(0, EXP_FILE, 7, getString(R.string.menu_file));
         menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(android.view.MenuItem item) {
@@ -4301,6 +4337,11 @@ public class EditorActivity extends Activity {
             exportPdf();
             return;
         }
+        if (what == EXP_STANDEE) {
+            // 立牌方案:先看摘要弹窗,PDF/底座存档都在弹窗里发起(写缓存/私有目录)
+            showStandeeDialog();
+            return;
+        }
         if (what == EXP_FILE) {
             // 分享 JSON 同样写缓存,不需要存储权限
             exportFile();
@@ -4315,6 +4356,207 @@ public class EditorActivity extends Activity {
             return;
         }
         doExport(what);
+    }
+
+    // ---------------- 立牌方案 ----------------
+
+    /** 立牌方案摘要弹窗:主图+底座统计+装配示意图,由此发起 PDF 导出或底座存档 */
+    private void showStandeeDialog() {
+        if (pattern == null || pattern.usedColors.isEmpty()) {
+            Toast.makeText(this, getString(R.string.err_not_ready),
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final com.pindou.app.bead.StandeeKit kit;
+        try {
+            kit = com.pindou.app.bead.StandeeKit.build(pattern);
+        } catch (IllegalArgumentException e) {
+            Toast.makeText(this, getString(R.string.err_not_ready),
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        float dm = getResources().getDisplayMetrics().density;
+        int pad = Math.round(20 * dm);
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(pad, Math.round(10 * dm), pad, 0);
+
+        BeadColor bc = pattern.palette.get(kit.baseColorIndex);
+        box.addView(standeeInfoRow(String.format(Locale.CHINA,
+                getString(R.string.fmt_standee_stat_sprite),
+                pattern.cols, pattern.rows, pattern.totalBeads), null));
+        box.addView(standeeInfoRow(String.format(Locale.CHINA,
+                getString(R.string.fmt_standee_stat_base),
+                kit.base.cols, kit.base.rows, kit.baseBeads), bc.rgb));
+        box.addView(standeeInfoRow(String.format(Locale.CHINA,
+                getString(R.string.fmt_standee_stat_total),
+                kit.mergedTotal,
+                Math.round(kit.mergedTotal * (miniBead ? 0.0067f : 0.024f)),
+                getString(miniBead ? R.string.bead_mini : R.string.bead_std)), null));
+
+        com.pindou.app.view.StandeeDiagramView diagram =
+                new com.pindou.app.view.StandeeDiagramView(this, pattern, kit);
+        LinearLayout.LayoutParams dLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, Math.round(200 * dm));
+        dLp.topMargin = Math.round(6 * dm);
+        box.addView(diagram, dLp);
+
+        TextView hint = new TextView(this);
+        hint.setText(getString(R.string.standee_dialog_hint));
+        hint.setTextSize(13);
+        hint.setTextColor(getColor(R.color.textSub));
+        LinearLayout.LayoutParams hLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        hLp.topMargin = Math.round(6 * dm);
+        box.addView(hint, hLp);
+
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.standee_title))
+                .setView(box)
+                .setPositiveButton(getString(R.string.standee_export_pdf),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface d, int w) {
+                                exportStandeePdf(kit);
+                            }
+                        })
+                .setNegativeButton(getString(R.string.standee_save_base),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface d, int w) {
+                                saveBaseAsProject(kit);
+                            }
+                        })
+                .setNeutralButton(getString(R.string.btn_close), null)
+                .show();
+    }
+
+    /** 弹窗统计行:文字 + 可选色块(底座行标出自动选用的底座色,null=无色块) */
+    private View standeeInfoRow(String text, Integer swatchRgb) {
+        float dm = getResources().getDisplayMetrics().density;
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        if (swatchRgb != null) {
+            View sw = new View(this);
+            GradientDrawable gd = new GradientDrawable();
+            gd.setShape(GradientDrawable.OVAL);
+            gd.setColor(0xFF000000 | swatchRgb);
+            sw.setBackground(gd);
+            LinearLayout.LayoutParams sLp = new LinearLayout.LayoutParams(
+                    Math.round(16 * dm), Math.round(16 * dm));
+            sLp.rightMargin = Math.round(8 * dm);
+            row.addView(sw, sLp);
+        }
+        TextView tv = new TextView(this);
+        tv.setText(text);
+        tv.setTextSize(15);
+        tv.setTextColor(getColor(R.color.textMain));
+        row.addView(tv);
+        LinearLayout.LayoutParams rLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        rLp.topMargin = Math.round(6 * dm);
+        row.setLayoutParams(rLp);
+        return row;
+    }
+
+    /** 立牌 PDF:主图图纸 + 底座图纸 + 装配封面 + 合并豆单,后台渲染后弹分享 */
+    private void exportStandeePdf(final com.pindou.app.bead.StandeeKit kit) {
+        showLoading(true, getString(R.string.working_pdf));
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String pal = currentPaletteName();
+                    Bitmap s1 = PatternSheetRenderer.render(EditorActivity.this,
+                            kit.sprite, pal, miniBead);
+                    Bitmap s2 = PatternSheetRenderer.render(EditorActivity.this,
+                            kit.base, pal, miniBead);
+                    String stamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA)
+                            .format(new Date());
+                    String name = getString(R.string.file_standee_prefix)
+                            + kit.sprite.cols + "x" + kit.sprite.rows
+                            + "_" + stamp + ".pdf";
+                    final Uri uri = com.pindou.app.export.StandeePdfExporter.export(
+                            EditorActivity.this,
+                            s1, s2, kit.sprite, kit, pal, miniBead, name);
+                    s1.recycle();
+                    s2.recycle();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showLoading(false);
+                            share(uri, "application/pdf");
+                        }
+                    });
+                } catch (final Exception e) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showLoading(false);
+                            Toast.makeText(EditorActivity.this,
+                                    getString(R.string.err_prefix_export) + e.getMessage(),
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    /**
+     * 底座存为独立项目(blank + share 结构):开口在前的插槽底座是一张
+     * 真图纸,重开后辅助拼/导出/PDF 全家桶照常可用。深度 ≥4 行保证
+     * 分享格式 cols/rows ≥4 的合法性。
+     */
+    private void saveBaseAsProject(final com.pindou.app.bead.StandeeKit kit) {
+        showLoading(true);
+        final long now = System.currentTimeMillis();
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String stamp = new SimpleDateFormat("MMdd_HHmm", Locale.CHINA)
+                            .format(new Date());
+                    final String name = getString(R.string.standee_proj_prefix) + stamp;
+                    JSONObject o = new JSONObject();
+                    o.put("name", name);
+                    o.put("savedAt", now);
+                    o.put("blank", true);
+                    JSONObject s = new JSONObject();
+                    s.put("cols", kit.base.cols);
+                    s.put("rows", kit.base.rows);
+                    s.put("tierIdx", tierIdx);
+                    s.put("style", PatternEngine.STYLE_REALISTIC);
+                    s.put("mini", miniBead);
+                    o.put("settings", s);
+                    o.put("edits", new JSONArray());
+                    o.put("share", PatternShare.build(kit.base, name));
+                    o.put("beadDone", new JSONArray());
+                    File f = ProjectStore.create(EditorActivity.this, name, now);
+                    Jsons.write(f, o);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showLoading(false);
+                            Toast.makeText(EditorActivity.this,
+                                    getString(R.string.fmt_saved_proj, name),
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    });
+                } catch (final Exception e) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showLoading(false);
+                            Toast.makeText(EditorActivity.this,
+                                    getString(R.string.err_prefix_proj) + e.getMessage(),
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            }
+        });
     }
 
     /** 渲染大图 -> 切 A4 多页 PDF -> 弹分享 */

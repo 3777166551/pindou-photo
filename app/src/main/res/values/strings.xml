@@ -617,4 +617,35 @@
     <string name="ar_need_camera">需要相机权限才能 AR 试摆(画面不会保存或上传)</string>
     <string name="ar_no_gyro">此手机没有姿态传感器,板子不会跟随视角变化</string>
     <string name="ar_load_failed">效果图加载失败</string>
+
+    <!-- 立牌方案(主图+插槽底座,一键生成套件) -->
+    <string name="menu_standee">🪧 立牌方案</string>
+    <string name="standee_title">立牌方案</string>
+    <string name="fmt_standee_stat_sprite">主图 %1$d×%2$d · %3$d 颗</string>
+    <string name="fmt_standee_stat_base">底座 %1$d×%2$d · %3$d 颗(插槽自动居中)</string>
+    <string name="fmt_standee_stat_total">合计 %1$d 颗 · 约 %2$d g(%3$s)</string>
+    <string name="fmt_standee_base_color">底座用色:%1$s</string>
+    <string name="fmt_standee_assembled_size">立起后 ≈ %1$.0f × %2$.0f cm(宽×高)</string>
+    <string name="standee_step1">① 先分别烫好主图与底座(插槽处留空,背排实心)</string>
+    <string name="standee_step2">② 主图竖起,从底座开口滑入,顶到背排即立稳</string>
+    <string name="standee_step3">③ 接缝处可再补烫半秒加固</string>
+    <string name="standee_dialog_hint">底座深度按主图高度自动计算,插槽宽 1 格;主图插进去就能站稳。可以导出整套 PDF 图纸,或把底座存为项目,用拼豆辅助照着拼。</string>
+    <string name="standee_export_pdf">导出 PDF</string>
+    <string name="standee_save_base">存底座为项目</string>
+    <string name="standee_proj_prefix">立牌底座_</string>
+    <string name="file_standee_prefix">拼豆立牌_</string>
+    <string name="standee_bom_title">立牌材料清单(主图+底座)</string>
+    <string name="pdf_col_sprite">主图</string>
+    <string name="pdf_col_base">底座</string>
+    <string name="pdf_col_total">合计</string>
+
+    <!-- 上墙预览(非 AR):相册照片+效果图透视贴合 -->
+    <string name="chip_wall">🧱 上墙</string>
+    <string name="wall_pick_hint">选一张房间/墙面的照片,把图纸贴上去看效果</string>
+    <string name="wall_btn_photo">🖼 换照片</string>
+    <string name="wall_btn_save">💾 保存</string>
+    <string name="wall_btn_done">✓ 完成</string>
+    <string name="wall_size_fmt">成品 ≈ %1$.0f × %2$.0f cm</string>
+    <string name="wall_opacity">图纸透明度</string>
+    <string name="file_wall_prefix">上墙预览_</string>
 </resources>
