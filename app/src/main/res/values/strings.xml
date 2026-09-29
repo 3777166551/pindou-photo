@@ -412,7 +412,7 @@
     <string name="menu_file">导出图纸文件(.json,发给别人导入)</string>
     <string name="err_not_ready">图纸还没生成好,稍等一下</string>
     <string name="working_pdf">正在生成 PDF…</string>
-    <string name="palname_main_fmt">主色%d</string>
+    <string name="palname_main_fmt">主色%1$d</string>
     <string name="palname_snap_fmt">·吸附%s</string>
     <string name="palname_free">·原色</string>
     <string name="palname_all_fmt">整套%s</string>
@@ -515,7 +515,7 @@
     <string name="fmt_qty_beads">%,d 颗</string>
     <string name="fmt_qty_bags">≈%1$d包(1000颗/包)</string>
     <string name="fmt_qty_left">%1$,d 颗 · 剩 %2$d</string>
-    <string name="fmt_qty_done">%,d 颗 · ✅拼完</string>
+    <string name="fmt_qty_done">%1$,d 颗 · ✅拼完</string>
     <string name="fmt_pdf_size">图纸尺寸:%1$d × %2$d 格</string>
     <string name="fmt_pdf_total">总用豆:%1$,d 颗 · 颜色 %2$d 种</string>
     <string name="fmt_pdf_weight">约重 %1$,d g(%2$s)</string>

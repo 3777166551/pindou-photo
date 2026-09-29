@@ -412,7 +412,7 @@
     <string name="menu_file">図案ファイルを書き出し(.json、共有用)</string>
     <string name="err_not_ready">図案はまだ生成中です。少しお待ちください</string>
     <string name="working_pdf">PDFを生成中…</string>
-    <string name="palname_main_fmt">主要色%d</string>
+    <string name="palname_main_fmt">主要色%1$d</string>
     <string name="palname_snap_fmt">·スナップ %s</string>
     <string name="palname_free">·元色</string>
     <string name="palname_all_fmt">全体 %s</string>
