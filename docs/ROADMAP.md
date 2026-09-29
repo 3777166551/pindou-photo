@@ -40,6 +40,18 @@
   投屏手势),透明度滑杆,顶栏成品实际厘米尺寸 chip,保存 2x 预览图入相册;
   零新权限。效果图经缓存文件传入(同 AR 页,1024 宽防 OOM)。
   **run_tests.sh 修复:TestVerify 一直漏登(本地 bat 有/CI sh 没有),已补。**
+- **★ v2.62 预埋⑤(2026-09-29,本地绿):豆仓库深度测试化(用户点名"没有
+  测试员")**——①BeadInventory 去 org.json 改纯 Java(手写 JSON 序列化/
+  解析,格式与旧版一致,旧文件直接可读;android.jar 的 org.json 是抛异常
+  stub 挡桌面测试)+useTestFile qa 钩子;②缺豆替代算法提炼 bead/
+  SubstituteSolver(逻辑一字不改,EditorActivity 委托;**文档化原语义:
+  富余≥该色总需求而非缺口**,推"整套替掉"不推"混着用");③**修真 bug:
+  InventoryActivity.reload 把未登记色 -1 直接填进输入框**(valueOf(-1)),
+  用户一按保存全部未登记色被静默写成"登记为 0"——改留空(编辑页弹窗
+  本有此防御,独立管理页漏了);④TestInventory 32 项(存储:两态/负数
+  钳制/RGB 掩码/持久化往返/损坏自愈/旧格式/大写键/300 色;替代:10 边界
+  含 ΔE 实测定色);⑤冒烟加"未登记不得显示 -1"回归断言。
+  **qa 17 套 438 项全绿。**
 - **★ v2.61 = M3 Expressive 化大版本(2026-09-21/22,全部 CI 模拟器实证)**:
   ①Material You 动态取色(Android 12+ 配色跟壁纸,语义色 @color→?attr 22 token
   214+ 处,AppTheme/CandyTokens 四套变体,API<12 静态紫回退);②M3 控件全面化:

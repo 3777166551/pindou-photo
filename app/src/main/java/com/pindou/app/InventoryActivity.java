@@ -124,7 +124,10 @@ public class InventoryActivity extends Activity {
         }
         drafts.clear();
         for (int rgb : colors) {
-            drafts.put(rgb, String.valueOf(BeadInventory.get(this, rgb)));
+            int v = BeadInventory.get(this, rgb);
+            // -1 = 未登记:必须留空。直接 valueOf(-1) 会把"-1"填进输入框,
+            // 用户一按保存全部未登记色被静默写成"登记为 0(用完)"
+            drafts.put(rgb, v < 0 ? "" : String.valueOf(v));
         }
         adapter.notifyDataSetChanged();
         tvCount.setText(colors.size() == 0

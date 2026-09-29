@@ -3306,39 +3306,20 @@ public class EditorActivity extends Activity {
     }
 
     /**
-     * 缺豆替代建议:对每种"库存不够"的用量色,在当前色板里找
-     * "库存富余量 ≥ 该色需求"且 Lab 色差最近的替代色(ΔE<18 才推荐)。
-     * 富余量 = 替代色库存 - 它自己在图纸里的用量(避免拆东墙补西墙)。
+     * 缺豆替代建议:求解逻辑在 bead/SubstituteSolver(纯 Java,qa 单测),
+     * 这里只负责把"登记过的 palette 下标→数量"收集出来喂给它。
      */
     private void computeSubstitutes() {
         beadSubstitutes.clear();
         if (pattern == null || pattern.usedColors.isEmpty()) return;
         List<BeadColor> pal = pattern.palette;
-        double[][] labs = new double[pal.size()][];
-        for (int i = 0; i < pal.size(); i++) {
-            labs[i] = ColorMath.rgbToLab(0xFF000000 | pal.get(i).rgb);
+        Map<Integer, Integer> inventory = new HashMap<>();
+        for (int j = 0; j < pal.size(); j++) {
+            int v = BeadInventory.get(this, pal.get(j).rgb);
+            if (v >= 0) inventory.put(j, v);   // -1 = 未登记,不进候选
         }
-        for (BeadPattern.UsedColor uc : pattern.usedColors) {
-            int have = BeadInventory.get(this, uc.color.rgb);
-            if (have < 0 || have >= uc.count) continue;   // 只管缺豆的
-            int best = -1;
-            double bestDe = Double.MAX_VALUE;
-            for (int j = 0; j < pal.size(); j++) {
-                if (j == uc.index) continue;
-                int inv = BeadInventory.get(this, pal.get(j).rgb);
-                if (inv < 0) continue;
-                int spare = inv - pattern.counts[j];   // 排除替代色自身图纸用量
-                if (spare < uc.count) continue;
-                double de = ColorMath.dist2(labs[uc.index], labs[j]);
-                if (de < bestDe) {
-                    bestDe = de;
-                    best = j;
-                }
-            }
-            if (best >= 0 && bestDe < 18 * 18) {
-                beadSubstitutes.put(uc.index, best);
-            }
-        }
+        beadSubstitutes.putAll(com.pindou.app.bead.SubstituteSolver.solve(
+                pal, pattern.counts, pattern.usedColors, inventory));
     }
 
     private void updateSummary() {

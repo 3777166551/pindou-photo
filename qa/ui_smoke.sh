@@ -1107,6 +1107,12 @@ sleep 1
 tap_id btnInventory
 sleep 2
 snap inventory
+# 回归断言:未登记色的输入框必须留空(曾把 -1 填进框,一按保存全部
+# 未登记色被静默写成"登记为 0")
+dump_ui
+if grep -q 'text="-1"' ui.xml; then
+  echo "[smoke] FAIL: unregistered inventory draft shows -1"; snap fail; exit 1;
+fi
 tap_text "Cancel"
 sleep 1
 tap_id tabPattern 0
