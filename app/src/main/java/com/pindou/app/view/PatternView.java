@@ -369,12 +369,24 @@ public class PatternView extends View {
     private boolean assistRowMode;
     private int assistRow;
     private final Paint boardFramePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    // ---- 漏豆检查(查漏):总览高亮 ----
+    /** true = 忽略逐色蒙灰与按板/逐行带外遮罩,已拼蒙纸色、未拼描琥珀圈呼吸 */
+    private boolean missCheck;
+    /** 未拼豆的圈:设计合同 colorWarning(亮 #E8A13D / 深 #F0B35B,缺料预警语义) */
+    private final Paint missRingPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     /** 夜间图纸:纸面转暗、网格线转亮,豆子颜色保持原样 */
     private boolean night;
 
     /** 夜间图纸模式开关(只影响画布渲染,不改豆子颜色) */
     public void setNight(boolean on) {
         night = on;
+        invalidate();
+    }
+
+    /** 漏豆检查(查漏)开关:开着时图纸总览所有未拼豆,再点由调用方关闭 */
+    public void setMissCheck(boolean on) {
+        missCheck = on;
         invalidate();
     }
     // 描摹底图:画笔模式下垫在格子下面的半透明照片
@@ -1257,13 +1269,38 @@ public class PatternView extends View {
         }
 
         // 拼豆模式:非当前颜色蒙上纸色,已完成的格子描薄荷绿边;
-        // 按板引导时当前板以外的格子整片蒙灰,逐行引导时当前行以外的格子整片蒙灰
+        // 按板引导时当前板以外的格子整片蒙灰,逐行引导时当前行以外的格子整片蒙灰。
+        // 查漏(missCheck)是总览态:忽略逐色蒙灰与带外遮罩,已拼蒙纸色、
+        // 未拼描琥珀圈呼吸——任何颜色的漏豆都一眼可见。
         if (assistOn) {
+            boolean missPulse = false;
+            missRingPaint.setStyle(Paint.Style.STROKE);
+            missRingPaint.setColor(night ? 0xFFF0B35B : 0xFFE8A13D);
             for (int y = 0; y < rows; y++) {
                 for (int x = 0; x < cols; x++) {
                     if (pattern.outsideShape(x, y)) continue;
                     int idx = pattern.cellAt(x, y);
                     if (idx < 0) continue;
+                    if (missCheck) {
+                        if (assistDone != null && assistDone.contains(y * cols + x)) {
+                            // 已拼:纸色蒙灰降权(板色还隐约透出,和"带外蒙灰"区分开)
+                            cellPaint.setColor(night ? 0x992E2938 : 0xA6FFFFFF);
+                            canvas.drawRect(x * cell, y * cell,
+                                    (x + 1) * cell, (y + 1) * cell, cellPaint);
+                        } else {
+                            // 未拼:琥珀圈缓慢呼吸(1.2s 周期,提注意力不刺眼)
+                            float phase = (SystemClock.uptimeMillis() % 1200L) / 1200f;
+                            float pulse = 0.5f - 0.5f * (float) Math.cos(phase * 2 * Math.PI);
+                            missRingPaint.setAlpha((int) (140 + 115 * pulse));
+                            missRingPaint.setStrokeWidth(Math.max(2f, cell * 0.16f));
+                            float inset = cell * 0.07f;
+                            canvas.drawRect(x * cell + inset, y * cell + inset,
+                                    (x + 1) * cell - inset, (y + 1) * cell - inset,
+                                    missRingPaint);
+                            missPulse = true;
+                        }
+                        continue;
+                    }
                     boolean outsideBand =
                             (assistBoardMode && assistBoardRect != null
                                     && (x < assistBoardRect.left || x >= assistBoardRect.right
@@ -1290,8 +1327,9 @@ public class PatternView extends View {
                     }
                 }
             }
-            // 当前行高亮框:墨衬底 + 黄油主线(与按板外框同语言)
-            if (assistRowMode) {
+            if (missPulse) postInvalidateOnAnimation();
+            // 当前行高亮框:墨衬底 + 黄油主线(与按板外框同语言;查漏总览态不画带框)
+            if (assistRowMode && !missCheck) {
                 boardFramePaint.setStyle(Paint.Style.STROKE);
                 float fr = Math.max(3f, cell * 0.14f);
                 boardFramePaint.setColor(0xFF2A2735);
@@ -1304,7 +1342,7 @@ public class PatternView extends View {
                         (assistRow + 1) * cell, boardFramePaint);
             }
             // 当前板外框:墨衬底 + 黄油主线(和拼板分隔线区分开)
-            if (assistBoardMode && assistBoardRect != null) {
+            if (assistBoardMode && assistBoardRect != null && !missCheck) {
                 boardFramePaint.setStyle(Paint.Style.STROKE);
                 float fr = Math.max(3f, cell * 0.14f);
                 boardFramePaint.setColor(0xFF2A2735);

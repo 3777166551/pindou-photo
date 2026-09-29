@@ -322,6 +322,7 @@ public class EditorActivity extends Activity {
     private View btnAssistLocate, btnAssistCalendar, btnBrushMirror;
     private View assistToolsRow;
     private View btnAssistImmersive, btnAssistHelp, btnAssistVoice, btnAssistHelpCard, btnAssistVerify;
+    private View btnAssistMiss;
     // 首页项目对话框「📸 验收」:打开存档生成图纸后自动进拍照验收
     public static volatile boolean pendingAutoVerify = false;
     // 语音引导:本地 TTS 播报进度(零网络零权限),只在辅助开启期间工作
@@ -344,6 +345,8 @@ public class EditorActivity extends Activity {
     private int assistBoard = 0;
     /** 逐行引导:当前行(0-based) */
     private int assistRow = 0;
+    /** 漏豆检查(查漏):开着时图纸总览所有未拼豆(琥珀圈呼吸) */
+    private boolean missCheckOn = false;
     private TextView chipBeadStd, chipBeadMini;
     private TextView btnTracePick, btnTraceToggle, btnTraceClear;
     private com.pindou.app.view.CelebrationView celebration;
@@ -616,6 +619,7 @@ public class EditorActivity extends Activity {
         chipAr = findViewById(R.id.chipAr);
         btnAssistLocate = findViewById(R.id.btnAssistLocate);
         btnAssistCalendar = findViewById(R.id.btnAssistCalendar);
+        btnAssistMiss = findViewById(R.id.btnAssistMiss);
         btnBrushMirror = findViewById(R.id.btnBrushMirror);
         assistToolsRow = findViewById(R.id.assistToolsRow);
         btnAssistImmersive = findViewById(R.id.btnAssistImmersive);
@@ -1160,6 +1164,12 @@ public class EditorActivity extends Activity {
             @Override
             public void onClick(View v) {
                 showCalendarDialog();
+            }
+        });
+        btnAssistMiss.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleMissCheck();
             }
         });
         btnBrushMirror.setOnClickListener(new View.OnClickListener() {
@@ -2503,6 +2513,9 @@ public class EditorActivity extends Activity {
             }
             if (voiceOn) speakAssistStatus();
         } else {
+            // 关辅助:查漏一并退出(chip 复位,画布下次套用时不再高亮)
+            missCheckOn = false;
+            if (btnAssistMiss != null) btnAssistMiss.setSelected(false);
             beadAssistPanel.setVisibility(View.GONE);
             tvAssistProgress.setVisibility(View.GONE);
             if (assistToolsRow != null) assistToolsRow.setVisibility(View.GONE);
@@ -2519,12 +2532,13 @@ public class EditorActivity extends Activity {
         }
     }
 
-    /** 把当前辅助状态(逐色/按板/逐行)套到指定 PatternView(编辑页/沉浸页共用) */
+    /** 把当前辅助状态(逐色/按板/逐行/查漏)套到指定 PatternView(编辑页/沉浸页共用) */
     private void applyAssistParamsTo(PatternView v) {
         v.setAssist(beadAssist,
                 assistMode == ASSIST_COLOR ? assistFocus : -1, beadDone,
                 assistMode == ASSIST_BOARD, assistBoard,
                 assistMode == ASSIST_ROW, assistRow);
+        v.setMissCheck(missCheckOn);
     }
 
     private void applyAssistToView() {
@@ -2910,9 +2924,17 @@ public class EditorActivity extends Activity {
                 order, pattern.usedColors.size(), total, remain));
         float pct = pattern.totalBeads > 0
                 ? beadDone.size() * 100f / pattern.totalBeads : 0f;
-        tvAssistProgress.setText(String.format(Locale.CHINA,
-                getString(R.string.fmt_assist_head),
-                done, total, pct, beadDone.size(), pattern.totalBeads, todayCount()));
+        if (missCheckOn) {
+            // 查漏开着:进度行换成漏豆摘要,边拼边看数字往下掉
+            int[] miss = missStats();
+            tvAssistProgress.setText(String.format(Locale.CHINA,
+                    getString(R.string.fmt_assist_miss_head),
+                    miss[0], miss[1], pct));
+        } else {
+            tvAssistProgress.setText(String.format(Locale.CHINA,
+                    getString(R.string.fmt_assist_head),
+                    done, total, pct, beadDone.size(), pattern.totalBeads, todayCount()));
+        }
     }
 
     // ---------------- 拼豆辅助怎么用 / 语音引导 ----------------
@@ -3989,6 +4011,69 @@ public class EditorActivity extends Activity {
     }
 
     /** 定位本色/本行/本板第一颗未拼的格子:居中显示并闪烁提示(拼豆模式) */
+    /** 漏豆统计:{全图未拼颗数, 未拼颜色数} */
+    private int[] missStats() {
+        int total = 0;
+        java.util.Set<Integer> colors = new java.util.HashSet<>();
+        for (int y = 0; y < pattern.rows; y++) {
+            for (int x = 0; x < pattern.cols; x++) {
+                if (pattern.outsideShape(x, y)) continue;
+                int idx = pattern.cellAt(x, y);
+                if (idx < 0) continue;
+                if (!beadDone.contains(y * pattern.cols + x)) {
+                    total++;
+                    colors.add(idx);
+                }
+            }
+        }
+        return new int[]{total, colors.size()};
+    }
+
+    /**
+     * 漏豆检查(查漏)开关:图纸总览所有未拼豆(琥珀圈呼吸,已拼蒙灰),
+     * 编辑页与沉浸页共用;开着时进度行换成漏豆摘要,再点一次关闭。
+     */
+    private void toggleMissCheck() {
+        if (pattern == null) return;
+        missCheckOn = !missCheckOn;
+        if (btnAssistMiss != null) btnAssistMiss.setSelected(missCheckOn);
+        applyMissCheckToView();
+        if (missCheckOn) {
+            selectTab(1);   // 高亮只在图纸页渲染,别让用户对着效果图找
+            int[] miss = missStats();
+            if (miss[0] == 0) {
+                Toast.makeText(this, getString(R.string.assist_miss_none),
+                        Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, String.format(Locale.CHINA,
+                        getString(R.string.fmt_miss_summary), miss[0], miss[1]),
+                        Toast.LENGTH_LONG).show();
+                locateMissAny();
+            }
+        }
+        updateAssistUi();
+    }
+
+    private void applyMissCheckToView() {
+        patternView.setMissCheck(missCheckOn);
+        if (immersiveView != null) immersiveView.setMissCheck(missCheckOn);
+    }
+
+    /** 查漏定位:跳到全图第一颗未拼的豆(不限色/不限板,和逐色定位互补) */
+    private void locateMissAny() {
+        for (int y = 0; y < pattern.rows; y++) {
+            for (int x = 0; x < pattern.cols; x++) {
+                if (pattern.outsideShape(x, y)) continue;
+                if (pattern.cellAt(x, y) < 0) continue;
+                if (!beadDone.contains(y * pattern.cols + x)) {
+                    patternView.centerOn(x, y);
+                    patternView.flashCell(x, y);
+                    return;
+                }
+            }
+        }
+    }
+
     private void locateAssistUndone() {
         if (pattern == null) return;
         // 按板/逐行模式:在当前带内找第一颗未拼(任意色)

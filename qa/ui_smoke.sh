@@ -594,11 +594,24 @@ snap photo_share_card
 back
 sleep 1.5
 
-# 11) 真图纸上的拼豆辅助:打卡日历
+# 11) 真图纸上的拼豆辅助:打卡日历 + 查漏(开关态硬断言)
 adb shell input swipe 540 1700 540 500 300; sleep 0.8
 toggle_assist_on
 sleep 1.5
 check_text "Locate" 0
+tap_id btnAssistMiss 0
+sleep 1.5
+dump_ui
+grep -q "resource-id=\"$PKG:id/btnAssistMiss\"[^\>]*selected=\"true\"" ui.xml || {
+  echo "[smoke] FAIL: miss-check chip did not select"; snap fail; exit 1;
+}
+snap assist_miss            # 全图未拼豆琥珀圈高亮(人眼审)
+tap_id btnAssistMiss 0
+sleep 1
+dump_ui
+grep -q "resource-id=\"$PKG:id/btnAssistMiss\"[^\>]*selected=\"true\"" ui.xml && {
+  echo "[smoke] FAIL: miss-check chip did not deselect"; snap fail; exit 1;
+}
 tap_id btnAssistCalendar 0
 sleep 1.5
 snap photo_calendar

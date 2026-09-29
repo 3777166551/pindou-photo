@@ -1,13 +1,21 @@
 # 路线图与交接文档 (ROADMAP & HANDOFF)
 
 > 本文档是项目的**持续交接入口**：当前状态、待办功能、开发约定、操作备忘。
-> 新会话/新开发者从这里开始读。最后更新：2026-09-29（**v2.61 后补两真机 bug
-> 修复:GIF 导出尺寸/空白帧(view 布局态不可信→视口钉屏幕+两级缩放)+空白画布
-> stale UI(syncSizeUi)**;本地 compile+qa 371 全绿,待随下一版推 CI;v2.61
-> M3 Expressive 化详见 09-22 快照与 design-contract 记忆)
+> 新会话/新开发者从这里开始读。最后更新：2026-09-29（**v2.61 后补:①两真机
+> bug 修复(GIF 导出尺寸/空白帧+空白画布 stale UI);②新功能「查漏高亮」
+> (拼豆辅助一键总览所有未拼豆,M3 colorWarning)**;本地 compile+qa 371 全绿,
+> 未推 CI,随 v2.62 出包;v2.61 M3 Expressive 化详见 09-22 快照)
 
 ## 一、当前状态快照（2026-09-22,v2.61 M3 化完成,远端 main=483bafc 之后）
 
+- **★ v2.62 预埋(2026-09-29,本地绿,未推 CI)**:**新功能「查漏高亮」**——
+  拼豆辅助工具行第一行新增 🔍 查漏 chip(定位/查漏/打卡/沉浸/怎么用 五列,
+  ZH 文案缩短:定位未拼→定位、打卡日历→打卡):开=图纸总览所有未拼豆
+  (设计合同 colorWarning 琥珀圈 1.2s 呼吸,已拼蒙纸色,忽略逐色/按板/逐行
+  遮罩),toast 报「未拼 N 颗 · M 色」+自动跳到第一颗,进度行换漏豆摘要
+  (边拼边掉数字);关=恢复正常辅助渲染。编辑页/沉浸页共用
+  (applyAssistParamsTo 透传);帮助弹窗补条目;三语;冒烟加 chip selected
+  双向断言+截图。核心:PatternView.setMissCheck + missStats/toggleMissCheck。
 - **★ v2.61 = M3 Expressive 化大版本(2026-09-21/22,全部 CI 模拟器实证)**:
   ①Material You 动态取色(Android 12+ 配色跟壁纸,语义色 @color→?attr 22 token
   214+ 处,AppTheme/CandyTokens 四套变体,API<12 静态紫回退);②M3 控件全面化:
