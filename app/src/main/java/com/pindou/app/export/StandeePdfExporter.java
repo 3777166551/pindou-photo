@@ -38,7 +38,7 @@ public final class StandeePdfExporter {
     private static final int BOM_ROWS_PER_PAGE = 30;
 
     public static Uri export(Context ctx, Bitmap spriteSheet, Bitmap baseSheet,
-                             BeadPattern sprite, StandeeKit kit,
+                             Bitmap hangerSheet, BeadPattern sprite, StandeeKit kit,
                              String paletteName, boolean mini,
                              String fileName) throws Exception {
         PdfDocument doc = new PdfDocument();
@@ -46,13 +46,13 @@ public final class StandeePdfExporter {
             int drawW = PAGE_W - 2 * MARGIN;
             int drawH = PAGE_H - 2 * MARGIN;
 
-            // 先算总页数:封面 1 + 主图分页 + 底座 1 + 清单分页
+            // 先算总页数:封面 1 + 主图分页 + 底座 1 + 挂绳杆 1 + 清单分页
             float scale = drawW / (float) spriteSheet.getWidth();
             int stripH = Math.max(1, Math.round(drawH / scale));
             int spritePages = (spriteSheet.getHeight() + stripH - 1) / stripH;
             List<BeadPattern.UsedColor> merged = kit.mergedUsed();
             int bomPages = (merged.size() + BOM_ROWS_PER_PAGE - 1) / BOM_ROWS_PER_PAGE;
-            int total = 1 + spritePages + 1 + bomPages;
+            int total = 1 + spritePages + 2 + bomPages;
             int[] counter = {1};
 
             coverPage(ctx, doc, sprite, kit, paletteName, mini, counter, total);
@@ -72,6 +72,8 @@ public final class StandeePdfExporter {
                 counter[0]++;
             }
             sheetPage(ctx, doc, baseSheet, ctx.getString(R.string.pdf_col_base),
+                    counter, total);
+            sheetPage(ctx, doc, hangerSheet, ctx.getString(R.string.standee_layer_hanger),
                     counter, total);
             for (int start = 0; start < bomPages * BOM_ROWS_PER_PAGE;
                  start += BOM_ROWS_PER_PAGE) {
@@ -114,6 +116,9 @@ public final class StandeePdfExporter {
                         ctx.getString(R.string.fmt_standee_stat_base),
                         kit.base.cols, kit.base.rows, kit.baseBeads),
                 String.format(Locale.CHINA,
+                        ctx.getString(R.string.fmt_standee_stat_hanger),
+                        kit.hanger.cols, kit.hangerBeads),
+                String.format(Locale.CHINA,
                         ctx.getString(R.string.fmt_standee_stat_total),
                         kit.mergedTotal,
                         Math.round(kit.mergedTotal * (mini ? 0.0067f : 0.024f)),
@@ -147,6 +152,7 @@ public final class StandeePdfExporter {
                 ctx.getString(R.string.standee_step1),
                 ctx.getString(R.string.standee_step2),
                 ctx.getString(R.string.standee_step3),
+                ctx.getString(R.string.standee_step4),
         };
         for (String step : steps) {
             c.drawText(step, MARGIN, y, textPaint(11, 0xFF333333, false));

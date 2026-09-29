@@ -6,16 +6,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 立牌方案:把当前图纸变成"可站立的摆件套件"——
- *   主图(原图不动) + 底座(带 1 格宽插槽的支撑板)。
- * 底座几何(经典 sprite stand 结构):
- *   - 宽 = 主图宽 + 2,向上取奇数(保证有正中列),最小 5;
- *   - 深(行) = 3 + 主图高/8,钳制在 [4,8](≥4 兼容分享格式 cols/rows≥4,
- *     8 封顶免得底座比主图还费豆);
+ * 立牌方案:把当前图纸变成"可站立/可挂墙的摆件套件"——
+ *   主图(原图不动) + 底座(带 1 格宽插槽的支撑板) + 挂绳杆(穿线孔,挂墙用)。
+ * 三件都是自动算好的,**用户零选择**:PDF/豆单是完整套件,用不上挂绳杆
+ * 就无视它(几颗豆的小件)。
+ *
+ * 底座几何(经典 sprite stand 结构,v2.62 加深:按宽高比自适应防倾):
+ *   - 深(行) = 2 + 高/5,钳制 [4,10]——越高的件底座越深,瘦高件不再头重脚轻;
+ *   - 宽 = max(主图宽+2, 高×0.4) 向上取奇数,最小 5——瘦高件加宽脚距;
  *   - 插槽 = 正中 1 列,从前往后留空到倒数第 2 行,最后一行(背排)实心
  *     ——主图从开口滑入顶到背排,左右导轨夹住,整块底座连通可一次熨成。
- * 底座配色 = 主图最下一行(圆形/六边形板取最低的非空行)的主色,
- *   让作品落地处颜色自然衔接;没有则退回全图用量第一的颜色。
+ * 挂绳杆 = 宽 max(5, 主图宽×0.6) 取奇 × 3 行,正中格只在中行留空成穿线孔
+ *   (上下两行实心保证连通);缝/粘在背面顶端,鱼线穿孔挂钉。
+ * 底座/挂绳杆配色 = 主图最低非空行(圆/六边形板取最低有豆行)的众数色。
  * 纯 Java 无 Android 依赖(qa 可单测);渲染/导出在 export 包。
  */
 public final class StandeeKit {
@@ -24,28 +27,35 @@ public final class StandeeKit {
     public final BeadPattern sprite;
     /** 底座图纸(复用主图色板,矩形小画幅) */
     public final BeadPattern base;
+    /** 挂绳杆图纸(3 行高,中行正中 1 格穿线孔) */
+    public final BeadPattern hanger;
     /** 插槽所在列(底座坐标) */
     public final int slotCol;
     /** 底座深度(行数) */
     public final int baseDepth;
-    /** 底座用色(主图色板下标) */
+    /** 底座用色(主图色板下标;挂绳杆同色) */
     public final int baseColorIndex;
     /** 底座用豆数 */
     public final int baseBeads;
-    /** 主图+底座按色板下标合并的用量 */
+    /** 挂绳杆用豆数 */
+    public final int hangerBeads;
+    /** 主图+底座+挂绳杆按色板下标合并的用量 */
     public final int[] mergedCounts;
     /** 合并用豆总数 */
     public final int mergedTotal;
 
-    private StandeeKit(BeadPattern sprite, BeadPattern base, int slotCol,
-                       int baseDepth, int baseColorIndex, int baseBeads,
+    private StandeeKit(BeadPattern sprite, BeadPattern base, BeadPattern hanger,
+                       int slotCol, int baseDepth, int baseColorIndex,
+                       int baseBeads, int hangerBeads,
                        int[] mergedCounts, int mergedTotal) {
         this.sprite = sprite;
         this.base = base;
+        this.hanger = hanger;
         this.slotCol = slotCol;
         this.baseDepth = baseDepth;
         this.baseColorIndex = baseColorIndex;
         this.baseBeads = baseBeads;
+        this.hangerBeads = hangerBeads;
         this.mergedCounts = mergedCounts;
         this.mergedTotal = mergedTotal;
     }
@@ -56,27 +66,55 @@ public final class StandeeKit {
             throw new IllegalArgumentException("sprite pattern is empty");
         }
 
-        // 底座宽:主图宽 + 2,向上取奇数(奇数才有正中列),最小 5
-        int w = sprite.cols + 2;
-        if (w % 2 == 0) w++;
-        if (w < 5) w = 5;
-        // 底座深:越高越深,4~8(≥4 兼容分享格式,8 封顶)
-        int depth = 3 + sprite.rows / 8;
-        if (depth < 4) depth = 4;
-        if (depth > 8) depth = 8;
-        int slot = w / 2;
-
         int colorIdx = pickBaseColor(sprite);
+
+        // 底座:越高的件越深越宽(防倾),4~10 行封顶
+        int depth = 2 + Math.round(sprite.rows / 5f);
+        if (depth < 4) depth = 4;
+        if (depth > 10) depth = 10;
+        int w = oddMax(sprite.cols + 2, Math.round(sprite.rows * 0.4f));
+        int slot = w / 2;
         int beads = w * depth - (depth - 1);   // 插槽空 (depth-1) 格
 
-        int[] cells = new int[w * depth];
+        int[] baseCells = new int[w * depth];
         for (int y = 0; y < depth; y++) {
             for (int x = 0; x < w; x++) {
-                cells[y * w + x] = (x == slot && y < depth - 1) ? -1 : colorIdx;
+                baseCells[y * w + x] = (x == slot && y < depth - 1) ? -1 : colorIdx;
             }
         }
+        BeadPattern base = assemble(w, depth, sprite, baseCells);
 
-        // 复用主图色板;逐色统计 + 按用量排序,与 PatternEngine 的 UsedColor 语义一致
+        // 挂绳杆:3 行高,正中格只在中行留空(上下行实心保连通),穿线挂钉
+        int hw = oddMax(5, Math.round(sprite.cols * 0.6f));
+        int[] hangCells = new int[hw * 3];
+        for (int y = 0; y < 3; y++) {
+            for (int x = 0; x < hw; x++) {
+                hangCells[y * hw + x] = (x == hw / 2 && y == 1) ? -1 : colorIdx;
+            }
+        }
+        BeadPattern hanger = assemble(hw, 3, sprite, hangCells);
+
+        // 合并用量(主图 + 底座 + 挂绳杆,同色板下标直接相加)
+        int[] merged = new int[sprite.palette.size()];
+        for (int i = 0; i < merged.length; i++) {
+            merged[i] = sprite.counts[i] + base.counts[i] + hanger.counts[i];
+        }
+        int mergedTotal = sprite.totalBeads + base.totalBeads + hanger.totalBeads;
+        return new StandeeKit(sprite, base, hanger, slot, depth, colorIdx,
+                base.totalBeads, hanger.totalBeads, merged, mergedTotal);
+    }
+
+    /** 上取奇数:base 与 want 取大后向上取奇,最小 5 */
+    private static int oddMax(int base, int want) {
+        int v = Math.max(base, want);
+        if (v % 2 == 0) v++;
+        if (v < 5) v = 5;
+        return v;
+    }
+
+    /** 由 cells 统计用量组装 BeadPattern(复用主图色板,与分享格式同语义) */
+    private static BeadPattern assemble(int cols, int rows, BeadPattern sprite,
+                                        int[] cells) {
         int[] counts = new int[sprite.palette.size()];
         List<BeadPattern.UsedColor> used = new ArrayList<>();
         for (int i = 0; i < cells.length; i++) {
@@ -90,17 +128,8 @@ public final class StandeeKit {
                     symbolFor(i), counts[i]));
         }
         BeadPattern.sortByCountDesc(used);
-        BeadPattern base = new BeadPattern(w, depth, sprite.palette, cells,
+        return new BeadPattern(cols, rows, sprite.palette, cells,
                 counts, used, total, 0);
-
-        // 合并用量(主图 + 底座,同色板下标直接相加)
-        int[] merged = new int[sprite.palette.size()];
-        for (int i = 0; i < merged.length; i++) {
-            merged[i] = sprite.counts[i] + counts[i];
-        }
-        int mergedTotal = sprite.totalBeads + total;
-        return new StandeeKit(sprite, base, slot, depth, colorIdx,
-                total, merged, mergedTotal);
     }
 
     /**
@@ -127,7 +156,7 @@ public final class StandeeKit {
         return sprite.usedColors.get(0).index;
     }
 
-    /** 合并后的逐色清单(主图+底座,按合并用量降序),PDF 材料清单页用 */
+    /** 合并后的逐色清单(主图+底座+挂绳杆,按合并用量降序),PDF 材料清单页用 */
     public List<BeadPattern.UsedColor> mergedUsed() {
         List<BeadPattern.UsedColor> out = new ArrayList<>();
         for (int i = 0; i < mergedCounts.length; i++) {
@@ -137,6 +166,11 @@ public final class StandeeKit {
         }
         BeadPattern.sortByCountDesc(out);
         return out;
+    }
+
+    /** 高件判断:深度封顶(10 行)都兜不住的细高件,建议靠墙/改挂墙 */
+    public boolean tallAdvice() {
+        return sprite.rows > baseDepth * 5;
     }
 
     /** 符号系统与图纸页一致(委托 PatternEngine,bead 包内可直达) */

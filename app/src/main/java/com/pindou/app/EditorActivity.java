@@ -4389,20 +4389,34 @@ public class EditorActivity extends Activity {
                 getString(R.string.fmt_standee_stat_base),
                 kit.base.cols, kit.base.rows, kit.baseBeads), bc.rgb));
         box.addView(standeeInfoRow(String.format(Locale.CHINA,
+                getString(R.string.fmt_standee_stat_hanger),
+                kit.hanger.cols, kit.hangerBeads), null));
+        box.addView(standeeInfoRow(String.format(Locale.CHINA,
                 getString(R.string.fmt_standee_stat_total),
                 kit.mergedTotal,
                 Math.round(kit.mergedTotal * (miniBead ? 0.0067f : 0.024f)),
                 getString(miniBead ? R.string.bead_mini : R.string.bead_std)), null));
+        // 底座跨拼板 + 立起后尺寸(买板/买豆都要用的两个数)
+        box.addView(standeeInfoRow(String.format(Locale.CHINA,
+                getString(R.string.fmt_standee_assembled_line),
+                (int) Math.ceil(kit.base.cols / 29.0) * (int) Math.ceil(kit.base.rows / 29.0),
+                pattern.cols * (miniBead ? 0.26f : 0.5f),
+                (pattern.rows + kit.baseDepth) * (miniBead ? 0.26f : 0.5f)), null));
 
         com.pindou.app.view.StandeeDiagramView diagram =
                 new com.pindou.app.view.StandeeDiagramView(this, pattern, kit);
         LinearLayout.LayoutParams dLp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, Math.round(200 * dm));
+                ViewGroup.LayoutParams.MATCH_PARENT, Math.round(180 * dm));
         dLp.topMargin = Math.round(6 * dm);
         box.addView(diagram, dLp);
 
         TextView hint = new TextView(this);
-        hint.setText(getString(R.string.standee_dialog_hint));
+        String hintText = getString(R.string.standee_dialog_hint);
+        if (kit.tallAdvice()) {
+            // 细高件:底座深度已封顶仍偏头重,自动给一句摆放建议(不开选项)
+            hintText += "\n" + getString(R.string.standee_advice_tall);
+        }
+        hint.setText(hintText);
         hint.setTextSize(13);
         hint.setTextColor(getColor(R.color.textSub));
         LinearLayout.LayoutParams hLp = new LinearLayout.LayoutParams(
@@ -4472,6 +4486,8 @@ public class EditorActivity extends Activity {
                             kit.sprite, pal, miniBead);
                     Bitmap s2 = PatternSheetRenderer.render(EditorActivity.this,
                             kit.base, pal, miniBead);
+                    Bitmap s3 = PatternSheetRenderer.render(EditorActivity.this,
+                            kit.hanger, pal, miniBead);
                     String stamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA)
                             .format(new Date());
                     String name = getString(R.string.file_standee_prefix)
@@ -4479,9 +4495,10 @@ public class EditorActivity extends Activity {
                             + "_" + stamp + ".pdf";
                     final Uri uri = com.pindou.app.export.StandeePdfExporter.export(
                             EditorActivity.this,
-                            s1, s2, kit.sprite, kit, pal, miniBead, name);
+                            s1, s2, s3, kit.sprite, kit, pal, miniBead, name);
                     s1.recycle();
                     s2.recycle();
+                    s3.recycle();
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {

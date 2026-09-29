@@ -314,10 +314,17 @@ public class WallPreviewActivity extends Activity {
         private final Bitmap effect;
         private Bitmap photo;
         private final float[] quad = new float[8];   // TL,TR,BR,BL(视图坐标)
+        private final float[] quadSnap = new float[8];
         private boolean quadReady;
         private float overlayAlpha = 0.9f;
         private boolean handlesVisible = true;
+        // 手势模式:0 无 / 1 拖角精调 / 2 框内拖动整体移 / 3 双指缩放
+        private int mode = 0;
         private int drag = -1;
+        private float moveStartX, moveStartY;
+        private float pinchStartSpan, pinchCx, pinchCy;
+        private long lastDownAt;
+        private float lastDownX, lastDownY;
 
         private final Paint bitmapPaint = new Paint(Paint.FILTER_BITMAP_FLAG
                 | Paint.ANTI_ALIAS_FLAG);
@@ -428,6 +435,21 @@ public class WallPreviewActivity extends Activity {
             float x = e.getX(), y = e.getY();
             switch (e.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN: {
+                    // 双击复位(与图纸/3D 把玩同款惯例)
+                    long now = android.os.SystemClock.uptimeMillis();
+                    if (now - lastDownAt < 280
+                            && Math.hypot(x - lastDownX, y - lastDownY) < dp(24)) {
+                        lastDownAt = 0;
+                        mode = 0;
+                        drag = -1;
+                        quadReady = false;   // 回到默认居中贴合
+                        invalidate();
+                        return true;
+                    }
+                    lastDownAt = now;
+                    lastDownX = x;
+                    lastDownY = y;
+                    // 优先就近吸附角点(精调透视);落在贴合区内部则整体移动
                     float hit = Math.max(64f, getWidth() * 0.09f);
                     drag = -1;
                     float best = hit * hit;
@@ -439,21 +461,129 @@ public class WallPreviewActivity extends Activity {
                             drag = i;
                         }
                     }
-                    return drag >= 0;
+                    if (drag >= 0) {
+                        mode = 1;
+                        return true;
+                    }
+                    if (insideQuad(x, y)) {
+                        mode = 2;
+                        moveStartX = x;
+                        moveStartY = y;
+                        System.arraycopy(quad, 0, quadSnap, 0, 8);
+                        return true;
+                    }
+                    return false;
+                }
+                case MotionEvent.ACTION_POINTER_DOWN: {
+                    if (e.getPointerCount() >= 2 && mode != 1) {
+                        // 双指捏合整体缩放(以贴合区中心为锚,从快照算防漂移)
+                        mode = 3;
+                        System.arraycopy(quad, 0, quadSnap, 0, 8);
+                        pinchStartSpan = twoSpan(e);
+                        pinchCx = quadCentroidX();
+                        pinchCy = quadCentroidY();
+                    }
+                    return true;
                 }
                 case MotionEvent.ACTION_MOVE: {
-                    if (drag < 0) return false;
-                    quad[drag * 2] = Math.max(4, Math.min(getWidth() - 4, x));
-                    quad[drag * 2 + 1] = Math.max(4, Math.min(getHeight() - 4, y));
-                    invalidate();
+                    if (mode == 1 && drag >= 0) {
+                        quad[drag * 2] = Math.max(4, Math.min(getWidth() - 4, x));
+                        quad[drag * 2 + 1] = Math.max(4, Math.min(getHeight() - 4, y));
+                        invalidate();
+                        return true;
+                    }
+                    if (mode == 2) {
+                        translateQuad(x - moveStartX, y - moveStartY);
+                        invalidate();
+                        return true;
+                    }
+                    if (mode == 3 && e.getPointerCount() >= 2 && pinchStartSpan > 0) {
+                        float k = Math.max(0.15f, Math.min(4f,
+                                twoSpan(e) / pinchStartSpan));
+                        scaleQuadAbout(k);
+                        invalidate();
+                        return true;
+                    }
+                    return mode != 0;
+                }
+                case MotionEvent.ACTION_POINTER_UP: {
+                    if (e.getPointerCount() <= 2 && mode == 3) mode = 0;
                     return true;
                 }
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
+                    mode = 0;
                     drag = -1;
                     return true;
             }
             return false;
+        }
+
+        private float dp(float v) {
+            return v * getResources().getDisplayMetrics().density;
+        }
+
+        private float twoSpan(MotionEvent e) {
+            float dx = e.getX(0) - e.getX(1), dy = e.getY(0) - e.getY(1);
+            return (float) Math.hypot(dx, dy);
+        }
+
+        private float quadCentroidX() {
+            return (quad[0] + quad[2] + quad[4] + quad[6]) / 4f;
+        }
+
+        private float quadCentroidY() {
+            return (quad[1] + quad[3] + quad[5] + quad[7]) / 4f;
+        }
+
+        /** 整体平移后把四点夹回视图范围内 */
+        private void translateQuad(float dx, float dy) {
+            for (int i = 0; i < 4; i++) {
+                quad[i * 2] = quadSnap[i * 2] + dx;
+                quad[i * 2 + 1] = quadSnap[i * 2 + 1] + dy;
+            }
+            clampQuad();
+        }
+
+        /** 以贴合区中心为锚整体缩放(从快照算,捏合过程不漂移) */
+        private void scaleQuadAbout(float k) {
+            float cx = quadCentroidX(), cy = quadCentroidY();
+            for (int i = 0; i < 4; i++) {
+                quad[i * 2] = cx + (quadSnap[i * 2] - cx) * k;
+                quad[i * 2 + 1] = cy + (quadSnap[i * 2 + 1] - cy) * k;
+            }
+            clampQuad();
+        }
+
+        private void clampQuad() {
+            if (getWidth() <= 0 || getHeight() <= 0) return;
+            float minX = Float.MAX_VALUE, maxX = -Float.MAX_VALUE;
+            float minY = Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
+            for (int i = 0; i < 4; i++) {
+                minX = Math.min(minX, quad[i * 2]);
+                maxX = Math.max(maxX, quad[i * 2]);
+                minY = Math.min(minY, quad[i * 2 + 1]);
+                maxY = Math.max(maxY, quad[i * 2 + 1]);
+            }
+            float dx = 0, dy = 0;
+            if (minX < 0) dx = -minX;
+            if (maxX > getWidth()) dx = getWidth() - maxX;
+            if (minY < 0) dy = -minY;
+            if (maxY > getHeight()) dy = getHeight() - maxY;
+            if (dx != 0 || dy != 0) {
+                for (int i = 0; i < 4; i++) {
+                    quad[i * 2] += dx;
+                    quad[i * 2 + 1] += dy;
+                }
+            }
+        }
+
+        /** 点是否落在贴合区四边形内(整体拖动的命中区) */
+        private boolean insideQuad(float x, float y) {
+            android.graphics.Region r = new android.graphics.Region();
+            r.setPath(quadPath(), new android.graphics.Region(
+                    0, 0, Math.max(1, getWidth()), Math.max(1, getHeight())));
+            return r.contains((int) x, (int) y);
         }
     }
 }

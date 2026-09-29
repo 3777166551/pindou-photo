@@ -17,11 +17,11 @@ public class TestStandee {
         // ---- 几何:矩形主图 ----
         BeadPattern rect = pattern(16, 12, false, false, 3);
         StandeeKit k1 = StandeeKit.build(rect);
-        check("底座宽 = 主图宽+2 取奇", k1.base.cols == 19);
+        check("底座宽 = max(主图+2, 高×0.4) 取奇", k1.base.cols == 19);
         check("底座宽为奇数", k1.base.cols % 2 == 1);
         check("插槽列 = 正中", k1.slotCol == k1.base.cols / 2);
-        check("底座深在 [4,8]", k1.baseDepth >= 4 && k1.baseDepth <= 8);
-        check("底座深 = 3+高/8 钳制", k1.baseDepth == clampD(12));
+        check("底座深在 [4,10]", k1.baseDepth >= 4 && k1.baseDepth <= 10);
+        check("底座深 = 2+高/5 钳制", k1.baseDepth == clampD(12));
 
         // ---- 插槽结构:开口在前,背排实心 ----
         boolean slotOk = true;
@@ -39,16 +39,37 @@ public class TestStandee {
         // ---- 连通性:底座非空格四向连通(一次熨成一块) ----
         check("底座四向连通", connected(k1.base));
 
-        // ---- 用量 ----
+        // ---- 用量(主图+底座+挂绳杆) ----
         check("底座豆数 = 宽×深-(深-1)",
                 k1.baseBeads == k1.base.cols * k1.baseDepth - (k1.baseDepth - 1));
-        check("合并总数 = 主图+底座", k1.mergedTotal == rect.totalBeads + k1.baseBeads);
+        check("挂绳杆豆数 = 3×宽-1(中孔 1 格)",
+                k1.hangerBeads == 3 * k1.hanger.cols - 1);
+        check("合并总数 = 主图+底座+挂绳",
+                k1.mergedTotal == rect.totalBeads + k1.baseBeads + k1.hangerBeads);
         long sum = 0;
         for (int c : k1.mergedCounts) sum += c;
         check("合并逐色求和 = 合并总数", sum == k1.mergedTotal);
 
-        // ---- 底座配色:主图最下行众数色 ----
+        // ---- 挂绳杆:3 行高,中行正中 1 格穿线孔,四向连通 ----
+        check("挂绳杆 3 行高", k1.hanger.rows == 3);
+        check("挂绳杆宽为奇数且 ≥5", k1.hanger.cols % 2 == 1 && k1.hanger.cols >= 5);
+        boolean holeOk = true;
+        for (int y = 0; y < 3; y++) {
+            for (int x = 0; x < k1.hanger.cols; x++) {
+                int v = k1.hanger.cellAt(x, y);
+                if (x == k1.hanger.cols / 2 && y == 1) {
+                    if (v != -1) holeOk = false;
+                } else if (v < 0) {
+                    holeOk = false;
+                }
+            }
+        }
+        check("挂绳孔 = 中行正中 1 格,其余实心", holeOk);
+        check("挂绳杆四向连通", connected(k1.hanger));
+
+        // ---- 底座配色:主图最下行众数色(挂绳杆同色) ----
         check("底座色 = 最下行众数色", k1.baseColorIndex == bottomRowDominant(rect));
+        check("挂绳杆同底座色", k1.hanger.cellAt(0, 0) == k1.baseColorIndex);
 
         // ---- 宽主图/偶数宽边界 ----
         BeadPattern wide = pattern(30, 8, false, false, 4);
@@ -62,11 +83,15 @@ public class TestStandee {
         check("3 宽主图 -> 底座 5 宽", k3.base.cols == 5);
         check("3 高主图 -> 底座深钳到 4", k3.baseDepth == 4);
         check("底座行数 ≥ 4(分享格式 cols/rows≥4 兼容)", k3.base.rows >= 4);
+        check("3 宽主图 -> 挂绳杆最小 5 宽", k3.hanger.cols == 5);
 
-        // ---- 高主图:深度封顶 8 ----
+        // ---- 瘦高主图:深封顶 10、宽按高×0.4 加宽防倾 ----
         BeadPattern tall = pattern(10, 80, false, false, 5);
         StandeeKit k4 = StandeeKit.build(tall);
-        check("80 高主图 -> 底座深封顶 8", k4.baseDepth == 8);
+        check("80 高主图 -> 底座深封顶 10", k4.baseDepth == 10);
+        check("瘦高件底座加宽 = 奇(高×0.4)", k4.base.cols == 33);
+        check("细高件触发摆放建议", k4.tallAdvice());
+        check("矮件不触发摆放建议", !k1.tallAdvice());
 
         // ---- 圆形板:最低非空行取色,不崩 ----
         BeadPattern round = pattern(15, 15, true, false, 4);
@@ -110,8 +135,8 @@ public class TestStandee {
     // ---------------- helpers ----------------
 
     private static int clampD(int rows) {
-        int d = 3 + rows / 8;
-        return Math.max(4, Math.min(8, d));
+        int d = 2 + Math.round(rows / 5f);
+        return Math.max(4, Math.min(10, d));
     }
 
     /** 造图:colors 色随机抖动铺满(shape 内),保证 totalBeads>0 */
