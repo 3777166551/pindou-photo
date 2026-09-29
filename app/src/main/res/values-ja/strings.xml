@@ -302,6 +302,7 @@
     <string name="play_hint_iron">アイロンをドラッグして豆を溶かそう</string>
     <string name="play_iron_progress_fmt">溶かした %1$d / %2$d</string>
     <string name="play_iron_done">全部溶けた!完成 🎉</string>
+    <string name="play_iron_auto">90%達成!残りはアイロンが自動で仕上げます ✨</string>
     <string name="play_err_load">図案の準備ができていません</string>
     <string name="play_replay">▶ 再生</string>
     <string name="play_export_gif">🎞 GIF</string>

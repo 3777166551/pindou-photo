@@ -32,13 +32,22 @@ public final class Play3DView extends View {
         void onIronProgress(int done, int total);
 
         void onIronComplete();
+
+        /** 烫到 90% 触发自动收尾时回调一次(Activity 弹提示) */
+        void onIronAutoFinish();
     }
 
     private static final float BEAD_R = 0.46f;      // 豆半径(格)
     private static final float BEAD_H = 0.34f;      // 豆高(格)
     private static final float MELT_H = 0.10f;      // 熔化后豆高
     private static final float PLATE_T = 0.22f;     // 底板厚(格)
-    private static final float IRON_R = 1.9f;       // 熨斗底板半径(格)
+    // 熨斗半径(格)随板幅自适应:用户反馈拖动面积太小,下限 2.6(旧固定 1.9,
+    // 面积≈翻倍),大板最高 5 格封顶,免得一板几乎一烫全完
+    private static final float IRON_R_MIN = 2.6f;
+    private static final float IRON_R_MAX = 5f;
+    // 烫到 90% 自动收尾:余豆按离熨斗距离排序,1.5s 内波及式烫完(用户点名)
+    private static final float AUTO_FINISH_AT = 0.90f;
+    private static final long AUTO_FINISH_MS = 1500L;
 
     private BeadPattern pattern;
     private boolean[] melted;
@@ -66,8 +75,16 @@ public final class Play3DView extends View {
     private float lastDownX, lastDownY;
     private boolean ironDown;
     private double ironU = -999, ironV = -999;
+    private float ironSegX, ironSegY;      // 拖动插值:上一个采样点(快速拖动补缝)
     private final List<float[]> steam = new ArrayList<>();   // {x,y,age}
     private long steamAt;
+
+    // 90% 自动收尾
+    private boolean autoFinishing;         // 收尾波进行中
+    private boolean ironDone;              // 完成回调只发一次
+    private int[] finishOrder;             // 余豆下标,按离熨斗距离升序
+    private int finishPtr;
+    private long finishStartAt;
 
     // 深度排序缓存(yaw 变化才重建);比较器是匿名内部类(裸管线不支持 lambda)
     private Integer[] order;
@@ -124,6 +141,10 @@ public final class Play3DView extends View {
         animMs = 0;
         animDur = 0;
         frozen = false;
+        autoFinishing = false;
+        ironDone = false;
+        finishOrder = null;
+        finishPtr = 0;
         resetView();
     }
 
@@ -262,6 +283,7 @@ public final class Play3DView extends View {
             yaw += 0.006;
             postInvalidateOnAnimation();
         }
+        if (autoFinishing) advanceFinish();   // 90% 自动收尾波(冻结导出时瞬完)
         int W = pattern.cols, H = pattern.rows;
         float maxDim = Math.max(W, H);
         float s = Math.min(w, h) / (maxDim + 6f) * zoom;
@@ -455,14 +477,14 @@ public final class Play3DView extends View {
         double[] sh = Play3DProjector.project(uC, vC, 0.02, yaw, sinT, cosT);
         float shx = cx + (float) sh[0] * s, shy = cy + (float) sh[1] * s;
         shadowPaint.setColor(0x3C40354E);
-        float rI = IRON_R * s;
-        tmpRect.set(shx - rI, shy - (float) (IRON_R * sinT) * s,
-                shx + rI, shy + (float) (IRON_R * sinT) * s);
+        float rI = ironRadius() * s;
+        tmpRect.set(shx - rI, shy - rI * (float) sinT,
+                shx + rI, shy + rI * (float) sinT);
         c.drawOval(tmpRect, shadowPaint);
 
-        // 蒸汽(熨着的时候冒)
+        // 蒸汽(熨着的时候冒;自动收尾波也当作在熨)
         long now = android.os.SystemClock.uptimeMillis();
-        if (ironDown && now - steamAt > 90) {
+        if ((ironDown || autoFinishing) && now - steamAt > 90) {
             steamAt = now;
             steam.add(new float[]{shx + rI * 0.5f, shy - rI * 0.4f, 0});
         }
@@ -541,7 +563,7 @@ public final class Play3DView extends View {
             }
             case MotionEvent.ACTION_MOVE: {
                 if (ironMode) {
-                    moveIron(ev.getX(), ev.getY());
+                    moveIronSegment(ev.getX(), ev.getY());
                     invalidate();
                     return true;
                 }
@@ -586,27 +608,73 @@ public final class Play3DView extends View {
         return (float) Math.hypot(dx, dy);
     }
 
-    /** 屏幕点 → 板面坐标,并熔化熨斗范围内的豆(生长动画没播完时不允许烫) */
-    private void moveIron(float x, float y) {
-        if (animPlaying || animMs < animDur) return;
+    /** 熨斗半径(格):随板幅自适应,小不小、大不大(拖动面积反馈,v2.62) */
+    private float ironRadius() {
+        float maxDim = pattern == null
+                ? 29f : Math.max(pattern.cols, pattern.rows);
+        return Math.max(IRON_R_MIN, Math.min(IRON_R_MAX, maxDim / 16f));
+    }
+
+    /** 屏上每格像素(onDraw/meltAt 共用同一投影参数,指哪是哪) */
+    private float viewScale() {
         int w = getWidth(), h = getHeight();
-        if (w <= 0 || h <= 0) return;
+        if (pattern == null || w <= 0 || h <= 0) return 0f;
         float maxDim = Math.max(pattern.cols, pattern.rows);
-        float s = Math.min(w, h) / (maxDim + 6f) * zoom;
+        return Math.min(w, h) / (maxDim + 6f) * zoom;
+    }
+
+    /** 熨斗按下:定位并烫一格,记下采样点作为拖动插值起点 */
+    private void moveIron(float x, float y) {
+        ironSegX = x;
+        ironSegY = y;
+        if (meltAt(x, y) && listener != null) {
+            listener.onIronProgress(meltedCount, beadTotal);
+        }
+        evalIronProgress();
+    }
+
+    /** 拖动:上一采样点到当前点之间按半步长插值补烫,快速拖不留漏豆缝 */
+    private void moveIronSegment(float x, float y) {
+        if (autoFinishing) return;
+        float dx = x - ironSegX, dy = y - ironSegY;
+        float dist = (float) Math.sqrt(dx * dx + dy * dy);
+        float stepPx = Math.max(1f, ironRadius() * viewScale() * 0.5f);
+        int steps = 1 + (int) (dist / stepPx);
+        boolean changed = false;
+        for (int i = 0; i <= steps; i++) {
+            float f = i / (float) steps;
+            changed |= meltAt(ironSegX + dx * f, ironSegY + dy * f);
+        }
+        ironSegX = x;
+        ironSegY = y;
+        if (changed && listener != null) {
+            listener.onIronProgress(meltedCount, beadTotal);
+        }
+        evalIronProgress();
+    }
+
+    /** 熨斗定位到屏幕点并熔化半径内的豆;有新熔化返回 true */
+    private boolean meltAt(float x, float y) {
+        if (pattern == null || melted == null) return false;
+        if (animPlaying || animMs < animDur) return false;
+        int w = getWidth(), h = getHeight();
+        if (w <= 0 || h <= 0) return false;
+        float s = viewScale();
         double tiltRad = Play3DProjector.clampTiltRad(tiltDeg);
         double sinT = Math.sin(tiltRad);
         double[] uv = Play3DProjector.surfaceFromScreen(
                 x - w / 2f, y - h / 2f, s, yaw, sinT);
-        if (uv == null) return;
+        if (uv == null) return false;
         // surfaceFromScreen 返回居中坐标,熨斗存索引坐标
         ironU = Math.max(-0.5, Math.min(pattern.cols + 0.5, uv[0] + pattern.cols / 2.0));
         ironV = Math.max(-0.5, Math.min(pattern.rows + 0.5, uv[1] + pattern.rows / 2.0));
 
         // 熔化范围内的豆(正交投影下直接在板面坐标量距离)
-        int x0 = Math.max(0, (int) Math.floor(ironU - IRON_R - 0.5));
-        int x1 = Math.min(pattern.cols - 1, (int) Math.ceil(ironU + IRON_R + 0.5));
-        int y0 = Math.max(0, (int) Math.floor(ironV - IRON_R - 0.5));
-        int y1 = Math.min(pattern.rows - 1, (int) Math.ceil(ironV + IRON_R + 0.5));
+        float R = ironRadius();
+        int x0 = Math.max(0, (int) Math.floor(ironU - R - 0.5));
+        int x1 = Math.min(pattern.cols - 1, (int) Math.ceil(ironU + R + 0.5));
+        int y0 = Math.max(0, (int) Math.floor(ironV - R - 0.5));
+        int y1 = Math.min(pattern.rows - 1, (int) Math.ceil(ironV + R + 0.5));
         boolean changed = false;
         for (int cy = y0; cy <= y1; cy++) {
             for (int cxI = x0; cxI <= x1; cxI++) {
@@ -614,19 +682,84 @@ public final class Play3DView extends View {
                 if (melted[idx] || pattern.cellAt(cxI, cy) < 0) continue;
                 double du = cxI + 0.5 - ironU;
                 double dv = cy + 0.5 - ironV;
-                if (du * du + dv * dv <= IRON_R * IRON_R) {
+                if (du * du + dv * dv <= R * R) {
                     melted[idx] = true;
                     meltedCount++;
                     changed = true;
                 }
             }
         }
-        if (changed && listener != null) {
-            listener.onIronProgress(meltedCount, beadTotal);
-            if (beadTotal > 0 && meltedCount >= beadTotal) {
-                autoSpin = true;
-                listener.onIronComplete();
+        return changed;
+    }
+
+    /** 达成检查:100% 完成收口;≥90% 且还没收尾就启动自动收尾波 */
+    private void evalIronProgress() {
+        if (beadTotal <= 0 || ironDone) return;
+        if (meltedCount >= beadTotal) {
+            autoFinishing = false;
+            ironDone = true;
+            autoSpin = true;
+            if (listener != null) listener.onIronComplete();
+        } else if (!autoFinishing
+                && meltedCount >= Math.ceil(beadTotal * AUTO_FINISH_AT)) {
+            startAutoFinish();
+        }
+    }
+
+    /** 自动收尾:余豆按离熨斗远近排序,1.5s 内由近及远波及式烫完 */
+    private void startAutoFinish() {
+        autoFinishing = true;
+        finishStartAt = android.os.SystemClock.uptimeMillis();
+        int cols = pattern.cols;
+        List<Integer> rest = new ArrayList<>();
+        for (int i = 0; i < pattern.cols * pattern.rows; i++) {
+            if (!melted[i] && pattern.cellAt(i % cols, i / cols) >= 0) {
+                rest.add(i);
             }
+        }
+        final double[] dist = new double[rest.size()];
+        for (int i = 0; i < dist.length; i++) {
+            int idx = rest.get(i);
+            double du = idx % cols + 0.5 - ironU;
+            double dv = idx / cols + 0.5 - ironV;
+            dist[i] = du * du + dv * dv;
+        }
+        Integer[] byDist = new Integer[dist.length];
+        for (int i = 0; i < byDist.length; i++) byDist[i] = i;
+        Arrays.sort(byDist, new Comparator<Integer>() {
+            @Override
+            public int compare(Integer a, Integer b) {
+                return Double.compare(dist[a], dist[b]);
+            }
+        });
+        finishOrder = new int[dist.length];
+        for (int i = 0; i < finishOrder.length; i++) {
+            finishOrder[i] = rest.get(byDist[i]);
+        }
+        finishPtr = 0;
+        if (listener != null) listener.onIronAutoFinish();
+        postInvalidateOnAnimation();
+    }
+
+    /** 收尾波推进(onDraw 里每帧调用):冻结导出时一次烫完保证帧一致 */
+    private void advanceFinish() {
+        float p = frozen ? 1f
+                : (android.os.SystemClock.uptimeMillis() - finishStartAt)
+                        / (float) AUTO_FINISH_MS;
+        int target = p >= 1f ? finishOrder.length
+                : (int) Math.ceil(finishOrder.length * p);
+        while (finishPtr < target) {
+            melted[finishOrder[finishPtr++]] = true;
+            meltedCount++;
+        }
+        if (listener != null && !frozen) {
+            listener.onIronProgress(meltedCount, beadTotal);
+        }
+        if (finishPtr >= finishOrder.length) {
+            autoFinishing = false;
+            evalIronProgress();   // → ironDone + onIronComplete
+        } else {
+            postInvalidateOnAnimation();
         }
     }
 }

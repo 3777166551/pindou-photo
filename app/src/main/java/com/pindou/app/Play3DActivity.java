@@ -427,6 +427,16 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
     }
 
     @Override
+    public void onIronAutoFinish() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                progressText.setText(getString(R.string.play_iron_auto));
+            }
+        });
+    }
+
+    @Override
     public void onBackPressed() {
         super.onBackPressed();
         overridePendingTransition(R.anim.enter_undim, R.anim.exit_down);

@@ -302,6 +302,7 @@
     <string name="play_hint_iron">Press and drag the iron to fuse the beads</string>
     <string name="play_iron_progress_fmt">%1$d / %2$d fused</string>
     <string name="play_iron_done">All fused — the piece is done! 🎉</string>
+    <string name="play_iron_auto">90% done — the iron finishes the rest ✨</string>
     <string name="play_err_load">Pattern is not ready yet</string>
     <string name="play_replay">▶ Replay</string>
     <string name="play_export_gif">🎞 GIF</string>

@@ -302,6 +302,7 @@
     <string name="play_hint_iron">按住拖动熨斗,把豆豆烫连起来</string>
     <string name="play_iron_progress_fmt">已烫 %1$d / %2$d</string>
     <string name="play_iron_done">全部烫好!成品完成 🎉</string>
+    <string name="play_iron_auto">烫到 90% 啦,剩下的交给熨斗自动完成 ✨</string>
     <string name="play_err_load">图纸还没准备好,先生成一张</string>
     <string name="play_replay">▶ 重播</string>
     <string name="play_export_gif">🎞 GIF</string>
