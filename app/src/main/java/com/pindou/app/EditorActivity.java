@@ -4442,6 +4442,7 @@ public class EditorActivity extends Activity {
         blankCanvas = true;
         imported = false;
         cols = rows = 29;          // 默认一块标准板,适合挂件
+        syncSizeUi();              // 尺寸 chip/hint 同步,否则停留在进入前的状态
         hidePhotoOnlyCards();
         setPaintMode(true, true);  // 进来就能直接画
         ensureBrushDefault();

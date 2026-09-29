@@ -1,10 +1,10 @@
 # 路线图与交接文档 (ROADMAP & HANDOFF)
 
 > 本文档是项目的**持续交接入口**：当前状态、待办功能、开发约定、操作备忘。
-> 新会话/新开发者从这里开始读。最后更新：2026-09-22（**v2.61 M3 Expressive 化:
-> Material You 动态取色+控件全面化+照片变拼豆动画+相机修复+三崩溃修复**,
-> CI 三 job 全绿含 fuzz;正式包 build_apk\PindouPhoto-v2.61.apk 已签出;
-> 真机复核清单在 HANDOFF.md 顶部段;细节见 design-contract 记忆与 04 报告)
+> 新会话/新开发者从这里开始读。最后更新：2026-09-29（**v2.61 后补两真机 bug
+> 修复:GIF 导出尺寸/空白帧(view 布局态不可信→视口钉屏幕+两级缩放)+空白画布
+> stale UI(syncSizeUi)**;本地 compile+qa 371 全绿,待随下一版推 CI;v2.61
+> M3 Expressive 化详见 09-22 快照与 design-contract 记忆)
 
 ## 一、当前状态快照（2026-09-22,v2.61 M3 化完成,远端 main=483bafc 之后）
 
@@ -403,27 +403,20 @@ IoT/蓝牙硬件板。详见 docs/完整文档.md 开头的"发布渠道计划"�
 | v2.58 | **生长动画 + GIF 导出（传播位第二期，2026-09-16）**：①**生长动画**——3D 把玩页进门自动播放：豆豆按颜色分批（用量多先落）从空中 4.5 格高处二次 easing 落成整幅，批内按行序波浪推进，时长按豆数自适应（6~20s），「▶ 重播」chip 随时再看，动画未完不许熨烫、可随时旋转/缩放视角；②**GIF 导出**——「🎞 GIF」chip 走 ACTION_CREATE_DOCUMENT(image/gif)：util/GifEncoder 纯 Java GIF89a（逐帧局部调色板 ≤256 色，超了走中位切分 + 最近色映射；LZW 按 GIFCOMPR/free_ent>maxcode 语义增位，表满发 clear；NETSCAPE2.0 无限循环），UI 线程 view.draw 离屏渲染 + 后台线程编码的队列流水线，长边 720px、48~160 帧、延时 ≥2cs，进度文本实时更新，导出期间冻结自转/禁触摸/强制退出熨烫模式；③**测试**——qa 新增 TestGifEncoder 20 项，测试内实现迷你 LZW 解码器做真往返（纯色/双色棋盘/64² 渐变中位切分误差断言/100² 噪声图打满 4096 字典走 clear 分支/多帧延时与 NETSCAPE 扩展/结构断言），全套 353 项全绿；④**修复**——渲染缓冲改为每帧独立分配（共用数组会被 UI 下一帧覆盖正在编码的帧，竞态）；⑤**边界**——GIF 为逐帧全量帧（无帧间差分），文件偏大但对拼豆色块图很友好；透明帧不支持（渲染底色为米白） |
 
 
-## 六、待办清单（2026-09-18 真机 session 留下，下一个会话从这里接）
+## 六、待办清单（2026-09-18 真机 session 留下,下一个会话从这里接）
 
 按优先级：
 
-1. **GIF 导出尺寸 bug（最高优先，用户已亲测踩中）**——真机导出成功但
-   `pindou_build_*.gif` 是 100×208（预期长边 720），76 帧内容全是空白
-   米白底。文件本体合法（GIF89a/NETSCAPE），GifEncoder 编码无嫌疑
-   （TestGifEncoder 20 项往返全过），嫌疑集中在
-   Play3DActivity.startGifExport() 取宽高：playView.getWidth()/
-   getHeight() 在 SAF 选择器返回后执行，若 view 此时未布局/被重建会
-   拿到小值；帧全空白说明 playView.draw(canvas) 画的时候 view 未
-   attach 或 onDraw 早退。修法方向：导出前对 playView 显式
-   measure+layout 固定尺寸，或干脆按纯函数离屏渲染（Play3DProjector
-   是纯数学，直接按 720×(720·h/w) 构造帧，完全不依赖 view 生命周期，
-   更稳）。回归流程：文字生成"BEAD"→3D 把玩→🎞 GIF→保存到下载→
-   adb pull→本地解码验尺寸与帧内容（现成件：qa/out/uinfo.ps1 解析
-   dump、System.Drawing 逐帧导 PNG，2026-09-18 会话已趟通全程）。
-2. **空白画布 stale UI**——startBlankCanvas() 设 cols=rows=29 后不调
-   syncSizeUi()，尺寸 chip/hint 停留在进入前状态（真机 20:07 截图
-   实证：显示 58×58/拼板 4 块，网格本体是对的）；startBlankCanvas 里
-   补 syncSizeUi() 一行，compile_check + 真机截图回归。
+1. ~~**GIF 导出尺寸 bug**~~ ✅ 已修(2026-09-29,本地 compile+qa 全绿,真机
+   回归待做):根因=帧几何取 playView 布局宽高,SAF 选择器返回后该值在
+   真机 ROM 上不可信(实测 100×208+帧全空)。重写 startGifExport:渲染
+   视口按屏幕尺寸显式 measure+layout 钉住(每帧前重钉,父布局重排免疫),
+   渲完缩到长边 720 成帧位图再交编码线程;结束/异常/finish 三路都恢复
+   布局并释放位图;onActivityResult 加 isFinishing 防幽灵导出。
+   **回归流程**:文字生成"BEAD"→3D 把玩→🎞 GIF→保存→adb pull→本地
+   解码验尺寸(应为 720 长边,如 324×720)与帧内容(非空白)。
+2. ~~**空白画布 stale UI**~~ ✅ 已修(2026-09-29):startBlankCanvas 补
+   syncSizeUi() 一行,尺寸 chip/hint/拼板数即时同步。
 3. **real_walk.bat 适配 Android 15+**——shell am start 非导出
    Activity 被 SecurityException（DEV-NOTES 32），现脚本在 Android 16
    真机上非导出页步骤半数失效；改 monkey 拉 LAUNCHER + uiautomator
@@ -434,7 +427,6 @@ IoT/蓝牙硬件板。详见 docs/完整文档.md 开头的"发布渠道计划"�
    用户或按 vivo 默认处理）。
 5. **PAT 吊销提醒**：2026-09-18 会话所用 PAT 已完成推送+Release，
    用户可能未吊销——新会话开场再提醒一次。
-6. **发版节奏**：以上 1~3 凑一个 v2.59 推 CI + Release（流程已趟熟：
-   直连推送/盯 run/artifact 下载/Release API 挂 APK；需用户临时 PAT，
-   只勾 Contents 读写即可，用完吊销）。
+6. **发版节奏**：以上 1~2 修复 + v2.61 真机复核反馈凑一个 v2.62 推
+   CI + Release（需用户临时 PAT，只勾 Contents 读写即可，用完吊销）。
 

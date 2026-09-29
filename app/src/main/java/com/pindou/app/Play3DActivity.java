@@ -43,6 +43,16 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
     private boolean exporting = false;
     private Uri exportTarget;
 
+    // GIF 导出的帧渲染资源(仅导出期间非空,restorePlayLayout 释放):
+    // 视口位图(屏幕比例,长边≤1440)→ 缩到成帧位图(长边 720)→ 交编码线程
+    private Bitmap gifViewBmp;
+    private Canvas gifViewCanvas;
+    private Bitmap gifFrameBmp;
+    private Canvas gifFrameCanvas;
+    private android.graphics.RectF gifDst;
+    private android.graphics.Paint gifScalePaint;
+    private int gifRw, gifRh, gifFw, gifFh;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -200,7 +210,7 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQ_EXPORT_GIF && resultCode == RESULT_OK
-                && data != null && data.getData() != null) {
+                && data != null && data.getData() != null && !isFinishing()) {
             exportTarget = data.getData();
             startGifExport();
         }
@@ -211,8 +221,7 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
      * 用一个小队列衔接:UI 每渲一帧就丢给后台,进度条同步走。
      */
     private void startGifExport() {
-        int vw = playView.getWidth(), vh = playView.getHeight();
-        if (vw <= 0 || vh <= 0) return;
+        if (isFinishing()) return;
         if (ironMode) {   // GIF 帧里不能有熨斗
             ironMode = false;
             modeChip.setText(modeLabel());
@@ -225,23 +234,38 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
         playView.setEnabled(false);
         playView.skipAnimation();
 
-        // 长边压到 720,短边按屏幕比例
+        // 帧几何不取 playView 的布局宽高——真机上从 SAF 选择器返回时该值
+        // 不可信(实测拿到 100×208 且帧全空:view 布局态一错,onDraw 早退/
+        // 投影比例全歪)。改两级定尺寸:渲染视口=屏幕尺寸(导出期间屏幕
+        // 观感不变),每帧渲完再缩到长边 720 的成帧位图;渲染前后都把 view
+        // 显式 measure+layout 钉住(见 renderFrames)。
+        android.util.DisplayMetrics dmi = getResources().getDisplayMetrics();
+        int rw = Math.max(1, dmi.widthPixels), rh = Math.max(1, dmi.heightPixels);
         int tw, th;
-        if (vw >= vh) {
-            tw = Math.min(720, vw);
-            th = Math.round(vh * (tw / (float) vw));
+        if (rw >= rh) {
+            tw = Math.min(720, rw);
+            th = Math.max(1, Math.round(rh * (tw / (float) rw)));
         } else {
-            th = Math.min(720, vh);
-            tw = Math.round(vw * (th / (float) vh));
+            th = Math.min(720, rh);
+            tw = Math.max(1, Math.round(rw * (th / (float) rh)));
         }
         final long dur = playView.getAnimDuration();
         final int frames = Math.max(48, Math.min(160, (int) (dur / 90)));
         final int delayCs = (int) Math.max(2, Math.round(dur / (double) frames / 10));
         final int fw = tw, fh = th;
 
-        final Bitmap bmp = Bitmap.createBitmap(fw, fh, Bitmap.Config.ARGB_8888);
-        final Canvas canvas = new Canvas(bmp);
-        canvas.scale(fw / (float) vw, fh / (float) vh);
+        gifViewBmp = Bitmap.createBitmap(rw, rh, Bitmap.Config.ARGB_8888);
+        gifViewCanvas = new Canvas(gifViewBmp);
+        gifFrameBmp = Bitmap.createBitmap(fw, fh, Bitmap.Config.ARGB_8888);
+        gifFrameCanvas = new Canvas(gifFrameBmp);
+        gifDst = new android.graphics.RectF(0, 0, fw, fh);
+        gifScalePaint = new android.graphics.Paint(
+                android.graphics.Paint.ANTI_ALIAS_FLAG
+                        | android.graphics.Paint.FILTER_BITMAP_FLAG);
+        gifRw = rw;
+        gifRh = rh;
+        gifFw = fw;
+        gifFh = fh;
 
         final BlockingQueue<int[]> queue = new ArrayBlockingQueue<int[]>(3);
         final int[] sentinel = new int[0];
@@ -308,32 +332,40 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
 
         // UI 线程:逐帧离屏渲染(view.draw 只能主线程)。
         // 每帧独立缓冲:队列里的帧还在编码时,UI 已经在渲下一帧,不能共用
-        renderFrames(0, frames, dur, bmp, canvas, queue, sentinel, fw, fh);
+        renderFrames(0, frames, dur, queue, sentinel);
     }
 
     private void renderFrames(final int i, final int frames, final long dur,
-                              final Bitmap bmp, final Canvas canvas,
                               final BlockingQueue<int[]> queue,
-                              final int[] sentinel, final int fw, final int fh) {
+                              final int[] sentinel) {
         if (isFinishing() || i >= frames) {
             try {
                 queue.put(sentinel);
             } catch (InterruptedException ignored) {
             }
+            restorePlayLayout();
             return;
         }
         try {
+            // 把 view 显式钉到渲染视口尺寸再画,不依赖它当时的布局态;
+            // 导出中进度文本刷新可能触发父布局重排,每帧前重新钉一遍
+            playView.measure(
+                    View.MeasureSpec.makeMeasureSpec(gifRw, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(gifRh, View.MeasureSpec.EXACTLY));
+            playView.layout(0, 0, gifRw, gifRh);
             playView.setAnimTime(dur * i / (frames - 1L));
-            bmp.eraseColor(getColor(R.color.bg));
-            playView.draw(canvas);
-            int[] buf = new int[fw * fh];
-            bmp.getPixels(buf, 0, fw, 0, 0, fw, fh);
+            gifViewBmp.eraseColor(getColor(R.color.bg));
+            playView.draw(gifViewCanvas);
+            gifFrameCanvas.drawBitmap(gifViewBmp, null, gifDst, gifScalePaint);
+            int[] buf = new int[gifFw * gifFh];
+            gifFrameBmp.getPixels(buf, 0, gifFw, 0, 0, gifFw, gifFh);
             queue.put(buf);   // 编码快于渲染,通常不阻塞
         } catch (Exception e) {
             try {
                 queue.put(sentinel);
             } catch (InterruptedException ignored) {
             }
+            restorePlayLayout();
             return;
         }
         if (i == frames - 1) {
@@ -341,15 +373,32 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
                 queue.put(sentinel);
             } catch (InterruptedException ignored) {
             }
+            restorePlayLayout();
             return;
         }
         playView.postDelayed(new Runnable() {
             @Override
             public void run() {
-                renderFrames(i + 1, frames, dur, bmp, canvas, queue, sentinel,
-                        fw, fh);
+                renderFrames(i + 1, frames, dur, queue, sentinel);
             }
         }, 0);
+    }
+
+    /**
+     * 导出把 view 钉在了渲染视口尺寸,结束后让父布局把它排回全屏,
+     * 并释放导出期的两张帧位图。
+     */
+    private void restorePlayLayout() {
+        playView.forceLayout();
+        View p = (View) playView.getParent();
+        if (p != null) p.requestLayout();
+        playView.invalidate();
+        gifViewBmp = null;
+        gifViewCanvas = null;
+        gifFrameBmp = null;
+        gifFrameCanvas = null;
+        gifDst = null;
+        gifScalePaint = null;
     }
 
     // ---------------- 熨烫进度回调 ----------------
