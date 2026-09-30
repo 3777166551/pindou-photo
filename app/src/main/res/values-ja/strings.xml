@@ -661,4 +661,14 @@
     <string name="footer_no_browser">ブラウザが見つかりません</string>
     <string name="repo_url">https://github.com/3777166551/pindou-photo</string>
     <string name="repo_issues_url">https://github.com/3777166551/pindou-photo/issues</string>
+
+    <!-- AI 変換ガイド:プロンプトをワンタップコピー -->
+    <string name="kb_ai_title">AI 変換ガイド:写真をアニメ図案に</string>
+    <string name="kb_ai_p1">📋 アニメ手描き風</string>
+    <string name="kb_ai_p2">📋 ビーズ向フラット</string>
+    <string name="kb_ai_p3">📋 ちび人形</string>
+    <string name="kb_ai_copied">コピーしました — AI アシスタントに貼り付けてね</string>
+    <string name="ai_prompt_anime">この写真を日本のアニメ調の手描きイラストに変えて:少女漫画風、きれいな線、やわらかいセル塗り、大きなアニメ目、人物的な髪型・服装・ポーズ・表情はそのまま、背景はやわらかいアニメ背景に簡略化、全体を明るく爽やかに</string>
+    <string name="ai_prompt_flat">この写真をフラットなアニメイラストに変えて:大きな平塗りの色面でグラデーションはほとんどなし、はっきりした太い輪郭線、細部は大幅に簡略化、明るい色は少数に限定、人物的な髪型・服装・ポーズ・表情は保持、背景は単色かなし、シールのような仕上がりで、ピクセルビーズ図案への変換に適したものにして</string>
+    <string name="ai_prompt_chibi">写真の人物をちびキャラのアニメ風に描いて:2 頭身で頭が大きく体が小さく、ハイライト付きの大きな目、頬の赤らみ、髪型・髪色・服の色・アクセサリーの特徴は保持、かわいい笑顔、単色の丸い背景、フラットでシール風に</string>
 </resources>

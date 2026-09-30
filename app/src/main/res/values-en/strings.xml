@@ -661,4 +661,14 @@
     <string name="footer_no_browser">No browser found</string>
     <string name="repo_url">https://github.com/3777166551/pindou-photo</string>
     <string name="repo_issues_url">https://github.com/3777166551/pindou-photo/issues</string>
+
+    <!-- AI chart guide: one-tap prompt copy -->
+    <string name="kb_ai_title">AI chart guide: photo to anime pattern</string>
+    <string name="kb_ai_p1">📋 Anime hand-drawn</string>
+    <string name="kb_ai_p2">📋 Bead-flat</string>
+    <string name="kb_ai_p3">📋 Chibi doll</string>
+    <string name="kb_ai_copied">Copied — paste it into your AI assistant</string>
+    <string name="ai_prompt_anime">Turn this photo into a Japanese hand-drawn anime illustration: shoujo manga style, clean lines, soft cel shading, big anime eyes, keep the hairstyle, clothing, pose and expression, simplify the background into a soft anime background, bright and fresh overall</string>
+    <string name="ai_prompt_flat">Turn this photo into a flat anime illustration: large flat color blocks with almost no gradients, clear bold outlines, heavily simplified details, bright colors limited to a few, keep the hairstyle, clothing, pose and expression, plain solid background or none, looking like a sticker, suitable for conversion into a pixel fuse-bead pattern</string>
+    <string name="ai_prompt_chibi">Draw the person in this photo as a chibi anime character: 2-head-tall proportions, big head with a small body, big glossy eyes with highlights, blush on the cheeks, keep the hairstyle, hair color, clothing colors and accessories, cute smiling expression, plain circular background, flat and sticker-like</string>
 </resources>

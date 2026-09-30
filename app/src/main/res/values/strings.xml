@@ -661,4 +661,14 @@
     <string name="footer_no_browser">没有找到浏览器</string>
     <string name="repo_url">https://github.com/3777166551/pindou-photo</string>
     <string name="repo_issues_url">https://github.com/3777166551/pindou-photo/issues</string>
+
+    <!-- AI 转图指南:一键复制提示词 -->
+    <string name="kb_ai_title">AI 转图指南:照片变二次元图纸</string>
+    <string name="kb_ai_p1">📋 日漫手绘风</string>
+    <string name="kb_ai_p2">📋 拼豆扁平风</string>
+    <string name="kb_ai_p3">📋 Q 版豆偶</string>
+    <string name="kb_ai_copied">已复制,去 AI 助手粘贴吧</string>
+    <string name="ai_prompt_anime">把这张照片转成日系手绘二次元插画:少女漫画画风,干净的线条,柔和的赛璐璐上色,大眼睛动漫脸,保留人物的发型、服装、姿势和表情,背景简化成柔和的动漫背景,整体明亮清新</string>
+    <string name="ai_prompt_flat">把这张照片转成扁平风二次元插画:大色块平涂,几乎无渐变,轮廓线条清晰粗黑,细节尽量简化,颜色明亮且限定在少数几种,保留人物的发型、服装、姿势和表情,背景用纯色或完全去掉,整体像一张贴纸,方便后续转成像素拼豆图纸</string>
+    <string name="ai_prompt_chibi">把照片里的人物画成 Q 版二次元形象:二头身,大头小身,大眼睛带高光,脸颊有腮红,保留人物的发型样式、发色、服装颜色和配饰特征,表情可爱微笑,背景用纯色圆形,整体扁平可爱像贴纸</string>
 </resources>
