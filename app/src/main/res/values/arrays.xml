@@ -61,4 +61,16 @@
         <item>卡其绿</item><item>亮紫</item><item>深珊瑚</item><item>湖水绿</item>
         <item>紫红</item><item>奶油白</item>
     </string-array>
+
+    <!-- 模板库 8 大分类名(默认中文;bead 数据层零 Android 依赖,由调用方传入) -->
+    <string-array name="template_cats">
+        <item>😹 流行表情</item>
+        <item>🐾 萌宠动物</item>
+        <item>🍔 美食饮料</item>
+        <item>🌸 花草节日</item>
+        <item>🎮 游戏音乐</item>
+        <item>⚽ 运动奖牌</item>
+        <item>🚗 出行工具</item>
+        <item>💎 潮流符号</item>
+    </string-array>
 </resources>

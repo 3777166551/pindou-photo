@@ -61,4 +61,16 @@
         <item>Khaki Green</item><item>Bright Purple</item><item>Deep Coral</item><item>Lake Green</item>
         <item>Magenta</item><item>Cream White</item>
     </string-array>
+
+    <!-- Template gallery category names (8) -->
+    <string-array name="template_cats">
+        <item>😹 Smiley faces</item>
+        <item>🐾 Cute animals</item>
+        <item>🍔 Food &amp; drinks</item>
+        <item>🌸 Flowers &amp; holidays</item>
+        <item>🎮 Games &amp; music</item>
+        <item>⚽ Sports &amp; medals</item>
+        <item>🚗 Vehicles</item>
+        <item>💎 Trendy symbols</item>
+    </string-array>
 </resources>

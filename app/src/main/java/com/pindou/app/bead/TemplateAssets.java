@@ -13,24 +13,39 @@ public final class TemplateAssets {
 
     /** 模板库全部分类(单屏导航:顶部标签切换) */
     public static List<Templates.Cat> allCategories() {
+        return allCategories(null);
+    }
+
+    /** 带本地化分类名版本:titles = 资源数组 template_cats(8 条),可为 null */
+    public static List<Templates.Cat> allCategories(String[] titles) {
         List<Templates.Cat> cats = new ArrayList<>();
-        cats.add(cuteCategory("😹 流行表情",
+        cats.add(cuteCategory(pickTitle(titles, 0, "😹 流行表情"),
                 TemplateEmojiData.EMOJI_SMILEY_SPECS, TemplateEmojiData.EMOJI_SMILEY_NAMES));
-        cats.add(cuteCategory("🐾 萌宠动物",
+        cats.add(cuteCategory(pickTitle(titles, 1, "🐾 萌宠动物"),
                 TemplateEmojiData.EMOJI_ANIMAL_SPECS, TemplateEmojiData.EMOJI_ANIMAL_NAMES));
-        cats.add(cuteCategory("🍔 美食饮料",
+        cats.add(cuteCategory(pickTitle(titles, 2, "🍔 美食饮料"),
                 TemplateEmojiData.EMOJI_FOOD_SPECS, TemplateEmojiData.EMOJI_FOOD_NAMES));
-        cats.add(cuteCategory("🌸 花草节日",
+        cats.add(cuteCategory(pickTitle(titles, 3, "🌸 花草节日"),
                 TemplateEmojiData.EMOJI_NATURE_SPECS, TemplateEmojiData.EMOJI_NATURE_NAMES));
-        cats.add(cuteCategory("🎮 游戏音乐",
+        cats.add(cuteCategory(pickTitle(titles, 4, "🎮 游戏音乐"),
                 TemplateEmojiData.EMOJI_GAME_SPECS, TemplateEmojiData.EMOJI_GAME_NAMES));
-        cats.add(cuteCategory("⚽ 运动奖牌",
+        cats.add(cuteCategory(pickTitle(titles, 5, "⚽ 运动奖牌"),
                 TemplateEmojiData.EMOJI_SPORT_SPECS, TemplateEmojiData.EMOJI_SPORT_NAMES));
-        cats.add(cuteCategory("🚗 出行工具",
+        cats.add(cuteCategory(pickTitle(titles, 6, "🚗 出行工具"),
                 TemplateEmojiData.EMOJI_TRAVEL_SPECS, TemplateEmojiData.EMOJI_TRAVEL_NAMES));
-        cats.add(cuteCategory("💎 潮流符号",
+        cats.add(cuteCategory(pickTitle(titles, 7, "💎 潮流符号"),
                 TemplateEmojiData.EMOJI_SYMBOL_SPECS, TemplateEmojiData.EMOJI_SYMBOL_NAMES));
         return cats;
+    }
+
+    /** 分类名按位本地化:数组长度对上且非空才采用,否则回退中文默认
+     *  (bead 包保持零 Android 依赖,资源数组由 Activity 侧传入) */
+    private static String pickTitle(String[] titles, int i, String zh) {
+        if (titles != null && titles.length == 8 && i < titles.length
+                && titles[i] != null && titles[i].trim().length() > 0) {
+            return titles[i];
+        }
+        return zh;
     }
 
     /** Fluent Emoji 通用工厂(32x32 网格;建议画幅 36 = 图案 + 一圈余量) */

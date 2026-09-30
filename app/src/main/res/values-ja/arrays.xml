@@ -61,4 +61,16 @@
         <item>カーキグリーン</item><item>ブライトパープル</item><item>深コーラル</item><item>レイクグリーン</item>
         <item>マゼンタ</item><item>クリームホワイト</item>
     </string-array>
+
+    <!-- テンプレートライブラリのカテゴリ名(8) -->
+    <string-array name="template_cats">
+        <item>😹 表情スタンプ</item>
+        <item>🐾 かわいい動物</item>
+        <item>🍔 食べ物・飲み物</item>
+        <item>🌸 花・季節の行事</item>
+        <item>🎮 ゲーム・音楽</item>
+        <item>⚽ スポーツ・メダル</item>
+        <item>🚗 のりもの</item>
+        <item>💎 流行のマーク</item>
+    </string-array>
 </resources>

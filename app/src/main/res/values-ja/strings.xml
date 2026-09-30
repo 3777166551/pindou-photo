@@ -32,8 +32,8 @@
     <string name="tool_scan">図案読み取り</string>
     <string name="tool_scan_desc">手持ちの図案を再現</string>
     <string name="tool_templates">テンプレート</string>
-    <string name="tool_templates_desc">オフライン図案</string>
-    <string name="tool_templates_desc_n">%d 種の図案、オフライン</string>
+    <string name="tool_templates_desc">写真なしですぐつくれる図案</string>
+    <string name="tool_templates_desc_n">%d 種の図案をすぐつくれる</string>
     <string name="tool_inventory">🎒 在庫</string>
     <string name="tool_inventory_desc">手持ちカラーと数量</string>
     <string name="inv_page_title">🎒 在庫</string>
@@ -125,10 +125,10 @@
     <string name="sec_palette">パレットとスタイル</string>
     <string name="palette_label">ビーズパレット</string>
     <string name="limit0">無制限</string>
-    <string name="limit1">12</string>
-    <string name="limit2">18</string>
-    <string name="limit3">26</string>
-    <string name="limit4">40</string>
+    <string name="limit1">12色</string>
+    <string name="limit2">18色</string>
+    <string name="limit3">26色</string>
+    <string name="limit4">40色</string>
     <string name="limit_hint">色数上限: 近い色を自動でまとめ、買う色数を減らします(リアルモード)</string>
     <string name="style_real">リアル</string>
     <string name="style_abs">アブストラクト</string>
@@ -586,7 +586,7 @@
     <string name="assist_help_btn">つかいかた</string>
     <string name="assist_help_icon">?</string>
     <string name="assist_help_title">ビーズ補助のつかいかた</string>
-    <string name="assist_help_body">図案のマスをタップ = 完成印（✓が出ます）、もう一度タップで解除。押したまま動かすと連続で塗れます。\n\n• 色ごと（初期）:現在の色だけ光る —「次の色」で切替\n• 板ごと:29×29 の板を 1 枚ずつ、埋まると次へ\n• 行ごと:1 行ずつ、埋まると次の行へ\n• 全画面:図案を画面いっぱいに広げて集中（戻るキーで終了）\n• 投影合わせ:カメラで実際の板に図案を重ねて見る\n• 📍未完へ:次の未完成マスへジャンプ\n• 🔍漏れ:まだ置いていないビーズをぜんぶ光らせます（琥珀色の点滅枠）。置き済みは薄くなり、もう一度タップで解除\n• 🔊音声:色替え・板/行の完了時に進捗を読み上げます\n\n進捗は自動保存され、開き直っても残ります。</string>
+    <string name="assist_help_body">図案のマスをタップ = 完成印（✓が出ます）、もう一度タップで解除。押したまま動かすと連続で塗れます。\n\nいろんな狙い方：\n• 色ごと（初期）：現在の色だけ光る —「次の色」で切替\n• 板ごと：29×29 の板を 1 枚ずつ、埋まると次へ\n• 行ごと：1 行ずつ、埋まると次の行へ\n• 全画面：図案を画面いっぱいに広げて集中（戻るキーで終了）\n• 🔍投影（全画面ページ内）：現在の行/板が超大きく表示。スマホを板の前に立てて遠くから見ながら ◀▶ で進める\n\n実際の板と照合：\n• 投影合わせ（カメラを使う）：図案を半透明で本物の板に重ねて、見ながらビーズを置ける\n• 📸チェック（板を撮影）：置き終えた板を撮ると、色ミス/未設置/余分を自動で見つける。アイロンの前に防げる\n\nチェックのお助け：\n• 📍未完へ：次の未完成マスへジャンプ\n• 🔍漏れ：まだ置いていないビーズをぜんぶ光らせます（琥珀色の点滅枠）。置き済みは薄くなり、もう一度タップで解除\n• 📅記録：毎月のビーズ記録を見られます\n• 🔊音声：色替え・板/行の完了時に進捗を読み上げます。画面を見なくてOK\n\n進捗は自動保存され、開き直っても残ります。</string>
 
     <!-- 音声ガイド:ローカル TTS、ネットワーク・権限ゼロ -->
     <string name="assist_voice_btn">🔊 音声</string>
@@ -604,13 +604,13 @@
     <string name="verify_start">▶ 比較する</string>
     <string name="verify_recheck">↺ 撮り直す</string>
     <string name="verify_only_wrong">エラーのみ</string>
-    <string name="fmt_verify_result">%1$d マス比較:✗ 間違い %2$d・不足 %3$d・余分 %4$d</string>
+    <string name="fmt_verify_result">%1$d マス比較:✗ 間違いかも %2$d・不足 %3$d・余分 %4$d\n（照り返しで誤判定することも。アイロンの前にもう一度確認を）</string>
     <string name="verify_good">✅ 全部正解！アイロンOK！</string>
     <string name="verify_need_photo">先に写真を撮ってください</string>
     <string name="verify_bad_photo">この写真は読み取れません</string>
 
     <!-- AR体感プレビュー(疑似AR:カメラプレビュー + ジャイロ、閲覧専用) -->
-    <string name="chip_ar">ARプレビュー</string>
+    <string name="chip_ar">ARプレビュー(カメラ)</string>
     <string name="ar_recenter">再配置</string>
     <string name="ar_hint">スマホを動かして見回すと、完成した板はその場に立っています。見えなくなったら「再配置」をタップ</string>
     <string name="ar_no_camera">カメラを開けないため、ARプレビューは利用できません</string>
@@ -645,7 +645,7 @@
     <string name="pdf_col_total">合計</string>
 
     <!-- 壁飾りプレビュー(非 AR):写真+透視で重ね合わせ -->
-    <string name="chip_wall">🧱 壁飾り</string>
+    <string name="chip_wall">🧱 壁飾り(アルバム)</string>
     <string name="wall_pick_hint">部屋や壁の写真を選んで、作品を置いた印象を確認しましょう</string>
     <string name="wall_btn_photo">🖼 写真</string>
     <string name="wall_btn_save">💾 保存</string>
@@ -678,4 +678,8 @@
     <string name="fmt_proj_board">板 %1$d / %2$d</string>
     <string name="toast_proj_hint">スマホを板の前に立てるなら「🔍 投影」— 現在の行が全画面で見やすくなります</string>
     <string name="toast_ai_guide_hint">アニメ風の図案が欲しい?「ビーズ知識」の AI 変換ガイドでプロンプトをコピーできます</string>
+    <!-- 初回図案完成時に1回だけ:デフォルト設定でそのまま作業できることを伝える -->
+    <string name="toast_first_pattern_hint">図案ができたよ!初期設定のまま作業できる。下のオプションは変えたくなったらでOK</string>
+    <!-- 大きい図案向け:安心話術の代わりに簡単化の道を示す -->
+    <string name="fmt_first_pattern_big">図案ができたよ!全部で約 %1$,d 個・%2$d 色。もっと簡単にするなら「色数上限」を 18 に、サイズを一つ小さくしてね</string>
 </resources>

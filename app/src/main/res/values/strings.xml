@@ -32,8 +32,8 @@
     <string name="tool_scan">识别图纸</string>
     <string name="tool_scan_desc">现成图纸变同款</string>
     <string name="tool_templates">模板库</string>
-    <string name="tool_templates_desc">图案离线拼</string>
-    <string name="tool_templates_desc_n">%d 款图案离线拼</string>
+    <string name="tool_templates_desc">图案直接拼,不用照片</string>
+    <string name="tool_templates_desc_n">%d 款图案直接拼</string>
     <string name="tool_inventory">🎒 豆仓库存</string>
     <string name="tool_inventory_desc">手头颜色与数量</string>
     <string name="inv_page_title">🎒 豆仓库存</string>
@@ -125,10 +125,10 @@
     <string name="sec_palette">色板与图纸风格</string>
     <string name="palette_label">豆豆色板</string>
     <string name="limit0">不限</string>
-    <string name="limit1">12</string>
-    <string name="limit2">18</string>
-    <string name="limit3">26</string>
-    <string name="limit4">40</string>
+    <string name="limit1">12色</string>
+    <string name="limit2">18色</string>
+    <string name="limit3">26色</string>
+    <string name="limit4">40色</string>
     <string name="limit_hint">色数上限:自动合并最接近的颜色,少买几种豆(写实模式生效)</string>
     <string name="style_real">写实</string>
     <string name="style_abs">抽象</string>
@@ -581,7 +581,7 @@
     <string name="assist_help_btn">怎么用?</string>
     <string name="assist_help_icon">?</string>
     <string name="assist_help_title">拼豆辅助怎么用</string>
-    <string name="assist_help_body">图纸页直接点格子 = 标记已拼好（弹✓），再点一下取消；按住滑动可以连续刷。\n\n• 逐色辅助（默认）：只亮当前颜色，点「下一个颜色」切换\n• 按板拼：一次点亮一块 29×29 拼板，拼满自动跳下一块\n• 按行拼：一次点亮一行，拼完自动下一行\n• 沉浸拼豆：图纸铺满全屏专心拼，返回键退出\n• 对位投屏：打开相机，把图纸对准真实拼豆板照着摆\n• 📍定位：直接跳到下一个还没拼的格子\n• 🔍查漏：一键点亮所有还没拼的豆（琥珀圈呼吸），已拼的自动蒙灰，再点一次关闭\n• 🔊语音播报：拼完一板/换色时开口报进度，拼豆不用低头看屏\n\n进度自动保存，退出重开都在。</string>
+    <string name="assist_help_body">图纸页直接点格子 = 标记已拼好（弹✓），再点一下取消；按住滑动可以连续刷。\n\n换着花样拼：\n• 逐色辅助（默认）：只亮当前颜色，点「下一个颜色」切换\n• 按板拼：一次点亮一块 29×29 拼板，拼满自动跳下一块\n• 按行拼：一次点亮一行，拼完自动下一行\n• 沉浸拼豆：图纸铺满全屏专心拼，返回键退出\n• 🔍投射（在沉浸页里）：当前行/板超大铺满，手机架板前远看，◀▶推进\n\n对着真实拼豆板核对：\n• 对位投屏（用相机）：图纸虚影钉在真板上，照着虚影摆豆\n• 📸验收（给拼好的板拍照）：自动圈出摆错/漏拼/多摆，熨烫前拦住\n\n帮你检查的小工具：\n• 📍定位：直接跳到下一个还没拼的格子\n• 🔍查漏：一键点亮全图还没拼的豆（琥珀圈呼吸），已拼的自动蒙灰，再点一次关闭\n• 📅打卡：看每月拼豆记录\n• 🔊语音播报：换色/拼满时开口报进度，拼豆不用低头看屏\n\n进度自动保存，退出重开都在。</string>
 
     <!-- 语音引导:本地 TTS 播报,零网络零权限 -->
     <string name="assist_voice_btn">🔊 语音</string>
@@ -599,7 +599,7 @@
     <string name="verify_start">▶ 开始比对</string>
     <string name="verify_recheck">↺ 重拍</string>
     <string name="verify_only_wrong">只看错格</string>
-    <string name="fmt_verify_result">比对 %1$d 格：✗ 摆错 %2$d · 缺 %3$d · 多 %4$d</string>
+    <string name="fmt_verify_result">比对 %1$d 格：✗ 疑似摆错 %2$d · 缺 %3$d · 多 %4$d\n（光线反光也可能误判，熨前再核对一眼）</string>
     <string name="verify_good">✅ 全部正确，可以熨烫啦！</string>
     <string name="verify_need_photo">先拍照或从相册选一张</string>
     <string name="verify_bad_photo">这张照片读不出来，换一张试试</string>
@@ -610,7 +610,7 @@
     <string name="cross_footer">照片变拼豆 PindouPhoto 导出 · 颜色为就近映射,实物以 DMC 官方色卡为准</string>
 
     <!-- AR 试摆(假 AR:相机取景 + 陀螺仪,无交互) -->
-    <string name="chip_ar">AR 试摆</string>
+    <string name="chip_ar">AR 试摆(相机)</string>
     <string name="ar_recenter">摆正</string>
     <string name="ar_hint">转动手机环顾四周,拼好的板子会立在那里;被挡住就点「摆正」</string>
     <string name="ar_no_camera">无法打开相机,AR 试摆不可用</string>
@@ -645,7 +645,7 @@
     <string name="pdf_col_total">合计</string>
 
     <!-- 上墙预览(非 AR):相册照片+效果图透视贴合 -->
-    <string name="chip_wall">🧱 上墙</string>
+    <string name="chip_wall">🧱 上墙(相册)</string>
     <string name="wall_pick_hint">选一张房间/墙面的照片,把图纸贴上去看效果</string>
     <string name="wall_btn_photo">🖼 换照片</string>
     <string name="wall_btn_save">💾 保存</string>
@@ -678,4 +678,8 @@
     <string name="fmt_proj_board">板 %1$d / %2$d</string>
     <string name="toast_proj_hint">手机架在板前拼?点顶栏「🔍 投射」,当前行超大远看更省眼</string>
     <string name="toast_ai_guide_hint">想要二次元效果的图纸?「拼豆知识」里有《AI 转图指南》,提示词一键复制</string>
+    <!-- 首次出图一次性指路:默认参数已经能直接拼,萌新不用先学参数 -->
+    <string name="toast_first_pattern_hint">图纸生成好啦!默认参数就能直接开拼,下面的选项想调再调</string>
+    <!-- 首图吓退预防:大图改口给简化出路(豆多/色多时用) -->
+    <string name="fmt_first_pattern_big">图纸生成好啦!这张约 %1$,d 颗豆、%2$d 种颜色——想更简单,把「色数上限」调到 18,或换小一档尺寸</string>
 </resources>

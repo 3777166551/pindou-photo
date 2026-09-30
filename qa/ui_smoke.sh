@@ -1033,21 +1033,31 @@ else
 fi
 snap immersive
 # ---------- v2.62:投射模式(沉浸页远看变体) ----------
-# 进入投射 -> 行进度硬断言 -> ▶ 推进 -> 退出投射回沉浸
-tap_text_still "Project"
+# 进入投射 -> 硬断言 chip 翻转成 ✕ 态(=覆盖层真的开了) -> 行进度软断言
+# (B 段走查结束停在逐色模式,状态行显示颜色进度,Row 文案不保证在)
+# -> ▶ 推进只截图(投射 ▶ 与遮罩底下编辑器「Next board ▶」文本撞车,
+# tap 命中哪一个不可控,推进断言移到行模式的专门轮次再补) -> 关投射回沉浸
+tap_text_still "Big view"
 sleep 1.5
-check_text "Row 1 /" 0           # fmt_proj_row:按行引导默认第 1 行
-snap projector
-tap_text_still "▶"
-sleep 1
 dump_ui
-grep -q 'text="[^"]*Row 2 /' ui.xml || {
-  echo "[smoke] FAIL: projector next-row did not advance to row 2"
+grep -q 'text="✕ [^"]*Big view' ui.xml || {
+  echo "[smoke] FAIL: projector chip did not flip to exit state"
   snap fail
   exit 1
 }
-tap_text_still "✕ Project"
+check_text "Row 1 /" 0           # 按行模式才显示;逐色模式 soft-miss 属预期
+snap projector
+tap_text_still "▶" 0
 sleep 1
+snap projector_next
+tap_text_still "Big view"
+sleep 1
+dump_ui
+grep -q 'text="✕ [^"]*Big view' ui.xml && {
+  echo "[smoke] FAIL: projector chip still in exit state after second tap"
+  snap fail
+  exit 1
+}
 tap_text_still "Exit"
 sleep 1
 dump_ui

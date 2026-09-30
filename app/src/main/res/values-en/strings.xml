@@ -32,8 +32,8 @@
     <string name="tool_scan">Scan chart</string>
     <string name="tool_scan_desc">Clone an existing chart</string>
     <string name="tool_templates">Templates</string>
-    <string name="tool_templates_desc">offline designs</string>
-    <string name="tool_templates_desc_n">%d designs, all offline</string>
+    <string name="tool_templates_desc">bead them directly, no photo needed</string>
+    <string name="tool_templates_desc_n">%d designs to bead directly</string>
     <string name="tool_inventory">🎒 Inventory</string>
     <string name="tool_inventory_desc">Colors &amp; counts you own</string>
     <string name="inv_page_title">🎒 Inventory</string>
@@ -561,7 +561,7 @@
     <string name="file_layered_prefix">Layered3D_</string>
 
     <!-- Projection align (v2.50): pin the chart onto a real board with 4 calibration points -->
-    <string name="assist_project_btn">Project</string>
+    <string name="assist_project_btn">Align</string>
     <string name="align_whole">Ghost chart</string>
     <string name="align_single">This color</string>
     <string name="align_opacity">Opacity</string>
@@ -586,7 +586,7 @@
     <string name="assist_help_btn">How-to</string>
     <string name="assist_help_icon">?</string>
     <string name="assist_help_title">How bead-along works</string>
-    <string name="assist_help_body">Tap a cell in the chart to mark it placed (a ✓ pops up); tap again to undo. Hold and drag to mark a whole run.\n\n• Per color (default): only the current color lights up — "Next color" cycles\n• By board: one 29×29 board at a time, auto-advances when full\n• By row: one row at a time, auto-advances downward\n• Focus: the chart goes fullscreen for distraction-free beading (Back exits)\n• Project: camera overlay pins the chart onto your real board\n• 📍 Locate: jumps straight to the next unplaced cell\n• 🔍 Missing: lights up every unplaced bead at once (pulsing amber rings); placed beads dim down. Tap again to turn off\n• 🔊 Voice: speaks progress on color switches and board/row completion\n\nProgress is saved automatically and survives reopen.</string>
+    <string name="assist_help_body">Tap a cell in the chart to mark it placed (a ✓ pops up); tap again to undo. Hold and drag to mark a whole run.\n\nWays to bead:\n• Per color (default): only the current color lights up — "Next color" cycles\n• By board: one 29×29 board at a time, auto-advances when full\n• By row: one row at a time, auto-advances downward\n• Focus: the chart goes fullscreen for distraction-free beading (Back exits)\n• 🔍 Big view (inside Focus): the current row/board fills the screen super large — prop the phone by the board, look from afar, step with ◀ ▶\n\nCheck against the real board:\n• Align (uses the camera): pins the chart onto your real pegboard as a ghost image, so you can place beads against it\n• 📸 Check (photo of your board): photographs the board you placed and flags wrong/missing/extra beads before you iron\n\nLittle helpers:\n• 📍 Locate: jumps straight to the next unplaced cell\n• 🔍 Missing: lights up every unplaced bead at once (pulsing amber rings); placed beads dim down. Tap again to turn off\n• 📅 Check-in: your monthly beading calendar\n• 🔊 Voice: speaks progress on color switches and board/row completion — no need to look at the screen\n\nProgress is saved automatically and survives reopen.</string>
 
     <!-- Voice guide: local TTS, zero network zero permissions -->
     <string name="assist_voice_btn">🔊 Voice</string>
@@ -604,13 +604,13 @@
     <string name="verify_start">▶ Compare</string>
     <string name="verify_recheck">↺ Retake</string>
     <string name="verify_only_wrong">Errors only</string>
-    <string name="fmt_verify_result">Checked %1$d cells: ✗ wrong %2$d · missing %3$d · extra %4$d</string>
+    <string name="fmt_verify_result">Checked %1$d cells: ✗ likely wrong %2$d · missing %3$d · extra %4$d\n(glare can fool it — double-check before ironing)</string>
     <string name="verify_good">✅ All correct — ready to iron!</string>
     <string name="verify_need_photo">Take or pick a photo first</string>
     <string name="verify_bad_photo">Could not read this photo — try another</string>
 
     <!-- AR try-on (fake AR: camera viewfinder + gyroscope, view only) -->
-    <string name="chip_ar">AR preview</string>
+    <string name="chip_ar">AR preview (camera)</string>
     <string name="ar_recenter">Re-center</string>
     <string name="ar_hint">Look around with your phone — the finished board stays where you left it. Tap "Re-center" if it drifts away.</string>
     <string name="ar_no_camera">Cannot open the camera; AR preview unavailable</string>
@@ -635,7 +635,7 @@
     <string name="standee_dialog_hint">Base depth and width are computed from the sprite proportions to keep it from tipping; the 1-bead slot is auto-centered — the sprite stands once slid in. The kit includes a hanger bar: use it for wall mounting or just ignore it. Export the whole kit as a PDF, or save the base as a project to bead-along with.</string>
     <string name="standee_advice_tall">💡 This piece is tall: the base is already at max depth — lean it against a wall, or hang it with the hanger bar instead.</string>
     <string name="standee_export_pdf">Export PDF</string>
-    <string name="standee_save_base">Save base as project</string>
+    <string name="standee_save_base">Save base</string>
     <string name="standee_proj_prefix">Standee base_</string>
     <string name="file_standee_prefix">Standee_</string>
     <string name="standee_bom_title">Standee BOM (sprite + base + hanger)</string>
@@ -645,7 +645,7 @@
     <string name="pdf_col_total">Total</string>
 
     <!-- Wall preview (non-AR): photo + perspective overlay -->
-    <string name="chip_wall">🧱 Wall</string>
+    <string name="chip_wall">🧱 Wall (album)</string>
     <string name="wall_pick_hint">Pick a photo of your room or wall to preview the piece on it</string>
     <string name="wall_btn_photo">🖼 Photo</string>
     <string name="wall_btn_save">💾 Save</string>
@@ -673,9 +673,13 @@
     <string name="ai_prompt_chibi">Draw the person in this photo as a chibi anime character: 2-head-tall proportions, big head with a small body, big glossy eyes with highlights, blush on the cheeks, keep the hairstyle, hair color, clothing colors and accessories, cute smiling expression, plain circular background, flat and sticker-like</string>
 
     <!-- Projector mode: far-view variant of the immersive page -->
-    <string name="proj_chip">🔍 Project</string>
+    <string name="proj_chip">🔍 Big view</string>
     <string name="fmt_proj_row">Row %1$d / %2$d</string>
     <string name="fmt_proj_board">Board %1$d / %2$d</string>
-    <string name="toast_proj_hint">Propping the phone by the board? Tap \"🔍 Project\" above — the current row goes fullscreen for easy viewing</string>
+    <string name="toast_proj_hint">Propping the phone by the board? Tap \"🔍 Big view\" above — the current row goes fullscreen for easy viewing</string>
     <string name="toast_ai_guide_hint">Want an anime-style chart? \"Bead knowledge\" has an AI chart guide with copy-paste prompts</string>
+    <!-- First-chart one-time hint: defaults already bead-ready, beginners need not learn the knobs -->
+    <string name="toast_first_pattern_hint">Chart is ready! Defaults are good to start beading — tweak the options below only if you like</string>
+    <!-- Big-chart variant: give a concrete simplification path instead of empty reassurance -->
+    <string name="fmt_first_pattern_big">Chart is ready! About %1$,d beads in %2$d colors — for an easier chart, lower the color limit to 18 or drop a size</string>
 </resources>

@@ -2495,6 +2495,31 @@ public class EditorActivity extends Activity {
                                     getString(R.string.toast_ai_guide_hint),
                                     Toast.LENGTH_LONG).show();
                         }
+                        // 首次出图一次性指路:萌新第一站,告诉他们默认参数已经
+                        // 能直接拼,不用先学下面一排参数( prefs 只弹一次;
+                        // 空白画布有自己的就绪提示,存档恢复/自动验收是老手流程)
+                        if (!blankCanvas && !pendingAutoVerify && !pendingResumeAssist
+                                && !getSharedPreferences("pindou", MODE_PRIVATE)
+                                        .getBoolean("editor_first_hinted", false)) {
+                            getSharedPreferences("pindou", MODE_PRIVATE).edit()
+                                    .putBoolean("editor_first_hinted", true).apply();
+                            // 首图吓退预防:大图(豆多/色多)不说空泛的"能拼",
+                            // 直接给简化出路(限色/降尺寸);小图维持安心话术
+                            int totalBeads = 0;
+                            for (int gy = 0; gy < pattern.rows; gy++) {
+                                for (int gx = 0; gx < pattern.cols; gx++) {
+                                    if (pattern.cellAt(gx, gy) >= 0) totalBeads++;
+                                }
+                            }
+                            int nColors = pattern.usedColors == null
+                                    ? 0 : pattern.usedColors.size();
+                            String firstMsg = (totalBeads >= 2600 || nColors >= 30)
+                                    ? getString(R.string.fmt_first_pattern_big,
+                                            totalBeads, nColors)
+                                    : getString(R.string.toast_first_pattern_hint);
+                            Toast.makeText(EditorActivity.this, firstMsg,
+                                    Toast.LENGTH_LONG).show();
+                        }
                         showLoading(false);
                         if (regenPill != null) regenPill.setVisibility(View.GONE);
                         if (beadAssist) {
@@ -3775,6 +3800,13 @@ public class EditorActivity extends Activity {
             }
         };
         lv.setAdapter(invAdapter);
+        // 90 色整表不限高会把按钮条顶出屏幕外(CANCEL 被裁,59d 评审实锤):
+        // 列表钳到屏高 55%,其余交给列表内滚动,按钮条恒在
+        android.graphics.Point screen = new android.graphics.Point();
+        getWindowManager().getDefaultDisplay().getSize(screen);
+        lv.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                Math.round(screen.y * 0.55f)));
 
         new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.inv_title_fmt, pal.size()))
@@ -3821,8 +3853,8 @@ public class EditorActivity extends Activity {
                         editMap.clear();
                         structureChanged();
                         Toast.makeText(EditorActivity.this,
-                                "🎨 我的豆板已生成并选用:" + BeadBrandCharts
-                                        .customAt(idx).colors.size() + " 种手头颜色",
+                                getString(R.string.inv_regen_done_fmt,
+                                        BeadBrandCharts.customAt(idx).colors.size()),
                                 Toast.LENGTH_LONG).show();
                     }
                 })

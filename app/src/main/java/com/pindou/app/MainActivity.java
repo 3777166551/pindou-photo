@@ -332,7 +332,9 @@ public class MainActivity extends Activity {
      * 已替换为顶部分类标签 + 大缩略图网格)。
      */
     private void showTemplateGallery() {
-        final List<Templates.Cat> cats = TemplateAssets.allCategories();
+        // 分类名走本地化数组(bead 数据层零 Android 依赖,标题由这里传入)
+        final List<Templates.Cat> cats = TemplateAssets.allCategories(
+                getResources().getStringArray(R.array.template_cats));
         int total = 0;
         for (Templates.Cat c : cats) total += c.items.length;
 
@@ -1315,12 +1317,26 @@ public class MainActivity extends Activity {
         wrap.addView(overlay, new android.widget.FrameLayout.LayoutParams(dw, dh));
         int pad = Math.round(12 * dm);
         wrap.setPadding(pad, 0, pad, 0);
-        com.pindou.app.util.Skin.apply(wrap);
+
+        // 框选正误示意图:「贴住网格、别框进空白」画出来看(绿✓贴网格/红✗带空白),
+        // 程序绘制零新资产,画面无文字三语通用
+        com.pindou.app.view.GuideDiagrams.ScanGuideView guide =
+                new com.pindou.app.view.GuideDiagrams.ScanGuideView(this);
+        android.widget.LinearLayout dialogView = new android.widget.LinearLayout(this);
+        dialogView.setOrientation(android.widget.LinearLayout.VERTICAL);
+        android.widget.LinearLayout.LayoutParams guideLp =
+                new android.widget.LinearLayout.LayoutParams(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        Math.round(64 * dm));
+        guideLp.setMargins(pad, 0, pad, Math.round(10 * dm));
+        dialogView.addView(guide, guideLp);
+        dialogView.addView(wrap);
+        com.pindou.app.util.Skin.apply(dialogView);
 
         new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.tool_scan))
                 .setMessage(getString(R.string.scan_msg))
-                .setView(wrap)
+                .setView(dialogView)
                 .setPositiveButton(getString(R.string.btn_detect), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int which) {

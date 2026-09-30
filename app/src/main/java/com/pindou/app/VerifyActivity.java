@@ -142,6 +142,17 @@ public class VerifyActivity extends Activity {
         hint.setTextSize(12);
         panel.addView(hint);
 
+        // 四角对齐示意图:拖角是手势操作,纯文字盲区大——画一张对照
+        // (程序绘制零新资产,深底配色与叠层手柄一致)
+        com.pindou.app.view.GuideDiagrams.VerifyGuideView guide =
+                new com.pindou.app.view.GuideDiagrams.VerifyGuideView(this);
+        android.widget.LinearLayout.LayoutParams guideLp =
+                new android.widget.LinearLayout.LayoutParams(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        Math.round(64 * getResources().getDisplayMetrics().density));
+        guideLp.topMargin = pad / 2;
+        panel.addView(guide, guideLp);
+
         android.widget.LinearLayout row1 = new android.widget.LinearLayout(this);
         row1.setOrientation(android.widget.LinearLayout.HORIZONTAL);
         row1.setGravity(Gravity.CENTER_VERTICAL);
