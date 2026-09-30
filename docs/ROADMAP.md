@@ -1,11 +1,15 @@
 # 路线图与交接文档 (ROADMAP & HANDOFF)
 
 > 本文档是项目的**持续交接入口**：当前状态、待办功能、开发约定、操作备忘。
-> 新会话/新开发者从这里开始读。最后更新：2026-09-30（**v2.62 功能冻结;
-> CI:0bfe4f6 全绿,b169092 的 stability job 挂在模拟器镜像下载(基础设施
-> flake,test/smoke/fuzz 三 job 全绿=新断言首轮全过),cadb8ab/8f80739/
-> 920ca6d/befa513 排队进行中,befa513 为最终判定轮;本地新增「萌新易用性
-> P1+P2」批(见状态快照★,本地绿未推);下一步=CI 全绿→真机验证→出包**）
+> 新会话/新开发者从这里开始读。最后更新：2026-09-30 下午（**v2.62 功能冻结;
+> CI:0bfe4f6 为最后全绿轮;cadb8ab 起 emulator-smoke 四连挂=投射段 tap
+> "Project" 命中遮罩下同名 chip(根因已修:Big view 改名+断言改稳)+
+> stability 四连挂=镜像下载 infra flake 与代码无关;萌新易用性 P1+P2 +
+> 冒烟修复 + dialog 修补三提交因 git 端点全断已走 **API 降级推送**
+> (远端 da19503/4700ee5/e5d1449,内容与本地 40f91da/286f7e7/2a01db9
+> 一致,SHA 不同;**git 恢复后 git fetch && git reset --hard origin/main
+> 对齐**);CI 判定盯 e5d1449;下一步=CI 全绿(stability 若再 flake 就
+> re-run failed jobs)→真机验证→出包**）
 
 ## ⭐ v2.62 发版检查清单(下一会话从这里接)
 
@@ -54,6 +58,20 @@
   (TemplateAssets 加 allCategories(titles) 重载,bead 包零 Android 依赖
   保持;template_cats 数组三语,MainActivity 传入;277 个图案名翻译仍是
   HANDOFF 挂着的「待用户拍板」项,未动)。
+- **★ CI 截图复审(befa513 轮 78 张逐张人眼审)抓出并已修三真缺陷
+  (2026-09-30,commit 2a01db9,API 已推 e5d1449)**:①豆仓 90 色弹窗
+  按钮条被列表顶出屏幕外(CANCEL 半裁,59d 评审遗留,合同 §6 违规)——
+  列表高度钳屏高 55% 修复;②立牌弹窗三按钮被 EN 长文案挤到零间距
+  ("Save base as projectExport PDF" 连行)——EN 缩短 Save base;
+  ③EditorActivity 3849 行硬编码中文 toast 改 inv_regen_done_fmt 资源。
+  **复审遗留观察(未修)**:EN 辅助工具行 5 列 chip 文案截断(Chec…/
+  Missi…,EN 缩短待做);合同 §7.2 库存列表顶部搜索框仍未做(销号清单
+  遗留);投射沉浸顶栏 chip 换 Big view 后文案变长,拥挤度下轮截图复核。
+  冒烟投射段四连挂根因=沉浸页 tap "Project" 命中遮罩下同名对位投屏
+  chip(uiautomator dump 底层节点在前,grep 取首个)——之前四轮投射从未
+  真正打开过;Big view 改名消重名+断言改稳(✕ 态硬断言/Row 改软)已随
+  4700ee5 推送。stability 四连挂=镜像下载 infra flake,re-run failed
+  jobs 即可。
 
 - **★ v2.62 收尾三件(已推 b169092/cadb8ab/8f80739)**:
   ①**稳定性第三层**:TestChaos 损坏注入 224 组(7 算子×豆仓/日历/草稿/存档,
