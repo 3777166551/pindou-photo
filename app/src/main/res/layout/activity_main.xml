@@ -347,6 +347,47 @@
                     <TextView style="@style/ToolCardDesc" android:text="@string/tool_backup_desc" />
                 </LinearLayout>
             </LinearLayout>
+
+            <!-- 页脚:免费开源声明 + 项目主页 + BUG 反馈(浏览器跳转,零网络权限) -->
+            <LinearLayout
+                android:id="@+id/footerOpenSource"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingBottom="24dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/footer_free"
+                    android:textColor="?attr/textSecondary"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/btnFooterSource"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="6dp"
+                    android:text="@string/footer_source"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/btnFooterIssues"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="6dp"
+                    android:text="@string/footer_issues"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="13sp" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

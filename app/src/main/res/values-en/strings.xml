@@ -653,4 +653,12 @@
     <string name="wall_size_fmt">Piece ≈ %1$.0f × %2$.0f cm</string>
     <string name="wall_opacity">Overlay opacity</string>
     <string name="file_wall_prefix">Wall preview_</string>
+
+    <!-- Footer: free & open source notice -->
+    <string name="footer_free">PindouPhoto · 100% free · open source</string>
+    <string name="footer_source">GitHub project page (tap here)</string>
+    <string name="footer_issues">Found a bug? Report it — the author fixes personally</string>
+    <string name="footer_no_browser">No browser found</string>
+    <string name="repo_url">https://github.com/3777166551/pindou-photo</string>
+    <string name="repo_issues_url">https://github.com/3777166551/pindou-photo/issues</string>
 </resources>

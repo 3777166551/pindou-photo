@@ -223,6 +223,30 @@ public class MainActivity extends Activity {
                 showBackupDialog();
             }
         });
+        // 页脚:开源声明 + 项目主页 + BUG 反馈(浏览器跳转,APP 本身零网络)
+        findViewById(R.id.btnFooterSource).setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        openInBrowser(getString(R.string.repo_url));
+                    }
+                });
+        findViewById(R.id.btnFooterIssues).setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        openInBrowser(getString(R.string.repo_issues_url));
+                    }
+                });
+    }
+
+    /** 用系统浏览器打开链接(ACTION_VIEW 不需要 APP 有网络权限) */
+    private void openInBrowser(String url) {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        } catch (Exception e) {
+            Toast.makeText(this, R.string.footer_no_browser, Toast.LENGTH_SHORT).show();
+        }
     }
 
     /** 文字生成:把名字/词语渲染成黑字透明底位图,交给编辑器变成拼豆图纸 */

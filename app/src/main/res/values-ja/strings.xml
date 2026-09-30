@@ -653,4 +653,12 @@
     <string name="wall_size_fmt">出来上がり ≈ %1$.0f × %2$.0f cm</string>
     <string name="wall_opacity">図案の不透明度</string>
     <string name="file_wall_prefix">壁飾りプレビュー_</string>
+
+    <!-- フッター:無料・オープンソース告知 -->
+    <string name="footer_free">ビーズ写真 · 完全無料 · オープンソース</string>
+    <string name="footer_source">GitHub プロジェクトページ（タップ）</string>
+    <string name="footer_issues">バグを見つけたらここから報告 — 作者が直します</string>
+    <string name="footer_no_browser">ブラウザが見つかりません</string>
+    <string name="repo_url">https://github.com/3777166551/pindou-photo</string>
+    <string name="repo_issues_url">https://github.com/3777166551/pindou-photo/issues</string>
 </resources>
