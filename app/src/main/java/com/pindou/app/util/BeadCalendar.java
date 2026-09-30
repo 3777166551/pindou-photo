@@ -19,8 +19,18 @@ public final class BeadCalendar {
     private static JSONObject data;
     private static boolean loaded;
 
+    /** qa 专用:桌面测试注入文件路径(null = 正常 Android filesDir) */
+    private static File testFile;
+
+    /** qa 专用:切到桌面测试文件并丢弃内存缓存 */
+    public static void useTestFile(File f) {
+        testFile = f;
+        resetForRestore();
+    }
+
     private static File file(Context ctx) {
-        return new File(ctx.getFilesDir(), "calendar.json");
+        return testFile != null
+                ? testFile : new File(ctx.getFilesDir(), "calendar.json");
     }
 
     private static synchronized void load(Context ctx) {

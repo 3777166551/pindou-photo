@@ -34,7 +34,19 @@ public final class ProjectStore {
         public Bitmap thumb;   // 可能是 null(解码失败时)
     }
 
+    /** qa 专用:桌面测试注入目录(null = 正常 Android filesDir/projects) */
+    private static File testDir;
+
+    /** qa 专用:切到桌面测试目录 */
+    public static void useTestDir(File d) {
+        testDir = d;
+    }
+
     private static File dir(Context ctx) {
+        if (testDir != null) {
+            if (!testDir.exists()) testDir.mkdirs();
+            return testDir;
+        }
         File d = new File(ctx.getFilesDir(), "projects");
         if (!d.exists()) d.mkdirs();
         return d;
@@ -60,7 +72,11 @@ public final class ProjectStore {
                     e.file = f;
                     e.name = o.optString("name", f.getName());
                     e.savedAt = o.optLong("savedAt", f.lastModified());
-                    e.thumb = Jsons.decodeBitmap(o.optString("thumb"));
+                    try {
+                        e.thumb = Jsons.decodeBitmap(o.optString("thumb"));
+                    } catch (Exception thumbErr) {
+                        e.thumb = null;   // 缩略图坏不该让整个项目从列表消失
+                    }
                     out.add(e);
                 } catch (Exception ignored) {
                 }

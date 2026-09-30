@@ -20,8 +20,16 @@ public final class DraftStore {
     private DraftStore() {
     }
 
+    /** qa 专用:桌面测试注入文件路径(null = 正常 Android filesDir) */
+    private static File testFile;
+
+    /** qa 专用:切到桌面测试文件 */
+    public static void useTestFile(File f) {
+        testFile = f;
+    }
+
     public static File file(Context c) {
-        return new File(c.getFilesDir(), FILE_NAME);
+        return testFile != null ? testFile : new File(c.getFilesDir(), FILE_NAME);
     }
 
     public static boolean exists(Context c) {

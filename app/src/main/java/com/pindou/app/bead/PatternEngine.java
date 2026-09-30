@@ -227,7 +227,11 @@ public final class PatternEngine {
         }
         if (!lineArt && n > 0) {
             double[][] labs = new double[n][];
-            for (int i = 0; i < n; i++) labs[i] = ColorMath.rgbToLab(palette.get(i).rgb);
+            int[] tie = new int[n];
+            for (int i = 0; i < n; i++) {
+                labs[i] = ColorMath.rgbToLab(palette.get(i).rgb);
+                tie[i] = palette.get(i).rgb;
+            }
 
             if (o.dither) {
                 double[] curRow = new double[gw * 3];
@@ -244,7 +248,7 @@ public final class PatternEngine {
                         double a = lab[1] + curRow[x * 3 + 1];
                         double bl = lab[2] + curRow[x * 3 + 2];
                         int idx = o.preciseColor
-                                ? nearestPrecise(labs, l, a, bl) : nearest(labs, l, a, bl);
+                                ? nearestPrecise(labs, l, a, bl, tie) : nearest(labs, l, a, bl, tie);
                         workCells[y * gw + x] = idx;
 
                         double el = l - labs[idx][0];
@@ -270,8 +274,8 @@ public final class PatternEngine {
                     } else {
                         double[] lab = ColorMath.rgbToLab(p);
                         workCells[i] = o.preciseColor
-                                ? nearestPrecise(labs, lab[0], lab[1], lab[2])
-                                : nearest(labs, lab[0], lab[1], lab[2]);
+                                ? nearestPrecise(labs, lab[0], lab[1], lab[2], tie)
+                                : nearest(labs, lab[0], lab[1], lab[2], tie);
                     }
                 }
             }
@@ -352,18 +356,21 @@ public final class PatternEngine {
     /** 逐像素配豆查找表:RGB 各 4 位量化 → 豆下标(4096 项,配一次投全图) */
     private static int[] buildLut(List<BeadColor> palette, boolean precise) {
         int[] lut = new int[4096];
-        double[][] labs = new double[Math.max(1, palette.size())][];
-        for (int i = 0; i < palette.size(); i++) {
+        int n = palette.size();
+        double[][] labs = new double[Math.max(1, n)][];
+        int[] tie = new int[Math.max(1, n)];
+        for (int i = 0; i < n; i++) {
             labs[i] = ColorMath.rgbToLab(palette.get(i).rgb);
+            tie[i] = palette.get(i).rgb;
         }
         for (int key = 0; key < 4096; key++) {
             int r = ((key >> 8) & 0xF) * 17 + 8;   // 桶中心
             int g = ((key >> 4) & 0xF) * 17 + 8;
             int b = (key & 0xF) * 17 + 8;
             double[] lab = ColorMath.rgbToLab(0xFF000000 | (r << 16) | (g << 8) | b);
-            lut[key] = palette.isEmpty() ? -1
-                    : (precise ? nearestPrecise(labs, lab[0], lab[1], lab[2])
-                               : nearest(labs, lab[0], lab[1], lab[2]));
+            lut[key] = n == 0 ? -1
+                    : (precise ? nearestPrecise(labs, lab[0], lab[1], lab[2], tie)
+                               : nearest(labs, lab[0], lab[1], lab[2], tie));
         }
         return lut;
     }
@@ -486,7 +493,12 @@ public final class PatternEngine {
             }
             int best = 0;
             for (int i = 1; i < n; i++) {
-                if (hist[i] > hist[best]) best = i;
+                // 平票按色板 RGB 小者胜:顺序无关(与 LUT 配豆 tie-break 同规则)
+                if (hist[i] > hist[best]
+                        || (hist[i] == hist[best]
+                            && palette.get(i).rgb < palette.get(best).rgb)) {
+                    best = i;
+                }
             }
             workCells[c] = best;
             // 线条救援:平均色亮(L*>60)且低彩(C*<20) = 纸样底;深豆占 4%~45% = 有线
@@ -499,10 +511,18 @@ public final class PatternEngine {
                 if (labMean[0] > 60 && chroma < 20) {
                     int dk = darkCount * 100;
                     if (dk >= opaque * 10 && dk <= opaque * 45) {
+                        // 深豆众数平票按色板 RGB 小者胜:顺序无关(同主投票规则)
                         int dBest = -1;
                         int darkN = 0;
+                        int dBestRgb = Integer.MAX_VALUE;
                         for (int i = 0; i < n; i++) {
-                            if (darkHist[i] > darkN) { darkN = darkHist[i]; dBest = i; }
+                            if (darkHist[i] > darkN
+                                    || (darkHist[i] == darkN && darkHist[i] > 0
+                                        && palette.get(i).rgb < dBestRgb)) {
+                                darkN = darkHist[i];
+                                dBestRgb = palette.get(i).rgb;
+                                dBest = i;
+                            }
                         }
                         if (dBest >= 0) workCells[c] = dBest;
                     }
@@ -1652,12 +1672,14 @@ public final class PatternEngine {
 
         if (snapToBeads) {
             double[][] beadLabs = new double[beadPalette.size()][];
+            int[] beadRGBs = new int[beadPalette.size()];
             for (int i = 0; i < beadPalette.size(); i++) {
                 beadLabs[i] = ColorMath.rgbToLab(beadPalette.get(i).rgb);
+                beadRGBs[i] = beadPalette.get(i).rgb;
             }
             Set<Integer> used = new HashSet<>();
             for (double[] c : centers) {
-                int bi = nearest(beadLabs, c[0], c[1], c[2]);
+                int bi = nearest(beadLabs, c[0], c[1], c[2], beadRGBs);
                 if (used.add(bi)) result.add(beadPalette.get(bi));
             }
         } else {
@@ -1764,6 +1786,16 @@ public final class PatternEngine {
     }
 
     private static int nearest(double[][] labs, double l, double a, double b) {
+        return nearest(labs, l, a, b, null);
+    }
+
+    /**
+     * tie = 可选的平距打破键(调用方传色板 RGB int):距离相等时键小者胜。
+     * 保证配豆结果与色板排列顺序无关 —— 色板秒切/自定义色板调整排序时
+     * 出图不再抖动(桌面 fuzz 实证:原实现同色板换序 30 组挂 18)。
+     */
+    private static int nearest(double[][] labs, double l, double a, double b,
+                               int[] tie) {
         int best = 0;
         double bestD = Double.MAX_VALUE;
         for (int i = 0; i < labs.length; i++) {
@@ -1771,7 +1803,7 @@ public final class PatternEngine {
             double da = a - labs[i][1];
             double db = b - labs[i][2];
             double d = dl * dl + da * da + db * db;
-            if (d < bestD) {
+            if (d < bestD || (d == bestD && tie != null && tie[i] < tie[best])) {
                 bestD = d;
                 best = i;
             }
@@ -1779,13 +1811,14 @@ public final class PatternEngine {
         return best;
     }
 
-    /** CIEDE2000 最近色(精准配色档),计算量约为欧氏距离的几倍 */
-    private static int nearestPrecise(double[][] labs, double l, double a, double b) {
+    /** CIEDE2000 最近色(精准配色档),计算量约为欧氏距离的几倍。tie 同上 */
+    private static int nearestPrecise(double[][] labs, double l, double a,
+                                      double b, int[] tie) {
         int best = 0;
         double bestD = ColorMath.deltaE2000(labs[0][0], labs[0][1], labs[0][2], l, a, b);
         for (int i = 1; i < labs.length; i++) {
             double d = ColorMath.deltaE2000(labs[i][0], labs[i][1], labs[i][2], l, a, b);
-            if (d < bestD) {
+            if (d < bestD || (d == bestD && tie != null && tie[i] < tie[best])) {
                 bestD = d;
                 best = i;
             }

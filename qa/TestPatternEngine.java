@@ -199,6 +199,62 @@ public class TestPatternEngine {
         }
         check("generateFromGrid rejects line art", rejected);
 
+        // ---- 色板秒切等价 fuzz:同一 WorkGrid, 换序/增删色板 30 组,
+        //      逐格实际颜色必须完全一致(色板秒切的核心正确性保证) ----
+        java.util.Random rnd = new java.util.Random(90210);
+        int fuzzOk = 0;
+        for (int t = 0; t < 30; t++) {
+            int fc = 3 + rnd.nextInt(6), fr = 3 + rnd.nextInt(6);
+            PatternEngine.WorkGrid wg = new PatternEngine.WorkGrid();
+            wg.gw = fc;
+            wg.gh = fr;
+            wg.brick = 1 + rnd.nextInt(3);
+            int n = fc * fr;
+            wg.cellPix = new int[n];
+            wg.cellStart = new int[n + 1];
+            for (int i = 0; i < n; i++) {
+                wg.cellPix[i] = rnd.nextInt(4) == 0
+                        ? 0x00000000 : 0xFF000000 | rnd.nextInt(0x1000000);
+                wg.cellStart[i] = i;
+            }
+            wg.cellStart[n] = n;
+            PatternEngine.Options of = new PatternEngine.Options();
+            of.cols = fc;
+            of.rows = fr;
+            of.dither = false;
+            java.util.List<com.pindou.app.bead.BeadColor> pa =
+                    new java.util.ArrayList<>();
+            for (int k = 0; k < 8; k++) {
+                pa.add(new com.pindou.app.bead.BeadColor(k + 1, "c" + k,
+                        0xFF000000 | rnd.nextInt(0x1000000)));
+            }
+            com.pindou.app.bead.BeadPattern f1 = PatternEngine.generateFromGrid(
+                    wg, pa, of, fc, fr);
+            // 只换序,不增删颜色 —— 被测性质 = 同色集合与顺序无关;
+            // (追加新色会参与最近豆竞争,不属于"秒切等价"的语义)
+            java.util.List<com.pindou.app.bead.BeadColor> pb =
+                    new java.util.ArrayList<>(pa);
+            java.util.Collections.shuffle(pb, rnd);
+            com.pindou.app.bead.BeadPattern f2 = PatternEngine.generateFromGrid(
+                    wg, pb, of, fc, fr);
+            boolean fsame = f1 != null && f2 != null
+                    && f1.cols == f2.cols && f1.rows == f2.rows;
+            if (fsame) {
+                for (int i = 0; i < n && fsame; i++) {
+                    int ia = f1.cells[i], ib = f2.cells[i];
+                    int ca = ia < 0 ? -1 : f1.palette.get(ia).rgb;
+                    int cb = ib < 0 ? -1 : f2.palette.get(ib).rgb;
+                    if (ca != cb) fsame = false;
+                }
+            }
+            if (fsame) {
+                fuzzOk++;
+            } else {
+                System.out.println("[FAIL] palette-remap fuzz t=" + t);
+            }
+        }
+        check("palette remap fuzz 30/30 (色板秒切等价)", fuzzOk == 30);
+
         System.out.println("TestPatternEngine: " + passed + " passed, " + failed + " failed");
         if (failed > 0) System.exit(1);
     }
