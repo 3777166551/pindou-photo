@@ -264,15 +264,23 @@ assist_scroll_top() {
   sleep 1
 }
 # 首次开启辅助会自动弹「How bead-along works」帮助弹窗(每次安装一次):
-# 在场就点 OK 关掉;不在场(已看过)时跳过,不浪费重试。
-# 弹窗开着时 uiautomator dump 可能只剩弹窗窗口——拨开关的坐标点击会
-# 落在弹窗上,造成"拨了没上"的假象,所以拨杆失败后也要兜底关一次。
+# 在场就点 OK 关掉并复核真关掉(最多 3 遍,弹窗开着时 dump 只剩弹窗窗口,
+# 后续一切断言都会瞎);最后兜底按 BACK(AlertDialog 默认可取消)。
+# 0930 run 实锤:帮助正文加长后弹窗更高,OK 一击不中就会整轮卡死。
 dismiss_assist_help() {
-  dump_ui
-  if grep -qi "text=\"[^\"]*bead-along works[^\"]*\"" ui.xml; then
-    log "assist help dialog present, dismissing"
+  n=0
+  while [ $n -lt 3 ]; do
+    dump_ui
+    if ! grep -qi "text=\"[^\"]*bead-along works[^\"]*\"" ui.xml; then
+      return 0
+    fi
+    log "assist help dialog present, dismissing (pass $n)"
     tap_text_still "OK" 0
-  fi
+    sleep 1
+    n=$((n + 1))
+  done
+  adb shell input keyevent 4
+  sleep 1
 }
 # 成功开启后把辅助面板露出来:两行工具行把面板撑高了,开关下方
 # (进度行/工具行)常被挤出视口,"屏外节点不进 dump"会让 100% 断言
@@ -302,14 +310,16 @@ toggle_assist_on() {
     fi
     tap_id swBeadAssist 0
     sleep 2
+    # 时序反转(0930 run 实锤):先关帮助弹窗再验开关——首次开启必弹窗,
+    # 弹窗开着时 dump 只剩弹窗窗口,先验 checked 永远是 false,还会把
+    # "其实开成功了"误判成"没拨上"而重拨(把开关又拨回去)
+    dismiss_assist_help
     if assist_on; then
       log "assist toggled on (round $n)"
-      dismiss_assist_help
       reveal_assist_panel
       return 0
     fi
     log "assist tap round $n did not stick, retry"
-    dismiss_assist_help
     n=$((n + 1))
   done
   die "could not turn bead-assist on"
@@ -908,7 +918,7 @@ log "editor opened"
 tap_id btnAssistHelpCard 0
 sleep 1
 check_text "How bead-along works" 0
-tap_text_still "OK" 0
+dismiss_assist_help
 
 # 画两笔
 adb shell input swipe 300 700 600 900 300
