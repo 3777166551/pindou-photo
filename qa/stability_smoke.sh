@@ -8,6 +8,7 @@
 # 全程 logcat FATAL/ANR 扫描(crash 段例外,am crash 的崩溃是预期的);
 # 任一断言失败退出非零,截图/日志进 artifact。
 set -u
+export PATH="$ANDROID_HOME/platform-tools:$PATH"
 PKG=com.pindou.app
 SHOT=stability_shots
 mkdir -p "$SHOT"
