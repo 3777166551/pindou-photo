@@ -1032,6 +1032,22 @@ else
   exit 1
 fi
 snap immersive
+# ---------- v2.62:投射模式(沉浸页远看变体) ----------
+# 进入投射 -> 行进度硬断言 -> ▶ 推进 -> 退出投射回沉浸
+tap_text_still "Project"
+sleep 1.5
+check_text "Row 1 /" 0           # fmt_proj_row:按行引导默认第 1 行
+snap projector
+tap_text_still "▶"
+sleep 1
+dump_ui
+grep -q 'text="[^"]*Row 2 /' ui.xml || {
+  echo "[smoke] FAIL: projector next-row did not advance to row 2"
+  snap fail
+  exit 1
+}
+tap_text_still "✕ Project"
+sleep 1
 tap_text_still "Exit"
 sleep 1
 dump_ui

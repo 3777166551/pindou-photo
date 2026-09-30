@@ -335,7 +335,13 @@ public class EditorActivity extends Activity {
     private android.view.ViewGroup immersiveOverlay;
     private PatternView immersiveView;
     private android.widget.TextView tvImmersiveInfo;
-    private View dotImmersive, btnImmersiveNext;
+    private android.widget.TextView btnImmersiveNext;
+    // 投射模式:沉浸页的"远看变体"——当前行/板/色超大铺满,手机架板前对照
+    private android.widget.LinearLayout projectorOverlay;
+    private ProjectorView projectorView;
+    private android.widget.TextView tvProjStatus;
+    private android.widget.TextView btnProjToggle;
+    private View dotImmersive;
     private View btnAssistProject;
     private TextView btnAssistBoard, tvAssistBoard, btnAssistNextBoard, btnAssistRow;
     private View assistBoardRow;
@@ -3140,6 +3146,15 @@ public class EditorActivity extends Activity {
         });
         bar.addView(btnImmersiveNext);
 
+        btnProjToggle = makeBarChip(getString(R.string.proj_chip));
+        btnProjToggle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleProjector();
+            }
+        });
+        bar.addView(btnProjToggle);
+
         box.addView(bar, new android.widget.FrameLayout.LayoutParams(
                 android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                 android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -3210,6 +3225,229 @@ public class EditorActivity extends Activity {
         tvImmersiveInfo = null;
         dotImmersive = null;
         btnImmersiveNext = null;
+        projectorOverlay = null;
+        projectorView = null;
+        tvProjStatus = null;
+        btnProjToggle = null;
+    }
+
+    // ---------------- 投射模式(沉浸页的"远看变体") ----------------
+
+    /**
+     * 投射开/关:手机架在拼豆板前,当前行/板/色超大铺满屏幕,远看对照。
+     * 层插在沉浸画布之上、顶栏之下——退出/换色 chip 保持可点;
+     * 行/板切换直接写 assistRow/assistBoard 并回写主界面引导,双向一致。
+     */
+    private void toggleProjector() {
+        if (immersiveOverlay == null) return;
+        if (projectorOverlay != null) {
+            ((android.view.ViewGroup) projectorOverlay.getParent())
+                    .removeView(projectorOverlay);
+            projectorOverlay = null;
+            projectorView = null;
+            tvProjStatus = null;
+            btnProjToggle.setText(getString(R.string.proj_chip));
+            return;
+        }
+        android.widget.LinearLayout layer = new android.widget.LinearLayout(this);
+        layer.setOrientation(android.widget.LinearLayout.VERTICAL);
+        layer.setBackgroundColor(nightMode ? 0xFF221E2C : 0xFFFBF9FE);
+
+        projectorView = new ProjectorView(this);
+        layer.addView(projectorView, new android.widget.LinearLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+
+        android.widget.LinearLayout controls = new android.widget.LinearLayout(this);
+        controls.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        controls.setGravity(android.view.Gravity.CENTER);
+        controls.setPadding(0, 0, 0, Math.round(24 * getResources()
+                .getDisplayMetrics().density));
+
+        android.widget.TextView prev = makeBarChip("\u25C0");
+        prev.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                projStep(-1);
+            }
+        });
+        controls.addView(prev);
+        tvProjStatus = new android.widget.TextView(this);
+        tvProjStatus.setTextSize(17);
+        tvProjStatus.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        tvProjStatus.setTextColor(nightMode ? 0xFFE6E1E9 : 0xFF1D1B20);
+        tvProjStatus.setGravity(android.view.Gravity.CENTER);
+        tvProjStatus.setMaxLines(1);
+        android.widget.LinearLayout.LayoutParams sLp =
+                new android.widget.LinearLayout.LayoutParams(
+                        0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        sLp.setMargins(Math.round(12 * getResources().getDisplayMetrics().density), 0,
+                Math.round(12 * getResources().getDisplayMetrics().density), 0);
+        controls.addView(tvProjStatus, sLp);
+        android.widget.TextView next = makeBarChip("\u25B6");
+        next.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                projStep(1);
+            }
+        });
+        controls.addView(next);
+
+        layer.addView(controls, new android.widget.LinearLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        projectorOverlay = layer;
+        android.view.ViewGroup box = (android.view.ViewGroup) immersiveOverlay;
+        box.addView(layer, 1, new android.widget.FrameLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+        btnProjToggle.setText("\u2715 " + getString(R.string.proj_chip));
+        refreshProjStatus();
+    }
+
+    /** ◀/▶:按行/按板推进引导(回写主界面状态);逐色模式 ▶=下一个颜色 */
+    private void projStep(int delta) {
+        if (pattern == null) return;
+        if (assistMode == ASSIST_ROW) {
+            assistRow = Math.max(0, Math.min(pattern.rows - 1, assistRow + delta));
+            updateAssistUi();
+            applyAssistToView();
+            syncAssistBoardUi();
+        } else if (assistMode == ASSIST_BOARD) {
+            assistBoard = Math.max(0, Math.min(pattern.boardsNeeded() - 1,
+                    assistBoard + delta));
+            updateAssistUi();
+            applyAssistToView();
+            syncAssistBoardUi();
+        } else if (delta > 0) {
+            cycleAssistColor();
+        }
+        refreshProjStatus();
+        speakAssistStatus();
+    }
+
+    private void refreshProjStatus() {
+        if (tvProjStatus == null || pattern == null) return;
+        if (assistMode == ASSIST_ROW) {
+            tvProjStatus.setText(String.format(Locale.CHINA,
+                    getString(R.string.fmt_proj_row), assistRow + 1, pattern.rows));
+        } else if (assistMode == ASSIST_BOARD) {
+            tvProjStatus.setText(String.format(Locale.CHINA,
+                    getString(R.string.fmt_proj_board), assistBoard + 1,
+                    pattern.boardsNeeded()));
+        } else {
+            updateAssistUi();
+            tvProjStatus.setText(tvAssistColor.getText());
+        }
+        if (projectorView != null) projectorView.invalidate();
+    }
+
+    /**
+     * 投射画布:按行 = 当前行铺满(上下邻行暗显对齐);按板 = 当前 29×29 板
+     * 铺满;逐色 = 整板只亮当前色(Pattern Keeper 的"符号高亮"范式)。
+     * 已拼格降透明 + 绿点;完成度即看即知。纯展示,无触摸交互。
+     */
+    private final class ProjectorView extends View {
+        private final Paint cellP = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint dimP = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint lineP = new Paint();
+        private final Paint symP = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint doneP = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint txtP = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+        ProjectorView(android.content.Context c) {
+            super(c);
+            lineP.setStyle(Paint.Style.STROKE);
+            symP.setTextAlign(Paint.Align.CENTER);
+            symP.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+            txtP.setTextAlign(Paint.Align.CENTER);
+            txtP.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            canvas.drawColor(nightMode ? 0xFF221E2C : 0xFFFFFFFF);
+            if (pattern == null) return;
+            int cols = pattern.cols, rows = pattern.rows;
+            int bx0 = 0, by0 = 0, bw = cols, bh = rows;
+            if (assistMode == ASSIST_ROW) {
+                by0 = assistRow;
+                bw = cols;
+                bh = 1;
+            } else if (assistMode == ASSIST_BOARD) {
+                android.graphics.Rect r = PatternView.boardRect(pattern, assistBoard);
+                bx0 = r.left;
+                by0 = r.top;
+                bw = r.width();
+                bh = r.height();
+            }
+            float den = getResources().getDisplayMetrics().density;
+            float top = getHeight() * 0.05f;
+            float side = Math.max(12, 14 * den);
+            float availW = getWidth() - side * 2;
+            float availH = getHeight() - top - 24 * den * 2;
+            float cell = assistMode == ASSIST_COLOR
+                    ? Math.min(availW / cols, availH / rows)
+                    : Math.min(availW / (bw + 0.6f), availH / (bh + 1.2f));
+            float ox = (getWidth() - bw * cell) / 2f;
+            float oy = top + (availH - bh * cell) / 2f;
+
+            cellP.setStyle(Paint.Style.FILL);
+            lineP.setStrokeWidth(Math.max(1f, cell * 0.03f));
+            lineP.setColor(nightMode ? 0x33FFFFFF : 0x26000000);
+            symP.setTextSize(cell * 0.5f);
+            txtP.setTextSize(cell * (assistMode == ASSIST_ROW ? 0.9f : 0.6f));
+            txtP.setColor(nightMode ? 0xFFB9AFC6 : 0xFF9A93A8);
+
+            // 行号大字(按行)/板号(按板)
+            if (assistMode == ASSIST_ROW) {
+                canvas.drawText(String.valueOf(assistRow + 1),
+                        getWidth() / 2f, top - den * 4, txtP);
+            }
+
+            for (int y = by0; y < by0 + bh; y++) {
+                for (int x = bx0; x < bx0 + bw; x++) {
+                    if (x >= cols || y >= rows || pattern.outsideShape(x, y)) continue;
+                    int idx = pattern.cellAt(x, y);
+                    float px = ox + (x - bx0) * cell;
+                    float py = oy + (y - by0) * cell;
+                    boolean done = beadDone.contains(y * cols + x);
+                    if (idx < 0) {
+                        // 空格:淡底
+                        cellP.setColor(nightMode ? 0x14221E2C : 0x14000000);
+                        canvas.drawRect(px, py, px + cell, py + cell, cellP);
+                        continue;
+                    }
+                    int rgb = pattern.palette.get(idx).rgb;
+                    if (assistMode == ASSIST_COLOR && idx != assistFocus) {
+                        cellP.setColor(nightMode ? 0xFF2A2534 : 0xFFE8E4EE);
+                        canvas.drawRect(px, py, px + cell, py + cell, cellP);
+                        continue;
+                    }
+                    cellP.setColor(0xFF000000 | rgb);
+                    if (done) cellP.setAlpha(60);   // 已拼:降透明
+                    canvas.drawRect(px, py, px + cell, py + cell, cellP);
+                    cellP.setAlpha(255);
+                    String sym = PatternEngine.symbolFor(idx);
+                    symP.setColor(ColorMath.textColorOn(rgb));
+                    Paint.FontMetrics fm = symP.getFontMetrics();
+                    float dy = -(fm.ascent + fm.descent) / 2f;
+                    canvas.drawText(sym, px + cell / 2f, py + cell / 2f + dy, symP);
+                    canvas.drawRect(px, py, px + cell, py + cell, lineP);
+                    if (done) {
+                        doneP.setColor(0xFF35C98E);
+                        float r = cell * 0.09f;
+                        canvas.drawCircle(px + cell - r * 2, py + r * 2, r, doneP);
+                    }
+                }
+            }
+            // 当前行/板外框
+            doneP.setStyle(Paint.Style.STROKE);
+            doneP.setStrokeWidth(Math.max(2f, cell * 0.06f));
+            doneP.setColor(nightMode ? 0xFFD0BCFF : 0xFF6750A4);
+            canvas.drawRect(ox, oy, ox + bw * cell, oy + bh * cell, doneP);
+            doneP.setStyle(Paint.Style.FILL);
+        }
     }
 
     @Override
