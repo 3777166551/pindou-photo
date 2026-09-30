@@ -33,10 +33,10 @@ javac -encoding UTF-8 -d qa/out \
 javac -encoding UTF-8 -cp "$AJ" -sourcepath app/src/main/java -d qa/out \
   qa/TestColorMath.java qa/TestPatternEngine.java qa/TestPatternPatch.java \
   qa/TestCustomPalette.java qa/TestSymmetry.java qa/TestLineArt.java \
-  qa/TestBrandCharts.java qa/TestCrossStitch.java qa/TestBoardProjector.java qa/TestHexBoard.java qa/TestBackup.java qa/TestPlay3D.java qa/TestGifEncoder.java qa/TestAlgoGate.java qa/TestVerify.java qa/TestStandee.java qa/TestInventory.java qa/TestPatternShare.java qa/TestPaletteShare.java qa/TestStrings.java qa/TestStorage.java
+  qa/TestBrandCharts.java qa/TestCrossStitch.java qa/TestBoardProjector.java qa/TestHexBoard.java qa/TestBackup.java qa/TestPlay3D.java qa/TestGifEncoder.java qa/TestAlgoGate.java qa/TestVerify.java qa/TestStandee.java qa/TestInventory.java qa/TestPatternShare.java qa/TestPaletteShare.java qa/TestStrings.java qa/TestStorage.java qa/TestChaos.java
 
 FAIL=0
-for T in TestColorMath TestPatternEngine TestPatternPatch TestCustomPalette TestSymmetry TestLineArt TestBrandCharts TestBoardProjector TestCrossStitch TestHexBoard TestBackup TestPlay3D TestGifEncoder TestAlgoGate TestVerify TestStandee TestInventory TestPatternShare TestPaletteShare TestStrings TestStorage; do
+for T in TestColorMath TestPatternEngine TestPatternPatch TestCustomPalette TestSymmetry TestLineArt TestBrandCharts TestBoardProjector TestCrossStitch TestHexBoard TestBackup TestPlay3D TestGifEncoder TestAlgoGate TestVerify TestStandee TestInventory TestPatternShare TestPaletteShare TestStrings TestStorage TestChaos; do
   echo "===== running $T ====="
   java -cp "qa/out:$AJ" "$T" || FAIL=1
 done

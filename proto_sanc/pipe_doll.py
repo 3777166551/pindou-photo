@@ -65,28 +65,25 @@ def pick_parts(a):
 
 
 def body_grid(a, top_colors):
-    """简身 8 行(14 宽): 脖(肤) + 水手领(衣色/点缀色) + 肩。y 从 15 起。"""
+    """简身 7 行(14 宽): 脖(肤,1 行) + 水手领(衣色/点缀色) + 肩。y 从 15 起。"""
     shirt = _clamp(PALETTE_90[a['shirt_i']])
     accent = _clamp(PALETTE_90[a['accent_i']])
     s = top_colors['s']
     g = [['.'] * 14 for _ in range(BODY_ROWS)]
-    for x in (5, 6, 7, 8):                    # 脖
-        g[0][x] = 'N'                          # N=脖肤(同 s,单独槽防透明)
-        g[1][x] = 'N'
-    # 肩/衣: y2..7, 领口 V 形用 accent
-    for y in range(2, BODY_ROWS):
-        half = min(6, 2 + (y - 2) * 2)        # 逐行加宽
+    for x in (5, 6, 7, 8):                    # 脖(1 行,v3 收短)
+        g[0][x] = 'N'
+    # 肩/衣: y1..6, 逐行加宽
+    for y in range(1, BODY_ROWS):
+        half = min(6, 1 + (y - 1) * 2)
         for x in range(7 - half, 7 + half):
             g[y][x] = 'C'
-    # 水手领 V: 从脖向下外扩
-    for i, y in enumerate((2, 3, 4)):
+    # 水手领 V: 从脖向下外扩(y1..3)
+    for i, y in enumerate((1, 2, 3)):
         for x in (6 - i, 7 + i):
             g[y][x] = 'A'
-    g[2][6] = 'A'
-    g[2][7] = 'A'
-    # 领结
-    g[4][5] = 'A'
-    g[4][8] = 'A'
+    # 领结(V 领下缘两颗,收紧到 x5/x8 内侧)
+    g[3][5] = 'A'
+    g[3][8] = 'A'
     return g, {'N': s, 'C': shirt, 'A': accent}
 
 

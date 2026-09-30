@@ -141,7 +141,7 @@ def _base_lids(g):
 
 
 def hair_bangs():
-    g = [['.'] * 14 for _ in range(7)]
+    g = [['.'] * 14 for _ in range(15)]
     for y in range(5):
         for x in range(14):
             g[y][x] = 'H'
@@ -150,7 +150,7 @@ def hair_bangs():
 
 
 def hair_airy():
-    g = [['.'] * 14 for _ in range(7)]
+    g = [['.'] * 14 for _ in range(15)]
     for y in (0, 1, 3, 4):
         for x in range(14):
             g[y][x] = 'H'
@@ -170,11 +170,11 @@ def hair_ahoge():
 
 
 def hair_hime():
-    g = [['.'] * 14 for _ in range(7)]
+    g = [['.'] * 14 for _ in range(15)]
     for y in range(3):              # 平顶
         for x in range(14):
             g[y][x] = 'H'
-    for y in range(3, 7):           # 中分露额 + 两颊垂条(姬发)
+    for y in range(3, 10):          # 中分露额 + 两颊垂条到 y9(姬发)
         for x in range(14):
             if x <= 4 or x >= 9 or x in (0, 1, 12, 13):
                 g[y][x] = 'H'
@@ -182,7 +182,7 @@ def hair_hime():
 
 
 def hair_bun():
-    g = [['.'] * 14 for _ in range(7)]
+    g = [['.'] * 14 for _ in range(15)]
     for y in (0, 1):
         for x in (5, 6, 7, 8):      # 顶部圆髻
             g[y][x] = 'H'
@@ -194,7 +194,7 @@ def hair_bun():
 
 
 def hair_twinbun():
-    g = [['.'] * 14 for _ in range(7)]
+    g = [['.'] * 14 for _ in range(15)]
     for y in (0, 1):
         for x in (2, 3, 4, 9, 10, 11):
             g[y][x] = 'H'
@@ -206,18 +206,18 @@ def hair_twinbun():
 
 
 def hair_straight():
-    g = [['.'] * 14 for _ in range(7)]
-    for y in range(7):
+    g = [['.'] * 14 for _ in range(15)]
+    for y in range(10):             # 长直垂到 y9
         for x in range(14):
             g[y][x] = 'H'
-    for y in range(4, 7):           # 长直垂条包脸,额前露
+    for y in range(4, 10):          # 额前露脸
         for x in range(3, 11):
             g[y][x] = '.'
     return g
 
 
 def hair_zigzag():
-    g = [['.'] * 14 for _ in range(7)]
+    g = [['.'] * 14 for _ in range(15)]
     for x in range(14):
         g[0][x] = 'H'
         g[1][x] = 'H' if x % 2 == 0 else '.'
@@ -230,7 +230,7 @@ def hair_zigzag():
 
 
 def hair_side():
-    g = [['.'] * 14 for _ in range(7)]
+    g = [['.'] * 14 for _ in range(15)]
     for y in range(5):
         for x in range(14):
             if x <= 9 - y // 2:
@@ -240,7 +240,7 @@ def hair_side():
 
 
 def hair_short():
-    g = [['.'] * 14 for _ in range(7)]
+    g = [['.'] * 14 for _ in range(15)]
     for y in range(3):
         for x in range(14):
             g[y][x] = 'H'
@@ -251,11 +251,11 @@ def hair_short():
 
 
 def hair_twintails():
-    g = [['.'] * 14 for _ in range(7)]
+    g = [['.'] * 14 for _ in range(15)]
     for y in range(4):
         for x in range(14):
             g[y][x] = 'H'
-    for y in (4, 5, 6):
+    for y in range(3, 10):                  # 垂条延到脸侧 y9(v3)
         for x in (0, 1, 12, 13):
             g[y][x] = 'H'
     return g
@@ -311,7 +311,7 @@ def face_grid_v2(hair_name, eye_params, mouth_name, blush=True):
             g[y][x] = 's'
     # 2) 发(覆盖脸侧/额,公主切垂条由此生效)
     hg = dict(HAIRS)[hair_name]()
-    for y in range(7):
+    for y in range(min(15, len(hg))):
         for x in range(14):
             if hg[y][x] != '.':
                 g[y][x] = 'H'

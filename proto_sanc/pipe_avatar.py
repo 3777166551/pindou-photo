@@ -69,7 +69,7 @@ def detect_attrs(img, person, cls_full, face):
     a['twin'] = a['side'] and a['long']
     a['hat'] = _frac(cls_full == 14, x - .1 * fw, y - .4 * fh, x + 1.1 * fw, y + .4 * fh) > .30
     a['glasses'] = float((cls_full == 3).sum()) > .004 * w * h
-    a['smile'] = _frac(cls_full == 10, x + .2 * fw, y + .5 * fh, x + .8 * fw, y + 1.0 * fh) > .02
+    a['smile'] = _frac(cls_full == 10, x + .2 * fw, y + .5 * fh, x + .8 * fw, y + 1.0 * fh) > .012
     sk = cls_full == 1
     a['skin_i'] = PS.nearest_in(PS.SKIN_SUB, np.median(img[sk], axis=0) if sk.sum() > 100
                                 else (229, 193, 177))
