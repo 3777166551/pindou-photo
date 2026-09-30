@@ -676,4 +676,6 @@
     <string name="proj_chip">🔍 Project</string>
     <string name="fmt_proj_row">Row %1$d / %2$d</string>
     <string name="fmt_proj_board">Board %1$d / %2$d</string>
+    <string name="toast_proj_hint">Propping the phone by the board? Tap \"🔍 Project\" above — the current row goes fullscreen for easy viewing</string>
+    <string name="toast_ai_guide_hint">Want an anime-style chart? \"Bead knowledge\" has an AI chart guide with copy-paste prompts</string>
 </resources>

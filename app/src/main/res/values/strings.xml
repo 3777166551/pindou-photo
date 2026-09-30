@@ -676,4 +676,6 @@
     <string name="proj_chip">🔍 投射</string>
     <string name="fmt_proj_row">第 %1$d / %2$d 行</string>
     <string name="fmt_proj_board">板 %1$d / %2$d</string>
+    <string name="toast_proj_hint">手机架在板前拼?点顶栏「🔍 投射」,当前行超大远看更省眼</string>
+    <string name="toast_ai_guide_hint">想要二次元效果的图纸?「拼豆知识」里有《AI 转图指南》,提示词一键复制</string>
 </resources>

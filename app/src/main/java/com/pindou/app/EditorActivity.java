@@ -2483,6 +2483,18 @@ public class EditorActivity extends Activity {
                             pendingAutoVerify = false;
                             launchVerify();
                         }
+                        // AI 转图指南场景触发:真人照片写实首图 = 最容易"不像
+                        // 动漫"的挫败时刻,一次性指路知识页(用户教育,只弹一次)
+                        if (source != null && !blankCanvas
+                                && style == PatternEngine.STYLE_REALISTIC
+                                && !getSharedPreferences("pindou", MODE_PRIVATE)
+                                        .getBoolean("ai_guide_hinted", false)) {
+                            getSharedPreferences("pindou", MODE_PRIVATE).edit()
+                                    .putBoolean("ai_guide_hinted", true).apply();
+                            Toast.makeText(EditorActivity.this,
+                                    getString(R.string.toast_ai_guide_hint),
+                                    Toast.LENGTH_LONG).show();
+                        }
                         showLoading(false);
                         if (regenPill != null) regenPill.setVisibility(View.GONE);
                         if (beadAssist) {
@@ -3173,6 +3185,14 @@ public class EditorActivity extends Activity {
                 | View.SYSTEM_UI_FLAG_FULLSCREEN
                 | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         updateImmersiveBar();
+        // 投射模式一次性告知:手机架起来远看的场景,第一次进沉浸就提一嘴
+        if (!getSharedPreferences("pindou", MODE_PRIVATE)
+                .getBoolean("proj_hinted", false)) {
+            getSharedPreferences("pindou", MODE_PRIVATE).edit()
+                    .putBoolean("proj_hinted", true).apply();
+            Toast.makeText(this, getString(R.string.toast_proj_hint),
+                    Toast.LENGTH_LONG).show();
+        }
     }
 
     /** 沉浸页顶栏的贴纸 chip(与工具行同语言:bg_chip 底 + 墨字) */

@@ -676,4 +676,6 @@
     <string name="proj_chip">🔍 投影</string>
     <string name="fmt_proj_row">%1$d / %2$d 行目</string>
     <string name="fmt_proj_board">板 %1$d / %2$d</string>
+    <string name="toast_proj_hint">スマホを板の前に立てるなら「🔍 投影」— 現在の行が全画面で見やすくなります</string>
+    <string name="toast_ai_guide_hint">アニメ風の図案が欲しい?「ビーズ知識」の AI 変換ガイドでプロンプトをコピーできます</string>
 </resources>
