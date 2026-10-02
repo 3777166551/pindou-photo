@@ -1,15 +1,17 @@
 # 路线图与交接文档 (ROADMAP & HANDOFF)
 
 > 本文档是项目的**持续交接入口**：当前状态、待办功能、开发约定、操作备忘。
-> 新会话/新开发者从这里开始读。最后更新：2026-09-30 下午（**v2.62 功能冻结;
-> CI:0bfe4f6 为最后全绿轮;cadb8ab 起 emulator-smoke 四连挂=投射段 tap
-> "Project" 命中遮罩下同名 chip(根因已修:Big view 改名+断言改稳)+
-> stability 四连挂=镜像下载 infra flake 与代码无关;萌新易用性 P1+P2 +
-> 冒烟修复 + dialog 修补三提交因 git 端点全断已走 **API 降级推送**
-> (远端 da19503/4700ee5/e5d1449,内容与本地 40f91da/286f7e7/2a01db9
-> 一致,SHA 不同;**git 恢复后 git fetch && git reset --hard origin/main
-> 对齐**);CI 判定盯 e5d1449;下一步=CI 全绿(stability 若再 flake 就
-> re-run failed jobs)→真机验证→出包**）
+> 新会话/新开发者从这里开始读。最后更新：2026-10-02（**CI 四 job 全绿达成:
+> run 36999548350(head 19dac26)=test/smoke/fuzz 全绿 + emulator-stability
+> 史上首次真跑真绿——stability 此前 8+ 连挂全是三层结构病,与 APP 无关:
+> ①build.yml 漏 env ANDROID_AVD_HOME(mkdir -p "" 秒挂)②stability_smoke.sh
+> 漏 adb PATH 导出③驱动逻辑(断言在 BACK 后/直启 MainActivity
+> SecurityException/BACK 后 am start 编辑器静默失效)——全部修掉见
+> 010ab50/3a07d61/f2c6f3a/19dac26 等提交。萌新易用性 P1+P2+dialog 修补
+> 全部在内。发版三步剩:真机验证(清单在 HANDOFF 顶部)→v2.62 出包。
+> 注意:git 端点断连期间全部走 API 降级推送,**本地与远端 SHA 不同、
+> 内容一致,git 恢复后 git fetch && git reset --hard origin/main 对齐**;
+> 远端 main=19dac26…）
 
 ## ⭐ v2.62 发版检查清单(下一会话从这里接)
 
