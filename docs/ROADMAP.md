@@ -1,17 +1,17 @@
 # 路线图与交接文档 (ROADMAP & HANDOFF)
 
 > 本文档是项目的**持续交接入口**：当前状态、待办功能、开发约定、操作备忘。
-> 新会话/新开发者从这里开始读。最后更新：2026-10-02（**CI 四 job 全绿达成:
-> run 36999548350(head 19dac26)=test/smoke/fuzz 全绿 + emulator-stability
-> 史上首次真跑真绿——stability 此前 8+ 连挂全是三层结构病,与 APP 无关:
-> ①build.yml 漏 env ANDROID_AVD_HOME(mkdir -p "" 秒挂)②stability_smoke.sh
-> 漏 adb PATH 导出③驱动逻辑(断言在 BACK 后/直启 MainActivity
-> SecurityException/BACK 后 am start 编辑器静默失效)——全部修掉见
-> 010ab50/3a07d61/f2c6f3a/19dac26 等提交。萌新易用性 P1+P2+dialog 修补
-> 全部在内。发版三步剩:真机验证(清单在 HANDOFF 顶部)→v2.62 出包。
-> 注意:git 端点断连期间全部走 API 降级推送,**本地与远端 SHA 不同、
-> 内容一致,git 恢复后 git fetch && git reset --hard origin/main 对齐**;
-> 远端 main=19dac26…）
+> 新会话/新开发者从这里开始读。最后更新：2026-10-02 晚（**CI 四 job 全绿 +
+> 外部代码评审 P0 批次落地:同事评审(崩溃簇 C1~C6/数据簇 D1~D13/性能/UI)
+> 经逐条核实后 P0 全修并 CI 四 job 全绿(run head=da20e76)——C1 位图回收
+> 竞态(有 09-22 CI 崩溃实录)=recycleOldSource 排队到单线程生成池串行回收+
+> 生成任务 try/catch 兜底;C2/C3 油漆桶/吸管界检查;C4 裁剪×AI 互踩双保险;
+> C5 GIF 编码线程死亡冻屏=超时 offer+onDestroy 打断;C6 相机 onOpened 竞态;
+> D1 限色权重先并再除/D2 零像素格判空/D4 导入 genSeq++/D9 RLE 溢出等;
+> 硬编码中文/验收页布局/色块描边 UI 三件;**v2.62.1(vc69)已挂 Release
+> v2.62 资产列表**(崩溃修复版);P1 剩余=C7 OOM 上限/D7 盲回收边界/性能五项/
+> UI 小项;git 断连期仍走 API 推送,本地远端 SHA 异内容同,恢复后
+> fetch+reset 对齐）
 
 ## ⭐ v2.62 发版检查清单(下一会话从这里接)
 
