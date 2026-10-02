@@ -758,14 +758,15 @@ public class MainActivity extends Activity {
                         return Long.compare(agg.get(b)[0], agg.get(a)[0]);
                     }
                 });
-                final int okCount = ok;
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        loading.dismiss();
-                        showMergedBomResult(keys, agg, labels, rgbs, okCount);
-                    }
-                });
+final int okCount = ok;
+runOnUiThread(new Runnable() {
+@Override
+public void run() {
+if (isFinishing() || loading == null) return;
+loading.dismiss();
+showMergedBomResult(keys, agg, labels, rgbs, okCount);
+}
+});
             }
         }).start();
     }
@@ -818,8 +819,8 @@ public class MainActivity extends Activity {
                     LinearLayout.LayoutParams.WRAP_CONTENT));
         }
         TextView sum = new TextView(this);
-        sum.setText(String.format(Locale.CHINA,
-                "%d 个项目 · %d 种颜色 · 合计 %,d 颗", okProjects, keys.size(), total));
+        sum.setText(getString(R.string.fmt_merge_summary,
+                okProjects, keys.size(), total));
         sum.setTextColor(getColor(R.color.textSub));
         sum.setTextSize(12);
         sum.setPadding(0, pad, 0, 0);
@@ -1013,6 +1014,7 @@ public class MainActivity extends Activity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            if (isFinishing()) return;
                             confirmRestore(uri, fr, curCount);
                         }
                     });

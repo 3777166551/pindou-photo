@@ -662,6 +662,13 @@
     <string name="repo_url">https://github.com/3777166551/pindou-photo</string>
     <string name="repo_issues_url">https://github.com/3777166551/pindou-photo/issues</string>
 
+    <!-- 异步照片任务(AI 风格化/去水印)完成时照片已被用户换掉的兜底提示 -->
+    <string name="edit_stale">照片已变更,本次效果未应用</string>
+    <!-- AI 处理期间再点裁剪等操作的等待提示 -->
+    <string name="wait_ai">AI 处理中,稍等一下</string>
+    <!-- 合并采购单摘要行 -->
+    <string name="fmt_merge_summary">%1$d 个项目 · %2$d 种颜色 · 合计 %3$,d 颗</string>
+
     <!-- AI 转图指南:一键复制提示词 -->
     <string name="kb_ai_title">AI 转图指南:照片变二次元图纸</string>
     <string name="kb_ai_p1">📋 日漫手绘风</string>

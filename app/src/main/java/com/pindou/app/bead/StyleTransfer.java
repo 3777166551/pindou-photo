@@ -87,13 +87,24 @@ public final class StyleTransfer {
                     in[0][y][x][2] = (c & 0xFF) / 127.5f - 1f;
                 }
             }
-            OnnxTensor tensor = OnnxTensor.createTensor(env, in);
-            ai.onnxruntime.OrtSession.Result res = session.run(
-                    Collections.singletonMap(
-                            session.getInputNames().iterator().next(), tensor));
-            float[][][][] out = (float[][][][]) res.get(0).getValue();
-            res.close();
-            tensor.close();
+            OnnxTensor tensor = null;
+            ai.onnxruntime.OrtSession.Result res = null;
+            float[][][][] out;
+            try {
+                tensor = OnnxTensor.createTensor(env, in);
+                res = session.run(
+                        Collections.singletonMap(
+                                session.getInputNames().iterator().next(), tensor));
+                out = (float[][][][]) res.get(0).getValue();
+            } finally {
+                // 异常路径不 close 会泄漏 native 内存(反复失败累积)
+                if (res != null) {
+                    try { res.close(); } catch (Throwable ignored) { }
+                }
+                if (tensor != null) {
+                    try { tensor.close(); } catch (Throwable ignored) { }
+                }
+            }
 
             int[] outPx = new int[lw * lh];
             for (int y = 0; y < lh; y++) {

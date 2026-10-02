@@ -64,15 +64,15 @@ public final class MlSegmenter {
     public static float[] findSubjectProbs(int[] rgb, int w, int h) {
         if (!initialised || !available) return null;
         if (rgb == null || rgb.length != w * h || w < 4 || h < 4) return null;
+        OnnxTensor tensor = null;
+        OrtSession.Result res = null;
         try {
             int[] net = PatternEngine.resampleBilinear(rgb, w, h, NET, NET);
             float[][][][] input = normalize(net);
-            OnnxTensor tensor = OnnxTensor.createTensor(env, input);
-            OrtSession.Result res = session.run(
+            tensor = OnnxTensor.createTensor(env, input);
+            res = session.run(
                     Collections.singletonMap(session.getInputNames().iterator().next(), tensor));
             float[][] plane = ((float[][][][]) res.get(0).getValue())[0][0];
-            res.close();
-            tensor.close();
 
             float mn = Float.MAX_VALUE, mx = -Float.MAX_VALUE;
             for (int y = 0; y < NET; y++) {
@@ -92,6 +92,14 @@ public final class MlSegmenter {
             return probs;
         } catch (Throwable t) {
             return null;
+        } finally {
+            // 异常路径不 close 会泄漏 native 内存(反复失败累积)
+            if (res != null) {
+                try { res.close(); } catch (Throwable ignored) { }
+            }
+            if (tensor != null) {
+                try { tensor.close(); } catch (Throwable ignored) { }
+            }
         }
     }
 

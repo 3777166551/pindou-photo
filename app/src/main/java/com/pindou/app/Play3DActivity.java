@@ -25,6 +25,7 @@ import org.json.JSONObject;
 import java.io.OutputStream;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 3D 把玩:全屏旋转/缩放自己的拼豆成品;进入自动播放「生长动画」
@@ -42,6 +43,8 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
     private boolean ironMode = false;
     private boolean exporting = false;
     private Uri exportTarget;
+    /** GIF 编码线程引用:onDestroy 打断用(编码中途退出页面时 take 永久阻塞) */
+    private volatile Thread gifEncThread;
 
     // GIF 导出的帧渲染资源(仅导出期间非空,restorePlayLayout 释放):
     // 视口位图(屏幕比例,长边≤1440)→ 缩到成帧位图(长边 720)→ 交编码线程
@@ -277,6 +280,7 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
         Thread enc = new Thread(new Runnable() {
             @Override
             public void run() {
+                gifEncThread = Thread.currentThread();
                 try {
                     OutputStream out = getContentResolver().openOutputStream(
                             exportTarget, "w");
@@ -307,12 +311,17 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
                                 getString(R.string.play_gif_ok), Toast.LENGTH_LONG).show();
                     }
                 } catch (Exception e) {
+                    // 编码线程死亡后 UI 还在往队列投帧:清空队列解堵,
+                    // UI 侧的超时 offer 才能探测到"无人消费"并终止
+                    queue.clear();
+                    queue.offer(sentinel);
                     if (!isFinishing()) {
                         Toast.makeText(Play3DActivity.this,
                                 getString(R.string.play_gif_err) + e.getMessage(),
                                 Toast.LENGTH_LONG).show();
                     }
                 } finally {
+                    gifEncThread = null;
                     try {
                         if (outHolder[0] != null) outHolder[0].close();
                     } catch (Exception ignored) {
@@ -339,10 +348,7 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
                               final BlockingQueue<int[]> queue,
                               final int[] sentinel) {
         if (isFinishing() || i >= frames) {
-            try {
-                queue.put(sentinel);
-            } catch (InterruptedException ignored) {
-            }
+            queue.offer(sentinel);
             restorePlayLayout();
             return;
         }
@@ -359,20 +365,18 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
             gifFrameCanvas.drawBitmap(gifViewBmp, null, gifDst, gifScalePaint);
             int[] buf = new int[gifFw * gifFh];
             gifFrameBmp.getPixels(buf, 0, gifFw, 0, 0, gifFw, gifFh);
-            queue.put(buf);   // 编码快于渲染,通常不阻塞
-        } catch (Exception e) {
-            try {
-                queue.put(sentinel);
-            } catch (InterruptedException ignored) {
+            // 编码线程死亡后队列无人消费,put 会永久阻塞主线程(冻屏):
+            // 带超时的 offer,超时即判编码线程已死,抛给下面的 catch 收场
+            if (!queue.offer(buf, 5, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("gif encoder not consuming");
             }
+        } catch (Exception e) {
+            queue.offer(sentinel);
             restorePlayLayout();
             return;
         }
         if (i == frames - 1) {
-            try {
-                queue.put(sentinel);
-            } catch (InterruptedException ignored) {
-            }
+            queue.offer(sentinel);
             restorePlayLayout();
             return;
         }
@@ -440,5 +444,14 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
     public void onBackPressed() {
         super.onBackPressed();
         overridePendingTransition(R.anim.enter_undim, R.anim.exit_down);
+    }
+
+    @Override
+    protected void onDestroy() {
+        // 导出中途退出:打断阻塞在队列 take() 上的编码线程,
+        // 其 catch/finally 会关输出流,否则线程+文件描述符双泄漏
+        Thread t = gifEncThread;
+        if (t != null) t.interrupt();
+        super.onDestroy();
     }
 }

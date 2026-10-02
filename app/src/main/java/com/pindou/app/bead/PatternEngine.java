@@ -487,7 +487,9 @@ public final class PatternEngine {
                     darkCount++;
                 }
             }
-            if (n == 0 || opaque * 2 < total) {
+            // 零像素格(opaque==0):小图生成大画幅时部分格采不到源像素,
+            // 必须判空格,否则 hist 全零走到 best=0 整格填 0 号色
+            if (n == 0 || opaque == 0 || opaque * 2 < total) {
                 workCells[c] = -1;   // 不透明不足半数 = 空格(与盒平均 alpha 阈值同语义)
                 continue;
             }
@@ -702,12 +704,13 @@ public final class PatternEngine {
             }
             counts[to] += counts[from];
             counts[from] = 0;
-            // 代表色 = 加权平均 Lab
+            // 代表色 = 加权平均 Lab(权重先合并再除:用合并前的旧权重
+            // 会把代表色系统性放大,第二次合并起贪心选择随之走偏)
+            weight[to] += weight[from];
             for (int c = 0; c < 3; c++) {
                 accLab[to][c] += accLab[from][c];
                 lab[to][c] = accLab[to][c] / weight[to];
             }
-            weight[to] += weight[from];
             accLab[from] = null;
             used--;
         }

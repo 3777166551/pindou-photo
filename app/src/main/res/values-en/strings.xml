@@ -662,6 +662,13 @@
     <string name="repo_url">https://github.com/3777166551/pindou-photo</string>
     <string name="repo_issues_url">https://github.com/3777166551/pindou-photo/issues</string>
 
+    <!-- Stale async photo task (AI style / watermark) finished after the user changed the photo -->
+    <string name="edit_stale">Photo changed — the edit was not applied</string>
+    <!-- Waiting hint when tapping crop etc. while AI is running -->
+    <string name="wait_ai">AI is busy, hang on a sec</string>
+    <!-- Merged shopping list summary line -->
+    <string name="fmt_merge_summary">%1$d projects · %2$d colors · %3$,d beads total</string>
+
     <!-- AI chart guide: one-tap prompt copy -->
     <string name="kb_ai_title">AI chart guide: photo to anime pattern</string>
     <string name="kb_ai_p1">📋 Anime hand-drawn</string>

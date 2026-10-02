@@ -79,6 +79,10 @@ public class CelebrationView extends View {
     }
 
     private void finish() {
+        // 跳过点按与动画自然结束都会走到这里:先 cancel 动画再回调,
+        // 否则点按跳过后动画照跑,结束时 onFinished 触发第二次
+        if (anim != null) anim.cancel();
+        anim = null;
         setVisibility(GONE);
         if (finishedListener != null) finishedListener.onFinished();
     }

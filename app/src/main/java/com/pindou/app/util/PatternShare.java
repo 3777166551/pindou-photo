@@ -102,7 +102,8 @@ public final class PatternShare {
         for (int i = 0; i + 1 < rle.length(); i += 2) {
             int v = rle.optInt(i, Integer.MIN_VALUE);
             int len = rle.optInt(i + 1, 0);
-            if (v < -1 || v >= palette.size() || len <= 0 || idx + len > cells.length) {
+            // len 用减法比较:idx + len 在 len 极大时会整型溢出绕过检查
+            if (v < -1 || v >= palette.size() || len <= 0 || len > cells.length - idx) {
                 throw new Exception("格子数据损坏");
             }
             for (int k = 0; k < len; k++) cells[idx++] = v;

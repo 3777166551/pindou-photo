@@ -204,6 +204,7 @@ public class LayeredComposeActivity extends Activity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        if (isFinishing()) return;
                         layers.addAll(loaded);
                         if (layers.size() < 2) {
                             Toast.makeText(LayeredComposeActivity.this,

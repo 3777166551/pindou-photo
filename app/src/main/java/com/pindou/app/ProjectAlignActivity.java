@@ -55,7 +55,8 @@ public class ProjectAlignActivity extends Activity {
     private Handler camHandler;
     private int sensorOrientation = 90;
     private Size previewSize;
-    private boolean resumed;
+    /** 相机异步回调跨线程读,volatile 保可见(onOpened 晚于 onPause 的竞态防御) */
+    private volatile boolean resumed;
 
     private BeadPattern pattern;
     private int focusPos = 0;   // 当前高亮色在 usedColors 里的位置
@@ -528,6 +529,11 @@ public class ProjectAlignActivity extends Activity {
             cm.openCamera(camId, new CameraDevice.StateCallback() {
                 @Override
                 public void onOpened(CameraDevice dev) {
+                    // 同 FakeAr:onOpened 晚于 onPause 时立即归还设备
+                    if (!resumed || isFinishing()) {
+                        dev.close();
+                        return;
+                    }
                     camera = dev;
                     try {
                         previewBuilder = dev.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);

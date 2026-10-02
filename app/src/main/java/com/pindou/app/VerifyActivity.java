@@ -213,6 +213,8 @@ public class VerifyActivity extends Activity {
         summary = new TextView(this);
         summary.setTextColor(0xFFFFFFFF);
         summary.setTextSize(13);
+        summary.setMaxLines(1);
+        summary.setEllipsize(android.text.TextUtils.TruncateAt.END);
         row2.addView(summary, new android.widget.LinearLayout.LayoutParams(
                 0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
@@ -225,9 +227,12 @@ public class VerifyActivity extends Activity {
                 overlay.invalidate();
             }
         });
-        row2.addView(onlyWrongChip, new android.widget.LinearLayout.LayoutParams(
-                android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
-                Math.round(34 * getResources().getDisplayMetrics().density)));
+        android.widget.LinearLayout.LayoutParams owLp =
+                new android.widget.LinearLayout.LayoutParams(
+                        android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                        Math.round(34 * getResources().getDisplayMetrics().density));
+        owLp.setMargins(pad, 0, 0, 0);
+        row2.addView(onlyWrongChip, owLp);
 
         TextView retake = chip(getString(R.string.verify_recheck));
         retake.setOnClickListener(new View.OnClickListener() {
@@ -367,11 +372,14 @@ public class VerifyActivity extends Activity {
                         result = r;
                         if (r.total > 0 && r.wrong + r.missing + r.extra == 0) {
                             summary.setText(getString(R.string.verify_good));
+                            // 全对时"只看错格"无意义,藏掉免得按钮挤在一行
+                            onlyWrongChip.setVisibility(View.GONE);
                         } else {
                             summary.setText(String.format(
                                     java.util.Locale.CHINA,
                                     getString(R.string.fmt_verify_result),
                                     r.total, r.wrong, r.missing, r.extra));
+                            onlyWrongChip.setVisibility(View.VISIBLE);
                         }
                         panelRow2.setVisibility(View.VISIBLE);
                         overlay.invalidate();
@@ -438,6 +446,13 @@ public class VerifyActivity extends Activity {
             qy[2] = pts[3] - iny;
             qx[3] = pts[0] + inx;
             qy[3] = pts[3] - iny;
+            // 手柄半径外扩的边距:照片满屏时默认角点悬在屏幕外一半,
+            // 钳进可视区(拖拽后以用户手点为准,钳位只影响初始位置)
+            float m = Math.max(18f, w * 0.03f) + 6f;
+            for (int i = 0; i < 4; i++) {
+                qx[i] = Math.max(m, Math.min(w - m, qx[i]));
+                qy[i] = Math.max(m, Math.min(h - m, qy[i]));
+            }
             invalidate();
         }
 

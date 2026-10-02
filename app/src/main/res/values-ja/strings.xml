@@ -662,6 +662,13 @@
     <string name="repo_url">https://github.com/3777166551/pindou-photo</string>
     <string name="repo_issues_url">https://github.com/3777166551/pindou-photo/issues</string>
 
+    <!-- 非同期の写真処理(AI 風格/ウォーターマーク)完了時に写真が変わっていた場合の代替文案 -->
+    <string name="edit_stale">写真が変わったため、この効果は適用されませんでした</string>
+    <!-- AI 処理中に切り抜き等をタップしたときの待機案内 -->
+    <string name="wait_ai">AI 処理中です。少し待ってね</string>
+    <!-- まとめ買いリストのサマリ行 -->
+    <string name="fmt_merge_summary">%1$d 件 · %2$d 色 · 合計 %3$,d 個</string>
+
     <!-- AI 変換ガイド:プロンプトをワンタップコピー -->
     <string name="kb_ai_title">AI 変換ガイド:写真をアニメ図案に</string>
     <string name="kb_ai_p1">📋 アニメ手描き風</string>

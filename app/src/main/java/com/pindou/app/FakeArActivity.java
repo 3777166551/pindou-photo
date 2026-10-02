@@ -44,7 +44,8 @@ public class FakeArActivity extends Activity {
     private Handler camHandler;
     private int sensorOrientation = 90;
     private Size previewSize;
-    private boolean resumed;
+    /** 相机异步回调跨线程读,volatile 保可见(onOpened 晚于 onPause 的竞态防御) */
+    private volatile boolean resumed;
 
     private android.hardware.SensorManager sensorManager;
     private android.hardware.SensorEventListener sensorListener;
@@ -247,6 +248,12 @@ public class FakeArActivity extends Activity {
             cm.openCamera(camId, new CameraDevice.StateCallback() {
                 @Override
                 public void onOpened(CameraDevice dev) {
+                    // 异步回调可能晚于 onPause(进页面立刻返回):camera 字段
+                    // 还是 null,closeCamera 关不到它,相机占死下次进不来
+                    if (!resumed || isFinishing()) {
+                        dev.close();
+                        return;
+                    }
                     camera = dev;
                     try {
                         previewBuilder = dev.createCaptureRequest(

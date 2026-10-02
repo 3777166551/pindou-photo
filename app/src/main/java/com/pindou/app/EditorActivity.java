@@ -1259,7 +1259,10 @@ public class EditorActivity extends Activity {
         patternView.setOnDropListener(new PatternView.OnDropListener() {
             @Override
             public void onDropCell(int cx, int cy) {
-                if (pattern == null || pattern.outsideShape(cx, cy)) return;
+                if (pattern == null) return;
+                // 吸管落点同油漆桶:手势期间图纸可能重生成,先卡界
+                if (cx < 0 || cy < 0 || cx >= pattern.cols || cy >= pattern.rows) return;
+                if (pattern.outsideShape(cx, cy)) return;
                 int idx = pattern.cellAt(cx, cy);
                 if (idx < 0 || idx >= pattern.palette.size()) return;
                 int rgb = pattern.palette.get(idx).rgb;
@@ -1989,6 +1992,11 @@ public class EditorActivity extends Activity {
     // ---------------- 取景裁剪 ----------------
     /** 拖动/缩放选区,确定后按选区重新生成(解决居中裁剪不可调的问题) */
     private void showCropDialog() {
+        if (aiRunning) {
+            // AI 处理期间照片会被结果替换,裁剪框持有的位图可能作废
+            Toast.makeText(this, getString(R.string.wait_ai), Toast.LENGTH_SHORT).show();
+            return;
+        }
         if (source == null) {
             Toast.makeText(this, getString(R.string.err_no_photo), Toast.LENGTH_SHORT).show();
             return;
@@ -2010,9 +2018,7 @@ public class EditorActivity extends Activity {
                             return;
                         }
                         if (cropped != source) {
-                            if (source != null && source != originalSource) {
-                                source.recycle();
-                            }
+                            recycleOldSource(source);
                             source = cropped;
                         }
                         invalidateEdits();
@@ -2112,9 +2118,15 @@ public class EditorActivity extends Activity {
                         public void run() {
                             aiRunning = false;
                             showLoading(false);
-                            if (source != null && source != originalSource) {
-                                source.recycle();
+                            // 任务期间照片被裁剪/还原/换图:丢弃 AI 结果,
+                            // 不回收不覆盖(CropView 可能仍持有旧 source)
+                            if (source != bmp) {
+                                out.recycle();
+                                Toast.makeText(EditorActivity.this,
+                                        getString(R.string.edit_stale), Toast.LENGTH_LONG).show();
+                                return;
                             }
+                            recycleOldSource(source);
                             source = out;
                             btnAiRestore.setVisibility(View.VISIBLE);
                             Anim.expand(btnAiRestore);
@@ -2219,9 +2231,14 @@ public class EditorActivity extends Activity {
                         public void run() {
                             aiRunning = false;
                             showLoading(false);
-                            if (source != null && source != originalSource) {
-                                source.recycle();
+                            // 同 AI 风格化:处理期间照片被换掉就丢弃结果
+                            if (source != bmp) {
+                                out.recycle();
+                                Toast.makeText(EditorActivity.this,
+                                        getString(R.string.edit_stale), Toast.LENGTH_LONG).show();
+                                return;
                             }
+                            recycleOldSource(source);
                             source = out;
                             btnAiRestore.setVisibility(View.VISIBLE);
                             Anim.expand(btnAiRestore);
@@ -2338,7 +2355,7 @@ public class EditorActivity extends Activity {
             Toast.makeText(this, getString(R.string.already_original), Toast.LENGTH_SHORT).show();
             return;
         }
-        if (source != null) source.recycle();
+        recycleOldSource(source);
         source = originalSource;
         btnAiRestore.setVisibility(View.GONE);
         regenerate();
@@ -2350,6 +2367,25 @@ public class EditorActivity extends Activity {
         if (source == null) return;
         main.removeCallbacks(regenTask);
         main.postDelayed(regenTask, 120);
+    }
+
+    /**
+     * 旧照片的回收统一投递到生成线程串行执行(exec 是单线程池)。
+     * 池里可能还有正在读这张位图的 generate 任务——主线程直接 recycle
+     * 会与在飞的 getPixels 竞态(idfail_crash 实锤),排队回收即无并发。
+     * 调用方在 UI 线程,alias 判定(originalSource)在此刻定性。
+     */
+    private void recycleOldSource(final Bitmap old) {
+        if (old == null || old == originalSource) return;
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    old.recycle();
+                } catch (Throwable ignored) {
+                }
+            }
+        });
     }
 
         /** 网格缓存指纹:只含第 1~3 步入参(与色板无关),一致即可走秒切路径 */
@@ -2425,9 +2461,27 @@ public class EditorActivity extends Activity {
         exec.execute(new Runnable() {
             @Override
             public void run() {
-                final BeadPattern np = fastGrid
-                        ? PatternEngine.generateFromGrid(workGrid, beadPalette, opt, fCols, fRows)
-                        : PatternEngine.generate(source, beadPalette, opt, sink);
+                final BeadPattern np;
+                try {
+                    np = fastGrid
+                            ? PatternEngine.generateFromGrid(workGrid, beadPalette, opt, fCols, fRows)
+                            : PatternEngine.generate(source, beadPalette, opt, sink);
+                } catch (final Throwable t) {
+                    // 兜底:回收已改串行排队,但极端时序下在飞任务仍可能读到
+                    // 刚回收的位图——作废本次生成,不再让异常杀掉池线程
+                    if (seq == genSeq) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                showLoading(false);
+                                if (regenPill != null) regenPill.setVisibility(View.GONE);
+                                Toast.makeText(EditorActivity.this,
+                                        getString(R.string.err_image), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                    return;
+                }
                 if (seq != genSeq) return;
                 runOnUiThread(new Runnable() {
                     @Override
@@ -2471,9 +2525,8 @@ public class EditorActivity extends Activity {
                         } else {
                             beadDone.clear();
                         }
-                        if (beadDone.isEmpty()) {
-                            beadDoneToday = 0;
-                        }
+                        // 今日计数不清零:打卡日历在标记时已入账,换尺寸/清
+                        // 进度把会话计数归零会造成与日历的显示不一致
                         rollBeadDay();
                         adapter.notifyDataSetChanged();
                         updateSummary();
@@ -3755,6 +3808,9 @@ public class EditorActivity extends Activity {
                 GradientDrawable gd = new GradientDrawable();
                 gd.setShape(GradientDrawable.OVAL);
                 gd.setColor(0xFF000000 | r.color.rgb);
+                // 白/奶油等浅色在白底弹窗里隐形:描一圈 token 描边色
+                gd.setStroke(Math.max(1, Math.round(getResources()
+                        .getDisplayMetrics().density)), 0xFFE2D9F0);
                 sw.setBackground(gd);
                 row.addView(sw, new LinearLayout.LayoutParams(
                         Math.round(26 * getResources().getDisplayMetrics().density),
@@ -4290,11 +4346,25 @@ public class EditorActivity extends Activity {
 
     /** 把导入的图纸装进编辑器:可编辑/导出/拼豆辅助,但不支持重新生成 */
     private void applyImportedPattern(BeadPattern bp) {
+        // 作废在飞生成任务:否则旧 regenerate 完成会覆盖掉刚导入的图纸
+        genSeq++;
         imported = true;
         rawPattern = bp;
         pattern = bp;
+        // 旧项目的两张位图都随导入作废,走生成线程串行回收
+        final Bitmap os = source, oo = originalSource;
         source = null;
         originalSource = null;
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (os != null) os.recycle();
+                    if (oo != null && oo != os) oo.recycle();
+                } catch (Throwable ignored) {
+                }
+            }
+        });
         blankCanvas = true;
         hidePhotoOnlyCards();
         cols = bp.cols;
@@ -4303,7 +4373,6 @@ public class EditorActivity extends Activity {
         editMap.clear();
         beadDone.clear();
         rollBeadDay();
-        beadDoneToday = 0;
         undoStack.clear();
         redoStack.clear();
         updateUndoRedoButtons();
@@ -5217,6 +5286,9 @@ public class EditorActivity extends Activity {
     /** 油漆桶:把与落点同色的四连通区域整体换成画笔色(橡皮 = 整片挖空) */
     private void floodFill(int sx, int sy) {
         if (!paintMode || pattern == null || rawPattern == null) return;
+        // 长按坐标是按下时刻捕获的,期间可能重生成成更小的图纸——先卡界
+        // (cellAt 是裸下标,方板 outsideShape 恒 false,界外必 AIOOBE)
+        if (sx < 0 || sy < 0 || sx >= pattern.cols || sy >= pattern.rows) return;
         if (pattern.outsideShape(sx, sy)) return;
         int from = pattern.cellAt(sx, sy);
         if (from < 0) return;                    // 空格不做填充起点
@@ -5235,8 +5307,10 @@ public class EditorActivity extends Activity {
             int cy = key / cols;
             Integer base = rawPattern.cellAt(cx, cy);
             if (base != null && base.intValue() == target) {
-                if (editMap.remove(key) != null) {
+                // 先拍撤销快照再删:快照落在删除之后,该格撤销回不去
+                if (editMap.containsKey(key)) {
                     if (!snapPushed) { pushUndoState(); snapPushed = true; }
+                    editMap.remove(key);
                     filled++;
                 }
             } else {
@@ -5449,6 +5523,7 @@ public class EditorActivity extends Activity {
                         if (blankCanvas || out == null) {
                             rebuildBlankRaw();
                         } else {
+                            recycleOldSource(source);
                             source = out;
                             scheduleRegen();
                         }
