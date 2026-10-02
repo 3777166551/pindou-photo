@@ -34,33 +34,60 @@ pss_kb() {
 
 front_is_ours() {
   adb shell dumpsys activity activities 2>/dev/null | tr -d '\r' \
-    | grep -q "topResumedActivity.*$PKG\|mResumedActivity.*$PKG"
+    | grep -q "topResumedActivity.*$PKG\|mResumedActivity.*$PKG" \
+    || adb shell dumpsys window 2>/dev/null | tr -d '\r' \
+    | grep -q "mCurrentFocus=Window{.*$PKG"
 }
 
 adb logcat -c
 
 echo "=== 1/4 cycle pressure: home<->editor x20 ==="
+# 热身+真实 PSS 基线(旧版在冷启动前取样,P0 恒空,水位检查形同虚设)
+adb shell am start -n "$PKG/.MainActivity" 2>&1 | sed 's/^/[stability] am: /'
+sleep 2
 P0=$(pss_kb)
 for i in $(seq 1 20); do
-  adb shell am start -n "$PKG/.EditorActivity" >/dev/null 2>&1
-  sleep 1
+  adb shell am start -n "$PKG/.EditorActivity" 2>&1 | sed 's/^/[stability] am: /'
+  sleep 1.5
+  # 前台断言放 am start 之后、BACK 之前——BACK 本来就回桌面,旧版在
+  # BACK 之后断言,逢 10 轮必挂(0930 run 实锤:截图=桌面,零 FATAL)
+  if ! front_is_ours; then
+    sleep 1.5
+    if ! front_is_ours; then
+      echo "[stability] FAIL: app not foreground at cycle $i (after am start)"
+      FAIL=1
+      snap "cycle_fail_$i"
+    fi
+  fi
   adb shell input keyevent 4 >/dev/null 2>&1
   sleep 0.5
   if [ $((i % 10)) -eq 0 ]; then
-    front_is_ours || { echo "[stability] FAIL: app not foreground at cycle $i"; FAIL=1; }
     snap "cycle_$i"
   fi
 done
 fatal_scan "cycle pressure"
 
 echo "=== 2/4 rotation rebuild x10 (inside editor) ==="
-adb shell am start -n "$PKG/.EditorActivity" >/dev/null 2>&1
-sleep 2
+adb shell am start -n "$PKG/.EditorActivity" 2>&1 | sed 's/^/[stability] am: /'
+sleep 2.5
+if ! front_is_ours; then
+  # 兜底重拉(0930 run 实锤:循环段 BACK 回桌面后 am start 偶发不落前台)
+  adb shell am start -n "$PKG/.EditorActivity" 2>&1 | sed 's/^/[stability] am2: /'
+  sleep 2.5
+fi
+front_is_ours || { echo "[stability] FAIL: editor never foreground before rotations"; FAIL=1; }
 adb shell settings put system accelerometer_rotation 0
 for i in $(seq 1 10); do
   adb shell settings put system user_rotation $((i % 2))
-  sleep 1.5
-  front_is_ours || { echo "[stability] FAIL: app died at rotation $i"; FAIL=1; }
+  sleep 2.2
+  if ! front_is_ours; then
+    sleep 1.5
+    if ! front_is_ours; then
+      echo "[stability] FAIL: app not foreground at rotation $i"
+      FAIL=1
+      snap "rotation_fail_$i"
+    fi
+  fi
 done
 adb shell settings put system user_rotation 0
 adb shell settings put system accelerometer_rotation 1
