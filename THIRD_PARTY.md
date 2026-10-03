@@ -45,6 +45,11 @@
 - 迷你规格色号表(Artkal C·2.6mm / Perler Mini·2.6mm / Hama Mini·2.5mm)取自
   **[maxcleme/beadcolors](https://github.com/maxcleme/beadcolors)** 数据集(gen/v2 CSV,
   MIT License,Copyright (c) 2020 maxcleme),按 MIT 要求保留本声明。
+- 漫德 MARD 2.6mm 零售标准色号表(221 色,`BeadBrandCharts.DATA_MARD_221`)取自
+  **[HansBug/pindou-color-data](https://github.com/HansBug/pindou-color-data)**
+  的 `mard-221-alfonse-doudou` 系列(MIT License,Copyright (c) 2026 HansBug;
+  该系列为 Alfonse 与豆豆工坊两个公开工具站所载 MARD 官方色卡的核对版),
+  按 MIT 要求保留本声明。源数据存档 `qa/palette_data/mard_221.csv`。
 - 各品牌名称与色号体系归各自品牌方所有,本项目仅作兼容性引用。
 
 ## 构建期工具(不随 APP 分发)

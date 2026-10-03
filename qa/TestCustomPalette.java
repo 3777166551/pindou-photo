@@ -37,11 +37,12 @@ public class TestCustomPalette {
         BeadBrandCharts.setCustoms(new ArrayList<BeadBrandCharts.Chart>());
         BeadPalettes.resetCache();
         int baseCount = BeadPalettes.selCount();
-        // v2.43 起品牌表 8 套(5 张 5mm + 3 张迷你规格)
-        check("baseline selCount = generic + brands(12)",
+        // v2.43 起品牌表 8 套(5 张 5mm + 3 张迷你规格);
+        // 漫德 MARD 2.6mm 221 色入库后共 9 套
+        check("baseline selCount = generic + brands(13)",
                 baseCount == BeadPalettes.GENERIC_COUNT + BeadBrandCharts.ALL.length
-                        && baseCount == 12);
-        check("baseline customSlotStart = 12", BeadPalettes.customSlotStart() == 12);
+                        && baseCount == 13);
+        check("baseline customSlotStart = 13", BeadPalettes.customSlotStart() == 13);
 
         // ---- 两套自定义色板 ----
         List<BeadColor> p1 = new ArrayList<>(Arrays.asList(
