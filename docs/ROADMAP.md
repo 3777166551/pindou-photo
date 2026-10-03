@@ -1,17 +1,16 @@
-# 路线图与交接文档 (ROADMAP & HANDOFF)
+﻿# 路线图与交接文档 (ROADMAP & HANDOFF)
 
 > 本文档是项目的**持续交接入口**：当前状态、待办功能、开发约定、操作备忘。
-> 新会话/新开发者从这里开始读。最后更新：2026-10-02 晚（**CI 四 job 全绿 +
-> 外部代码评审 P0 批次落地:同事评审(崩溃簇 C1~C6/数据簇 D1~D13/性能/UI)
-> 经逐条核实后 P0 全修并 CI 四 job 全绿(run head=da20e76)——C1 位图回收
-> 竞态(有 09-22 CI 崩溃实录)=recycleOldSource 排队到单线程生成池串行回收+
-> 生成任务 try/catch 兜底;C2/C3 油漆桶/吸管界检查;C4 裁剪×AI 互踩双保险;
-> C5 GIF 编码线程死亡冻屏=超时 offer+onDestroy 打断;C6 相机 onOpened 竞态;
-> D1 限色权重先并再除/D2 零像素格判空/D4 导入 genSeq++/D9 RLE 溢出等;
-> 硬编码中文/验收页布局/色块描边 UI 三件;**v2.62.1(vc69)已挂 Release
-> v2.62 资产列表**(崩溃修复版);P1 剩余=C7 OOM 上限/D7 盲回收边界/性能五项/
-> UI 小项;git 断连期仍走 API 推送,本地远端 SHA 异内容同,恢复后
-> fetch+reset 对齐）
+> 新会话/新开发者从这里开始读。最后更新：2026-10-03（**v2.62.2(vc70)已发布:
+> 用户亲手写的系统栏沉浸适配落地——新增 util/Insets(平台 API,根布局
+> padding 追加系统栏 inset,监听器捕获原 padding 保追加语义),13 个
+> Activity setContentView 后统一 padRoot(修全面屏手势/国产 ROM 全屏/
+> Android 15+ edge-to-edge 下滚动区末排被导航栏遮挡);compile+qa 523 绿+
+> 推送 bf26a6e;APK 已挂 Release v2.62 资产(说明指向 v2.62.2)。此前
+> 2026-10-02:P0 批次(同事外审崩溃簇 C1~C6+数据簇)全修 CI 四 job 全绿,
+> v2.62.1(vc69)同挂 Release。P1 剩余=C7 OOM 上限/D7 盲回收边界/性能五项/
+> UI 小项/277 图案名翻译;git 通道已恢复,本地远端同源(b756bc2..bf26a6e
+> 直推),断连期 API 推送的历史遗留 SHA 差异已 reset 对齐**）
 
 ## ⭐ v2.62 发版检查清单(下一会话从这里接)
 
