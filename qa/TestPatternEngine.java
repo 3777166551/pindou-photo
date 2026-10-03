@@ -4,7 +4,8 @@ import com.pindou.app.bead.PatternEngine;
  * PatternEngine 纯数组函数测试(不依赖 Bitmap):
  *  - boxResample:尺寸映射 / 面积平均 / alpha 加权 / 多数透明格置空
  *  - dominantResample:众数胜平均(灰毛边) / 透明像素不参与 / 全透明输出
- *  - resampleBilinear:常色不变 / 尺寸正确
+ *  - resampleBilinear:常色不变 / 尺寸正确 / 透明底放大不掺黑
+ *  - 半透明像素:投票与众数路径均按非预乘色处理(羽化边缘不发灰黑)
  *  - expandBricks:粗网格展开覆盖
  *  - symbolFor:符号循环
  * 需要 android.jar 在 classpath(PatternEngine 引用 Bitmap)。
@@ -254,6 +255,39 @@ public class TestPatternEngine {
             }
         }
         check("palette remap fuzz 30/30 (色板秒切等价)", fuzzOk == 30);
+
+        // ---- 透明底小图放大:双线性不再混入预乘黑(背景发黑修复) ----
+        int[] cutout = {0x00000000, 0xFFFFFFFF};
+        int[] up2 = PatternEngine.resampleBilinear(cutout, 2, 1, 4, 1);
+        check("bilinear enlarge: transparent stays transparent (no black bleed)",
+                up2.length == 4 && up2[0] == 0x00000000 && up2[3] == 0xFFFFFFFF);
+
+        // ---- 投票路径:半透明像素按非预乘色配豆(α=150 的白预乘成 (150,150,150),
+        //      不还原会投成灰豆——羽化边缘/半透明底发灰发黑的来源) ----
+        java.util.List<com.pindou.app.bead.BeadColor> palw = new java.util.ArrayList<>();
+        palw.add(new com.pindou.app.bead.BeadColor(1, "W", 0xFFFFFF));
+        palw.add(new com.pindou.app.bead.BeadColor(2, "G", 0x757575));
+        PatternEngine.WorkGrid gsemi = new PatternEngine.WorkGrid();
+        gsemi.gw = 1;
+        gsemi.gh = 1;
+        gsemi.brick = 1;
+        gsemi.cellPix = new int[]{px(255, 255, 255, 255),
+                px(150, 150, 150, 150), px(150, 150, 150, 150)};
+        gsemi.cellStart = new int[]{0, 3};
+        PatternEngine.Options osemi = new PatternEngine.Options();
+        osemi.cols = 1;
+        osemi.rows = 1;
+        com.pindou.app.bead.BeadPattern psemi = PatternEngine.generateFromGrid(
+                gsemi, palw, osemi, 1, 1);
+        check("vote path un-premultiplies semi-transparent pixels",
+                psemi != null && psemi.cellAt(0, 0) == 0);
+
+        // ---- 众数路径:半透明像素同样按非预乘色统计 ----
+        int[] semid = {px(255, 255, 255, 255),
+                px(150, 150, 150, 150), px(150, 150, 150, 150)};
+        int[] rsemi = PatternEngine.dominantResample(semid, 3, 1, 1, 1);
+        check("dominantResample un-premultiplies semi-transparent",
+                rsemi[0] == px(255, 255, 255, 255));
 
         System.out.println("TestPatternEngine: " + passed + " passed, " + failed + " failed");
         if (failed > 0) System.exit(1);

@@ -364,9 +364,12 @@ public final class PatternEngine {
             tie[i] = palette.get(i).rgb;
         }
         for (int key = 0; key < 4096; key++) {
-            int r = ((key >> 8) & 0xF) * 17 + 8;   // 桶中心
-            int g = ((key >> 4) & 0xF) * 17 + 8;
-            int b = (key & 0xF) * 17 + 8;
+            // 桶中心 = 16n+8(nibble n 的通道范围 [16n,16n+15])。旧式 n*17+8
+            // 在 n=15 时溢出到 263,字节互窜把白色桶(15,15,15)的"中心"
+            // 算成 (8,7,7)≈纯黑——浅色背景整片配成黑/深紫豆的根因
+            int r = ((key >> 8) & 0xF) * 16 + 8;
+            int g = ((key >> 4) & 0xF) * 16 + 8;
+            int b = (key & 0xF) * 16 + 8;
             double[] lab = ColorMath.rgbToLab(0xFF000000 | (r << 16) | (g << 8) | b);
             lut[key] = n == 0 ? -1
                     : (precise ? nearestPrecise(labs, lab[0], lab[1], lab[2], tie)
@@ -409,6 +412,14 @@ public final class PatternEngine {
             if ((p >>> 24) >= 128) {
                 opaque++;
                 int r = (p >> 16) & 0xFF, g = (p >> 8) & 0xFF, bl = p & 0xFF;
+                int a = (p >>> 24) & 0xFF;
+                if (a < 255) {
+                    // 预乘还原:getPixels 返回 premultiplied,半透明像素的
+                    // RGB 已按 alpha 缩暗,不还原会把羽化边缘算成深色
+                    r = Math.min(255, r * 255 / a);
+                    g = Math.min(255, g * 255 / a);
+                    bl = Math.min(255, bl * 255 / a);
+                }
                 lumSum += (r * 299 + g * 587 + bl * 114) / 1000;
                 buckets.set(((r >> 4) << 8) | ((g >> 4) << 4) | (bl >> 4));
             }
@@ -458,9 +469,18 @@ public final class PatternEngine {
             if (n > 0) Arrays.fill(darkHist, 0, n, 0);
             for (int i = s; i < e; i++) {
                 int p = g.cellPix[i];
-                if (((p >>> 24) & 0xFF) < 128) continue;
+                int a = (p >>> 24) & 0xFF;
+                if (a < 128) continue;
                 opaque++;
                 int r = (p >> 16) & 0xFF, gr = (p >> 8) & 0xFF, bl = p & 0xFF;
+                if (a < 255) {
+                    // 预乘还原:半透明像素(羽化边缘/AI 抠图半透明底)的
+                    // 预乘 RGB 已缩暗,直接配豆会出灰黑深色豆(背景发
+                    // 黑发紫的来源之一);还原回真实色再配豆
+                    r = Math.min(255, r * 255 / a);
+                    gr = Math.min(255, gr * 255 / a);
+                    bl = Math.min(255, bl * 255 / a);
+                }
                 sumR += r;
                 sumG += gr;
                 sumB += bl;
@@ -1141,10 +1161,10 @@ public final class PatternEngine {
     }
 
     /**
-     * 盒式面积平均重采样(RGB,忽略 alpha)。
-     * 每个目标像素取源图对应矩形内全部像素的平均--大比例缩小时
-     * 所有源像素都参与,不像双线性只零星采样,边缘颜色不会被漏掉。
-     * 目标比源大时退化为双线性。
+     * 盒式面积平均重采样(alpha 加权):每个目标像素取源图对应矩形内
+     * 全部像素的平均——大比例缩小时所有源像素都参与,不像双线性只零星
+     * 采样,边缘颜色不会被漏掉。透明像素按 alpha 加权,不再把边界颜色
+     * 拉向黑/白;多数透明整格留空。目标比源大时退化为双线性。
      */
     /**
      * 众数色降采样(清晰轮廓):每个目标格取区域内出现频率最高的颜色量化桶
@@ -1175,8 +1195,15 @@ public final class PatternEngine {
                     int row = yy * sw;
                     for (int xx = sx0; xx < sx1; xx++) {
                         int c = src[row + xx];
-                        if (((c >>> 24) & 0xFF) < 128) continue;
+                        int a = (c >>> 24) & 0xFF;
+                        if (a < 128) continue;
                         int r = (c >> 16) & 0xFF, g = (c >> 8) & 0xFF, b = c & 0xFF;
+                        if (a < 255) {
+                            // 预乘还原(同投票路径):半透明像素不按缩暗色统计
+                            r = Math.min(255, r * 255 / a);
+                            g = Math.min(255, g * 255 / a);
+                            b = Math.min(255, b * 255 / a);
+                        }
                         int bucket = ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
                         if (stamp[bucket] != gen) {
                             stamp[bucket] = gen;
@@ -1312,7 +1339,8 @@ public final class PatternEngine {
         return out;
     }
 
-    /** 双线性重采样(RGB,忽略 alpha) */
+    /** 双线性重采样。全不透明源走原逐位双线性;任一角透明时透明角
+     *  不参与混色(预乘黑会把透明底小图放大成黑底),全透明输出透明 */
     public static int[] resampleBilinear(int[] src, int sw, int sh, int dw, int dh) {
         if (dw == sw && dh == sh) return src.clone();
         int[] out = new int[dw * dh];
@@ -1344,12 +1372,56 @@ public final class PatternEngine {
                 int x1 = Math.min(sw - 1, x0 + 1);
                 int c00 = src[y0 * sw + x0], c10 = src[y0 * sw + x1];
                 int c01 = src[y1 * sw + x0], c11 = src[y1 * sw + x1];
-                int r = bilinear1((c00 >> 16) & 0xFF, (c10 >> 16) & 0xFF,
-                        (c01 >> 16) & 0xFF, (c11 >> 16) & 0xFF, tx, ty);
-                int g = bilinear1((c00 >> 8) & 0xFF, (c10 >> 8) & 0xFF,
-                        (c01 >> 8) & 0xFF, (c11 >> 8) & 0xFF, tx, ty);
-                int b = bilinear1(c00 & 0xFF, c10 & 0xFF, c01 & 0xFF, c11 & 0xFF, tx, ty);
-                out[y * dw + x] = 0xFF000000 | (r << 16) | (g << 8) | b;
+                if (((c00 & c10 & c01 & c11) >>> 24) == 0xFF) {
+                    int r = bilinear1((c00 >> 16) & 0xFF, (c10 >> 16) & 0xFF,
+                            (c01 >> 16) & 0xFF, (c11 >> 16) & 0xFF, tx, ty);
+                    int g = bilinear1((c00 >> 8) & 0xFF, (c10 >> 8) & 0xFF,
+                            (c01 >> 8) & 0xFF, (c11 >> 8) & 0xFF, tx, ty);
+                    int b = bilinear1(c00 & 0xFF, c10 & 0xFF, c01 & 0xFF, c11 & 0xFF, tx, ty);
+                    out[y * dw + x] = 0xFF000000 | (r << 16) | (g << 8) | b;
+                } else {
+                    // alpha 感知:透明角(alpha<128)不参与混色,不透明角取
+                    // 非预乘色按双线性权重平均
+                    double w00 = (1 - tx) * (1 - ty), w10 = tx * (1 - ty);
+                    double w01 = (1 - tx) * ty, w11 = tx * ty;
+                    double sr = 0, sg = 0, sb = 0, wSum = 0;
+                    int a = (c00 >>> 24) & 0xFF;
+                    if (a >= 128) {
+                        sr += Math.min(255, ((c00 >> 16) & 0xFF) * 255 / a) * w00;
+                        sg += Math.min(255, ((c00 >> 8) & 0xFF) * 255 / a) * w00;
+                        sb += Math.min(255, (c00 & 0xFF) * 255 / a) * w00;
+                        wSum += w00;
+                    }
+                    a = (c10 >>> 24) & 0xFF;
+                    if (a >= 128) {
+                        sr += Math.min(255, ((c10 >> 16) & 0xFF) * 255 / a) * w10;
+                        sg += Math.min(255, ((c10 >> 8) & 0xFF) * 255 / a) * w10;
+                        sb += Math.min(255, (c10 & 0xFF) * 255 / a) * w10;
+                        wSum += w10;
+                    }
+                    a = (c01 >>> 24) & 0xFF;
+                    if (a >= 128) {
+                        sr += Math.min(255, ((c01 >> 16) & 0xFF) * 255 / a) * w01;
+                        sg += Math.min(255, ((c01 >> 8) & 0xFF) * 255 / a) * w01;
+                        sb += Math.min(255, (c01 & 0xFF) * 255 / a) * w01;
+                        wSum += w01;
+                    }
+                    a = (c11 >>> 24) & 0xFF;
+                    if (a >= 128) {
+                        sr += Math.min(255, ((c11 >> 16) & 0xFF) * 255 / a) * w11;
+                        sg += Math.min(255, ((c11 >> 8) & 0xFF) * 255 / a) * w11;
+                        sb += Math.min(255, (c11 & 0xFF) * 255 / a) * w11;
+                        wSum += w11;
+                    }
+                    if (wSum <= 0) {
+                        out[y * dw + x] = 0x00000000;
+                    } else {
+                        int r = clamp8((int) Math.round(sr / wSum));
+                        int g = clamp8((int) Math.round(sg / wSum));
+                        int b = clamp8((int) Math.round(sb / wSum));
+                        out[y * dw + x] = 0xFF000000 | (r << 16) | (g << 8) | b;
+                    }
+                }
             }
         }
         return out;

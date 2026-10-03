@@ -277,9 +277,11 @@ public class TestAlgoGate {
         double[][] labs = new double[pal.size()][];
         for (int j = 0; j < pal.size(); j++) labs[j] = ColorMath.rgbToLab(pal.get(j).rgb);
         for (int key = 0; key < 4096; key++) {
-            int r = ((key >> 8) & 0xF) * 17 + 8;
-            int g = ((key >> 4) & 0xF) * 17 + 8;
-            int b = (key & 0xF) * 17 + 8;
+            // 桶中心与管线 buildLut 保持一致(16n+8;旧 17n+8 在 n=15 溢出,
+            // 会把白色桶算成近黑色,镜像必须跟随引擎修正)
+            int r = ((key >> 8) & 0xF) * 16 + 8;
+            int g = ((key >> 4) & 0xF) * 16 + 8;
+            int b = (key & 0xF) * 16 + 8;
             double[] lab = ColorMath.rgbToLab(0xFF000000 | (r << 16) | (g << 8) | b);
             double bd = Double.MAX_VALUE;
             int best = 0;
