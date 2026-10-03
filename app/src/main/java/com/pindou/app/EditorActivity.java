@@ -779,20 +779,16 @@ public class EditorActivity extends Activity {
     // ---------------- 参数控件 ----------------
 
     private void setupControls() {
-        // 尺寸预设(画幅变化会使手动修格失效)
+        // 尺寸预设(画幅变化会使手动修格失效);档位随豆规格:29/58/87/116 或 50/100/150/200
         View.OnClickListener preset = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int id = v.getId();
-                if (id == R.id.chip29) {
-                    cols = rows = 29;
-                } else if (id == R.id.chip58) {
-                    cols = rows = 58;
-                } else if (id == R.id.chip87) {
-                    cols = rows = 87;
-                } else {
-                    cols = rows = 116;
-                }
+                int idx = id == R.id.chip29 ? 0
+                        : id == R.id.chip58 ? 1
+                        : id == R.id.chip87 ? 2 : 3;
+                int s = presetSizes()[idx];
+                cols = rows = s;
                 structureChanged();
             }
         };
@@ -814,7 +810,7 @@ public class EditorActivity extends Activity {
         chipShapeRound.setOnClickListener(shapeClick);
         chipShapeHex.setOnClickListener(shapeClick);
 
-        // 豆子规格:标准豆 5mm / 迷你豆 2.6mm(只改尺寸与克重估算)
+        // 豆子规格:标准豆 5mm / 迷你豆 2.6mm(改尺寸克重估算 + 拼板模块 29/50)
         View.OnClickListener beadSpecClick = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -856,7 +852,7 @@ public class EditorActivity extends Activity {
             }
         });
 
-        // 按板引导:一次只点亮一块 29×29 板;逐行引导:一次只点亮一行
+        // 按板引导:一次只点亮一块标准板(标准豆 29×29 / 迷你豆 50×50);逐行引导:一次只点亮一行
         btnAssistBoard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1587,10 +1583,11 @@ public class EditorActivity extends Activity {
     private void syncSizeUi() {
         tvW.setText(String.format(Locale.CHINA, "%d", cols));
         tvH.setText(String.format(Locale.CHINA, "%d", rows));
-        chip29.setSelected(cols == 29 && rows == 29);
-        chip58.setSelected(cols == 58 && rows == 58);
-        chip87.setSelected(cols == 87 && rows == 87);
-        chip116.setSelected(cols == 116 && rows == 116);
+        int[] p = presetSizes();
+        chip29.setSelected(cols == p[0] && rows == p[0]);
+        chip58.setSelected(cols == p[1] && rows == p[1]);
+        chip87.setSelected(cols == p[2] && rows == p[2]);
+        chip116.setSelected(cols == p[3] && rows == p[3]);
         if (chipShapeRect != null) {
             chipShapeRect.setSelected(!roundBoard && !hexBoard);
             chipShapeRound.setSelected(roundBoard);
@@ -1605,11 +1602,20 @@ public class EditorActivity extends Activity {
                     getString(R.string.fmt_board_hex),
                     cols, cols * cmPerBead() * 0.866f, cols * cmPerBead()));
         } else {
-            int boards = (int) (Math.ceil(cols / 29.0) * Math.ceil(rows / 29.0));
+            int bs = BeadPattern.boardSize(miniBead);
+            int boards = (int) (Math.ceil(cols / (double) bs)
+                    * Math.ceil(rows / (double) bs));
             tvBoardHint.setText(String.format(Locale.CHINA,
                     getString(R.string.fmt_board_rect),
                     boards, cols * cmPerBead(), rows * cmPerBead()));
         }
+    }
+
+    /** 尺寸预设档(格):标准豆 29/58/87/116(29 孔板 ×1/4/9/16),
+     *  迷你豆 50/100/150/200(2.6mm 50 孔板 ×1/4/9/16) */
+    private int[] presetSizes() {
+        return miniBead ? new int[]{50, 100, 150, 200}
+                : new int[]{29, 58, 87, 116};
     }
 
     /** 每格边长(cm):标准豆 5mm / 迷你豆 2.6mm */
@@ -1679,6 +1685,14 @@ public class EditorActivity extends Activity {
     private void syncBeadSpecUi() {
         chipBeadStd.setSelected(!miniBead);
         chipBeadMini.setSelected(miniBead);
+        // 预设档与"一块板"随规格走:标准豆 29 孔板,迷你豆 2.6mm 50 孔板
+        int[] p = presetSizes();
+        ((TextView) chip29).setText(String.format(Locale.CHINA, "%d×%d", p[0], p[0]));
+        ((TextView) chip58).setText(String.format(Locale.CHINA, "%d×%d", p[1], p[1]));
+        ((TextView) chip87).setText(String.format(Locale.CHINA, "%d×%d", p[2], p[2]));
+        ((TextView) chip116).setText(String.format(Locale.CHINA, "%d×%d", p[3], p[3]));
+        if (pattern != null) pattern.miniBead = miniBead;
+        patternView.invalidate();
     }
 
     /** 描摹底图按钮态:开关钮文字随显隐切换,清除钮仅有底图时可用 */
@@ -1777,7 +1791,7 @@ public class EditorActivity extends Activity {
         editMap.clear();
         updateEditsButton();
         if (blankCanvas) {
-            cols = rows = 29;   // 空白画布恢复到单板尺寸
+            cols = rows = BeadPattern.boardSize(miniBead);   // 空白画布恢复到单板尺寸
         }
         roundBoard = false;
         hexBoard = false;
@@ -2493,6 +2507,7 @@ public class EditorActivity extends Activity {
                             workGridKey = gridKey;
                         }
                         pattern = PatternPatch.apply(np, editMap);
+                        pattern.miniBead = miniBead;
                         patternView.setPattern(pattern);
                         // 照片变拼豆变形动画(M3 motion):仅新照片首次生成播放,
                         // 同一张照片的调色/限色重生成不重播(identityHashCode 判别)
@@ -4091,6 +4106,7 @@ public class EditorActivity extends Activity {
     /** 用引擎原始输出叠加手动覆盖,刷新展示与清单 */
     private void applyEditsToUi() {
         pattern = PatternPatch.apply(rawPattern, editMap);
+        pattern.miniBead = miniBead;
         patternView.setPattern(pattern);
         adapter.notifyDataSetChanged();
         updateSummary();
@@ -4352,6 +4368,7 @@ public class EditorActivity extends Activity {
         imported = true;
         rawPattern = bp;
         pattern = bp;
+        pattern.miniBead = miniBead;
         // 旧项目的两张位图都随导入作废,走生成线程串行回收
         final Bitmap os = source, oo = originalSource;
         source = null;
@@ -4738,9 +4755,11 @@ public class EditorActivity extends Activity {
                 Math.round(kit.mergedTotal * (miniBead ? 0.0067f : 0.024f)),
                 getString(miniBead ? R.string.bead_mini : R.string.bead_std)), null));
         // 底座跨拼板 + 立起后尺寸(买板/买豆都要用的两个数)
+        int stBase = BeadPattern.boardSize(miniBead);
         box.addView(standeeInfoRow(String.format(Locale.CHINA,
                 getString(R.string.fmt_standee_assembled_line),
-                (int) Math.ceil(kit.base.cols / 29.0) * (int) Math.ceil(kit.base.rows / 29.0),
+                (int) Math.ceil(kit.base.cols / (double) stBase)
+                        * (int) Math.ceil(kit.base.rows / (double) stBase),
                 pattern.cols * (miniBead ? 0.26f : 0.5f),
                 (pattern.rows + kit.baseDepth) * (miniBead ? 0.26f : 0.5f)), null));
 
@@ -5126,7 +5145,7 @@ public class EditorActivity extends Activity {
     private void startBlankCanvas() {
         blankCanvas = true;
         imported = false;
-        cols = rows = 29;          // 默认一块标准板,适合挂件
+        cols = rows = BeadPattern.boardSize(miniBead);   // 默认一块标准板,适合挂件
         syncSizeUi();              // 尺寸 chip/hint 同步,否则停留在进入前的状态
         hidePhotoOnlyCards();
         setPaintMode(true, true);  // 进来就能直接画
@@ -5156,6 +5175,7 @@ public class EditorActivity extends Activity {
     private void rebuildBlankRaw() {
         rawPattern = emptyPattern(cols, rows);
         pattern = PatternPatch.apply(rawPattern, editMap);
+        pattern.miniBead = miniBead;
         patternView.setPattern(pattern);
         adapter.notifyDataSetChanged();
         updateSummary();
@@ -5864,6 +5884,7 @@ public class EditorActivity extends Activity {
                 blankCanvas = true;
                 hidePhotoOnlyCards();
                 pattern = rawPattern;
+                pattern.miniBead = miniBead;
                 patternView.setPattern(pattern);
                 adapter.notifyDataSetChanged();
                 updateSummary();

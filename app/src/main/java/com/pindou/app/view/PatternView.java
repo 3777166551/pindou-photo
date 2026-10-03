@@ -420,15 +420,16 @@ public class PatternView extends View {
         invalidate();
     }
 
-    /** 第 b 块 29×29 板的格子范围(边缘板不足 29 按实际格子裁) */
+    /** 第 b 块标准板的格子范围(边长按豆规格 29 或 50;边缘板不足按实际格子裁) */
     public static android.graphics.Rect boardRect(BeadPattern p, int b) {
-        int bc = (int) Math.ceil(p.cols / 29.0);
-        int br = (int) Math.ceil(p.rows / 29.0);
+        int bs = BeadPattern.boardSize(p.miniBead);
+        int bc = (int) Math.ceil(p.cols / (double) bs);
+        int br = (int) Math.ceil(p.rows / (double) bs);
         int idx = Math.max(0, Math.min(b, bc * br - 1));
-        int x0 = (idx % bc) * 29;
-        int y0 = (idx / bc) * 29;
+        int x0 = (idx % bc) * bs;
+        int y0 = (idx / bc) * bs;
         return new android.graphics.Rect(x0, y0,
-                Math.min(x0 + 29, p.cols), Math.min(y0 + 29, p.rows));
+                Math.min(x0 + bs, p.cols), Math.min(y0 + bs, p.rows));
     }
 
     /** 设置描摹底图(传 null 清除);显示开关用 setTraceVisible */
@@ -1192,11 +1193,12 @@ public class PatternView extends View {
             }
         }
 
-        // 每 29 格一条拼板分隔线
+        // 每块标准板一条拼板分隔线(标准豆 29 格 / 迷你豆 50 格)
+        int boardSpan = BeadPattern.boardSize(pattern.miniBead);
         float boardW = Math.max(2f, cell * 0.1f);
         boardLinePaint.setColor(night ? 0x8CC9BFD6 : 0xFF9A9086);
         boardLinePaint.setStrokeWidth(boardW);
-        for (int x = 29; x < cols; x += 29) {
+        for (int x = boardSpan; x < cols; x += boardSpan) {
             if (round) {
                 chordV(canvas, boardLinePaint, x * cell, w / 2f, h / 2f,
                         Math.min(w, h) / 2f, 0f, h);
@@ -1208,7 +1210,7 @@ public class PatternView extends View {
                 canvas.drawLine(x * cell, 0, x * cell, h, boardLinePaint);
             }
         }
-        for (int y = 29; y < rows; y += 29) {
+        for (int y = boardSpan; y < rows; y += boardSpan) {
             if (round) {
                 chordH(canvas, boardLinePaint, y * cell, w / 2f, h / 2f,
                         Math.min(w, h) / 2f, 0f, w);

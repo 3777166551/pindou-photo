@@ -23,6 +23,17 @@ public final class BeadPattern {
     public final boolean round;
     /** 六边形拼板:尖顶正六边形以外的格子全部视为板外,不存在 */
     public final boolean hex;
+    /**
+     * 豆子规格:true=迷你豆 2.6mm(一块标准板 = 50×50 孔),false=标准豆 5mm(29×29)。
+     * 只参与拼板模块计算(板数/图纸分隔线/按板引导/预设档);分享格式不含此字段,
+     * 由项目存档的设置项携带,UI 侧负责保持与本对象一致。
+     */
+    public boolean miniBead = false;
+
+    /** 一块标准板的边长(格):标准豆 29 孔板;迷你豆(2.6mm 融合豆)50 孔板 */
+    public static int boardSize(boolean mini) {
+        return mini ? 50 : 29;
+    }
 
     public BeadPattern(int cols, int rows, List<BeadColor> palette,
                        int[] cells, int[] counts, List<UsedColor> usedColors,
@@ -131,7 +142,8 @@ public final class BeadPattern {
     }
 
     public int boardsNeeded() {
-        return (int) (Math.ceil(cols / 29.0) * Math.ceil(rows / 29.0));
+        int b = boardSize(miniBead);
+        return (int) (Math.ceil(cols / (double) b) * Math.ceil(rows / (double) b));
     }
 
     /** 按用量从多到少排序后的已用颜色 */

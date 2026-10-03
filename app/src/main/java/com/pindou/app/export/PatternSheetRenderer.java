@@ -151,12 +151,13 @@ public final class PatternSheetRenderer {
             }
         }
 
-        // 每 29 格拼板分隔线 + 外框
+        // 每块标准板一条拼板分隔线(标准豆 29 格 / 迷你豆 50 格)+ 外框
+        int boardSpan = BeadPattern.boardSize(p.miniBead);
         Paint boardP = new Paint(Paint.ANTI_ALIAS_FLAG);
         boardP.setColor(0xFF9A9086);
         boardP.setStyle(Paint.Style.STROKE);
         boardP.setStrokeWidth(Math.max(2f, cell * 0.1f));
-        for (int x = 29; x < cols; x += 29) {
+        for (int x = boardSpan; x < cols; x += boardSpan) {
             float lx = gx + x * cell;
             if (p.round) {
                 chord(c, boardP, lx, ccy, ccx, crad, true, gy, gy + gridH);
@@ -168,7 +169,7 @@ public final class PatternSheetRenderer {
                 c.drawLine(lx, gy, lx, gy + gridH, boardP);
             }
         }
-        for (int y = 29; y < rows; y += 29) {
+        for (int y = boardSpan; y < rows; y += boardSpan) {
             float ly = gy + y * cell;
             if (p.round) {
                 chord(c, boardP, ly, ccx, ccy, crad, false, gx, gx + gridW);
