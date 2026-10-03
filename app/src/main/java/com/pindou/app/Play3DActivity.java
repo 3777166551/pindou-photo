@@ -154,6 +154,7 @@ public class Play3DActivity extends Activity implements Play3DView.Listener {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 Gravity.TOP));
         setContentView(root);
+        com.pindou.app.util.Insets.padRoot(this);
         com.pindou.app.util.Skin.apply(root);
 
         // 进门即高潮:生长动画自动来一遍

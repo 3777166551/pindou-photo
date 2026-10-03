@@ -65,6 +65,7 @@ public class PaletteActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_palette);
+        com.pindou.app.util.Insets.padRoot(this);
         com.pindou.app.util.L10n.apply(this);
         CustomPalettes.loadIfNeeded(this);
 

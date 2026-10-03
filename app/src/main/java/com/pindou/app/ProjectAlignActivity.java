@@ -269,6 +269,7 @@ public class ProjectAlignActivity extends Activity {
         root.addView(hint, hintLp);
 
         setContentView(root);
+        com.pindou.app.util.Insets.padRoot(this);
         // 提示条挂在面板上方:面板加进 root 后再调 hint 的边距
         android.widget.FrameLayout.LayoutParams lp =
                 (android.widget.FrameLayout.LayoutParams) hint.getLayoutParams();

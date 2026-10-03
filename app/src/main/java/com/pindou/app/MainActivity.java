@@ -64,6 +64,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        com.pindou.app.util.Insets.padRoot(this);
         com.pindou.app.util.Skin.apply(getWindow().getDecorView());
         com.pindou.app.util.L10n.apply(this);
 

@@ -152,6 +152,7 @@ public class LayeredComposeActivity extends Activity {
 
         scroll.addView(root);
         setContentView(scroll);
+        com.pindou.app.util.Insets.padRoot(this);
     }
 
     private void startCompose() {
@@ -347,6 +348,7 @@ public class LayeredComposeActivity extends Activity {
                 Gravity.BOTTOM));
 
         setContentView(root);
+        com.pindou.app.util.Insets.padRoot(this);
         syncLayerUi();
     }
 

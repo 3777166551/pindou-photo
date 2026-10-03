@@ -380,6 +380,7 @@ public class EditorActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_editor);
+        com.pindou.app.util.Insets.padRoot(this);
         Skin.apply(getWindow().getDecorView());
         L10n.apply(this);
 

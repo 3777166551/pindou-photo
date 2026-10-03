@@ -58,6 +58,7 @@ public class ColorMatchActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_color_match);
+        com.pindou.app.util.Insets.padRoot(this);
         iv = findViewById(R.id.ivMatch);
         llResults = findViewById(R.id.llMatchResults);
         tvHint = findViewById(R.id.tvMatchHint);

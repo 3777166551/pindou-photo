@@ -256,6 +256,7 @@ public class VerifyActivity extends Activity {
                 Gravity.BOTTOM));
 
         setContentView(root);
+        com.pindou.app.util.Insets.padRoot(this);
     }
 
     private TextView chip(String text) {

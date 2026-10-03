@@ -176,6 +176,7 @@ public class FakeArActivity extends Activity {
         root.addView(hint, hintLp);
 
         setContentView(root);
+        com.pindou.app.util.Insets.padRoot(this);
     }
 
     /** 权限到手(或本就有)后,TextureView 才允许挂监听开相机 */

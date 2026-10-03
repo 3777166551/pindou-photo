@@ -164,6 +164,7 @@ public class WallPreviewActivity extends Activity {
         root.addView(bottom, bottomLp);
 
         setContentView(root);
+        com.pindou.app.util.Insets.padRoot(this);
         pickPhoto();   // 进门直接拉相册(取消也不影响,页面有"照片"键可再来)
     }
 

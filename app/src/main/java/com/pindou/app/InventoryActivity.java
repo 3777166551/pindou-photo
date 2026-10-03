@@ -63,6 +63,7 @@ public class InventoryActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inventory);
+        com.pindou.app.util.Insets.padRoot(this);
         L10n.apply(this);
 
         tvCount = findViewById(R.id.tvCount);

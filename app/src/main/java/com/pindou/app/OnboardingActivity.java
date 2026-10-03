@@ -111,6 +111,7 @@ public class OnboardingActivity extends Activity {
         root.addView(action, actionLp);
 
         setContentView(root);
+        com.pindou.app.util.Insets.padRoot(this);
         render();
     }
 
