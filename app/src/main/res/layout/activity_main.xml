@@ -185,7 +185,7 @@
             android:id="@+id/moreToolsHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="18dp"
             android:background="@drawable/bg_card_sketch"
             android:clickable="true"
             android:elevation="2dp"
