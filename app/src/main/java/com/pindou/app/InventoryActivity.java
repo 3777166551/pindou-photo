@@ -212,8 +212,7 @@ public class InventoryActivity extends Activity {
             LinearLayout row = new LinearLayout(InventoryActivity.this);
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
-            row.setBackgroundResource(R.drawable.bg_card);
-            row.setElevation(dp(4));
+            row.setBackgroundResource(R.drawable.bg_card_outline);
             row.setPadding(dp(12), dp(10), dp(12), dp(10));
 
             View sw = new View(InventoryActivity.this);
