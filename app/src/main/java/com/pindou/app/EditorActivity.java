@@ -154,10 +154,21 @@ public class EditorActivity extends Activity {
 
     // 状态
     private Bitmap source;
+    /** 默认色板 = 漫德 Mard·2.6mm(221 色,DIY 拼豆店主流体系),连带迷你规格;
+     *  找不到该表(理论上不会)兜底回 90 色 */
+    private static int defaultTierIdx() {
+        for (int i = 0; i < com.pindou.app.bead.BeadBrandCharts.ALL.length; i++) {
+            if ("漫德 Mard·2.6mm".equals(com.pindou.app.bead.BeadBrandCharts.ALL[i].name)) {
+                return BeadPalettes.GENERIC_COUNT + i;
+            }
+        }
+        return 2;
+    }
+
     private BeadPattern pattern;
     private int cols = 58;
     private int rows = 58;
-    private int tierIdx = 2;            // 默认 90 色
+    private int tierIdx = defaultTierIdx();   // 默认漫德 2.6mm(221 色)
     private boolean dither = false;
     private int brightness = 0;
     private int contrast = 0;
@@ -174,8 +185,9 @@ public class EditorActivity extends Activity {
     private boolean roundBoard = false;
     /** 六边形拼板 */
     private boolean hexBoard = false;
-    /** 豆子规格:false=标准豆 5mm,true=迷你豆 2.6mm(只影响尺寸/克重估算,不改格数) */
-    private boolean miniBead = false;
+    /** 豆子规格:跟随默认色板(漫德 2.6mm = 迷你),老存档按存档值覆盖 */
+    private boolean miniBead = BeadBrandCharts.isMiniChart(
+            BeadBrandCharts.ALL[tierIdx - BeadPalettes.GENERIC_COUNT].name);
     /** 线稿模式:描线灵敏度 0~100(黑豆描线 + 空格自己填色) */
     private int lineSensitivity = 50;
     /** 夜间图纸:画布转暗 + 屏幕亮度降档,晚上拼豆不刺眼 */
@@ -1781,7 +1793,9 @@ public class EditorActivity extends Activity {
 
     private void resetSettings() {
         cols = rows = 58;
-        tierIdx = 2;
+        tierIdx = defaultTierIdx();
+        miniBead = BeadBrandCharts.isMiniChart(
+                BeadBrandCharts.ALL[tierIdx - BeadPalettes.GENERIC_COUNT].name);
         dither = false;
         imported = false;
         dominant = false;

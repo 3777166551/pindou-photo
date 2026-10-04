@@ -207,8 +207,8 @@ public class InventoryActivity extends Activity {
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
             row.setBackgroundResource(R.drawable.bg_card);
-            row.setElevation(dp(2));
-            row.setPadding(dp(12), dp(8), dp(12), dp(8));
+            row.setElevation(dp(4));
+            row.setPadding(dp(12), dp(10), dp(12), dp(10));
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -220,7 +220,7 @@ public class InventoryActivity extends Activity {
             gd.setColor(0xFF000000 | rgb);
             gd.setCornerRadius(dp(6));
             sw.setBackground(gd);
-            row.addView(sw, new LinearLayout.LayoutParams(dp(30), dp(30)));
+            row.addView(sw, new LinearLayout.LayoutParams(dp(32), dp(32)));
 
             TextView label = new TextView(InventoryActivity.this);
             label.setText(PaletteShare.toHex(rgb));
@@ -229,14 +229,19 @@ public class InventoryActivity extends Activity {
             label.setTypeface(Typeface.DEFAULT_BOLD);
             LinearLayout.LayoutParams llp = new LinearLayout.LayoutParams(
                     0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-            llp.leftMargin = dp(10);
+            llp.leftMargin = dp(12);
+            llp.rightMargin = dp(12);
             row.addView(label, llp);
 
+            // 数量列:标签在上、输入框在下,避免横排互相顶挤
+            LinearLayout countBox = new LinearLayout(InventoryActivity.this);
+            countBox.setOrientation(LinearLayout.VERTICAL);
+            countBox.setGravity(Gravity.CENTER_HORIZONTAL);
             TextView cntLabel = new TextView(InventoryActivity.this);
             cntLabel.setText(getString(R.string.inv_count_hint));
             cntLabel.setTextColor(0xFF49454F);
             cntLabel.setTextSize(11);
-            row.addView(cntLabel);
+            countBox.addView(cntLabel);
 
             final EditText et = new com.pindou.app.view.M3EditText(InventoryActivity.this);
             et.setInputType(InputType.TYPE_CLASS_NUMBER);
@@ -262,9 +267,9 @@ public class InventoryActivity extends Activity {
                     }
                 }
             });
-            et.setLayoutParams(new LinearLayout.LayoutParams(dp(84),
+            countBox.addView(et, new LinearLayout.LayoutParams(dp(96),
                     ViewGroup.LayoutParams.WRAP_CONTENT));
-            row.addView(et);
+            row.addView(countBox);
             return row;
         }
     }
