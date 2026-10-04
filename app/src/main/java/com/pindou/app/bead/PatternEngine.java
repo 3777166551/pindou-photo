@@ -67,6 +67,9 @@ public final class PatternEngine {
         public boolean preciseColor = false;
         /** 线稿模式:描线灵敏度 0~100,越高描线越密(阈值占最大梯度 0.55→0.10) */
         public int lineSensitivity = 50;
+        /** 简图色板收敛:渐变简图(如 AI 卡通)的近似色豆并入主色,
+         *  防止"一支太阳散成十几支黄";仅简图门控内生效,复杂照片不受影响 */
+        public boolean flatCollapse = true;
     }
 
     public static BeadPattern generate(Bitmap source, List<BeadColor> beadPalette, Options o) {
@@ -563,6 +566,9 @@ public final class PatternEngine {
             for (int i = 0; i < n; i++) tie[i] = palette.get(i).rgb;
             flatUnifyCells(g, workCells, purity, palette, labs, lut, tie,
                     gate, g.gateGain, g.gateSat, adjust, o);
+            if (o.flatCollapse) {
+                flatCollapsePalette(workCells, palette, labs);
+            }
         }
         return finishPattern(workCells, g.gw, g.gh, g.brick, palette, o, cols, rows);
     }
@@ -592,6 +598,64 @@ public final class PatternEngine {
         }
         return valid >= 16 && boundary >= 3 && clean * 2 >= valid
                 && boundary * 5 <= valid && mid * 4 <= valid;
+    }
+
+    /** 肉眼同色:CIEDE2000 在此以内视为同一色,无条件并(渐变相邻台阶) */
+    private static final double FLAT_DE_SAME = 6.0;
+    /** 少数派(占比 <2%)可并色差上限;异色少数派(蓝星/白点)超过它受保护 */
+    private static final double FLAT_DE_NEAR = 13.0;
+
+    /**
+     * 简图色板收敛:AI 渐变卡通的平滑渐变每一级都被配成"又一支近似豆",
+     * 一支太阳散成十几支黄,豆单没法照单买。把用量最小的在用豆并入
+     * CIEDE2000 最近的在用豆,双档保护:ΔE≤6 肉眼同色无条件并;
+     * ΔE≤13 且占比 <2% 的少数派尾巴才并——色相不同的少数派(蓝天星、
+     * 白点)超出色差帽,永远保留。只在简图门控内运行,复杂照片不受影响。
+     */
+    private static void flatCollapsePalette(int[] workCells, List<BeadColor> palette,
+                                            double[][] labs) {
+        int n = palette.size();
+        int[] usage = new int[n];
+        int total = 0;
+        for (int c : workCells) {
+            if (c >= 0) {
+                usage[c]++;
+                total++;
+            }
+        }
+        if (total == 0) return;
+        int minCells = Math.max(1, total / 50);   // 占比 <2% = 少数派
+        boolean[] alive = new boolean[n];
+        for (int i = 0; i < n; i++) alive[i] = usage[i] > 0;
+        // 每轮取用量最小的在用豆:可并则并入最近豆,不可并则封禁退出候选;
+        // 两种结局都从 alive 移除一支,guard 上限内必终止
+        for (int guard = 0; guard < n; guard++) {
+            int src = -1;
+            for (int i = 0; i < n; i++) {
+                if (alive[i] && (src < 0 || usage[i] < usage[src])) src = i;
+            }
+            if (src < 0) break;
+            int dst = -1;
+            double best = Double.MAX_VALUE;
+            for (int i = 0; i < n; i++) {
+                if (i == src || !alive[i]) continue;
+                double de = ColorMath.deltaE2000(labs[src], labs[i]);
+                if (de < best) {
+                    best = de;
+                    dst = i;
+                }
+            }
+            if (dst < 0) break;
+            if (best <= FLAT_DE_SAME
+                    || (usage[src] <= minCells && best <= FLAT_DE_NEAR)) {
+                for (int c = 0; c < workCells.length; c++) {
+                    if (workCells[c] == src) workCells[c] = dst;
+                }
+                usage[dst] += usage[src];
+                usage[src] = 0;
+            }
+            alive[src] = false;   // ΔE00 对称:封禁的豆作为合并目标也必然超帽
+        }
     }
 
     /**

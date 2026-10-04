@@ -55,6 +55,22 @@ public class TestFlatUnify {
         return o;
     }
 
+    static int[] fill(int[] px, int r, int g, int b) {
+        for (int i = 0; i < px.length; i++) {
+            px[i] = 0xFF000000 | (r << 16) | (g << 8) | b;
+        }
+        return px;
+    }
+
+    static int countReds(BeadPattern p) {
+        int n = 0;
+        for (BeadPattern.UsedColor uc : p.usedColors) {
+            int r = (uc.color.rgb >> 16) & 0xFF, g = (uc.color.rgb >> 8) & 0xFF;
+            if (r > 150 && g < 130 && uc.color.rgb != 0x2266CC) n++;
+        }
+        return n;
+    }
+
     public static void main(String[] args) {
         // ---- 门控:纯度数组直接判定 ----
         float[] flat = new float[256];
@@ -151,6 +167,69 @@ public class TestFlatUnify {
         BeadPattern p2 = PatternEngine.generateFromGrid(g2, pal, opts(8, 8), 8, 8);
         check("渐变图端到端: 门控不过,正常出豆",
                 p2 != null && p2.totalBeads == gw2 * gh2);
+
+        // ---- 色板收敛:渐变圆 + 蓝色少数派 ----
+        // 色板:白 + 4 档近似红(模拟渐变散开成多支豆) + 蓝(异色少数派)
+        List<BeadColor> pal2 = new ArrayList<>();
+        pal2.add(new BeadColor(1, "白", 0xFFFFFF));
+        pal2.add(new BeadColor(2, "红A", 0xD93A2B));
+        pal2.add(new BeadColor(3, "红B", 0xDE4836));
+        pal2.add(new BeadColor(4, "红C", 0xE35641));
+        pal2.add(new BeadColor(5, "红D", 0xE8644D));
+        pal2.add(new BeadColor(6, "蓝", 0x2266CC));
+
+        int gw3 = 14, gh3 = 14;
+        int[][] cells3 = new int[gw3 * gh3][];
+        for (int cy = 0; cy < gh3; cy++) {
+            for (int cx = 0; cx < gw3; cx++) {
+                double dx = cx + 0.5 - 6.5, dy = cy + 0.5 - 6.5;
+                double dist = Math.sqrt(dx * dx + dy * dy);
+                int[] px = new int[per];
+                if (dist < 1.4) {
+                    fill(px, 0xE8, 0x64, 0x4D);      // 渐变台阶 D
+                } else if (dist < 2.3) {
+                    fill(px, 0xE3, 0x56, 0x41);      // 渐变台阶 C
+                } else if (dist < 3.2) {
+                    fill(px, 0xDE, 0x48, 0x36);      // 渐变台阶 B
+                } else if (dist < 4.1) {
+                    fill(px, 0xD9, 0x3A, 0x2B);      // 渐变台阶 A(最外圈最大)
+                } else if (dist < 5.0) {
+                    // 边界环:2 过渡红 + 2 白(纯度 0.5 < 0.62 = 边界格,触发简图门控)
+                    px[0] = 0xFFE05040;
+                    px[1] = 0xFFFFFFFF;
+                    px[2] = 0xFFE25242;
+                    px[3] = 0xFFFFFFFF;
+                } else {
+                    fill(px, 0xFB, 0xFA, 0xF7);      // 背景:白
+                }
+                cells3[cy * gw3 + cx] = px;
+            }
+        }
+        // 2 格蓝色小星(占比 1%,异色少数派)
+        cells3[1 * gw3 + 12] = fill(new int[per], 0x22, 0x66, 0xCC);
+        cells3[2 * gw3 + 12] = fill(new int[per], 0x22, 0x66, 0xCC);
+
+        PatternEngine.WorkGrid g3 = grid(gw3, gh3, cells3);
+        PatternEngine.Options o3off = opts(gw3, gh3);
+        o3off.flatCollapse = false;
+        BeadPattern p3off = PatternEngine.generateFromGrid(g3, pal2, o3off, gw3, gh3);
+        PatternEngine.Options o3on = opts(gw3, gh3);
+        BeadPattern p3on = PatternEngine.generateFromGrid(g3, pal2, o3on, gw3, gh3);
+
+        check("收敛: 关闭时渐变散成多支红(>=4 种红)",
+                countReds(p3off) >= 4);
+        check("收敛: 开启后红收敛为 1 支", countReds(p3on) == 1);
+        check("收敛: 开启后总用色 = 白+红+蓝 3 种",
+                p3on.usedColors.size() == 3);
+        boolean blueKept = false;
+        int blueCount = 0;
+        for (BeadPattern.UsedColor uc : p3on.usedColors) {
+            if (uc.color.rgb == 0x2266CC) {
+                blueKept = true;
+                blueCount = uc.count;
+            }
+        }
+        check("收敛: 蓝色少数派受色差保护保留 2 颗", blueKept && blueCount == 2);
 
         System.out.println("TestFlatUnify: " + passed + " passed, " + failed + " failed");
         if (failed > 0) System.exit(1);
