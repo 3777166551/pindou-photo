@@ -512,3 +512,27 @@ checkSelfPermission → 未授权先 requestPermissions,授权回调再发;
 未授权路径);③同类坑:VerifyActivity 与 MainActivity 同构,修一处
 必须 grep 同款意图的全部发送点。
 
+
+## 38. parseHexColor 返回带 alpha 的负数,调用点"负数=失败"判断永远为真(v2.63 豆仓实测)
+
+**现象**:豆仓「➕ Add color」填好预填的 #E3242B ×100 点 OK,弹
+"Invalid color, use #RRGGBB",库存永远空。自定义色板页的 hex 添加
+同款死法;hex 实时预览(TextWatcher 里 rgb >= 0 才刷新)也从不生效。
+
+**原因**:契约漂移。`PaletteShare.parseHexColor` 成功时返回
+`(v & 0xFFFFFF) | 0xFF000000`(带 alpha,Java 有符号 int 恒为负),
+失败返回 -1;而三个调用点全按旧契约"负数 = 失败"判断
+(`rgb < 0` 报错 / `rgb >= 0` 刷新)——合法颜色必然被判失败。
+附带雷:白色 #FFFFFF 的返回值 0xFFFFFFFF 恰好等于 -1,和失败
+哨兵撞值,即使改对判断白色也添不进去。
+
+**修法**:`parseHexColor` 回归裸 RGB 契约(成功 = 0xRRGGBB 恒正,
+失败 = -1);调用点零改动即恢复正确;TestPaletteShare/TestCustomPalette
+断言同步,新增"白色不撞 -1 哨兵"回归。TestInventory 只测后端
+set/get,覆盖不到这条 UI 链——它是模拟器手动实测抓出来的。
+
+**教训**:①跨层契约("成功返回什么")一旦漂移,编译器和多数测试
+都抓不到——调用点的判断会跟着旧契约"自洽地错下去";②哨兵值选
+-1 时必须检查合法值域是否包含 -1(带 alpha 的颜色里白色就是);
+③"后端单测全绿"不等于"功能可用",UI 链路必须端到端点一遍
+(本次是模拟器实操豆仓才现形)。

@@ -92,7 +92,11 @@ public final class PaletteShare {
 
     /**
      * 解析 "#RRGGBB" / "RRGGBB" / "#RGB" / "RGB" 十六进制颜色,
-     * 非法返回 -1(调用方给用户提示)。
+     * 成功返回裸 RGB(0xRRGGBB,恒为正;白色 = 0xFFFFFF),
+     * 非法返回 -1(调用方以 rgb < 0 判失败,给用户提示)。
+     * v2.63 修复:曾返回 0xFF 前缀的 ARGB(负数),而两个调用点都按
+     * "负数 = 失败"判断,导致豆仓/色板的 hex 添加永远报格式错误;
+     * 且白色 0xFFFFFFFF 与失败哨兵 -1 撞值,白色根本无法添加。
      */
     public static int parseHexColor(String s) {
         if (s == null) return -1;
@@ -105,8 +109,7 @@ public final class PaletteShare {
         }
         if (t.length() != 6) return -1;
         try {
-            int v = Integer.parseInt(t, 16);
-            return (v & 0xFFFFFF) | 0xFF000000;
+            return Integer.parseInt(t, 16) & 0xFFFFFF;
         } catch (NumberFormatException e) {
             return -1;
         }

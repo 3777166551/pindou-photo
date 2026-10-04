@@ -99,10 +99,10 @@ public class TestCustomPalette {
         check("renumber 1..n", hues.get(0).code == 1 && hues.get(1).code == 2
                 && hues.get(2).code == 3);
 
-        // ---- 十六进制取色 ----
-        check("hex with #", PaletteShare.parseHexColor("#AABBCC") == 0xFFAABBCC);
-        check("hex without #", PaletteShare.parseHexColor("aabbcc") == 0xFFAABBCC);
-        check("hex short form", PaletteShare.parseHexColor("#ABC") == 0xFFAABBCC);
+        // ---- 十六进制取色(契约:成功 = 裸 RGB 恒正,失败 = -1) ----
+        check("hex with #", PaletteShare.parseHexColor("#AABBCC") == 0xAABBCC);
+        check("hex without #", PaletteShare.parseHexColor("aabbcc") == 0xAABBCC);
+        check("hex short form", PaletteShare.parseHexColor("#ABC") == 0xAABBCC);
         check("hex invalid letters", PaletteShare.parseHexColor("#GGHHII") == -1);
         check("hex wrong length", PaletteShare.parseHexColor("12345") == -1
                 && PaletteShare.parseHexColor("1234567") == -1);

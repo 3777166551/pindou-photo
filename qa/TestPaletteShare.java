@@ -71,10 +71,11 @@ public class TestPaletteShare {
                 "{\"format\":\"pindou-palette\",\"version\":1,"
                         + "\"colors\":[\"oops\"]}");
 
-        // ---- hex 工具 ----
-        check("hex:#RRGGBB", PaletteShare.parseHexColor("#AABBCC") == 0xFFAABBCC);
-        check("hex:无井号", PaletteShare.parseHexColor("123456") == 0xFF123456);
-        check("hex:#RGB 展开", PaletteShare.parseHexColor("#1A2") == 0xFF11AA22);
+        // ---- hex 工具(契约:成功 = 裸 RGB 恒正,失败 = -1) ----
+        check("hex:#RRGGBB", PaletteShare.parseHexColor("#AABBCC") == 0xAABBCC);
+        check("hex:无井号", PaletteShare.parseHexColor("123456") == 0x123456);
+        check("hex:#RGB 展开", PaletteShare.parseHexColor("#1A2") == 0x11AA22);
+        check("hex:白色不撞 -1 哨兵", PaletteShare.parseHexColor("#FFFFFF") == 0xFFFFFF);
         check("hex:非法返回 -1", PaletteShare.parseHexColor("#12G45Z") == -1);
         check("hex:长度不对 -1", PaletteShare.parseHexColor("#12345") == -1);
         check("hex:null -1", PaletteShare.parseHexColor(null) == -1);
