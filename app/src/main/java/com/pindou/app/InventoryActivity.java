@@ -203,17 +203,18 @@ public class InventoryActivity extends Activity {
             }
 
             final int rgb = colors.get(position);
+            // ListView 会吃掉列表项的 LayoutParams margin——卡片间距改用
+            // 透明外层容器的 paddingBottom 实现(顺带给 4dp 阴影留绘制空间)
+            LinearLayout root = new LinearLayout(InventoryActivity.this);
+            root.setOrientation(LinearLayout.VERTICAL);
+            root.setPadding(0, 0, 0, dp(10));
+
             LinearLayout row = new LinearLayout(InventoryActivity.this);
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
             row.setBackgroundResource(R.drawable.bg_card);
             row.setElevation(dp(4));
             row.setPadding(dp(12), dp(10), dp(12), dp(10));
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT);
-            lp.bottomMargin = dp(8);
-            row.setLayoutParams(lp);
 
             View sw = new View(InventoryActivity.this);
             GradientDrawable gd = new GradientDrawable();
@@ -270,7 +271,10 @@ public class InventoryActivity extends Activity {
             countBox.addView(et, new LinearLayout.LayoutParams(dp(96),
                     ViewGroup.LayoutParams.WRAP_CONTENT));
             row.addView(countBox);
-            return row;
+            root.addView(row, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT));
+            return root;
         }
     }
 
