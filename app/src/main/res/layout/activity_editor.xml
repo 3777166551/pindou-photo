@@ -2380,7 +2380,7 @@
             android:gravity="center"
             android:orientation="vertical">
 
-            <ProgressBar
+            <com.pindou.app.view.LoadingIndicatorView
                 android:layout_width="40dp"
                 android:layout_height="40dp" />
 

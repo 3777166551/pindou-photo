@@ -198,7 +198,7 @@ public class EditorActivity extends Activity {
     /** 草稿恢复/重开项目:图纸就绪后自动切图纸页并恢复辅助拼 */
     private boolean pendingResumeAssist;
     /** 重新生成中的非阻塞提示 pill(旧图纸保持可见可操作) */
-    private TextView regenPill;
+    private View regenPill;
     /** 一键开始拼豆(图纸就绪且辅助未开时可见) */
     private TextView btnStartBeading;
     /** 预览右下角 FAB:展开 3D 预览/3D 把玩/AR 试摆三个入口(合同 §6 防遮挡) */
@@ -555,17 +555,28 @@ public class EditorActivity extends Activity {
                 enterImmersive();   // 直接进全屏沉浸拼豆(页内手势缩放,退出键/chip 退出)
             }
         });
-        // 重新生成的非阻塞提示:小 pill 挂在预览下沿,旧图纸保持可见
+        // 重新生成的非阻塞提示:M3 Expressive 变形加载器 + 文案,挂在预览下沿
         float den = getResources().getDisplayMetrics().density;
-        regenPill = new TextView(this);
-        regenPill.setText("⋯ " + getString(R.string.regen_hint));
-        regenPill.setTextSize(12);
-        regenPill.setTextColor(getResources().getColor(R.color.textSub));
-        regenPill.setBackgroundResource(R.drawable.bg_chip);
-        regenPill.setGravity(Gravity.CENTER);
-        regenPill.setElevation(8 * den);
-        regenPill.setPadding(Math.round(14 * den), Math.round(6 * den),
-                Math.round(14 * den), Math.round(6 * den));
+        LinearLayout regenPillBox = new LinearLayout(this);
+        regenPillBox.setOrientation(LinearLayout.HORIZONTAL);
+        regenPillBox.setGravity(Gravity.CENTER_VERTICAL);
+        regenPillBox.setBackgroundResource(R.drawable.bg_chip);
+        regenPillBox.setElevation(8 * den);
+        regenPillBox.setPadding(Math.round(12 * den), Math.round(7 * den),
+                Math.round(14 * den), Math.round(7 * den));
+        com.pindou.app.view.LoadingIndicatorView regenLoader =
+                new com.pindou.app.view.LoadingIndicatorView(this);
+        LinearLayout.LayoutParams regenLoaderLp = new LinearLayout.LayoutParams(
+                Math.round(16 * den), Math.round(16 * den));
+        regenLoaderLp.rightMargin = Math.round(7 * den);
+        regenLoader.setLayoutParams(regenLoaderLp);
+        TextView regenText = new TextView(this);
+        regenText.setText(getString(R.string.regen_hint));
+        regenText.setTextSize(12);
+        regenText.setTextColor(getResources().getColor(R.color.textSub));
+        regenPillBox.addView(regenLoader);
+        regenPillBox.addView(regenText);
+        regenPill = regenPillBox;
         regenPill.setVisibility(View.GONE);
         FrameLayout.LayoutParams pillLp = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
