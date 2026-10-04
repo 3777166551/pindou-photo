@@ -3692,7 +3692,8 @@ public class EditorActivity extends Activity {
         StringBuilder sb = new StringBuilder();
         sb.append(String.format(Locale.CHINA, getString(R.string.fmt_sum_total), pattern.totalBeads));
         sb.append(String.format(Locale.CHINA, getString(R.string.fmt_sum_colors),
-                pattern.usedColors.size(), pattern.boardsNeeded()));
+                pattern.usedColors.size(), pattern.boardsNeeded(),
+                BeadPattern.boardSize(miniBead)));
         sb.append(String.format(Locale.CHINA, getString(R.string.fmt_sum_size),
                 pattern.cols * cmPerBead(), pattern.rows * cmPerBead()));
         if (pattern.emptyCount > 0) {

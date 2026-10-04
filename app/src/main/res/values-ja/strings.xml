@@ -334,7 +334,7 @@
     <string name="fmt_assist_remain">色 %1$d/%2$d · この色 %3$d 個 · 残り %4$d</string>
     <string name="fmt_assist_done">色 %1$d/%2$d · この色 %3$d 個 · ✅完了</string>
     <string name="fmt_sum_total">総ビーズ数: %,d\n</string>
-    <string name="fmt_sum_colors">色数: %1$d · 29×29 ボード: %2$d 枚\n</string>
+    <string name="fmt_sum_colors">色数: %1$d · %3$d×%3$d ボード: %2$d 枚\n</string>
     <string name="fmt_sum_size">サイズ: 約 %1$.0f × %2$.0f cm\n</string>
     <string name="fmt_sum_empty">空きマス: %,d(ビーズなし)\n</string>
     <string name="fmt_sum_weight">約 %1$,d g · 参考価格 ¥%2$.2f(タップで単価変更)\n</string>
@@ -502,7 +502,7 @@
     <string name="fmt_sheet_info">%1$d×%2$d マス%3$s · %4$s · 計 %5$d 個 · %6$s</string>
     <string name="sheet_round">(丸ボード)</string>
     <string name="sheet_hex">(六角ボード)</string>
-    <string name="fmt_sheet_boards">29×29 ボード %d 枚</string>
+    <string name="fmt_sheet_boards">%1$d×%1$d ボード %2$d 枚</string>
     <string name="sheet_official"> 公式コード</string>
     <string name="fmt_sheet_dia">直径 約 %.0f cm</string>
     <string name="fmt_sheet_hex">幅 約 %1$.0f × 高さ %2$.0f cm</string>
@@ -512,7 +512,7 @@
     <string name="err_no_pattern">図案がまだ生成されていません</string>
     <string name="pdf_header_fmt">%s · アイロンビーズ図案</string>
     <string name="pdf_tagline">PindouPhoto · 完全無料 · 広告なし · AGPL-3.0 オープンソース</string>
-    <string name="fmt_pdf_boards">29×29 ボード:%1$d 枚 · 約 %2$.0f × %3$.0f cm</string>
+    <string name="fmt_pdf_boards">%4$d×%4$d ボード:%1$d 枚 · 約 %2$.0f × %3$.0f cm</string>
     <string name="fmt_qty_beads">%,d 個</string>
     <string name="fmt_qty_bags">≈%1$d袋</string>
     <string name="fmt_qty_left">%1$,d 個 · 残り %2$d</string>
@@ -587,7 +587,7 @@
     <string name="assist_help_btn">つかいかた</string>
     <string name="assist_help_icon">?</string>
     <string name="assist_help_title">ビーズ補助のつかいかた</string>
-    <string name="assist_help_body">図案のマスをタップ = 完成印（✓が出ます）、もう一度タップで解除。押したまま動かすと連続で塗れます。\n\nいろんな狙い方：\n• 色ごと（初期）：現在の色だけ光る —「次の色」で切替\n• 板ごと：29×29 の板を 1 枚ずつ、埋まると次へ\n• 行ごと：1 行ずつ、埋まると次の行へ\n• 全画面：図案を画面いっぱいに広げて集中（戻るキーで終了）\n• 🔍投影（全画面ページ内）：現在の行/板が超大きく表示。スマホを板の前に立てて遠くから見ながら ◀▶ で進める\n\n実際の板と照合：\n• 投影合わせ（カメラを使う）：図案を半透明で本物の板に重ねて、見ながらビーズを置ける\n• 📸チェック（板を撮影）：置き終えた板を撮ると、色ミス/未設置/余分を自動で見つける。アイロンの前に防げる\n\nチェックのお助け：\n• 📍未完へ：次の未完成マスへジャンプ\n• 🔍漏れ：まだ置いていないビーズをぜんぶ光らせます（琥珀色の点滅枠）。置き済みは薄くなり、もう一度タップで解除\n• 📅記録：毎月のビーズ記録を見られます\n• 🔊音声：色替え・板/行の完了時に進捗を読み上げます。画面を見なくてOK\n\n進捗は自動保存され、開き直っても残ります。</string>
+    <string name="assist_help_body">図案のマスをタップ = 完成印（✓が出ます）、もう一度タップで解除。押したまま動かすと連続で塗れます。\n\nいろんな狙い方：\n• 色ごと（初期）：現在の色だけ光る —「次の色」で切替\n• 板ごと：標準の板を 1 枚ずつ、埋まると次へ\n• 行ごと：1 行ずつ、埋まると次の行へ\n• 全画面：図案を画面いっぱいに広げて集中（戻るキーで終了）\n• 🔍投影（全画面ページ内）：現在の行/板が超大きく表示。スマホを板の前に立てて遠くから見ながら ◀▶ で進める\n\n実際の板と照合：\n• 投影合わせ（カメラを使う）：図案を半透明で本物の板に重ねて、見ながらビーズを置ける\n• 📸チェック（板を撮影）：置き終えた板を撮ると、色ミス/未設置/余分を自動で見つける。アイロンの前に防げる\n\nチェックのお助け：\n• 📍未完へ：次の未完成マスへジャンプ\n• 🔍漏れ：まだ置いていないビーズをぜんぶ光らせます（琥珀色の点滅枠）。置き済みは薄くなり、もう一度タップで解除\n• 📅記録：毎月のビーズ記録を見られます\n• 🔊音声：色替え・板/行の完了時に進捗を読み上げます。画面を見なくてOK\n\n進捗は自動保存され、開き直っても残ります。</string>
 
     <!-- 音声ガイド:ローカル TTS、ネットワーク・権限ゼロ -->
     <string name="assist_voice_btn">🔊 音声</string>

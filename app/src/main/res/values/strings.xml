@@ -334,7 +334,7 @@
     <string name="fmt_assist_remain">颜色 %1$d/%2$d · 本色 %3$d 颗 · 剩 %4$d 颗</string>
     <string name="fmt_assist_done">颜色 %1$d/%2$d · 本色 %3$d 颗 · ✅拼完</string>
     <string name="fmt_sum_total">总用豆:%,d 颗\n</string>
-    <string name="fmt_sum_colors">颜色:%1$d 种 · 29×29 拼板:%2$d 块\n</string>
+    <string name="fmt_sum_colors">颜色:%1$d 种 · %3$d×%3$d 拼板:%2$d 块\n</string>
     <string name="fmt_sum_size">成品约:%1$.0f × %2$.0f cm\n</string>
     <string name="fmt_sum_empty">空格:%,d 格(不放置)\n</string>
     <string name="fmt_sum_weight">约重 %1$,d g · 参考成本 ¥%2$.2f(点此改单价)\n</string>
@@ -502,7 +502,7 @@
     <string name="fmt_sheet_info">%1$d×%2$d 格%3$s · %4$s · 共 %5$d 颗 · %6$s</string>
     <string name="sheet_round">(圆形板)</string>
     <string name="sheet_hex">(六边形板)</string>
-    <string name="fmt_sheet_boards">29×29 拼板 %d 块</string>
+    <string name="fmt_sheet_boards">%1$d×%1$d 拼板 %2$d 块</string>
     <string name="sheet_official"> 官方色号</string>
     <string name="fmt_sheet_dia">直径约 %.0f cm</string>
     <string name="fmt_sheet_hex">宽约 %1$.0f × 高 %2$.0f cm</string>
@@ -512,7 +512,7 @@
     <string name="err_no_pattern">图纸还没有生成</string>
     <string name="pdf_header_fmt">%s · 拼豆图纸</string>
     <string name="pdf_tagline">PindouPhoto · 完全免费 · 无广告 · AGPL-3.0 开源</string>
-    <string name="fmt_pdf_boards">29×29 拼板:%1$d 块 · 成品约 %2$.0f × %3$.0f cm</string>
+    <string name="fmt_pdf_boards">%4$d×%4$d 拼板:%1$d 块 · 成品约 %2$.0f × %3$.0f cm</string>
     <string name="fmt_qty_beads">%,d 颗</string>
     <string name="fmt_qty_bags">≈%1$d包</string>
     <string name="fmt_qty_left">%1$,d 颗 · 剩 %2$d</string>
@@ -582,7 +582,7 @@
     <string name="assist_help_btn">怎么用?</string>
     <string name="assist_help_icon">?</string>
     <string name="assist_help_title">拼豆辅助怎么用</string>
-    <string name="assist_help_body">图纸页直接点格子 = 标记已拼好（弹✓），再点一下取消；按住滑动可以连续刷。\n\n换着花样拼：\n• 逐色辅助（默认）：只亮当前颜色，点「下一个颜色」切换\n• 按板拼：一次点亮一块 29×29 拼板，拼满自动跳下一块\n• 按行拼：一次点亮一行，拼完自动下一行\n• 沉浸拼豆：图纸铺满全屏专心拼，返回键退出\n• 🔍投射（在沉浸页里）：当前行/板超大铺满，手机架板前远看，◀▶推进\n\n对着真实拼豆板核对：\n• 对位投屏（用相机）：图纸虚影钉在真板上，照着虚影摆豆\n• 📸验收（给拼好的板拍照）：自动圈出摆错/漏拼/多摆，熨烫前拦住\n\n帮你检查的小工具：\n• 📍定位：直接跳到下一个还没拼的格子\n• 🔍查漏：一键点亮全图还没拼的豆（琥珀圈呼吸），已拼的自动蒙灰，再点一次关闭\n• 📅打卡：看每月拼豆记录\n• 🔊语音播报：换色/拼满时开口报进度，拼豆不用低头看屏\n\n进度自动保存，退出重开都在。</string>
+    <string name="assist_help_body">图纸页直接点格子 = 标记已拼好（弹✓），再点一下取消；按住滑动可以连续刷。\n\n换着花样拼：\n• 逐色辅助（默认）：只亮当前颜色，点「下一个颜色」切换\n• 按板拼：一次点亮一块标准拼板，拼满自动跳下一块\n• 按行拼：一次点亮一行，拼完自动下一行\n• 沉浸拼豆：图纸铺满全屏专心拼，返回键退出\n• 🔍投射（在沉浸页里）：当前行/板超大铺满，手机架板前远看，◀▶推进\n\n对着真实拼豆板核对：\n• 对位投屏（用相机）：图纸虚影钉在真板上，照着虚影摆豆\n• 📸验收（给拼好的板拍照）：自动圈出摆错/漏拼/多摆，熨烫前拦住\n\n帮你检查的小工具：\n• 📍定位：直接跳到下一个还没拼的格子\n• 🔍查漏：一键点亮全图还没拼的豆（琥珀圈呼吸），已拼的自动蒙灰，再点一次关闭\n• 📅打卡：看每月拼豆记录\n• 🔊语音播报：换色/拼满时开口报进度，拼豆不用低头看屏\n\n进度自动保存，退出重开都在。</string>
 
     <!-- 语音引导:本地 TTS 播报,零网络零权限 -->
     <string name="assist_voice_btn">🔊 语音</string>

@@ -80,7 +80,8 @@ public final class PatternSheetRenderer {
                         ? String.format(Locale.CHINA, ctx.getString(R.string.fmt_sheet_hex),
                         cols * cm * 0.866f, cols * cm)
                         : String.format(Locale.CHINA,
-                        ctx.getString(R.string.fmt_sheet_boards), p.boardsNeeded()))
+                        ctx.getString(R.string.fmt_sheet_boards),
+                        BeadPattern.boardSize(p.miniBead), p.boardsNeeded()))
                 + " · " + date;
         c.drawText(info, margin, margin + 118, infoP);
 

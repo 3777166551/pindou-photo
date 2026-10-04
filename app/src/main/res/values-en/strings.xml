@@ -334,7 +334,7 @@
     <string name="fmt_assist_remain">Color %1$d/%2$d · %3$d beads · %4$d left</string>
     <string name="fmt_assist_done">Color %1$d/%2$d · %3$d beads · ✅done</string>
     <string name="fmt_sum_total">Total beads: %,d\n</string>
-    <string name="fmt_sum_colors">Colors: %1$d · 29×29 boards: %2$d\n</string>
+    <string name="fmt_sum_colors">Colors: %1$d · %3$d×%3$d boards: %2$d\n</string>
     <string name="fmt_sum_size">Size: about %1$.0f × %2$.0f cm\n</string>
     <string name="fmt_sum_empty">Empty cells: %,d (no bead)\n</string>
     <string name="fmt_sum_weight">About %1$,d g · est. cost ¥%2$.2f (tap to change price)\n</string>
@@ -502,7 +502,7 @@
     <string name="fmt_sheet_info">%1$d×%2$d cells%3$s · %4$s · %5$d beads · %6$s</string>
     <string name="sheet_round"> (round)</string>
     <string name="sheet_hex"> (hexagon)</string>
-    <string name="fmt_sheet_boards">%d 29×29 boards</string>
+    <string name="fmt_sheet_boards">%2$d boards of %1$d×%1$d</string>
     <string name="sheet_official"> official code</string>
     <string name="fmt_sheet_dia">⌀ about %.0f cm</string>
     <string name="fmt_sheet_hex">about %1$.0f × %2$.0f cm (W×H)</string>
@@ -512,7 +512,7 @@
     <string name="err_no_pattern">Chart not generated yet</string>
     <string name="pdf_header_fmt">%s · Bead Chart</string>
     <string name="pdf_tagline">PindouPhoto · free · no ads · AGPL-3.0 open source</string>
-    <string name="fmt_pdf_boards">29×29 boards: %1$d · about %2$.0f × %3$.0f cm</string>
+    <string name="fmt_pdf_boards">%4$d×%4$d boards: %1$d · about %2$.0f × %3$.0f cm</string>
     <string name="fmt_qty_beads">%,d pcs</string>
     <string name="fmt_qty_bags">≈%1$d pack(s)</string>
     <string name="fmt_qty_left">%1$,d · %2$d left</string>
@@ -587,7 +587,7 @@
     <string name="assist_help_btn">How-to</string>
     <string name="assist_help_icon">?</string>
     <string name="assist_help_title">How bead-along works</string>
-    <string name="assist_help_body">Tap a cell in the chart to mark it placed (a ✓ pops up); tap again to undo. Hold and drag to mark a whole run.\n\nWays to bead:\n• Per color (default): only the current color lights up — "Next color" cycles\n• By board: one 29×29 board at a time, auto-advances when full\n• By row: one row at a time, auto-advances downward\n• Focus: the chart goes fullscreen for distraction-free beading (Back exits)\n• 🔍 Big view (inside Focus): the current row/board fills the screen super large — prop the phone by the board, look from afar, step with ◀ ▶\n\nCheck against the real board:\n• Align (uses the camera): pins the chart onto your real pegboard as a ghost image, so you can place beads against it\n• 📸 Check (photo of your board): photographs the board you placed and flags wrong/missing/extra beads before you iron\n\nLittle helpers:\n• 📍 Locate: jumps straight to the next unplaced cell\n• 🔍 Missing: lights up every unplaced bead at once (pulsing amber rings); placed beads dim down. Tap again to turn off\n• 📅 Check-in: your monthly beading calendar\n• 🔊 Voice: speaks progress on color switches and board/row completion — no need to look at the screen\n\nProgress is saved automatically and survives reopen.</string>
+    <string name="assist_help_body">Tap a cell in the chart to mark it placed (a ✓ pops up); tap again to undo. Hold and drag to mark a whole run.\n\nWays to bead:\n• Per color (default): only the current color lights up — "Next color" cycles\n• By board: one standard board at a time, auto-advances when full\n• By row: one row at a time, auto-advances downward\n• Focus: the chart goes fullscreen for distraction-free beading (Back exits)\n• 🔍 Big view (inside Focus): the current row/board fills the screen super large — prop the phone by the board, look from afar, step with ◀ ▶\n\nCheck against the real board:\n• Align (uses the camera): pins the chart onto your real pegboard as a ghost image, so you can place beads against it\n• 📸 Check (photo of your board): photographs the board you placed and flags wrong/missing/extra beads before you iron\n\nLittle helpers:\n• 📍 Locate: jumps straight to the next unplaced cell\n• 🔍 Missing: lights up every unplaced bead at once (pulsing amber rings); placed beads dim down. Tap again to turn off\n• 📅 Check-in: your monthly beading calendar\n• 🔊 Voice: speaks progress on color switches and board/row completion — no need to look at the screen\n\nProgress is saved automatically and survives reopen.</string>
 
     <!-- Voice guide: local TTS, zero network zero permissions -->
     <string name="assist_voice_btn">🔊 Voice</string>
