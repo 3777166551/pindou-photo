@@ -4062,21 +4062,24 @@ public class EditorActivity extends Activity {
             }
 
             TextView count = v.findViewById(R.id.tvCount);
+            String bags = bagsSuffix(uc.count);
             if (donePerColor != null && donePerColor[uc.index] > 0) {
                 int left = uc.count - donePerColor[uc.index];
                 count.setText(String.format(Locale.CHINA, left > 0
                         ? getString(R.string.fmt_qty_left)
                         : getString(R.string.fmt_qty_done), uc.count, left));
             } else {
+                // 数量行只留颗数("748 颗"),短文本与名称之间自然拉开;
+                // 按包提示挪到下一行与百分比合并,避免与名称连读
                 count.setText(String.format(Locale.CHINA,
-                        getString(R.string.fmt_qty_beads), uc.count)
-                        + bagsSuffix(uc.count));
+                        getString(R.string.fmt_qty_beads), uc.count));
             }
 
             TextView percent = v.findViewById(R.id.tvPercent);
             float pct = pattern.totalBeads > 0
                     ? uc.count * 100f / pattern.totalBeads : 0f;
-            percent.setText(String.format(Locale.CHINA, "%.1f%%", pct));
+            percent.setText((bags.isEmpty() ? "" : bags + " · ")
+                    + String.format(Locale.CHINA, "%.1f%%", pct));
 
             // 豆仓库存状态:够 / 缺 / 未登记
             TextView inv = v.findViewById(R.id.tvInv);
