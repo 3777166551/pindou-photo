@@ -514,7 +514,7 @@
     <string name="pdf_tagline">PindouPhoto · 完全免费 · 无广告 · AGPL-3.0 开源</string>
     <string name="fmt_pdf_boards">29×29 拼板:%1$d 块 · 成品约 %2$.0f × %3$.0f cm</string>
     <string name="fmt_qty_beads">%,d 颗</string>
-    <string name="fmt_qty_bags">≈%1$d包(1000颗/包)</string>
+    <string name="fmt_qty_bags">≈%1$d包</string>
     <string name="fmt_qty_left">%1$,d 颗 · 剩 %2$d</string>
     <string name="fmt_qty_done">%1$,d 颗 · ✅拼完</string>
     <string name="fmt_pdf_size">图纸尺寸:%1$d × %2$d 格</string>
