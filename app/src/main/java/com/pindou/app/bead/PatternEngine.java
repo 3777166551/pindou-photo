@@ -456,6 +456,7 @@ public final class PatternEngine {
         boolean gate = g.gateGain > 1f;
         int cells = g.gw * g.gh;
         int[] workCells = new int[cells];
+        float[] purity = new float[cells];   // 简图门控:胜出色票占格内不透明像素比;-1=空格
         int[] hist = new int[Math.max(1, n)];
         int[] darkHist = new int[Math.max(1, n)];
         boolean adjust = o.brightness != 0 || o.contrast != 0 || o.saturation != 0;
@@ -511,6 +512,7 @@ public final class PatternEngine {
             // 必须判空格,否则 hist 全零走到 best=0 整格填 0 号色
             if (n == 0 || opaque == 0 || opaque * 2 < total) {
                 workCells[c] = -1;   // 不透明不足半数 = 空格(与盒平均 alpha 阈值同语义)
+                purity[c] = -1f;
                 continue;
             }
             int best = 0;
@@ -523,6 +525,7 @@ public final class PatternEngine {
                 }
             }
             workCells[c] = best;
+            purity[c] = (float) hist[best] / opaque;
             // 线条救援:平均色亮(L*>60)且低彩(C*<20) = 纸样底;深豆占 4%~45% = 有线
             if (opaque >= 8) {
                 int mR = sumR / opaque, mG = sumG / opaque, mB = sumB / opaque;
@@ -551,7 +554,176 @@ public final class PatternEngine {
                 }
             }
         }
+        // 简图清晰化(自动门控,v2.63):平坦图(卡通/赛璐璐)的边界格横跨两个
+        // 色区,多数票会投出混色豆——边界发糊、线条变色的根源。检测到简图时
+        // 按 4 连通笔画统一边界线条色;复杂照片过不了门控,完全走原路径。
+        // 欠曝提亮门控激活时同样跳过(提亮中的照片不是线稿素材,保守跳过)。
+        if (n > 0 && !gate && isFlatSimple(purity)) {
+            int[] tie = new int[n];
+            for (int i = 0; i < n; i++) tie[i] = palette.get(i).rgb;
+            flatUnifyCells(g, workCells, purity, palette, labs, lut, tie,
+                    gate, g.gateGain, g.gateSat, adjust, o);
+        }
         return finishPattern(workCells, g.gw, g.gh, g.brick, palette, o, cols, rows);
+    }
+
+    // ---- 简图清晰化(v2.63):平坦图边界线条色统一 ----
+
+    /** 纯度 ≥ 此值视为内部格(格内像素几乎都配到同一豆) */
+    private static final float FLAT_PURITY_CLEAN = 0.85f;
+    /** 纯度 < 此值视为边界格(横跨色区/含线条) */
+    private static final float FLAT_PURITY_BOUNDARY = 0.62f;
+
+    /**
+     * 简图门控:纯度分布双峰(内部格接近 1、边界格少量存在)且内部格过半、
+     * 边界格不超两成。卡通/赛璐璐/扁平插画 → 纯;照片有大量渐变纹理,
+     * 中间带占比高 → 不触发(保持原路径)。完全无边界格的也不触发
+     * (没有线条可统一)。
+     * @param purity 每格纯度;负值 = 空格(不计)
+     */
+    public static boolean isFlatSimple(float[] purity) {
+        int valid = 0, clean = 0, boundary = 0, mid = 0;
+        for (float p : purity) {
+            if (p < 0) continue;
+            valid++;
+            if (p >= FLAT_PURITY_CLEAN) clean++;
+            else if (p < FLAT_PURITY_BOUNDARY) boundary++;
+            else mid++;
+        }
+        return valid >= 16 && boundary >= 3 && clean * 2 >= valid
+                && boundary * 5 <= valid && mid * 4 <= valid;
+    }
+
+    /**
+     * 边界格线条色统一:低纯度格取"离纯色均值最远的离群像素"为线条色
+     * (深线浅底、浅线深底都适用),再按 4 连通把相邻边界格并成笔画,
+     * 每笔画以线条色众数(4bit 桶均值)统一配豆——同一根线条不再变色。
+     */
+    private static void flatUnifyCells(WorkGrid g, int[] workCells, float[] purity,
+                                       List<BeadColor> palette, double[][] labs,
+                                       int[] lut, int[] tie, boolean gate,
+                                       float gateGain, float gateSat,
+                                       boolean adjust, Options o) {
+        int gw = g.gw, gh = g.gh;
+        int cells = workCells.length;
+        boolean[] isLine = new boolean[cells];
+        int[] lineR = new int[cells], lineG = new int[cells], lineB = new int[cells];
+        for (int c = 0; c < cells; c++) {
+            if (workCells[c] < 0 || purity[c] < 0
+                    || purity[c] >= FLAT_PURITY_BOUNDARY) continue;
+            int s = g.cellStart[c], e = g.cellStart[c + 1];
+            long pr = 0, pg = 0, pb = 0;
+            int mN = 0;
+            for (int i = s; i < e; i++) {
+                int p = g.cellPix[i];
+                if (((p >>> 24) & 0xFF) < 128) continue;
+                int[] rgb = voteRgb(p, gate, gateGain, gateSat, adjust, o);
+                if (lut[quantizeIdx(rgb[0], rgb[1], rgb[2])] == workCells[c]) {
+                    pr += rgb[0]; pg += rgb[1]; pb += rgb[2]; mN++;
+                }
+            }
+            if (mN == 0) continue;   // 全是过渡像素,保持多数票结果
+            float mr = pr / (float) mN, mg = pg / (float) mN, mb = pb / (float) mN;
+            float bestD = -1f;
+            int br = -1, bgc = -1, bb = -1;
+            for (int i = s; i < e; i++) {
+                int p = g.cellPix[i];
+                if (((p >>> 24) & 0xFF) < 128) continue;
+                int[] rgb = voteRgb(p, gate, gateGain, gateSat, adjust, o);
+                float d = (rgb[0] - mr) * (rgb[0] - mr)
+                        + (rgb[1] - mg) * (rgb[1] - mg)
+                        + (rgb[2] - mb) * (rgb[2] - mb);
+                if (d > bestD) {
+                    bestD = d;
+                    br = rgb[0]; bgc = rgb[1]; bb = rgb[2];
+                }
+            }
+            isLine[c] = true;
+            lineR[c] = br; lineG[c] = bgc; lineB[c] = bb;
+        }
+        // 4 连通笔画聚类,每笔画统一线条色(众数桶均值 → 就近配豆)
+        int[] stack = new int[cells];
+        boolean[] seen = new boolean[cells];
+        java.util.ArrayList<Integer> comp = new java.util.ArrayList<>();
+        for (int c0 = 0; c0 < cells; c0++) {
+            if (!isLine[c0] || seen[c0]) continue;
+            comp.clear();
+            seen[c0] = true;
+            stack[0] = c0;
+            int sp = 1;
+            while (sp > 0) {
+                int c = stack[--sp];
+                comp.add(c);
+                int cx = c % gw, cy = c / gw;
+                if (cx > 0 && isLine[c - 1] && !seen[c - 1]) {
+                    seen[c - 1] = true; stack[sp++] = c - 1;
+                }
+                if (cx < gw - 1 && isLine[c + 1] && !seen[c + 1]) {
+                    seen[c + 1] = true; stack[sp++] = c + 1;
+                }
+                if (cy > 0 && isLine[c - gw] && !seen[c - gw]) {
+                    seen[c - gw] = true; stack[sp++] = c - gw;
+                }
+                if (cy < gh - 1 && isLine[c + gw] && !seen[c + gw]) {
+                    seen[c + gw] = true; stack[sp++] = c + gw;
+                }
+            }
+            java.util.HashMap<Integer, long[]> acc = new java.util.HashMap<>();
+            for (int ci = 0; ci < comp.size(); ci++) {
+                int c = comp.get(ci);
+                int key = ((lineR[c] >> 4) << 8) | ((lineG[c] >> 4) << 4) | (lineB[c] >> 4);
+                long[] a = acc.get(key);
+                if (a == null) {
+                    a = new long[4];
+                    acc.put(key, a);
+                }
+                a[0]++; a[1] += lineR[c]; a[2] += lineG[c]; a[3] += lineB[c];
+            }
+            long bestN = -1;
+            int br = 255, bgc = 255, bb = 255;
+            for (long[] a : acc.values()) {
+                if (a[0] > bestN) {
+                    bestN = a[0];
+                    br = (int) (a[1] / a[0]);
+                    bgc = (int) (a[2] / a[0]);
+                    bb = (int) (a[3] / a[0]);
+                }
+            }
+            double[] lab = ColorMath.rgbToLab(0xFF000000 | (br << 16) | (bgc << 8) | bb);
+            int uni = nearest(labs, lab[0], lab[1], lab[2], tie);
+            for (int ci = 0; ci < comp.size(); ci++) workCells[comp.get(ci)] = uni;
+        }
+    }
+
+    /** 投票路径的像素→RGB 变换(预乘还原/欠曝提亮/画面调节),与主循环逐位一致 */
+    private static int[] voteRgb(int p, boolean gate, float gateGain, float gateSat,
+                                 boolean adjust, Options o) {
+        int r = (p >> 16) & 0xFF, gr = (p >> 8) & 0xFF, bl = p & 0xFF;
+        int a = (p >>> 24) & 0xFF;
+        if (a < 255) {
+            r = Math.min(255, r * 255 / a);
+            gr = Math.min(255, gr * 255 / a);
+            bl = Math.min(255, bl * 255 / a);
+        }
+        if (gate) {
+            r = clamp8(Math.round(r * gateGain));
+            gr = clamp8(Math.round(gr * gateGain));
+            bl = clamp8(Math.round(bl * gateGain));
+            int gray = (r * 299 + gr * 587 + bl * 114) / 1000;
+            r = clamp8(gray + Math.round((r - gray) * gateSat));
+            gr = clamp8(gray + Math.round((gr - gray) * gateSat));
+            bl = clamp8(gray + Math.round((bl - gray) * gateSat));
+        }
+        if (adjust) {
+            p = ColorMath.adjust(0xFF000000 | (r << 16) | (gr << 8) | bl,
+                    o.brightness, o.contrast, o.saturation);
+            r = (p >> 16) & 0xFF; gr = (p >> 8) & 0xFF; bl = p & 0xFF;
+        }
+        return new int[]{r, gr, bl};
+    }
+
+    private static int quantizeIdx(int r, int g, int b) {
+        return ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
     }
 
     /**
