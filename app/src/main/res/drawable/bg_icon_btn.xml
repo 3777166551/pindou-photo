@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 圆形图标按钮(M3 icon button,tonal):步进器 −/+ 专用。
+     v2.63:此前四个步进钮 40×40 与 44×40 混用 + 胶囊矩形背景,
+     非正方形视图上出椭圆变形,叠 elevation 在部分 ROM 拖出脏影;
+     改正方形 + oval 背景 + 无阴影(按压反馈由 Anim 弹簧承担) -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/primary">
+    <item>
+        <selector>
+            <item>
+                <shape android:shape="oval">
+                    <solid android:color="?attr/subsurface" />
+                </shape>
+            </item>
+        </selector>
+    </item>
+</ripple>
