@@ -32,8 +32,8 @@
     <string name="tool_scan">Scan chart</string>
     <string name="tool_scan_desc">Clone an existing chart</string>
     <string name="tool_templates">Templates</string>
-    <string name="tool_templates_desc">bead them directly, no photo needed</string>
-    <string name="tool_templates_desc_n">%d designs to bead directly</string>
+    <string name="tool_templates_desc">bead directly, no photo</string>
+    <string name="tool_templates_desc_n">%d designs to bead</string>
     <string name="tool_inventory">🎒 Inventory</string>
     <string name="tool_inventory_desc">Colors &amp; counts you own</string>
     <string name="inv_page_title">🎒 Inventory</string>
