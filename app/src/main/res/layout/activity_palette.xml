@@ -74,7 +74,7 @@
             android:layout_weight="1"
             android:background="@drawable/bg_chip"
             android:clickable="true"
-            android:elevation="2dp"
+
             android:focusable="true"
             android:gravity="center"
             android:text="@string/btn_new"
@@ -90,7 +90,7 @@
             android:layout_weight="1"
             android:background="@drawable/bg_chip"
             android:clickable="true"
-            android:elevation="2dp"
+
             android:focusable="true"
             android:gravity="center"
             android:text="@string/btn_from_inventory"
@@ -105,7 +105,7 @@
             android:layout_weight="1"
             android:background="@drawable/bg_chip"
             android:clickable="true"
-            android:elevation="2dp"
+
             android:focusable="true"
             android:gravity="center"
             android:text="@string/btn_import"

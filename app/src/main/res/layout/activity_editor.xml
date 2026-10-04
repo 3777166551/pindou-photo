@@ -99,7 +99,7 @@
             android:layout_marginTop="12dp"
             android:layout_marginEnd="14dp"
             android:background="@drawable/bg_tab_track"
-            android:elevation="2dp"
+
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:padding="4dp">
@@ -340,7 +340,7 @@
                         android:layout_weight="1"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
-                        android:elevation="2dp"
+
                         android:focusable="true"
                         android:gravity="center"
                         android:text="29×29"
@@ -355,7 +355,7 @@
                         android:layout_weight="1"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
-                        android:elevation="2dp"
+
                         android:focusable="true"
                         android:gravity="center"
                         android:text="58×58"
@@ -370,7 +370,7 @@
                         android:layout_weight="1"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
-                        android:elevation="2dp"
+
                         android:focusable="true"
                         android:gravity="center"
                         android:text="87×87"
@@ -384,7 +384,7 @@
                         android:layout_weight="1"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
-                        android:elevation="2dp"
+
                         android:focusable="true"
                         android:gravity="center"
                         android:text="116×116"
@@ -551,7 +551,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/limit0"
@@ -566,7 +566,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/limit1"
@@ -581,7 +581,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/limit2"
@@ -596,7 +596,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/limit3"
@@ -610,7 +610,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/limit4"
@@ -641,7 +641,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/style_real"
@@ -656,7 +656,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/style_abs"
@@ -670,7 +670,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/style_line"
@@ -721,7 +721,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/brick0"
@@ -736,7 +736,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/brick1"
@@ -751,7 +751,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/brick2"
@@ -765,7 +765,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/brick3"
@@ -946,7 +946,7 @@
                         android:layout_marginTop="16dp"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
-                        android:elevation="2dp"
+
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -995,7 +995,7 @@
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="@string/shape_rect"
@@ -1010,7 +1010,7 @@
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="@string/shape_round"
@@ -1024,7 +1024,7 @@
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="@string/shape_hex"
@@ -1055,7 +1055,7 @@
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="@string/bead_std"
@@ -1069,7 +1069,7 @@
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="@string/bead_mini"
@@ -1303,7 +1303,7 @@
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
-                        android:elevation="2dp"
+
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -1431,7 +1431,7 @@
                         android:layout_marginTop="8dp"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
-                        android:elevation="2dp"
+
                         android:focusable="true"
                         android:gravity="center"
                         android:text="@string/btn_watermark"
@@ -1445,7 +1445,7 @@
                         android:layout_marginTop="8dp"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
-                        android:elevation="2dp"
+
                         android:focusable="true"
                         android:gravity="center"
                         android:text="@string/btn_ghibli"
@@ -1459,7 +1459,7 @@
                         android:layout_marginTop="10dp"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
-                        android:elevation="2dp"
+
                         android:focusable="true"
                         android:gravity="center"
                         android:text="@string/btn_restore"
@@ -1483,7 +1483,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/mirror_h"
@@ -1498,7 +1498,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/mirror_v"
@@ -1512,7 +1512,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/rotate90"
@@ -1535,7 +1535,7 @@
                         android:layout_marginTop="8dp"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
-                        android:elevation="2dp"
+
                         android:focusable="true"
                         android:gravity="center"
                         android:text="@string/btn_crop"
@@ -1669,7 +1669,7 @@
                             android:layout_marginEnd="12dp"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/assist_help_icon"
@@ -1718,7 +1718,7 @@
                             android:layout_height="40dp"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:paddingStart="12dp"
@@ -1759,7 +1759,7 @@
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
@@ -1776,7 +1776,7 @@
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
@@ -1793,7 +1793,7 @@
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
@@ -1810,7 +1810,7 @@
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
@@ -1826,7 +1826,7 @@
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
@@ -1850,7 +1850,7 @@
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
@@ -1867,7 +1867,7 @@
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
@@ -1884,7 +1884,7 @@
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
@@ -1901,7 +1901,7 @@
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
@@ -1917,7 +1917,7 @@
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:maxLines="1"
@@ -1958,7 +1958,7 @@
                             android:layout_marginStart="8dp"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:paddingStart="12dp"
@@ -2009,7 +2009,7 @@
                                 android:layout_marginStart="8dp"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="⇋"
@@ -2023,7 +2023,7 @@
                                 android:layout_marginStart="8dp"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:paddingStart="14dp"
@@ -2048,7 +2048,7 @@
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="@string/brush_eraser"
@@ -2063,7 +2063,7 @@
                                 android:layout_weight="1"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="@string/dropper_label"
@@ -2077,7 +2077,7 @@
                                 android:layout_weight="1.2"
                                 android:background="@drawable/bg_chip"
                                 android:clickable="true"
-                                android:elevation="2dp"
+
                                 android:focusable="true"
                                 android:gravity="center"
                                 android:text="@string/sym_off"
@@ -2102,7 +2102,7 @@
                             android:layout_weight="1.3"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/trace_pick"
@@ -2117,7 +2117,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/trace_hide"
@@ -2131,7 +2131,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_chip"
                             android:clickable="true"
-                            android:elevation="2dp"
+
                             android:focusable="true"
                             android:gravity="center"
                             android:text="@string/trace_clear"
@@ -2146,7 +2146,7 @@
                         android:layout_marginTop="10dp"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
-                        android:elevation="2dp"
+
                         android:focusable="true"
                         android:gravity="center"
                         android:text="@string/clear_edits"
@@ -2163,7 +2163,7 @@
                     android:layout_marginTop="18dp"
                     android:background="@drawable/bg_chip"
                     android:clickable="true"
-                    android:elevation="2dp"
+
                     android:focusable="true"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
@@ -2332,7 +2332,7 @@
                         android:layout_weight="1"
                         android:background="@drawable/bg_chip"
                         android:clickable="true"
-                        android:elevation="2dp"
+
                         android:focusable="true"
                         android:gravity="center"
                         android:text="@string/btn_reset"
