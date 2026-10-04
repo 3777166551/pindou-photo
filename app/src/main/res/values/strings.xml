@@ -61,6 +61,7 @@
     <string name="pick_wm_photo">选一张带水印的图</string>
     <string name="err_no_gallery">没有可用的相册应用</string>
     <string name="err_no_camera">没有可用的相机应用</string>
+    <string name="err_need_camera">需要相机权限才能拍照。照片只保存在本机,不会上传</string>
     <string name="err_camera">拍照失败,请重试</string>
     <string name="err_image">图片读不出来</string>
 
@@ -271,7 +272,7 @@
     <string name="err_no_redo">没有可重做的操作了</string>
     <string name="fmt_board_round">圆形板直径 %1$d 格 · 成品约 %2$.0f cm</string>
     <string name="fmt_board_hex">六边形板高 %1$d 格 · 成品约 %2$.0f × %3$.0f cm</string>
-    <string name="fmt_board_rect">需要 29×29 拼板 %1$d 块 · 成品约 %2$.0f × %3$.0f cm</string>
+    <string name="fmt_board_rect">需要 %4$d×%4$d 拼板 %1$d 块 · 成品约 %2$.0f × %3$.0f cm</string>
 
     <!-- 备份与恢复 -->
     <string name="tool_backup">📦 备份与恢复</string>

@@ -489,3 +489,26 @@ PowerShell 管道会把 UTF-8 按 GBK 重解码,中文注释必失真——对�
 之外,引用它的包装 XML 也要查),别只看名字;②"文档说 X"不等于
 "代码是 X",四年前某次改版把引用换掉后文档没更新,后来者全被名字骗。
 
+## 37. 清单声明了 CAMERA 却未授权 → ACTION_IMAGE_CAPTURE 直接 SecurityException(v2.62.2 真机反馈)
+
+**现象**：首装后点首页「拍一张照片」立刻报「没有可用的相机应用」;
+只要进过 AR 试摆/对位投屏(会弹权限框)就永远复现不了——用户报告
+"相机按钮没有权限,点击报错,不知道为什么"。
+
+**原因**:Android 6+ 规则——应用在清单里**声明了** android.permission.CAMERA
+却**未获授权**时,任何 ACTION_IMAGE_CAPTURE / ACTION_VIDEO_CAPTURE
+意图直接抛 SecurityException(不是 ActivityNotFoundException)。v2.49
+加 AR 时把 CAMERA 写进清单,而运行时申请权限的入口只有 AR/对位两处;
+拍照/验收走"系统相机意图零权限"的旧假设从此不成立。SecurityException
+被当"无相机设备"兜底(DEV-NOTES 24),文案还误导。
+
+**修法**：MainActivity / VerifyActivity 发相机意图前
+checkSelfPermission → 未授权先 requestPermissions,授权回调再发;
+拒绝给三语新文案 err_need_camera。
+
+**教训**：①"这个 Intent 不需要权限"的结论有前提——清单没声明;
+声明了就必须先拿到再发意图;②给 SecurityException 写兜底时要问
+异常的真实主因(fuzz 在无相机的模拟器上跑,永远复现不出真机首装
+未授权路径);③同类坑:VerifyActivity 与 MainActivity 同构,修一处
+必须 grep 同款意图的全部发送点。
+

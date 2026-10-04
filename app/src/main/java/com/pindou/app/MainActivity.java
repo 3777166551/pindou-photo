@@ -52,6 +52,7 @@ public class MainActivity extends Activity {
     private static final int REQ_ACTION_PICK = 4;
     private static final int REQ_BACKUP_CREATE = 5;
     private static final int REQ_BACKUP_OPEN = 6;
+    private static final int REQ_CAMERA_PHOTO = 7;
     /** 工具卡片(二次元/去水印)选图后要自动执行的动作 */
     private int nextAction = com.pindou.app.EditorActivity.PENDING_NONE;
     /** 备份/恢复的zip 打包与解包走后台线程(项目存档可能几 MB 一份) */
@@ -1162,6 +1163,19 @@ showMergedBomResult(keys, agg, labels, rgbs, okCount);
     }
 
     private void takePhoto() {
+        // Android 6+ 规则:清单声明了 CAMERA 权限却未授权时,ACTION_IMAGE_CAPTURE
+        // 直接 SecurityException(表现 = 首装点拍照就报"没有可用的相机应用")。
+        // AR 试摆/对位投屏之前是仅有的两个申请点,没进过它们就永远没弹过权限框。
+        if (checkSelfPermission(android.Manifest.permission.CAMERA)
+                != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{android.Manifest.permission.CAMERA},
+                    REQ_CAMERA_PHOTO);
+            return;
+        }
+        takePhotoNow();
+    }
+
+    private void takePhotoNow() {
         cameraFile = new File(getCacheDir(), "camera_" + System.currentTimeMillis() + ".jpg");
         Uri uri = AppFileProvider.forCameraFile(cameraFile);
         Intent i = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
@@ -1176,6 +1190,20 @@ showMergedBomResult(keys, agg, labels, rgbs, okCount);
             // 无相机/无可处理相机应用的设备(含无摄像头模拟器):系统会直接
             // 抛 SecurityException 而不是 ActivityNotFoundException(fuzz 抓出)
             Toast.makeText(this, getString(R.string.err_no_camera), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] perms, int[] results) {
+        super.onRequestPermissionsResult(requestCode, perms, results);
+        if (requestCode == REQ_CAMERA_PHOTO) {
+            if (results.length > 0
+                    && results[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                takePhotoNow();
+            } else {
+                Toast.makeText(this, getString(R.string.err_need_camera),
+                        Toast.LENGTH_LONG).show();
+            }
         }
     }
 

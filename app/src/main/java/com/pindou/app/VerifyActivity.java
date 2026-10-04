@@ -40,6 +40,7 @@ public class VerifyActivity extends Activity {
 
     private static final int REQ_TAKE = 51;
     private static final int REQ_PICK = 52;
+    private static final int REQ_CAMERA_TAKE = 53;
     private static final int MAX_DIM = 1600;
 
     private BeadPattern pattern;
@@ -274,6 +275,18 @@ public class VerifyActivity extends Activity {
     // ---------------- 取照片(系统相机意图 + 相册,零新权限) ----------------
 
     private void takePhoto() {
+        // 同 MainActivity:声明 CAMERA 未授权时 ACTION_IMAGE_CAPTURE 直接
+        // SecurityException,先要权限再开相机
+        if (checkSelfPermission(android.Manifest.permission.CAMERA)
+                != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{android.Manifest.permission.CAMERA},
+                    REQ_CAMERA_TAKE);
+            return;
+        }
+        takePhotoNow();
+    }
+
+    private void takePhotoNow() {
         cameraFile = new File(getCacheDir(), "verify_" + System.currentTimeMillis() + ".jpg");
         android.net.Uri uri = AppFileProvider.forCameraFile(cameraFile);
         Intent i = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
@@ -287,6 +300,20 @@ public class VerifyActivity extends Activity {
         } catch (SecurityException e) {
             // 无相机设备直接抛 SecurityException(DEV-NOTES 24)
             Toast.makeText(this, getString(R.string.err_no_camera), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] perms, int[] results) {
+        super.onRequestPermissionsResult(requestCode, perms, results);
+        if (requestCode == REQ_CAMERA_TAKE) {
+            if (results.length > 0
+                    && results[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                takePhotoNow();
+            } else {
+                Toast.makeText(this, getString(R.string.err_need_camera),
+                        Toast.LENGTH_LONG).show();
+            }
         }
     }
 

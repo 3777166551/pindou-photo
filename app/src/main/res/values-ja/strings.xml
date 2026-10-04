@@ -61,6 +61,7 @@
     <string name="pick_wm_photo">ウォーターマーク付き画像を選択</string>
     <string name="err_no_gallery">ギャラリーアプリがありません</string>
     <string name="err_no_camera">カメラアプリがありません</string>
+    <string name="err_need_camera">撮影にはカメラ権限が必要です。写真は端末内のみに保存され、アップロードされません</string>
     <string name="err_camera">撮影に失敗しました、再試行してください</string>
     <string name="err_image">画像を読み込めません</string>
 
@@ -271,7 +272,7 @@
     <string name="err_no_redo">やり直す操作がありません</string>
     <string name="fmt_board_round">丸ボード 直径 %1$d マス · 約 %2$.0f cm</string>
     <string name="fmt_board_hex">六角ボード 高さ %1$d マス · 約 %2$.0f × %3$.0f cm</string>
-    <string name="fmt_board_rect">29×29 ボード %1$d 枚 · 約 %2$.0f × %3$.0f cm</string>
+    <string name="fmt_board_rect">%4$d×%4$d ボード %1$d 枚 · 約 %2$.0f × %3$.0f cm</string>
 
     <!-- バックアップと復元 -->
     <string name="tool_backup">📦 バックアップ</string>

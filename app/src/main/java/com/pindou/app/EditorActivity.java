@@ -1607,7 +1607,7 @@ public class EditorActivity extends Activity {
                     * Math.ceil(rows / (double) bs));
             tvBoardHint.setText(String.format(Locale.CHINA,
                     getString(R.string.fmt_board_rect),
-                    boards, cols * cmPerBead(), rows * cmPerBead()));
+                    boards, cols * cmPerBead(), rows * cmPerBead(), bs));
         }
     }
 

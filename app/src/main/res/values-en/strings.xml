@@ -61,6 +61,7 @@
     <string name="pick_wm_photo">Pick an image with a watermark</string>
     <string name="err_no_gallery">No gallery app available</string>
     <string name="err_no_camera">No camera app available</string>
+    <string name="err_need_camera">Camera permission is needed to take a photo. Photos stay on this device, never uploaded</string>
     <string name="err_camera">Camera failed, please retry</string>
     <string name="err_image">Can\'t read this image</string>
 
@@ -271,7 +272,7 @@
     <string name="err_no_redo">Nothing to redo</string>
     <string name="fmt_board_round">Round board %1$d pegs across · about %2$.0f cm</string>
     <string name="fmt_board_hex">Hexagon %1$d pegs tall · about %2$.0f × %3$.0f cm</string>
-    <string name="fmt_board_rect">Uses %1$d 29×29 boards · about %2$.0f × %3$.0f cm</string>
+    <string name="fmt_board_rect">Uses %1$d %4$d×%4$d boards · about %2$.0f × %3$.0f cm</string>
 
     <!-- Backup & restore -->
     <string name="tool_backup">📦 Backup &amp; restore</string>
