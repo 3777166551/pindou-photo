@@ -227,6 +227,8 @@ public final class BeadBrandCharts {
             "ST6|Transparent Purple|8477B3",
     };
 
+    /** 漫德 MARD 291 色完整版全色谱:基础 A~M 221 色 + P/Q/R/T/Y/ZG 荧光/透明/夜光
+     *  扩展 70 色;色号跨尺寸通用(5mm/2.6mm 同号),线下豆店"三百色"即它的 302 色后继 */
     private static final String[] DATA_MARD = {
             "A1|A1|F9F0CD",
             "A10|A10|FF9D55",
@@ -1285,7 +1287,7 @@ public final class BeadBrandCharts {
 
     public static final Chart[] ALL = {
             new Chart("Artkal S·5mm", build(DATA_ARTKAL_S)),
-            new Chart("漫德 Mard·5mm", build(DATA_MARD)),
+            new Chart("漫德 Mard·291色", build(DATA_MARD)),
             new Chart("Perler·5mm", build(DATA_PERLER)),
             new Chart("Hama Midi·5mm", build(DATA_HAMA)),
             new Chart("Nabbi Midi·5mm", build(DATA_NABBI)),
