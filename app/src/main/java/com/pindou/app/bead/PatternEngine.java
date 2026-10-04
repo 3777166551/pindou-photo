@@ -2150,4 +2150,286 @@ public final class PatternEngine {
 
     private PatternEngine() {
     }
+
+    // ---------------- 成品照片转图纸(v2.64):豆格检测 + 逐豆采样 ----------------
+    // 成品照片里豆子晶格已经存在,普通重采样会出网格纹/串色;正确做法是
+    // 找到豆距与相位,一颗物理豆采一个色,产出的图纸与实物一一对应。
+
+    /** 豆格检测结果:豆距与网格线相位,坐标系 = 传入像素 */
+    public static final class BeadGrid {
+        public double pitchX, pitchY;
+        public double lineX, lineY;
+    }
+
+    /**
+     * 自相关豆距检测:降采样到 ≤480 后对梯度幅值图分别做横/纵自相关,
+     * 取"最小强峰"为基频豆距(避开 2p/3p 倍频假峰);相位取网格线上
+     * 边缘能量最大的平移。找不到清晰周期(非成品照/虚焦)返回 null。
+     */
+    public static BeadGrid detectBeadGrid(int[] px, int w, int h) {
+        if (px == null || w < 64 || h < 64) return null;
+        int side = Math.max(w, h);
+        int dw = w, dh = h;
+        int[] small = px;
+        if (side > 480) {
+            dw = Math.max(1, Math.round(w * 480f / side));
+            dh = Math.max(1, Math.round(h * 480f / side));
+            small = boxDown(px, w, h, dw, dh);
+        }
+        double[] gray = new double[dw * dh];
+        for (int i = 0; i < dw * dh; i++) {
+            int p = small[i];
+            gray[i] = ((p >> 16) & 0xFF) * 299 + ((p >> 8) & 0xFF) * 587
+                    + (p & 0xFF) * 114;
+        }
+        // 梯度幅值(中心差分),边缘集中在豆与豆的分界线上
+        double[] m = new double[dw * dh];
+        for (int y = 0; y < dh; y++) {
+            for (int x = 0; x < dw; x++) {
+                int xl = Math.max(0, x - 1), xr = Math.min(dw - 1, x + 1);
+                int yu = Math.max(0, y - 1), yd = Math.min(dh - 1, y + 1);
+                double gx = Math.abs(gray[y * dw + xr] - gray[y * dw + xl]);
+                double gy = Math.abs(gray[yd * dw + x] - gray[yu * dw + x]);
+                m[y * dw + x] = gx + gy;
+            }
+        }
+        int minLag = Math.max(4, Math.min(dw, dh) / 120);
+        int maxLag = Math.min(dw, dh) / 4;
+        if (maxLag <= minLag + 2) return null;
+        double sx = bestLag(m, dw, dh, minLag, maxLag, true);
+        double sy = bestLag(m, dw, dh, minLag, maxLag, false);
+        if (sx <= 0 || sy <= 0) return null;
+        BeadGrid g = new BeadGrid();
+        g.pitchX = sx * (w / (double) dw);
+        g.pitchY = sy * (h / (double) dh);
+        g.lineX = bestPhase(m, dw, dh, sx, true) * (w / (double) dw);
+        g.lineY = bestPhase(m, dw, dh, sy, false) * (h / (double) dh);
+        return g;
+    }
+
+    /** 横/纵自相关找基频:取首个分数 ≥0.92×全局最大 的局部峰(最小强峰) */
+    private static double bestLag(double[] m, int w, int h,
+                                  int minLag, int maxLag, boolean horizontal) {
+        int aMax = horizontal ? w : h;          // 采样轴长度
+        int bMax = horizontal ? h : w;          // 遍历轴长度
+        int nLags = maxLag - minLag + 1;
+        double[] score = new double[nLags];
+        for (int li = 0; li < nLags; li++) {
+            int lag = minLag + li;
+            double sum = 0;
+            int cnt = 0;
+            for (int b = 0; b < bMax; b++) {
+                for (int a = 0; a + lag < aMax; a++) {
+                    int i = horizontal ? b * w + a : a * w + b;
+                    int j = horizontal ? i + lag : i + lag * w;
+                    sum += m[i] * m[j];
+                    cnt++;
+                }
+            }
+            score[li] = cnt > 0 ? sum / cnt : 0;
+        }
+        int best = 0;
+        for (int i = 1; i < nLags; i++) {
+            if (score[i] > score[best]) best = i;
+        }
+        double peak = score[best];
+        if (peak <= 0) return -1;
+        int fundamental = best;
+        for (int i = 0; i < nLags; i++) {
+            boolean localMax = score[i] >= score[Math.max(0, i - 1)]
+                    && score[i] >= score[Math.min(nLags - 1, i + 1)];
+            if (localMax && score[i] >= peak * 0.92) {
+                fundamental = i;
+                break;
+            }
+        }
+        // 抛物线插值细化峰位
+        double lag = minLag + fundamental;
+        if (fundamental > 0 && fundamental < nLags - 1) {
+            double d = score[fundamental - 1] - score[fundamental + 1];
+            double e = score[fundamental - 1]
+                    - 2 * score[fundamental] + score[fundamental + 1];
+            if (e != 0) {
+                double off = d / (2 * e);
+                if (off > -0.5 && off < 0.5) lag += off;
+            }
+        }
+        // 周期性置信度:峰须明显高于均值,否则视为无晶格
+        double mean = 0;
+        for (double v : score) mean += v;
+        mean /= nLags;
+        if (peak < mean * 1.12) return -1;
+        return lag;
+    }
+
+    /** 网格线相位:边缘能量沿采样轴投影后,在一个豆距内取投影和最大的平移 */
+    private static double bestPhase(double[] m, int w, int h, double lag,
+                                    boolean horizontal) {
+        int aMax = horizontal ? w : h;
+        int bMax = horizontal ? h : w;
+        int p = Math.max(2, (int) Math.round(lag));
+        double[] proj = new double[aMax];
+        for (int b = 0; b < bMax; b++) {
+            for (int a = 0; a < aMax; a++) {
+                proj[a] += horizontal ? m[b * w + a] : m[a * w + b];
+            }
+        }
+        int best = 0;
+        double bestSum = -1;
+        for (int ph = 0; ph < p; ph++) {
+            double sum = 0;
+            for (int a = ph; a < aMax; a += p) sum += proj[a];
+            if (sum > bestSum) {
+                bestSum = sum;
+                best = ph;
+            }
+        }
+        return best;
+    }
+
+    /**
+     * 成品照片 → 图纸:按网格线相位 + 豆距逐格采样。每格取"豆环"像素
+     * (外径 0.38 豆距,避开中心孔 0.16),剔除高光过曝点后取逐通道中位数,
+     * 再就近配豆。precise = CIEDE2000 最近色。格子越界为空格 -1。
+     */
+    public static BeadPattern fromBeadPhoto(int[] px, int pw, int ph,
+                                            double lineX, double lineY,
+                                            double pitchX, double pitchY,
+                                            List<BeadColor> beadPalette,
+                                            boolean precise,
+                                            boolean round, boolean hex) {
+        if (px == null || pitchX < 4 || pitchY < 4 || beadPalette == null
+                || beadPalette.isEmpty()) {
+            return null;
+        }
+        // 网格线相位折回 [-豆距/2,豆距/2):检测报告的"最强线"是第 k 条,
+        // 折半宽区间后首列(可能半格越界)也能覆盖,格子索引与晶格对齐
+        lineX -= pitchX * Math.round(lineX / pitchX);
+        lineY -= pitchY * Math.round(lineY / pitchY);
+        int cols = (int) Math.round((pw - lineX) / pitchX);
+        int rows = (int) Math.round((ph - lineY) / pitchY);
+        cols = Math.max(1, Math.min(400, cols));
+        rows = Math.max(1, Math.min(400, rows));
+        double[][] labs = new double[beadPalette.size()][];
+        int[] tie = new int[beadPalette.size()];
+        for (int i = 0; i < beadPalette.size(); i++) {
+            labs[i] = ColorMath.rgbToLab(beadPalette.get(i).rgb);
+            tie[i] = beadPalette.get(i).rgb;
+        }
+        int[] cells = new int[cols * rows];
+        int[] ring = new int[Math.max(16,
+                (int) (Math.PI * pitchX * pitchY))];
+        for (int cy = 0; cy < rows; cy++) {
+            double centerY = lineY + (cy + 0.5) * pitchY;
+            for (int cx = 0; cx < cols; cx++) {
+                double centerX = lineX + (cx + 0.5) * pitchX;
+                cells[cy * cols + cx] = -1;
+                if (centerX < 0 || centerX >= pw
+                        || centerY < 0 || centerY >= ph) {
+                    continue;
+                }
+                double rOutX = pitchX * 0.38, rOutY = pitchY * 0.38;
+                int n = 0, nKeep = 0;
+                int x0 = Math.max(0, (int) (centerX - rOutX));
+                int x1 = Math.min(pw - 1, (int) Math.ceil(centerX + rOutX));
+                int y0 = Math.max(0, (int) (centerY - rOutY));
+                int y1 = Math.min(ph - 1, (int) Math.ceil(centerY + rOutY));
+                for (int y = y0; y <= y1; y++) {
+                    double dy = (y + 0.5 - centerY) / pitchY;
+                    for (int x = x0; x <= x1; x++) {
+                        double dx = (x + 0.5 - centerX) / pitchX;
+                        double d2 = dx * dx + dy * dy;
+                        if (d2 > 0.38 * 0.38 || d2 < 0.16 * 0.16) continue;
+                        int p = px[y * pw + x];
+                        int r = (p >> 16) & 0xFF, g = (p >> 8) & 0xFF, b = p & 0xFF;
+                        n++;
+                        // 高光过曝(泛白)像素剔除,豆色取环上未被反光的实体
+                        int mx = Math.max(r, Math.max(g, b));
+                        int mn = Math.min(r, Math.min(g, b));
+                        int lum = (r * 299 + g * 587 + b * 114) / 1000;
+                        if (lum > 236 && mx - mn < 28) continue;
+                        ring[nKeep * 3] = r;
+                        ring[nKeep * 3 + 1] = g;
+                        ring[nKeep * 3 + 2] = b;
+                        nKeep++;
+                    }
+                }
+                if (nKeep == 0) {
+                    if (n == 0) continue;
+                    nKeep = collectRingAll(px, pw, x0, x1, y0, y1,
+                            centerX, centerY, pitchX, pitchY, ring);
+                    if (nKeep == 0) continue;
+                }
+                int mr = medianAt(ring, nKeep, 0);
+                int mg = medianAt(ring, nKeep, 1);
+                int mb = medianAt(ring, nKeep, 2);
+                double[] lab = ColorMath.rgbToLab(
+                        0xFF000000 | (mr << 16) | (mg << 8) | mb);
+                cells[cy * cols + cx] = precise
+                        ? nearestPrecise(labs, lab[0], lab[1], lab[2], tie)
+                        : nearest(labs, lab[0], lab[1], lab[2], tie);
+            }
+        }
+        Options o = new Options();
+        o.cols = cols;
+        o.rows = rows;
+        o.roundBoard = round;
+        o.hexBoard = hex;
+        return finishPattern(cells, cols, rows, 1, beadPalette, o, cols, rows);
+    }
+
+    /** 高光剔除全军覆没时的兜底:重采一遍环上全部像素 */
+    private static int collectRingAll(int[] px, int pw, int x0, int x1,
+                                      int y0, int y1, double centerX,
+                                      double centerY, double pitchX,
+                                      double pitchY, int[] ring) {
+        int nKeep = 0;
+        for (int y = y0; y <= y1; y++) {
+            double dy = (y + 0.5 - centerY) / pitchY;
+            for (int x = x0; x <= x1; x++) {
+                double dx = (x + 0.5 - centerX) / pitchX;
+                double d2 = dx * dx + dy * dy;
+                if (d2 > 0.38 * 0.38 || d2 < 0.16 * 0.16) continue;
+                int p = px[y * pw + x];
+                ring[nKeep * 3] = (p >> 16) & 0xFF;
+                ring[nKeep * 3 + 1] = (p >> 8) & 0xFF;
+                ring[nKeep * 3 + 2] = p & 0xFF;
+                nKeep++;
+            }
+        }
+        return nKeep;
+    }
+
+    /** ring 交错 RGB,按 ch 通道取中位数(插入排序,环内像素 ~数百) */
+    private static int medianAt(int[] ring, int n, int ch) {
+        int[] v = new int[n];
+        for (int i = 0; i < n; i++) v[i] = ring[i * 3 + ch];
+        java.util.Arrays.sort(v);
+        return v[n / 2];
+    }
+
+    /** 盒式降采样(检测用,精度要求不高) */
+    private static int[] boxDown(int[] px, int w, int h, int dw, int dh) {
+        int[] out = new int[dw * dh];
+        for (int dy = 0; dy < dh; dy++) {
+            int sy0 = dy * h / dh, sy1 = Math.max(sy0 + 1, (dy + 1) * h / dh);
+            for (int dx = 0; dx < dw; dx++) {
+                int sx0 = dx * w / dw, sx1 = Math.max(sx0 + 1, (dx + 1) * w / dw);
+                long sr = 0, sg = 0, sb = 0, n = 0;
+                for (int y = sy0; y < sy1; y++) {
+                    for (int x = sx0; x < sx1; x++) {
+                        int p = px[y * w + x];
+                        sr += (p >> 16) & 0xFF;
+                        sg += (p >> 8) & 0xFF;
+                        sb += p & 0xFF;
+                        n++;
+                    }
+                }
+                out[dy * dw + dx] = 0xFF000000
+                        | ((int) (sr / n) << 16) | ((int) (sg / n) << 8)
+                        | (int) (sb / n);
+            }
+        }
+        return out;
+    }
 }

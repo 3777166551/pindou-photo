@@ -587,3 +587,41 @@ BeadPattern.cellAt 返回的是色板下标而非 usedColors 下标,按
 UsedColor.index 建 map 再渲染(旧测试 countReds 断言靠排序巧合通过,
 别模仿)。③fixture 门控:边界环 3红1白纯度 0.75 落中间带不触发门控,
 要 2红2白(0.5)才算边界格——门控阈值与 fixture 的换算要先算再写。
+
+## 41. 成品照片转图纸(v2.64):豆格检测 + 逐豆采样
+
+**需求**:店里/网上看到拼好的成品,拍一张照直接还原图纸(色号+豆单)。
+与普通照片转图纸本质不同:成品照片里豆格已存在,普通重采样会把豆
+格再切一遍 → 网格纹/串色。正确做法 = 检测晶格,一颗物理豆采一色。
+
+**引擎**(PatternEngine,纯 JVM 可测):
+- detectBeadGrid:降采样≤480 → 梯度幅值 → 横/纵自相关找豆距
+  ("最小强峰"= 基频,避开 2p/3p 倍频;峰/均值 <1.12 判非晶格返回
+  null),相位 = 一个豆距内边缘投影和最大的平移,抛物线插值细化。
+- fromBeadPhoto:按网格线+豆距逐格采样"豆环"(外径 0.38 豆距,避开
+  中心孔 0.16),剔除高光过曝(亮度>236 且极差<28)后逐通道取中位数
+  (抗噪),CIEDE2000 就近配豆;finishPattern 收尾(圆板/六角板直通)。
+- 相位归一必须到 [-豆距/2,+豆距/2):归到 [0,豆距) 时"最强线在第 k
+  条"会让 cells 整体错位一格,首列丢失(检测网格还原率 13.7% 的根因)。
+
+**界面**(BeadPhotoActivity,全程序化 UI):LatticeView 照片+网格叠加,
+单指拖动平移原点;自动对格后台线程;± 步进改豆距(±6%);色板下拉
+默认漫德 2.6mm;生成 → PatternShare.build → 项目 JSON(settings+
+share)→ EditorActivity.pendingProjectJson 静态传递 —— 编辑器零改动,
+色号/豆单/PDF/立牌/拼豆进度全部既有链路复用。主页新增 ToolCardWide
+"成品转图纸"(ic_camera + bg_icon_mint)。
+
+**坑**:①TextView.setBackgroundResource(颜色常量) = Resources
+NotFoundException 当场崩(要 setBackgroundColor),模拟器一击即中;
+②adb root 推到 /sdcard 的文件属主 root,APP 连自己的
+Android/data/files 都读不了(EACCES,SELinux storage_file 拒绝)——
+测试图要走 `cat > /data/data/<pkg>/cache/` + chown 到 app uid;
+③该镜像 documentsui 选择器的"近期的图片"条目点击无响应(仅预览角标
+clickable),BeadPhotoActivity 留了 `--es bp_uri <uri>` 直载通道给
+模拟器 QA 用(exported=false,仅 root 可达,无安全面);④
+BeadPattern.cellAt 返回色板下标不是 usedColors 下标(条目 40 已记,
+本次渲染再次踩到)。
+
+**测试**:TestBeadPhoto 13 项 —— 合成豆照(圆豆+中心孔+板底+光照
+渐变+噪声)上验检测豆距±1.5/相位贴边≤2.5、真实网格还原≥96%、
+检测网格还原≥88%、噪声图不触发、非法参数返 null。qa 27 套全绿。

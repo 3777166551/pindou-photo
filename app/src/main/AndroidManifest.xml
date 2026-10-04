@@ -103,6 +103,12 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize|stateHidden" />
 
+        <!-- 成品照片转图纸(v2.64):拍成品自动对格还原图纸 -->
+        <activity
+            android:name=".BeadPhotoActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
         <activity
             android:name=".ColorMatchActivity"
             android:exported="false"

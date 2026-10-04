@@ -137,6 +137,31 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- 成品转图纸:拍成品照片自动对格还原图纸(v2.64) -->
+        <LinearLayout
+            android:id="@+id/btnBeadPhoto"
+            style="@style/ToolCardWide"
+            android:layout_marginTop="12dp">
+
+            <ImageView
+                style="@style/ToolCardIconPlate"
+                android:contentDescription="@null"
+                android:background="@drawable/bg_icon_mint"
+                android:src="@drawable/ic_camera"
+                android:tint="?attr/textPrimary" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView style="@style/ToolCardTitle" android:text="@string/tool_bead_photo" />
+                <TextView style="@style/ToolCardDesc" android:text="@string/tool_bead_photo_desc" />
+            </LinearLayout>
+        </LinearLayout>
+
         <!-- 常用双列:模板库 + 豆料库存 -->
         <LinearLayout
             android:layout_width="match_parent"

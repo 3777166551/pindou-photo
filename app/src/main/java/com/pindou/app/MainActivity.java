@@ -80,6 +80,7 @@ public class MainActivity extends Activity {
         // 按压缩放反馈:主页大按钮都是贴纸,按下去陷一下再弹回
         int[] pressIds = {R.id.btnGallery, R.id.btnCamera, R.id.btnText,
                 R.id.btnBlank, R.id.btnTemplates, R.id.btnProjects,
+                R.id.btnBeadPhoto,
                 R.id.btnScanPattern, R.id.cardWatermark, R.id.btnKnowledge,
                 R.id.btnInventoryHome, R.id.btnBackup, R.id.moreToolsHeader};
         for (int id : pressIds) {
@@ -89,8 +90,8 @@ public class MainActivity extends Activity {
         // 像手工贴上去的 —— 糖果贴纸风语言,角度压在 ±6° 内不碍阅读
         int[] cardIds = {R.id.cardWatermark, R.id.btnScanPattern, R.id.btnTemplates,
                 R.id.btnText, R.id.btnBlank, R.id.btnKnowledge, R.id.btnInventoryHome,
-                R.id.btnProjects, R.id.btnBackup};
-        float[] tilts = {-5f, 4f, -3f, 6f, -6f, 3f, -4f, 5f, 2f};
+                R.id.btnProjects, R.id.btnBeadPhoto, R.id.btnBackup};
+        float[] tilts = {-5f, 4f, -3f, 6f, -6f, 3f, -4f, 5f, -4f, 2f};
         for (int i = 0; i < cardIds.length; i++) {
             View card = findViewById(cardIds[i]);
             if (card instanceof ViewGroup && ((ViewGroup) card).getChildCount() > 0) {
@@ -210,6 +211,12 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 showMyProjects();
+            }
+        });
+        findViewById(R.id.btnBeadPhoto).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, BeadPhotoActivity.class));
             }
         });
         findViewById(R.id.btnKnowledge).setOnClickListener(new View.OnClickListener() {
