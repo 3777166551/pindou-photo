@@ -34,7 +34,7 @@ if errorlevel 1 (
 )
 
 "%JAVA_HOME%\bin\javac.exe" -encoding UTF-8 -cp "%AJ%" -sourcepath app\src\main\java -d qa\out ^
-  qa\TestColorMath.java qa\TestPatternEngine.java qa\TestPatternPatch.java qa\TestCustomPalette.java qa\TestSymmetry.java qa\TestLineArt.java qa\TestBrandCharts.java qa\TestCrossStitch.java qa\TestBoardProjector.java qa\TestHexBoard.java qa\TestBackup.java qa\TestPlay3D.java qa\TestGifEncoder.java qa\TestVerify.java qa\TestAlgoGate.java qa\TestStandee.java qa\TestInventory.java qa\TestPatternShare.java qa\TestPaletteShare.java qa\TestStrings.java qa\TestStorage.java qa\TestChaos.java qa\TestBoardModule.java qa\TestSpringMotion.java qa\TestFlatUnify.java qa\TestBeadPhoto.java
+  qa\TestColorMath.java qa\TestPatternEngine.java qa\TestPatternPatch.java qa\TestCustomPalette.java qa\TestSymmetry.java qa\TestLineArt.java qa\TestBrandCharts.java qa\TestCrossStitch.java qa\TestBoardProjector.java qa\TestHexBoard.java qa\TestBackup.java qa\TestPlay3D.java qa\TestGifEncoder.java qa\TestVerify.java qa\TestAlgoGate.java qa\TestStandee.java qa\TestInventory.java qa\TestPatternShare.java qa\TestPaletteShare.java qa\TestStrings.java qa\TestStorage.java qa\TestChaos.java qa\TestGridScanner.java qa\TestBoardModule.java qa\TestSpringMotion.java qa\TestFlatUnify.java qa\TestBeadPhoto.java
 if errorlevel 1 (
     echo [COMPILE FAILED]
     exit /b 1

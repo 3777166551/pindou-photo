@@ -1316,7 +1316,9 @@ showMergedBomResult(keys, agg, labels, rgbs, okCount);
                 android.graphics.BitmapFactory.decodeStream(in, null, o);
                 if (in != null) in.close();
                 int sample = 1;
-                while (Math.max(o.outWidth, o.outHeight) / sample > 900) sample *= 2;
+                // 成品豆粒照需要格距≥8px 才能可靠采样(豆孔/高光/缝隙),
+                // 900 工作边长下 100+ 格的板只剩 ~5px/格,提到 1600
+                while (Math.max(o.outWidth, o.outHeight) / sample > 1600) sample *= 2;
                 android.graphics.BitmapFactory.Options o2 = new android.graphics.BitmapFactory.Options();
                 o2.inSampleSize = sample;
                 java.io.InputStream in2 = getContentResolver().openInputStream(uri);
@@ -1438,7 +1440,10 @@ showMergedBomResult(keys, agg, labels, rgbs, okCount);
                                             android.graphics.Bitmap.Config.ARGB_8888);
                             out.setPixels(cells, 0, cols, 0, 0, cols, rows);
                             EditorActivity.pendingSource = out;
-                            EditorActivity.pendingSuggestedSize = Math.max(cols, rows);
+                            // 扫描产物 1 格 = 1 豆:矩形画幅直接按识别行列数进编辑器,
+                            // 强套正方形会被居中裁剪+重采样,整格颜色全糊(v2.63)
+                            EditorActivity.pendingSuggestedCols = cols;
+                            EditorActivity.pendingSuggestedRows = rows;
                             startActivity(new Intent(MainActivity.this, EditorActivity.class));
                             overridePendingTransition(R.anim.enter_up, R.anim.exit_dim);
                         }

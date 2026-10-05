@@ -133,6 +133,9 @@ public class EditorActivity extends Activity {
     public static String pendingPlay3DJson;
     /** 模板库建议画幅(边长),0 表示用默认 */
     public static int pendingSuggestedSize;
+    /** 图纸识别建议画幅(列/行,矩形;0 表示不指定——扫描产物 1 格=1 豆,强套方形会糊) */
+    public static int pendingSuggestedCols;
+    public static int pendingSuggestedRows;
 
     private static final int REQ_STORAGE = 100;
     private static final int REQ_IMPORT = 101;
@@ -147,6 +150,7 @@ public class EditorActivity extends Activity {
     private static final int EXP_CARD = 8;
     private static final int EXP_SHARE = 3;
     private static final int EXP_PDF = 4;
+    private static final int EXP_PDF_CODE = 14;   // 格内色号版 PDF(横版)
     private static final int EXP_FILE = 6;
     private static final int EXP_CROSS = 10;
     private static final int EXP_MORE = 12;
@@ -488,7 +492,23 @@ public class EditorActivity extends Activity {
             imported = false;
             int sug = pendingSuggestedSize;
             pendingSuggestedSize = 0;
-            if (sug >= MIN_SIZE && sug <= MAX_SIZE) {
+            int sugC = pendingSuggestedCols;
+            int sugR = pendingSuggestedRows;
+            pendingSuggestedCols = pendingSuggestedRows = 0;
+            if (sugC >= MIN_SIZE && sugR >= MIN_SIZE
+                    && (sugC <= MAX_SIZE && sugR <= MAX_SIZE
+                            || Math.max(sugC, sugR) <= 200)) {
+                // 识别图纸:矩形画幅 1:1 落格(源位图恰好 cols×rows,generate 不再裁剪);
+                // 超 160 的按比例缩进画幅上限(罕见:>160 格的大板)
+                if (sugC > MAX_SIZE || sugR > MAX_SIZE) {
+                    float sc = MAX_SIZE / (float) Math.max(sugC, sugR);
+                    sugC = Math.max(MIN_SIZE, Math.round(sugC * sc));
+                    sugR = Math.max(MIN_SIZE, Math.round(sugR * sc));
+                }
+                cols = sugC;
+                rows = sugR;
+                syncSizeUi();
+            } else if (sug >= MIN_SIZE && sug <= MAX_SIZE) {
                 cols = rows = sug;
                 syncSizeUi();
             }
@@ -4667,10 +4687,11 @@ public class EditorActivity extends Activity {
     private void showExportMenu(View anchor) {
         PopupMenu menu = new PopupMenu(this, anchor);
         menu.getMenu().add(0, EXP_SHARE, 1, getString(R.string.menu_share));
-        menu.getMenu().add(1, 5, 2, getString(R.string.save_proj_title));
-        menu.getMenu().add(0, EXP_MORE, 3, getString(R.string.menu_more_exports));
-        menu.getMenu().add(0, 11, 4, getString(R.string.menu_import_json));
-        android.view.MenuItem night = menu.getMenu().add(0, 9, 5,
+        menu.getMenu().add(0, EXP_PDF_CODE, 2, getString(R.string.menu_pdf_code));
+        menu.getMenu().add(1, 5, 3, getString(R.string.save_proj_title));
+        menu.getMenu().add(0, EXP_MORE, 4, getString(R.string.menu_more_exports));
+        menu.getMenu().add(0, 11, 5, getString(R.string.menu_import_json));
+        android.view.MenuItem night = menu.getMenu().add(0, 9, 6,
                 nightMode ? R.string.menu_night_off : R.string.menu_night_on);
         night.setChecked(nightMode);
         night.setCheckable(true);
@@ -4697,13 +4718,14 @@ public class EditorActivity extends Activity {
     /** 二级导出菜单:图纸/效果图/长图卡/PDF/十字绣/立牌方案/.json 文件 */
     private void showExportSubmenu(View anchor) {
         PopupMenu menu = new PopupMenu(this, anchor);
-        menu.getMenu().add(0, EXP_SHEET, 1, getString(R.string.menu_sheet));
-        menu.getMenu().add(0, EXP_EFFECT, 2, getString(R.string.menu_effect));
-        menu.getMenu().add(0, EXP_CARD, 3, getString(R.string.menu_card));
-        menu.getMenu().add(0, EXP_PDF, 4, getString(R.string.menu_pdf));
-        menu.getMenu().add(0, EXP_CROSS, 5, getString(R.string.menu_cross));
-        menu.getMenu().add(0, EXP_STANDEE, 6, getString(R.string.menu_standee));
-        menu.getMenu().add(0, EXP_FILE, 7, getString(R.string.menu_file));
+        menu.getMenu().add(0, EXP_PDF, 1, getString(R.string.menu_pdf));
+        menu.getMenu().add(0, EXP_PDF_CODE, 2, getString(R.string.menu_pdf_code));
+        menu.getMenu().add(0, EXP_SHEET, 3, getString(R.string.menu_sheet));
+        menu.getMenu().add(0, EXP_EFFECT, 4, getString(R.string.menu_effect));
+        menu.getMenu().add(0, EXP_CARD, 5, getString(R.string.menu_card));
+        menu.getMenu().add(0, EXP_CROSS, 6, getString(R.string.menu_cross));
+        menu.getMenu().add(0, EXP_STANDEE, 7, getString(R.string.menu_standee));
+        menu.getMenu().add(0, EXP_FILE, 8, getString(R.string.menu_file));
         menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(android.view.MenuItem item) {
@@ -4722,6 +4744,11 @@ public class EditorActivity extends Activity {
         if (what == EXP_PDF) {
             // PDF 写到应用缓存再分享,不需要存储权限
             exportPdf();
+            return;
+        }
+        if (what == EXP_PDF_CODE) {
+            // 格内色号版(横版,每格直接印豆色号,拼时免对照图例)
+            exportPdfCode();
             return;
         }
         if (what == EXP_STANDEE) {
@@ -4958,6 +4985,44 @@ public class EditorActivity extends Activity {
                             Toast.makeText(EditorActivity.this,
                                     getString(R.string.err_prefix_proj) + e.getMessage(),
                                     Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    /** 格内色号版:横版 A4,每格直接印豆色号(免对照图例,小字号自适应) */
+    private void exportPdfCode() {
+        showLoading(true, getString(R.string.working_pdf));
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Bitmap sheet = PatternSheetRenderer.renderCodeSheet(
+                            EditorActivity.this, pattern, currentPaletteName(), miniBead);
+                    String stamp = new SimpleDateFormat("yyyyMMdd_HHmm", Locale.CHINA)
+                            .format(new Date());
+                    String name = getString(R.string.file_pattern_prefix)
+                            + pattern.cols + "x" + pattern.rows
+                            + "_codes_" + stamp + ".pdf";
+                    final Uri uri = PdfExporter.export(EditorActivity.this, sheet,
+                            pattern, currentPaletteName(), name, miniBead, true);
+                    sheet.recycle();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showLoading(false);
+                            share(uri, "application/pdf");
+                        }
+                    });
+                } catch (final Exception e) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showLoading(false);
+                            Toast.makeText(EditorActivity.this,
+                                    getString(R.string.err_prefix_export) + e.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
                 }

@@ -89,7 +89,7 @@
     <string name="btn_categories">カテゴリ 🔎</string>
 
     <!-- ホーム: 図案読み取り -->
-    <string name="scan_msg">枠を図案のグリッド部分に合わせて(まわりの余白は避け)、「読み取り」をタップ。読み取り後はそのままエディタが開き、パレットを変えて再生成できます。</string>
+    <string name="scan_msg">枠を図案または完成したビーズ作品のグリッド部分に合わせて(まわりの余白は避け)、「読み取り」をタップ。読み取り後はそのままエディタが開き、パレットを変えて再生成できます。</string>
     <string name="btn_detect">読み取り</string>
     <string name="scan_need_box">まず枠をグリッドに合わせてください</string>
     <string name="working_scan">グリッドを解析中…</string>
@@ -394,6 +394,8 @@
     <string name="menu_effect">プレビュー画像を保存</string>
     <string name="menu_share">図案を共有</string>
     <string name="menu_pdf">PDFで書き出し</string>
+    <string name="menu_pdf_code">PDF書き出し(マス内に色番号)</string>
+    <string name="sheet_code_title">図案(マス内に色番号)</string>
     <string name="menu_more_exports">図案 / ファイルを書き出す…</string>
     <string name="menu_import_json">📥 図案ファイルを読み込む(.json)</string>
     <string name="btn_start_beading">🧵 ビーズを始める</string>

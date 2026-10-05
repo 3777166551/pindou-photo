@@ -89,7 +89,7 @@
     <string name="btn_categories">Categories 🔎</string>
 
     <!-- home: chart scanner -->
-    <string name="scan_msg">Drag the box over the grid area of the chart (avoid blank space next to it), then tap Detect. It opens the editor where you can pick another palette and regenerate.</string>
+    <string name="scan_msg">Drag the box over the grid area of a chart or a finished beadwork photo (avoid blank space next to it), then tap Detect. It opens the editor where you can pick another palette and regenerate.</string>
     <string name="btn_detect">Detect</string>
     <string name="scan_need_box">Drag the box over the grid first</string>
     <string name="working_scan">Detecting grid…</string>
@@ -394,6 +394,8 @@
     <string name="menu_effect">Save preview image</string>
     <string name="menu_share">Share chart</string>
     <string name="menu_pdf">Export PDF document</string>
+    <string name="menu_pdf_code">Export PDF (codes in grid)</string>
+    <string name="sheet_code_title">Bead chart (codes in grid)</string>
     <string name="menu_more_exports">Export chart / files…</string>
     <string name="menu_import_json">📥 Import chart file (.json)</string>
     <string name="btn_start_beading">🧵 Start beading</string>

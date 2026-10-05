@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 工具小卡:与大卡同语言(colorSurface + 24dp)。v2.61 包 M3 水波纹(可点卡反馈) -->
+<!-- 工具小卡:与大卡同语言(colorSurface + 24dp)。v2.61 包 M3 水波纹(可点卡反馈)。
+     v2.63 补 colorStroke 1dp 描边(合同 colorStroke token 本就标注"卡片描边"):
+     近白卡面贴近白点阵背景,2dp 阴影只在四角可见,直边无边界感(用户反馈
+     "按钮边上感觉是缺失的")——描边补上轮廓,次按钮 §6 同款做法。 -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="?attr/primary">
     <item>
         <shape android:shape="rectangle">
             <solid android:color="?attr/colorSurface" />
+            <stroke android:width="1dp" android:color="?attr/colorStroke" />
             <corners android:radius="24dp" />
         </shape>
     </item>

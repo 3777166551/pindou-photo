@@ -49,12 +49,12 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
                 android:contentDescription="@string/a11y_undo"
                 android:text="↺"
                 android:textColor="?attr/textMain"
-                android:textSize="22sp"
+                android:textSize="28sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -64,12 +64,12 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
-                android:paddingStart="12dp"
-                android:paddingEnd="8dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="10dp"
                 android:contentDescription="@string/a11y_redo"
                 android:text="↪"
                 android:textColor="?attr/textMain"
-                android:textSize="22sp"
+                android:textSize="28sp"
                 android:textStyle="bold" />
 
             <TextView

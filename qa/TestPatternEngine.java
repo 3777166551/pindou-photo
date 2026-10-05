@@ -289,6 +289,49 @@ public class TestPatternEngine {
         check("dominantResample un-premultiplies semi-transparent",
                 rsemi[0] == px(255, 255, 255, 255));
 
+        // ---- 先配后投 LUT:亮色桶中心不得溢出(v2.63 回归锁定) ----
+        // 旧 buildLut 桶中心 i*17+8,最高桶(通道值>=240)溢出到相邻通道:
+        // 纯白的桶中心变 (7,8,7)≈黑,亮黄变绿,柔和亮图全毁。
+        // 锁法:单像素 WorkGrid 走 generateFromGrid,白/亮黄必须配到
+        // 高亮度同色相豆,而不是黑/绿豆。
+        {
+            java.util.List<com.pindou.app.bead.BeadColor> pal90 =
+                    com.pindou.app.bead.BeadPalettes.getPalette(2);   // 90色·进阶
+            int[] probes = {
+                    0xFFFFFFFF,   // 纯白
+                    0xFFFCD854,   // 亮黄(太阳中心)
+                    0xFFFEEFA8,   // 奶黄(光晕)
+                    0xFFFAEECF,   // 米白(背景)
+            };
+            String[] probeNames = {"white", "bright yellow", "pale yellow", "cream"};
+            for (int i = 0; i < probes.length; i++) {
+                PatternEngine.WorkGrid wg = new PatternEngine.WorkGrid();
+                wg.gw = 1; wg.gh = 1; wg.brick = 1;
+                wg.cellPix = new int[]{probes[i]};
+                wg.cellStart = new int[]{0, 1};
+                wg.gateGain = 1f; wg.gateSat = 1f;
+                PatternEngine.Options o = new PatternEngine.Options();
+                o.cols = 1; o.rows = 1;
+                com.pindou.app.bead.BeadPattern bp =
+                        PatternEngine.generateFromGrid(wg, pal90, o, 1, 1);
+                int rgb = bp.palette.get(bp.cellAt(0, 0)).rgb;
+                double[] lab = com.pindou.app.bead.ColorMath.rgbToLab(
+                        0xFF000000 | rgb);
+                double[] src = com.pindou.app.bead.ColorMath.rgbToLab(
+                        0xFF000000 | probes[i]);
+                // 亮度不得暴跌(旧溢出 bug:白→黑掉 ~100、亮黄→绿掉 ~60);
+                // 正常量化降档 ≤20(L*),色相由下面的 b* 轴检查守住
+                check("vote LUT " + probeNames[i] + " -> L* " + String.format("%.0f", lab[0])
+                                + " (src " + String.format("%.0f", src[0]) + ")",
+                        lab[0] >= src[0] - 20);
+                boolean hueOk = src[2] > 15 ? lab[2] > 0
+                        : src[2] < -15 ? lab[2] < 0 : Math.abs(lab[2]) < 25;
+                check("vote LUT " + probeNames[i] + " keeps hue (b* "
+                                + String.format("%.0f", lab[2]) + ")",
+                        hueOk);
+            }
+        }
+
         System.out.println("TestPatternEngine: " + passed + " passed, " + failed + " failed");
         if (failed > 0) System.exit(1);
     }

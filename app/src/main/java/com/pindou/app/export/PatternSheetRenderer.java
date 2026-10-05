@@ -29,10 +29,26 @@ public final class PatternSheetRenderer {
     /** mini=true 时尺寸按迷你豆 2.6mm 折算(标题信息行) */
     public static Bitmap render(android.content.Context ctx, BeadPattern p,
                                 String paletteName, boolean mini) {
+        return render(ctx, p, paletteName, mini, false);
+    }
+
+    /**
+     * 格内色号版:每格直接印豆色号(免对照图例,导出菜单「PDF(格内色号)」)。
+     * 配合 PdfExporter 横版 A4:65 格宽在纸上约 4mm/格,色号 3 字号自适应缩排。
+     */
+    public static Bitmap renderCodeSheet(android.content.Context ctx, BeadPattern p,
+                                         String paletteName, boolean mini) {
+        return render(ctx, p, paletteName, mini, true);
+    }
+
+    /** mini=true 时尺寸按迷你豆 2.6mm 折算(标题信息行);codeMode=格内印色号 */
+    public static Bitmap render(android.content.Context ctx, BeadPattern p,
+                                String paletteName, boolean mini, boolean codeMode) {
         float cm = mini ? 0.26f : 0.5f;
         int cols = p.cols;
         int rows = p.rows;
-        int cell = (int) Math.max(20, Math.min(48, 2800.0 / Math.max(cols, rows)));
+        int cell = (int) Math.max(codeMode ? 26 : 20,
+                Math.min(48, (codeMode ? 3400.0 : 2800.0) / Math.max(cols, rows)));
         int band = cell;            // 坐标编号带
         int margin = cell;
 
@@ -44,7 +60,7 @@ public final class PatternSheetRenderer {
         int entryH = 96;
         int legendColW = 430;
         int legendCols = Math.max(1, Math.min(6, pageW / legendColW));
-        int entries = p.usedColors.size() + (p.emptyCount > 0 ? 1 : 0);
+        int entries = codeMode ? 0 : p.usedColors.size() + (p.emptyCount > 0 ? 1 : 0);
         int legendRows = (int) Math.ceil(entries / (double) legendCols);
         int legendH = entries > 0 ? 130 + legendRows * entryH + 20 : 0;
 
@@ -66,7 +82,8 @@ public final class PatternSheetRenderer {
 
         // 标题
         String date = new SimpleDateFormat("yyyy/MM/dd", Locale.CHINA).format(new Date());
-        c.drawText(ctx.getString(R.string.sheet_title), margin, margin + 62, titleP);
+        c.drawText(ctx.getString(codeMode ? R.string.sheet_code_title : R.string.sheet_title),
+                margin, margin + 62, titleP);
         String info = String.format(Locale.CHINA,
                 ctx.getString(R.string.fmt_sheet_info),
                 cols, rows,
@@ -80,8 +97,7 @@ public final class PatternSheetRenderer {
                         ? String.format(Locale.CHINA, ctx.getString(R.string.fmt_sheet_hex),
                         cols * cm * 0.866f, cols * cm)
                         : String.format(Locale.CHINA,
-                        ctx.getString(R.string.fmt_sheet_boards),
-                        BeadPattern.boardSize(p.miniBead), p.boardsNeeded()))
+                        ctx.getString(R.string.fmt_sheet_boards), p.boardsNeeded()))
                 + " · " + date;
         c.drawText(info, margin, margin + 118, infoP);
 
@@ -152,13 +168,12 @@ public final class PatternSheetRenderer {
             }
         }
 
-        // 每块标准板一条拼板分隔线(标准豆 29 格 / 迷你豆 50 格)+ 外框
-        int boardSpan = BeadPattern.boardSize(p.miniBead);
+        // 每 29 格拼板分隔线 + 外框
         Paint boardP = new Paint(Paint.ANTI_ALIAS_FLAG);
         boardP.setColor(0xFF9A9086);
         boardP.setStyle(Paint.Style.STROKE);
         boardP.setStrokeWidth(Math.max(2f, cell * 0.1f));
-        for (int x = boardSpan; x < cols; x += boardSpan) {
+        for (int x = 29; x < cols; x += 29) {
             float lx = gx + x * cell;
             if (p.round) {
                 chord(c, boardP, lx, ccy, ccx, crad, true, gy, gy + gridH);
@@ -170,7 +185,7 @@ public final class PatternSheetRenderer {
                 c.drawLine(lx, gy, lx, gy + gridH, boardP);
             }
         }
-        for (int y = boardSpan; y < rows; y += boardSpan) {
+        for (int y = 29; y < rows; y += 29) {
             float ly = gy + y * cell;
             if (p.round) {
                 chord(c, boardP, ly, ccx, ccy, crad, false, gx, gx + gridW);
@@ -201,17 +216,34 @@ public final class PatternSheetRenderer {
             c.drawRect(gx, gy, gx + gridW, gy + gridH, borderP);
         }
 
-        // 符号
+        // 符号 / 格内色号
         Paint.FontMetrics sfm = symbolP.getFontMetrics();
         float sdy = -(sfm.ascent + sfm.descent) / 2f;
+        Paint codeP = textPaint((int) (cell * 0.34), 0xFF000000, true);
+        codeP.setTextAlign(Paint.Align.CENTER);
+        String[] codes = codeMode ? new String[p.palette.size()] : null;
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < cols; x++) {
                 int idx = p.cellAt(x, y);
                 if (idx < 0) continue;
                 int rgb = p.palette.get(idx).rgb;
-                symbolP.setColor(ColorMath.textColorOn(rgb));
-                c.drawText(PatternEngine.symbolFor(idx),
-                        gx + (x + 0.5f) * cell, gy + (y + 0.5f) * cell + sdy, symbolP);
+                String t;
+                if (codeMode) {
+                    if (codes[idx] == null) codes[idx] = p.palette.get(idx).displayCode();
+                    t = codes[idx];
+                    float maxW = cell * 0.88f;
+                    while (codeP.getTextSize() > cell * 0.2
+                            && codeP.measureText(t) > maxW) {
+                        codeP.setTextSize(codeP.getTextSize() - 1f);
+                    }
+                    codeP.setColor(ColorMath.textColorOn(rgb));
+                    c.drawText(t, gx + (x + 0.5f) * cell, gy + (y + 0.5f) * cell + sdy, codeP);
+                    codeP.setTextSize(cell * 0.34f);   // 复位,下个格子重新自适应
+                } else {
+                    symbolP.setColor(ColorMath.textColorOn(rgb));
+                    c.drawText(PatternEngine.symbolFor(idx),
+                            gx + (x + 0.5f) * cell, gy + (y + 0.5f) * cell + sdy, symbolP);
+                }
             }
         }
 

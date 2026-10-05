@@ -89,7 +89,7 @@
     <string name="btn_categories">分类 🔎</string>
 
     <!-- 首页:识别图纸 -->
-    <string name="scan_msg">拖框贴住图纸的网格区域(别框进旁边的空白),然后点「识别」。识别完直接进编辑器,可换色板重新生成。</string>
+    <string name="scan_msg">拖框贴住图纸或成品拼豆的网格区域(别框进旁边的空白),然后点「识别」。识别完直接进编辑器,可换色板重新生成。</string>
     <string name="btn_detect">识别</string>
     <string name="scan_need_box">先把框拖到图纸网格上</string>
     <string name="working_scan">识别网格中…</string>
@@ -394,6 +394,8 @@
     <string name="menu_effect">保存效果图</string>
     <string name="menu_share">分享图纸</string>
     <string name="menu_pdf">导出 PDF 文档</string>
+    <string name="menu_pdf_code">导出 PDF(格内色号)</string>
+    <string name="sheet_code_title">拼豆图纸(格内色号)</string>
     <string name="menu_more_exports">导出图纸 / 文件…</string>
     <string name="menu_import_json">📥 导入图纸文件(.json)</string>
     <string name="btn_start_beading">🧵 开始拼豆</string>
