@@ -33,6 +33,7 @@ public final class PatternShare {
             c.put("code", uc.color.code);
             c.put("name", uc.color.name);
             c.put("rgb", uc.color.rgb);
+            if (!uc.color.tag.isEmpty()) c.put("tag", uc.color.tag);
             colors.put(c);
         }
         JSONArray rle = new JSONArray();
@@ -93,7 +94,8 @@ public final class PatternShare {
             JSONObject c = colors.optJSONObject(i);
             if (c == null) throw new Exception("颜色表损坏");
             palette.add(new BeadColor(c.optInt("code", 0),
-                    c.optString("name", "色" + (i + 1)), c.optInt("rgb", 0xFF000000)));
+                    c.optString("name", "色" + (i + 1)), c.optInt("rgb", 0xFF000000),
+                    c.optString("tag", "")));
         }
         JSONArray rle = o.optJSONArray("cells");
         if (rle == null) throw new Exception("缺少格子数据");

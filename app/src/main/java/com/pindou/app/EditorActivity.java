@@ -5017,6 +5017,7 @@ public class EditorActivity extends Activity {
                         }
                     });
                 } catch (final Exception e) {
+                    android.util.Log.e("ExportDbg", "exportPdfCode failed", e);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -5983,6 +5984,11 @@ public class EditorActivity extends Activity {
                 adapter.notifyDataSetChanged();
                 updateSummary();
                 updateEditsButton();
+                // 导入图纸(含成品转图纸):1 格 = 1 豆 固定,画幅/宽高调整
+                // 不会重生成(只弹"导入图纸"提示),留着只会误导——整段隐藏;
+                // 开始拼豆按钮不走 regenerate 回调,这里直接点亮
+                findViewById(R.id.sizeSection).setVisibility(View.GONE);
+                btnStartBeading.setVisibility(View.VISIBLE);
             } else if (blankCanvas || source == null) {
                 blankCanvas = true;
                 hidePhotoOnlyCards();

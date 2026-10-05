@@ -108,7 +108,11 @@ public final class PdfExporter {
             fos.close();
             return AppFileProvider.forCacheShare(out);
         } finally {
-            doc.close();
+            try {
+                doc.close();
+            } catch (Throwable ignored) {
+                // 页面未完成等收尾异常不掩盖真正的导出异常
+            }
         }
     }
 
@@ -138,7 +142,8 @@ public final class PdfExporter {
                     String.format(Locale.CHINA, ctx.getString(R.string.fmt_pdf_total),
                             p.totalBeads, p.usedColors.size()),
                     String.format(Locale.CHINA, ctx.getString(R.string.fmt_pdf_boards),
-                            p.boardsNeeded(), p.cols * cm, p.rows * cm),
+                            p.boardsNeeded(), p.cols * cm, p.rows * cm,
+                            com.pindou.app.bead.BeadPattern.boardSize(mini)),
                     String.format(Locale.CHINA, ctx.getString(R.string.fmt_pdf_weight),
                             Math.round(p.totalBeads * (mini ? 0.0067f : 0.024f)),
                             ctx.getString(mini ? R.string.bead_mini : R.string.bead_std)),
