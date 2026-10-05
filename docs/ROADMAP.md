@@ -462,11 +462,22 @@ IoT/蓝牙硬件板。详见 docs/完整文档.md 开头的"发布渠道计划"�
 - **本机安全钩子（Mimosa）**：Bash 里出现 `.java` 路径的写入/编译命令会被拦
   （编译测试请走 bat 脚本或让 CI 跑）；Python 脚本里的动态 URL 请求会被按
   SSRF 拦（网络请求用 curl + 固定域名，或先 DNS 校验公网 IP）。
-- **android-emulator MCP**：插件已装但本机无 SDK/模拟器，MCP 工具未连接；
-  真机验证走 CI 云端模拟器（已建成）或用户提供 USB 设备。
+- **android-emulator MCP**：插件已装但 MCP 工具未连接；本机验证直接用
+  tools\asdk 的模拟器（见下），真机走 CI 云端模拟器或用户提供 USB 设备。
+- **★ 本机模拟器已可行（2026-10-05 实测，推翻 2026-09-07 的旧结论）**：
+  本机已装 AEHD 2.2 加速驱动（无需再装），tools\asdk 里有 x86_64
+  google_apis android-30 镜像和现成 `smoke` AVD。快速验证四步：
+  ①启动 `tools\asdk\emulator\emulator.exe -avd smoke -no-window -no-audio
+  -no-boot-anim -no-snapshot -gpu swiftshader_indirect -port 5554`（后台）→
+  ②`adb wait-for-device` + `getprop sys.boot_completed`==1 →
+  ③`build_apk.bat` 构建 + `adb install -r`（版本降级报错先 uninstall）→
+  ④注入测试照片（root cp 到 files/）+ `am start --es photo_uri ...` +
+  `screencap` 截图人眼审。Git Bash 记得 `MSYS_NO_PATHCONV=1`；模拟器是
+  zh-CN 环境；google_apis 镜像支持 `adb root`。
 - **★ UI 测试 = 推 git 走 CI 云端模拟器**（2026-09-07 实战验证，标准流程）：
-  本机缺 hypervisor（装 AEHD/WHPX 要管理员+重启），且模拟器 37.x
-  拒绝在 x86 主机跑 arm64 镜像，**本地模拟器路线不可行**。标准做法：
+  CI 用于 en 环境三语验证与截图存档（本机是 zh-CN）。历史上"本地模拟器
+  路线不可行"是当时缺 hypervisor+镜像错配所致，现已解除（见上条）。
+  标准做法：
   ①改完 UI → 本地 `compile_check.bat` + `qa\run_tests.bat` 全绿 →
   ②push main（github 直连间歇抽风，重试 5~15 次，每次间隔 30~45s 可过；
   `git -c http.version=HTTP/1.1 push` 用一次性 token URL，不落盘）→
