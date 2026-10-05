@@ -41,7 +41,7 @@ if errorlevel 1 (
 )
 
 set FAIL=0
-for %%T in (TestColorMath TestPatternEngine TestPatternPatch TestCustomPalette TestSymmetry TestLineArt TestBrandCharts TestBoardProjector TestCrossStitch TestHexBoard TestBackup TestPlay3D TestGifEncoder TestVerify TestAlgoGate TestStandee TestInventory TestPatternShare TestPaletteShare TestStrings TestStorage TestChaos TestBoardModule TestSpringMotion TestFlatUnify TestBeadPhoto) do (
+for %%T in (TestColorMath TestPatternEngine TestPatternPatch TestCustomPalette TestSymmetry TestLineArt TestBrandCharts TestBoardProjector TestCrossStitch TestHexBoard TestBackup TestPlay3D TestGifEncoder TestVerify TestAlgoGate TestStandee TestInventory TestPatternShare TestPaletteShare TestStrings TestStorage TestChaos TestGridScanner TestBoardModule TestSpringMotion TestFlatUnify TestBeadPhoto) do (
     echo ===== running %%T =====
     "%JAVA_HOME%\bin\java.exe" -cp "qa\out;%AJ%" %%T
     if errorlevel 1 set FAIL=1

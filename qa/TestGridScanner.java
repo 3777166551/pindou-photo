@@ -113,19 +113,19 @@ public class TestGridScanner {
         if (g == null) return null;
         int[] dims = new int[2];
         int[] cells = GridScanner.sample(img, w, h, g, dims);
-        // 命中率:允许 ±1 格相位平移取最优(边界峰漏检时整体差一格,
-        // 颜色依旧清晰,对产品不构成损伤);只比内部重叠区
+        // 命中率:全平移搜索取最优。旧版只允许居中±1 格——大角度下旋转
+        // bounding box 外扩不对称,真值块在输出里的偏移远超 1 格,
+        // 居中假设直接判死(9° 实测 hit 10% 的根因是测试架不是扫描器);
+        // 只比内部重叠区,输出含底板边由 sample 内部 trimBackground 收敛
         int best = 0, bestTot = 0;
-        for (int dy = -1; dy <= 1; dy++) {
-            for (int dx = -1; dx <= 1; dx++) {
+        for (int oy = 0; oy <= dims[1] - rows; oy++) {
+            for (int ox = 0; ox <= dims[0] - cols; ox++) {
                 int hit = 0, tot = 0;
-                int ox = (dims[0] - cols) / 2 + dx, oy = (dims[1] - rows) / 2 + dy;
                 for (int y = 0; y < rows; y++) {
+                    int base = (y + oy) * dims[0] + ox;
                     for (int x = 0; x < cols; x++) {
-                        int sx = x + ox, sy = y + oy;
-                        if (sx < 0 || sy < 0 || sx >= dims[0] || sy >= dims[1]) continue;
                         tot++;
-                        if (colorHit(cells[sy * dims[0] + sx], truth[y][x])) hit++;
+                        if (colorHit(cells[base + x], truth[y][x])) hit++;
                     }
                 }
                 if (tot > 0 && hit * 100 > best * bestTot) {
@@ -200,6 +200,28 @@ public class TestGridScanner {
             check("beads 1.2° cols " + r4[0], Math.abs(r4[0] - 30) <= 3);
             check("beads 1.2° rows " + r4[1], Math.abs(r4[1] - 22) <= 3);
             check("beads 1.2° hit " + r4[2] + "%", r4[2] >= 85);
+        }
+        // 大角度(v2.70 旋转搜索 ±6°→±12°):手持斜拍成品照常见 6° 以上。
+        // 期望行列数 = 旋转网格轴对齐包围盒(cols·|cos|+rows·|sin|),
+        // 四角半豆半底板的边界列 trimBackground 裁不到(不足 90% 同色),
+        // 故容差 ±3 只覆盖边界残留
+        double c9 = Math.abs(Math.cos(Math.toRadians(9.0)));
+        double s9 = Math.abs(Math.sin(Math.toRadians(9.0)));
+        int[] r5 = beadCase(24, 30, 18f, 9.0, 55);
+        check("beads 9° detect", r5 != null);
+        if (r5 != null) {
+            check("beads 9° cols " + r5[0], Math.abs(r5[0] - (24 * c9 + 30 * s9)) <= 3);
+            check("beads 9° rows " + r5[1], Math.abs(r5[1] - (30 * c9 + 24 * s9)) <= 3);
+            check("beads 9° hit " + r5[2] + "%", r5[2] >= 85);
+        }
+        double c11 = Math.abs(Math.cos(Math.toRadians(-11.0)));
+        double s11 = Math.abs(Math.sin(Math.toRadians(-11.0)));
+        int[] r6 = beadCase(20, 26, 16f, -11.0, 66);
+        check("beads -11° detect", r6 != null);
+        if (r6 != null) {
+            check("beads -11° cols " + r6[0], Math.abs(r6[0] - (20 * c11 + 26 * s11)) <= 3);
+            check("beads -11° rows " + r6[1], Math.abs(r6[1] - (26 * c11 + 20 * s11)) <= 3);
+            check("beads -11° hit " + r6[2] + "%", r6[2] >= 85);
         }
 
         // ---- 无网格:随机噪声必须拒检

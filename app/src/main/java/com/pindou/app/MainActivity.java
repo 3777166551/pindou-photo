@@ -1428,22 +1428,35 @@ showMergedBomResult(keys, agg, labels, rgbs, okCount);
                         return;
                     }
                     final int[] dims = new int[2];
-                    final int[] cells =
+                    int[] cells =
                             com.pindou.app.util.GridScanner.sample(px, w, h, g, dims);
-                    final int cols = dims[0], rows = dims[1];
+                    int cols = dims[0], rows = dims[1];
+                    // 织物边框裁剪(v2.63 写好、v2.70 接线):选框常带进照片里的
+                    // 白色织物/桌面背景,边缘同色行/列≥90% 判背景逐条裁掉,
+                    // 最多各裁 35%;全不被裁则原样返回
+                    int[] outCR = new int[2];
+                    int[] trimmed = com.pindou.app.util.GridScanner
+                            .trimBackground(cells, cols, rows, outCR);
+                    if (trimmed != cells && outCR[0] >= 3 && outCR[1] >= 3) {
+                        cells = trimmed;
+                        cols = outCR[0];
+                        rows = outCR[1];
+                    }
+                    final int[] fCells = cells;
+                    final int fCols = cols, fRows = rows;
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             pd.dismiss();
                             android.graphics.Bitmap out =
-                                    android.graphics.Bitmap.createBitmap(cols, rows,
+                                    android.graphics.Bitmap.createBitmap(fCols, fRows,
                                             android.graphics.Bitmap.Config.ARGB_8888);
-                            out.setPixels(cells, 0, cols, 0, 0, cols, rows);
+                            out.setPixels(fCells, 0, fCols, 0, 0, fCols, fRows);
                             EditorActivity.pendingSource = out;
                             // 扫描产物 1 格 = 1 豆:矩形画幅直接按识别行列数进编辑器,
                             // 强套正方形会被居中裁剪+重采样,整格颜色全糊(v2.63)
-                            EditorActivity.pendingSuggestedCols = cols;
-                            EditorActivity.pendingSuggestedRows = rows;
+                            EditorActivity.pendingSuggestedCols = fCols;
+                            EditorActivity.pendingSuggestedRows = fRows;
                             startActivity(new Intent(MainActivity.this, EditorActivity.class));
                             overridePendingTransition(R.anim.enter_up, R.anim.exit_dim);
                         }

@@ -87,19 +87,31 @@ public final class GridScanner {
             }
         }
 
-        // 旋转角:X 投影(竖线)的剪切方差最大处;网格对齐时峰最尖
+        // 旋转角:X 投影(竖线)的剪切方差最大处;网格对齐时峰最尖。
+        // ±12°(v2.70 放宽,原 ±6°):手持拍成品 6° 以上的歪并不罕见;
+        // 作品内 45° 树枝纹理远在范围外不会误锁。三段式控制开销:
+        // 0.6° 粗扫(41 次)→ 0.1°(13 次)→ 0.05° 终细化(5 次)
         double bestTheta = 0, bestVar = -1;
-        for (int deg10 = -60; deg10 <= 60; deg10 += 3) {   // ±6° 步 0.3°
-            double th = Math.toRadians(deg10 / 10.0);
+        for (int deg100 = -1200; deg100 <= 1200; deg100 += 60) {
+            double th = Math.toRadians(deg100 / 100.0);
             double var = shearVariance(gxm, cw, ch, Math.tan(th), true);
             if (var > bestVar) {
                 bestVar = var;
                 bestTheta = th;
             }
         }
-        double t0 = bestTheta - Math.toRadians(0.3), t1 = bestTheta + Math.toRadians(0.3);
-        for (int i = 0; i <= 6; i++) {
-            double th = t0 + (t1 - t0) * i / 6.0;
+        double t0 = bestTheta - Math.toRadians(0.6), t1 = bestTheta + Math.toRadians(0.6);
+        for (int i = 0; i <= 12; i++) {
+            double th = t0 + (t1 - t0) * i / 12.0;
+            double var = shearVariance(gxm, cw, ch, Math.tan(th), true);
+            if (var > bestVar) {
+                bestVar = var;
+                bestTheta = th;
+            }
+        }
+        double u0 = bestTheta - Math.toRadians(0.1), u1 = bestTheta + Math.toRadians(0.1);
+        for (int i = 0; i <= 4; i++) {
+            double th = u0 + (u1 - u0) * i / 4.0;
             double var = shearVariance(gxm, cw, ch, Math.tan(th), true);
             if (var > bestVar) {
                 bestVar = var;
@@ -120,7 +132,12 @@ public final class GridScanner {
         float pitchY = gy == null ? -1 : gy[0];
         // 拼豆网格横竖格距相同:一个方向失手就借用另一个的格距
         // (只借格距,不借相位——两轴坐标系不通用)
-        if (pitchX <= 0 && pitchY <= 0) return null;
+        if (pitchX <= 0 && pitchY <= 0) {
+            if (DEBUG) System.out.printf("[GridScanner] FAIL no pitch: gx=%s gy=%s%n",
+                    gx == null ? "null" : java.util.Arrays.toString(gx),
+                    gy == null ? "null" : java.util.Arrays.toString(gy));
+            return null;
+        }
         if (pitchX > 0 && pitchY > 0
                 && Math.max(pitchX, pitchY) / Math.min(pitchX, pitchY) > 1.35f) {
             return null;   // 两方向差太多,至少一个被纹理带偏
@@ -175,7 +192,11 @@ public final class GridScanner {
         int cols = Math.max(3, (int) Math.floor((cw - 1 - fcX) / pitchX) + 1);
         int rows = Math.max(3, (int) Math.floor((ch - 1 - fcY) / pitchY) + 1);
         // 拼豆图纸实际常见 3~200 格,过滤离谱结果
-        if (cols < 3 || rows < 3 || cols > 200 || rows > 200) return null;
+        if (cols < 3 || rows < 3 || cols > 200 || rows > 200) {
+            if (DEBUG) System.out.printf("[GridScanner] FAIL dims %dx%d fc=(%.1f,%.1f) pitch=%.1f%n",
+                    cols, rows, fcX, fcY, pitchX);
+            return null;
+        }
 
         return new Grid(cols, rows, x0 + fcX, y0 + fcY, pitchX, pitchY, bestTheta);
     }
