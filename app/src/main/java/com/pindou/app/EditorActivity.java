@@ -1174,7 +1174,7 @@ public class EditorActivity extends Activity {
                 floodFill(cellX, cellY);
             }
         });
-        // 拼豆模式按住滑动 = 连续标记完成
+        // 拼豆模式长按后滑动 = 连续标记完成(拖动已改为平移图纸)
         patternView.setOnAssistDragListener(new PatternView.OnAssistDragListener() {
             @Override
             public void onAssistDragCell(int cellX, int cellY) {

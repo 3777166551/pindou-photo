@@ -326,7 +326,11 @@ public class PatternView extends View {
     }
 
     // 拼豆模式触摸状态
-    private boolean dragging, dragMarking;
+    // v2.67 手势重排(用户反馈"想拖动界面结果误标完成"):拖动 = 平移图纸,
+    // 连续刷选改由长按进入(与画笔模式长按油漆桶同一套交互语言)
+    private boolean dragging, dragMarking, dragPanning;
+    private float lastPanX, lastPanY;
+    private Runnable assistLongPress;
     private int lastDragX = -1, lastDragY = -1;
     private Runnable pendingTap;
     private long lastTapUp;
@@ -497,7 +501,7 @@ public class PatternView extends View {
 
     /**
      * 拼豆模式的触摸处理:单击 = 切换完成标记(双击仍复位缩放),
-     * 按住滑动 = 连续刷选(只标记完成,不取消)。
+     * 拖动 = 平移图纸,长按后滑动 = 连续刷选(只标记完成,不取消)。
      */
     private boolean handleAssistTouch(MotionEvent event) {
         if (pattern == null || fitCell() <= 0) return false;
@@ -510,6 +514,8 @@ public class PatternView extends View {
                 downCell = c;
                 dragging = true;
                 dragMarking = false;
+                dragPanning = false;
+                armAssistLongPress();
                 return true;
             }
             case MotionEvent.ACTION_MOVE: {
@@ -519,6 +525,8 @@ public class PatternView extends View {
                     if (dragging && event.getPointerCount() > 1) {
                         dragging = false;
                         dragMarking = false;
+                        dragPanning = false;
+                        cancelAssistLongPress();
                         if (pendingTap != null) {
                             removeCallbacks(pendingTap);
                             pendingTap = null;
@@ -528,27 +536,41 @@ public class PatternView extends View {
                     return dragging;
                 }
                 if (!dragMarking) {
-                    if (!isBeyondSlop(event)) return true;
-                    dragMarking = true;
+                    if (!isBeyondSlop(event)) return true;   // 未出阈值,继续等长按
+                    cancelAssistLongPress();
                     if (pendingTap != null) {
                         removeCallbacks(pendingTap);
                         pendingTap = null;
                     }
-                    lastDragX = -1;
-                    lastDragY = -1;
-                    markAt(downX, downY);
+                    if (!dragPanning) {
+                        // 出手即平移:不再误标格子(旧版这里直接进刷选)
+                        dragPanning = true;
+                        lastPanX = downX;   // 从落点起算,首段位移不跳变
+                        lastPanY = downY;
+                    }
+                    offX -= event.getX() - lastPanX;
+                    offY -= event.getY() - lastPanY;
+                    lastPanX = event.getX();
+                    lastPanY = event.getY();
+                    invalidate();
+                    return true;
                 }
                 markLine(event.getX(), event.getY());
                 return true;
             }
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL: {
+                cancelAssistLongPress();
                 if (!dragging) return false;
                 dragging = false;
                 if (dragMarking) {
                     dragMarking = false;
                     if (assistDragListener != null) assistDragListener.onAssistDragEnd();
-                    return true;
+                    return true;   // 长按已标记过落点格,抬手不再当单击切换
+                }
+                if (dragPanning) {
+                    dragPanning = false;
+                    return true;   // 平移结束后不触发格子切换
                 }
                 int[] c = cellAt(event.getX(), event.getY());
                 if (c == null) return true;
@@ -608,6 +630,34 @@ public class PatternView extends View {
             lastDragX = c[0];
             lastDragY = c[1];
             if (assistDragListener != null) assistDragListener.onAssistDragCell(c[0], c[1]);
+        }
+    }
+
+    /** 启动辅助模式长按计时:超时仍按着且未滑出即进入刷选(落点格立即标记) */
+    private void armAssistLongPress() {
+        cancelAssistLongPress();
+        assistLongPress = new Runnable() {
+            @Override
+            public void run() {
+                if (!dragging || dragMarking || dragPanning) return;
+                dragMarking = true;
+                if (pendingTap != null) {
+                    removeCallbacks(pendingTap);
+                    pendingTap = null;
+                }
+                performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS);
+                lastDragX = -1;
+                lastDragY = -1;
+                markAt(downX, downY);
+            }
+        };
+        postDelayed(assistLongPress, ViewConfiguration.getLongPressTimeout());
+    }
+
+    private void cancelAssistLongPress() {
+        if (assistLongPress != null) {
+            removeCallbacks(assistLongPress);
+            assistLongPress = null;
         }
     }
 
