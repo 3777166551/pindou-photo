@@ -1,0 +1,19 @@
+Turn any photo into a perler/fuse bead pattern — fully offline. Snap your cat, your drawing or your avatar and get a beading chart plus a shopping list. Candy-sticker UI designed for beaders.
+
+✨ Features
+• Photo → chart: 4 universal palettes (24/48/90/120 colors) mapped to Artkal / MARD / Perler / Hama / Nabbi color codes
+• Realistic / abstract / line-art styles, k-means quantization + Floyd–Steinberg dithering, round boards supported
+• Quality modes: clean outlines / noise cleanup / precise colors (CIEDE2000); color-limit merging (12/18/26/40)
+• On-device background removal (built-in U²-Net model, no network), watermark removal, and photo-of-finished-piece → chart recovery
+• Snap an old pattern: automatic grid detection; PDF charts can be imported too
+• Built-in template library: 277 patterns in 8 categories (based on Fluent Emoji, MIT)
+• Bead list: counts, share, weight, cost, pack conversion (≈N packs of 1000), inventory and substitution suggestions
+• Beading assistant: per-color locating, tap/swipe marking, board/row guidance, check-in calendar, keep-screen-on
+• 3D preview and stacked multi-layer compositions with merged bead lists
+• Projector alignment: pin the current color onto your real pegboard with 4-point calibration
+• AR try-on, cross-stitch export (DMC 454 floss), GIF export, full backup/restore, open charts from WeChat/QQ
+
+🔒 Privacy: the app requests NO internet permission — no network, no uploads, no ads, no tracking.
+🆓 Free & open source (AGPL-3.0): https://github.com/3777166551/pindou-photo
+
+Third-party notices in THIRD_PARTY.md: ONNX Runtime (MIT), U²-Net model (Apache-2.0), AnimeGANv3 model (non-commercial license), Fluent Emoji (MIT).
