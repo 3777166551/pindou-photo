@@ -221,7 +221,7 @@ public class InventoryActivity extends Activity {
             if (colors.isEmpty()) {
                 TextView empty = new TextView(InventoryActivity.this);
                 empty.setText(getString(R.string.inv_empty_home));
-                empty.setTextColor(0xFF1D1B20);
+                empty.setTextColor(themeColor(R.attr.textMain, 0xFF1D1B20));
                 empty.setTextSize(14);
                 empty.setLineSpacing(dp(3), 1f);
                 LinearLayout row = new LinearLayout(InventoryActivity.this);
@@ -245,33 +245,48 @@ public class InventoryActivity extends Activity {
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
             row.setBackgroundResource(R.drawable.bg_card_outline);
-            row.setPadding(dp(12), dp(10), dp(12), dp(10));
+            row.setPadding(dp(16), dp(12), dp(16), dp(12));
 
+            // M3 色样:正圆 + 1dp 描边(白/淡黄等浅豆在白卡上也有轮廓)
             View sw = new View(InventoryActivity.this);
             GradientDrawable gd = new GradientDrawable();
+            gd.setShape(GradientDrawable.OVAL);
             gd.setColor(0xFF000000 | rgb);
-            gd.setCornerRadius(dp(6));
+            gd.setStroke(dp(1), themeColor(R.attr.colorStroke, 0xFFCAC4D0));
             sw.setBackground(gd);
-            row.addView(sw, new LinearLayout.LayoutParams(dp(32), dp(32)));
+            row.addView(sw, new LinearLayout.LayoutParams(dp(36), dp(36)));
 
-            TextView label = new TextView(InventoryActivity.this);
-            label.setText(PaletteShare.toHex(rgb));
-            label.setTextColor(0xFF1D1B20);
-            label.setTextSize(14);
-            label.setTypeface(Typeface.DEFAULT_BOLD);
+            // 文字列(M3 两级排版):官方色号为主行、hex 为次行;
+            // 无官方色号(回退 hex)时不重复展示第二行
+            LinearLayout textCol = new LinearLayout(InventoryActivity.this);
+            textCol.setOrientation(LinearLayout.VERTICAL);
+            String hex = PaletteShare.toHex(rgb);
+            String code = codeLookup().get(rgb & 0xFFFFFF);
+            TextView tvCode = new TextView(InventoryActivity.this);
+            tvCode.setText(code != null ? code : hex);
+            tvCode.setTextColor(themeColor(R.attr.textMain, 0xFF1D1B20));
+            tvCode.setTextSize(15);
+            tvCode.setTypeface(Typeface.DEFAULT_BOLD);
+            textCol.addView(tvCode);
+            if (code != null && !code.equalsIgnoreCase(hex)) {
+                TextView tvHex = new TextView(InventoryActivity.this);
+                tvHex.setText(hex);
+                tvHex.setTextColor(themeColor(R.attr.textSub, 0xFF79747E));
+                tvHex.setTextSize(12);
+                textCol.addView(tvHex);
+            }
             LinearLayout.LayoutParams llp = new LinearLayout.LayoutParams(
                     0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-            llp.leftMargin = dp(12);
-            llp.rightMargin = dp(12);
-            row.addView(label, llp);
+            llp.leftMargin = dp(14);
+            llp.rightMargin = dp(10);
+            row.addView(textCol, llp);
 
-            // 数量列:标签在上、输入框在下,避免横排互相顶挤
+            // 数量列:标签在上、输入框在下,左对齐同宽,避免横排互相顶挤
             LinearLayout countBox = new LinearLayout(InventoryActivity.this);
             countBox.setOrientation(LinearLayout.VERTICAL);
-            countBox.setGravity(Gravity.CENTER_HORIZONTAL);
             TextView cntLabel = new TextView(InventoryActivity.this);
             cntLabel.setText(getString(R.string.inv_count_hint));
-            cntLabel.setTextColor(0xFF49454F);
+            cntLabel.setTextColor(themeColor(R.attr.textSub, 0xFF79747E));
             cntLabel.setTextSize(11);
             countBox.addView(cntLabel);
 
@@ -599,6 +614,14 @@ public class InventoryActivity extends Activity {
         if (updateHex) {
             etHex.setText(PaletteShare.toHex(rgb));
         }
+    }
+
+    /** 解析主题语义色(深浅色/动态取色自动),取不到用 fallback */
+    private int themeColor(int attr, int fallback) {
+        android.content.res.TypedArray ta = obtainStyledAttributes(new int[]{attr});
+        int c = ta.getColor(0, fallback);
+        ta.recycle();
+        return c;
     }
 
     private int dp(float v) {
