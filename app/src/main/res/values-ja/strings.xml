@@ -556,7 +556,7 @@
     <string name="fmt_excluded_toast">除外しました。近い色に自動振り替え</string>
     <string name="excluded_bar">除外 %1$d 色(タップで復元):</string>
     <string name="cell_info_title">マスの色</string>
-    <string name="fmt_cell_symbol">記号:%s</string>
+    <string name="fmt_cell_symbol">コード:%s</string>
     <string name="fmt_cell_rgb">RGB:#%06X</string>
     <string name="fmt_cell_count">使用:%1$,d 個 · %2$.1f%%</string>
 

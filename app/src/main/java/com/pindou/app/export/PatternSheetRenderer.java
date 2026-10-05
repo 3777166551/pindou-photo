@@ -217,34 +217,28 @@ public final class PatternSheetRenderer {
             c.drawRect(gx, gy, gx + gridW, gy + gridH, borderP);
         }
 
-        // 符号 / 格内色号
+        // 格内色号(v2.69 起两种模式格内都是官方色号,区别只在图例/标题;
+        // 原 A/B/C 内部序号别人认不出,用户反馈后统一)
         Paint.FontMetrics sfm = symbolP.getFontMetrics();
         float sdy = -(sfm.ascent + sfm.descent) / 2f;
         Paint codeP = textPaint((int) (cell * 0.34), 0xFF000000, true);
         codeP.setTextAlign(Paint.Align.CENTER);
-        String[] codes = codeMode ? new String[p.palette.size()] : null;
+        String[] codes = new String[p.palette.size()];
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < cols; x++) {
                 int idx = p.cellAt(x, y);
                 if (idx < 0) continue;
                 int rgb = p.palette.get(idx).rgb;
-                String t;
-                if (codeMode) {
-                    if (codes[idx] == null) codes[idx] = p.palette.get(idx).displayCode();
-                    t = codes[idx];
-                    float maxW = cell * 0.88f;
-                    while (codeP.getTextSize() > cell * 0.2
-                            && codeP.measureText(t) > maxW) {
-                        codeP.setTextSize(codeP.getTextSize() - 1f);
-                    }
-                    codeP.setColor(ColorMath.textColorOn(rgb));
-                    c.drawText(t, gx + (x + 0.5f) * cell, gy + (y + 0.5f) * cell + sdy, codeP);
-                    codeP.setTextSize(cell * 0.34f);   // 复位,下个格子重新自适应
-                } else {
-                    symbolP.setColor(ColorMath.textColorOn(rgb));
-                    c.drawText(PatternEngine.symbolFor(idx),
-                            gx + (x + 0.5f) * cell, gy + (y + 0.5f) * cell + sdy, symbolP);
+                if (codes[idx] == null) codes[idx] = p.palette.get(idx).displayCode();
+                String t = codes[idx];
+                float maxW = cell * 0.88f;
+                while (codeP.getTextSize() > cell * 0.2
+                        && codeP.measureText(t) > maxW) {
+                    codeP.setTextSize(codeP.getTextSize() - 1f);
                 }
+                codeP.setColor(ColorMath.textColorOn(rgb));
+                c.drawText(t, gx + (x + 0.5f) * cell, gy + (y + 0.5f) * cell + sdy, codeP);
+                codeP.setTextSize(cell * 0.34f);   // 复位,下个格子重新自适应
             }
         }
 

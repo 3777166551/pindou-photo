@@ -348,12 +348,13 @@ public final class PatternEngine {
             mergeToMaxColors(cells, counts, n, palette, o.maxColors);
         }
 
-        // 7. 统计
+        // 7. 统计(symbol 字段 = 官方色号,v2.69 起图例/清单行/PDF BOM 直接显示色号)
         int total = 0;
         List<BeadPattern.UsedColor> used = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             if (counts[i] > 0) {
-                used.add(new BeadPattern.UsedColor(i, palette.get(i), symbolFor(i), counts[i]));
+                used.add(new BeadPattern.UsedColor(i, palette.get(i),
+                        palette.get(i).displayCode(), counts[i]));
                 total += counts[i];
             }
         }

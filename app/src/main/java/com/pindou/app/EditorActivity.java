@@ -3013,7 +3013,7 @@ public class EditorActivity extends Activity {
                 c.fullLabel(),
                 getString(R.string.fmt_cell_symbol,
                         uc != null ? uc.symbol
-                                : PatternEngine.symbolFor(idx)),
+                                : pattern.palette.get(idx).displayCode()),
                 getString(R.string.fmt_cell_rgb, c.rgb & 0xFFFFFF),
                 (uc != null ? String.format(Locale.CHINA,
                         getString(R.string.fmt_cell_count), cnt, pct) : "")
@@ -3587,7 +3587,15 @@ public class EditorActivity extends Activity {
                     if (done) cellP.setAlpha(60);   // 已拼:降透明
                     canvas.drawRect(px, py, px + cell, py + cell, cellP);
                     cellP.setAlpha(255);
-                    String sym = PatternEngine.symbolFor(idx);
+                    // 格内文字 = 官方色号(v2.69,原 A/B/C 内部序号)
+                    String sym = pattern.palette.get(idx).displayCode();
+                    float ts = cell * 0.42f;
+                    symP.setTextSize(ts);
+                    while (ts > cell * 0.2f
+                            && symP.measureText(sym) > cell * 0.92f) {
+                        ts -= 1f;
+                        symP.setTextSize(ts);
+                    }
                     symP.setColor(ColorMath.textColorOn(rgb));
                     Paint.FontMetrics fm = symP.getFontMetrics();
                     float dy = -(fm.ascent + fm.descent) / 2f;

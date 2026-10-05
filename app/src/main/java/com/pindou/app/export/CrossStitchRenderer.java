@@ -110,15 +110,25 @@ public final class CrossStitchRenderer {
             c.drawText(String.valueOf(y + 1), gx0 - 10,
                     gy0 + (y + 0.5f) * cell + labelP.getTextSize() * 0.35f, labelP);
         }
-        // 符号
+        // 格内官方色号(v2.69,原 A/B/C 内部序号);字号按码宽自适应
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < cols; x++) {
                 int idx = p.cellAt(x, y);
                 if (idx < 0) continue;
+                String sym = p.palette.get(idx).displayCode();
+                float ts = symbolP.getTextSize();
+                while (ts > cell * 0.2f
+                        && symbolP.measureText(sym) > cell * 0.92f) {
+                    ts -= 1f;
+                    symbolP.setTextSize(ts);
+                }
+                symbolP.setColor(ColorMath
+                        .textColorOn(p.palette.get(idx).rgb));
                 Paint.FontMetrics fm = symbolP.getFontMetrics();
                 float dy = -(fm.ascent + fm.descent) / 2f;
-                c.drawText(PatternEngine.symbolFor(idx),
+                c.drawText(sym,
                         gx0 + (x + 0.5f) * cell, gy0 + (y + 0.5f) * cell + dy, symbolP);
+                symbolP.setTextSize((int) (cell * 0.42));   // 复位,下格重新自适应
             }
         }
 
@@ -140,7 +150,7 @@ public final class CrossStitchRenderer {
                 swP.setStrokeWidth(1.5f);
                 c.drawRect(cx, cy, cx + 64, cy + 64, swP);
                 swP.setStyle(Paint.Style.FILL);
-                String sym = PatternEngine.symbolFor(m.paletteIndex);
+                String sym = p.palette.get(m.paletteIndex).displayCode();
                 Paint.FontMetrics fm = symbolP.getFontMetrics();
                 float dy = -(fm.ascent + fm.descent) / 2f;
                 symbolP.setColor(ColorMath.textColorOn(DmcTable.RGBS[m.dmc]));

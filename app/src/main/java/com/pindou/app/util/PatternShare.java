@@ -136,7 +136,7 @@ public final class PatternShare {
         for (int i = 0; i < n; i++) {
             if (counts[i] > 0) {
                 used.add(new BeadPattern.UsedColor(i, palette.get(i),
-                        PatternEngine.symbolFor(i), counts[i]));
+                        palette.get(i).displayCode(), counts[i]));
                 total += counts[i];
             }
         }

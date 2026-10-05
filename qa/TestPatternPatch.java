@@ -67,9 +67,9 @@ public class TestPatternPatch {
                         && p.usedColors.get(0).count == 6
                         && p.usedColors.get(1).index == 1
                         && p.usedColors.get(1).count == 1);
-        check("usedColor symbol assigned",
-                p.usedColors.get(0).symbol.equals("A")
-                        && p.usedColors.get(1).symbol.equals("B"));
+        check("usedColor symbol = displayCode(v2.69 官方色号)",
+                p.usedColors.get(0).symbol.equals(p.palette.get(0).displayCode())
+                        && p.usedColors.get(1).symbol.equals(p.palette.get(1).displayCode()));
         check("raw pattern untouched (pure function)",
                 raw.cells[0] == 0 && raw.counts[0] == 9 && raw.totalBeads == 9);
 

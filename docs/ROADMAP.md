@@ -1,7 +1,12 @@
 ﻿# 路线图与交接文档 (ROADMAP & HANDOFF)
 
 > 本文档是项目的**持续交接入口**：当前状态、待办功能、开发约定、操作备忘。
-> 新会话/新开发者从这里开始读。最后更新：2026-10-05（**v2.68(vc76):大画幅切尺寸后
+> 新会话/新开发者从这里开始读。最后更新：2026-10-05（**v2.69(vc77):格内文字
+> A/B/C 内部序号全部改为官方色号(用户反馈"拼豆或导出图纸时格子里显示的能直接是
+> 色号嘛?不要是ABCD 别人认不出来"):图纸页/投射沉浸/格信息/豆豆清单/导出图纸
+> PNG+PDF/立牌/十字绣统一 displayCode,格内字号按最长码自适应收缩。
+> 另含 v2.68 大画幅卡顿修复、v2.67 辅助手势、v2.66 豆仓行 M3。
+> 此前 2026-10-05 v2.68(vc76):大画幅切尺寸后
 > 拖动卡顿修复(用户反馈"切换尺寸后拖动下面的卡片卡一会自己好"):根因=效果图/图纸
 > 每帧重放数万格描画指令(systrace 实锤 RenderThread DrawFrame 16~23ms@200×200,
 > 切换后首段叠加显示列表重建),滚动设置区等其他无关帧同背成本;修复=≥100×100 网格
@@ -37,6 +42,24 @@
 3. **出包**:build_apk.bat 三处版本号(v2.61→v2.62,vc 67→68)→签名→
    Release 挂 APK→README 版本号同步。签名口令 PINDOU_KS_PASS 在
    HANDOFF.md(本地文档)。
+
+## ⭐ v2.69（vc77,2026-10-05,格内文字统一官方色号)
+
+- **背景**:用户反馈"拼豆或者导出图纸的时候 格子里面显示的能直接是色号嘛?不要是
+  ABCD 别人认不出来"——原 `PatternEngine.symbolFor` 是色板序号字母(A..Z..),
+  只有对照图例才有意义;官方色号本来就在 `BeadColor.displayCode()`(品牌=官方号,
+  通用=内部"n 号")。
+- **格内统一换色号**:PatternView 图纸页(setPattern 预缓存逐色 displayCode+最长
+  码宽,绘制帧一次 setTextSize,避免 200×200 逐格 measureText)/EditorActivity
+  投射沉浸 ProjectorView/格信息弹窗/PatternSheetRenderer(符号模式与色号模式
+  格内统一,差别只剩图例与标题)/CrossStitchRenderer 十字绣。
+- **UsedColor.symbol 构造点全换 displayCode**(PatternEngine/PatternPatch/
+  StandeeKit×2/PatternShare),豆豆清单行、替换选择器、PDF 材料清单、立牌清单、
+  分享图纸图例自动跟随;存档 JSON 不嵌 symbol,旧档重开自动新码。
+- **字号自适应**:格内 2~3 位码(H2/A26)缩到格宽 92% 为止,下限 0.2×格。
+- **文案**:fmt_cell_symbol "符号:%s"→"色号:%s"(en Code:,ja コード)三语。
+- TestPatternPatch 断言更新为 displayCode 语义;qa 全绿;模拟器 24×24 实测格内
+  H2/G15/F3/A26 官方码清晰可读。
 
 ## ⭐ v2.68（vc76,2026-10-05,大画幅切尺寸后拖动卡顿修复）
 

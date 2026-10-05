@@ -38,7 +38,7 @@ public final class PatternPatch {
         for (int i = 0; i < n; i++) {
             if (counts[i] > 0) {
                 used.add(new BeadPattern.UsedColor(
-                        i, p.palette.get(i), PatternEngine.symbolFor(i), counts[i]));
+                        i, p.palette.get(i), p.palette.get(i).displayCode(), counts[i]));
             }
         }
         BeadPattern.sortByCountDesc(used);

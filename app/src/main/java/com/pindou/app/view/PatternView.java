@@ -35,6 +35,9 @@ public class PatternView extends View {
     private BeadPattern pattern;
     private int mode = MODE_EFFECT;
     private boolean showSymbols = true;
+    /** 格内文字缓存:palette 逐色 displayCode(v2.69 起格内=官方色号)+ 最长码宽(em) */
+    private String[] codeCache;
+    private float codeWPerEm = 1f;
     private boolean showGrid = true;
 
     private float zoom = 1f;
@@ -232,6 +235,25 @@ public class PatternView extends View {
             zoom = 1f;
             offX = 0f;
             offY = 0f;
+        }
+        // 格内文字 = 官方色号(v2.69,原 A/B/C 内部序号别人认不出):
+        // 逐色板缓存 displayCode 与最长码宽,绘制帧只做一次 setTextSize,
+        // 避免 200×200 逐格 measureText
+        if (p != null && p.palette != null && !p.palette.isEmpty()) {
+            codeCache = new String[p.palette.size()];
+            Paint m = new Paint();
+            m.setTypeface(Typeface.DEFAULT_BOLD);
+            m.setTextSize(100f);
+            float maxW = 100f;
+            for (int i = 0; i < codeCache.length; i++) {
+                codeCache[i] = p.palette.get(i).displayCode();
+                float cw = m.measureText(codeCache[i]);
+                if (cw > maxW) maxW = cw;
+            }
+            codeWPerEm = maxW / 100f;
+        } else {
+            codeCache = null;
+            codeWPerEm = 1f;
         }
         // 大网格(≥100×100)挂硬件层:效果图/图纸每帧重放数万格圆/矩形,
         // 滚动设置区等无关帧也背着这笔 RenderThread 成本(systrace 实锤
@@ -1291,19 +1313,21 @@ public class PatternView extends View {
             canvas.drawRect(0, 0, w, h, borderPaint);
         }
 
-        // 符号(开关开就画;缩得太小时字会很小,但不至于"开关失灵")
-        if (showSymbols) {
-            symbolPaint.setTextSize(cell * 0.42f);
+        // 格内色号(开关开就画;缩得太小时字会很小,但不至于"开关失灵")。
+        // 字号按最长色号自适应:超宽的码(如 B23)缩到格宽 92% 为止
+        if (showSymbols && codeCache != null) {
+            symbolPaint.setTextSize(Math.min(cell * 0.42f,
+                    cell * 0.92f / Math.max(1f, codeWPerEm)));
             Paint.FontMetrics fm = symbolPaint.getFontMetrics();
             float dy = -(fm.ascent + fm.descent) / 2f;
             for (int y = 0; y < rows; y++) {
                 for (int x = 0; x < cols; x++) {
                     int idx = pattern.cellAt(x, y);
-                    if (idx < 0) continue;
+                    if (idx < 0 || idx >= codeCache.length) continue;
                     int rgb = pattern.palette.get(idx).rgb;
                     symbolPaint.setColor(ColorMath.textColorOn(rgb));
-                    String sym = PatternEngine.symbolFor(idx);
-                    canvas.drawText(sym, (x + 0.5f) * cell, (y + 0.5f) * cell + dy, symbolPaint);
+                    canvas.drawText(codeCache[idx],
+                            (x + 0.5f) * cell, (y + 0.5f) * cell + dy, symbolPaint);
                 }
             }
         }

@@ -556,7 +556,7 @@
     <string name="fmt_excluded_toast">已排除,该色格子自动改配最近的替代色</string>
     <string name="excluded_bar">已排除 %1$d 色(点色块恢复):</string>
     <string name="cell_info_title">格子颜色</string>
-    <string name="fmt_cell_symbol">符号:%s</string>
+    <string name="fmt_cell_symbol">色号:%s</string>
     <string name="fmt_cell_rgb">RGB:#%06X</string>
     <string name="fmt_cell_count">用量:%1$,d 颗 · %2$.1f%%</string>
 

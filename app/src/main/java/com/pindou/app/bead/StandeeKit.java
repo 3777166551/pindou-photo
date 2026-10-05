@@ -125,7 +125,7 @@ public final class StandeeKit {
             if (counts[i] <= 0) continue;
             total += counts[i];
             used.add(new BeadPattern.UsedColor(i, sprite.palette.get(i),
-                    symbolFor(i), counts[i]));
+                    sprite.palette.get(i).displayCode(), counts[i]));
         }
         BeadPattern.sortByCountDesc(used);
         return new BeadPattern(cols, rows, sprite.palette, cells,
@@ -162,7 +162,7 @@ public final class StandeeKit {
         for (int i = 0; i < mergedCounts.length; i++) {
             if (mergedCounts[i] <= 0) continue;
             out.add(new BeadPattern.UsedColor(i, sprite.palette.get(i),
-                    symbolFor(i), mergedCounts[i]));
+                    sprite.palette.get(i).displayCode(), mergedCounts[i]));
         }
         BeadPattern.sortByCountDesc(out);
         return out;
@@ -173,8 +173,4 @@ public final class StandeeKit {
         return sprite.rows > baseDepth * 5;
     }
 
-    /** 符号系统与图纸页一致(委托 PatternEngine,bead 包内可直达) */
-    private static String symbolFor(int idx) {
-        return PatternEngine.symbolFor(idx);
-    }
 }
