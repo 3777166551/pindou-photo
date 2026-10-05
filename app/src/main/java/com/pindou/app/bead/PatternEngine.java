@@ -484,7 +484,6 @@ public final class PatternEngine {
             int opaque = 0;
             int darkCount = 0;
             int sumR = 0, sumG = 0, sumB = 0;
-            double lSum = 0, aSum = 0, bSum = 0;
             if (n > 0) Arrays.fill(hist, 0, n, 0);
             if (n > 0) Arrays.fill(darkHist, 0, n, 0);
             for (int i = s; i < e; i++) {
@@ -504,8 +503,6 @@ public final class PatternEngine {
                 sumR += r;
                 sumG += gr;
                 sumB += bl;
-                double[] plab = ColorMath.rgbToLab(0xFF000000 | (r << 16) | (gr << 8) | bl);
-                lSum += plab[0]; aSum += plab[1]; bSum += plab[2];
                 if (gate) {
                     r = clamp8(Math.round(r * g.gateGain));
                     gr = clamp8(Math.round(gr * g.gateGain));
@@ -549,11 +546,13 @@ public final class PatternEngine {
             purity[c] = (float) hist[best] / opaque;
             darkFrac[c] = (float) darkCount / opaque;
             // 色族纯度:光照渐变把同一底色散成多支近似豆,豆级纯度掉进
-            // 中间带、简图门控误判"复杂"(用户火焰图实测:中间带 50%);
-            // 改按"像素集中在本格均值 Lab ΔE≤10 色族内的比例"度量——
-            // 渐变格整格一族 → 高;真跨界格两族(ΔE 30+)→ 低
+            // 中间带、简图门控误判"复杂"(用户火焰图实测:中间带 50%)。
+            // 度量 = 像素集中在本格均值 RGB 距离 ≤35(≈Lab ΔE10)内的比例:
+            // 渐变格整格一族 → 高;真跨界格两族 → 低。
+            // 纯整数运算零分配——旧实现逐像素 rgbToLab 每张图 ~200 万次
+            // 调用,是反复换画幅时卡顿的来源之一(v2.64.1)
             if (opaque > 0) {
-                double mL = lSum / opaque, mA = aSum / opaque, mB = bSum / opaque;
+                int mR2 = sumR / opaque, mG2 = sumG / opaque, mB2 = sumB / opaque;
                 int fam = 0;
                 for (int i = s; i < e; i++) {
                     int p = g.cellPix[i];
@@ -565,10 +564,8 @@ public final class PatternEngine {
                         gg = Math.min(255, gg * 255 / a);
                         bb2 = Math.min(255, bb2 * 255 / a);
                     }
-                    double[] pl = ColorMath.rgbToLab(
-                            0xFF000000 | (rr << 16) | (gg << 8) | bb2);
-                    double dl = pl[0] - mL, da = pl[1] - mA, db = pl[2] - mB;
-                    if (dl * dl + da * da + db * db <= FLAT_FAMILY_DE2) fam++;
+                    int dr = rr - mR2, dg = gg - mG2, dbb = bb2 - mB2;
+                    if (dr * dr + dg * dg + dbb * dbb <= FLAT_FAMILY_RGB2) fam++;
                 }
                 famPurity[c] = (float) fam / opaque;
             }
@@ -650,8 +647,8 @@ public final class PatternEngine {
 
     // ---- 简图清晰化(v2.63):平坦图边界线条色统一 ----
 
-    /** 色族纯度的"同族"邻域:与本格均值 Lab 距离 ≤10(平方 100)算同族 */
-    private static final double FLAT_FAMILY_DE2 = 100.0;
+    /** 色族纯度的"同族"邻域:与本格均值 RGB 距离 ≤35(平方 1225,≈Lab ΔE10) */
+    private static final int FLAT_FAMILY_RGB2 = 1225;
     /** 纯度 ≥ 此值视为内部格(格内像素几乎都配到同一豆) */
     private static final float FLAT_PURITY_CLEAN = 0.85f;
     /** 纯度 < 此值视为边界格(横跨色区/含线条) */
