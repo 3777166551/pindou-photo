@@ -25,6 +25,9 @@ import java.util.Set;
  */
 public final class PatternEngine {
 
+    /** 临时调试开关(排查用,生产恒 false) */
+    static final boolean PDEBUG = Boolean.getBoolean("pindou.flat.debug");
+
     public static final int STYLE_REALISTIC = 0;
     public static final int STYLE_ABSTRACT = 1;
     public static final int STYLE_LINEART = 2;
@@ -83,6 +86,9 @@ public final class PatternEngine {
         public int[] cellPix;
         /** cellStart[格下标] 起、cellStart[格下标+1] 止(半开区间) */
         public int[] cellStart;
+        /** Sobel 线检测掩码(栅格序,与源像素同尺寸);简图门控通过时用于描边叠加。
+         *  细于一格的描边逐格投票必断点,连续轮廓只能来自跨格的梯度检测 */
+        public boolean[] lineMask;
         public int gw;
         public int gh;
         public int brick;
@@ -155,6 +161,13 @@ public final class PatternEngine {
         if (votePath) {
             WorkGrid grid = (out != null) ? out : new WorkGrid();
             buildVoteGrid(srcPx, pw, ph, gw, gh, b, grid);
+            // Sobel 线掩码(全图一遍 ~20ms):简图门控通过时做描边叠加,
+            // 细于一格的描边逐格投票必断点,连续轮廓只能来自跨格梯度检测
+            int darkest = darkestBeadIndex(beadPalette);
+            int[] lineCells = lineArtCells(srcPx, pw, ph, gw, gh, 40, darkest);
+            boolean[] lm = new boolean[gw * gh];
+            for (int i = 0; i < lm.length; i++) lm[i] = lineCells[i] == darkest;
+            grid.lineMask = lm;
             return finishVote(grid, beadPalette, o, cols, rows);
         }
 
@@ -461,6 +474,7 @@ public final class PatternEngine {
         int[] workCells = new int[cells];
         float[] purity = new float[cells];   // 简图门控:胜出色票占格内不透明像素比;-1=空格
         float[] darkFrac = new float[cells]; // 描边桥接:格内深豆像素占比
+        float[] famPurity = new float[cells]; // 色族纯度:像素集中在本格均值 ΔE≤10 色族内的比例
         int[] hist = new int[Math.max(1, n)];
         int[] darkHist = new int[Math.max(1, n)];
         boolean adjust = o.brightness != 0 || o.contrast != 0 || o.saturation != 0;
@@ -470,6 +484,7 @@ public final class PatternEngine {
             int opaque = 0;
             int darkCount = 0;
             int sumR = 0, sumG = 0, sumB = 0;
+            double lSum = 0, aSum = 0, bSum = 0;
             if (n > 0) Arrays.fill(hist, 0, n, 0);
             if (n > 0) Arrays.fill(darkHist, 0, n, 0);
             for (int i = s; i < e; i++) {
@@ -489,6 +504,8 @@ public final class PatternEngine {
                 sumR += r;
                 sumG += gr;
                 sumB += bl;
+                double[] plab = ColorMath.rgbToLab(0xFF000000 | (r << 16) | (gr << 8) | bl);
+                lSum += plab[0]; aSum += plab[1]; bSum += plab[2];
                 if (gate) {
                     r = clamp8(Math.round(r * g.gateGain));
                     gr = clamp8(Math.round(gr * g.gateGain));
@@ -531,102 +548,98 @@ public final class PatternEngine {
             workCells[c] = best;
             purity[c] = (float) hist[best] / opaque;
             darkFrac[c] = (float) darkCount / opaque;
-            // 线条救援:两种"底+深线"结构改投深豆众数,细线不被多数票抹掉。
-            //   A(v1):平均色亮(L*>60)且低彩(C*<20) = 纸样底——只覆盖白底黑线;
-            //   B(v2.63.1):黑描边贴在彩色块上时,格内平均色带彩度,A 漏掉
-            //     (实测火焰图 300+ 线格只救回 88)。改为结构判据:深豆众数
-            //     近黑(L*≤35)且与多数豆 Lab 距离 ≥30 且占比 10%~45% ——
-            //     高对比深色细线;照片暗部渐变(深豆与底色距离小)不误伤。
-            // 深豆众数平票按色板 RGB 小者胜:顺序无关(同主投票规则)。
+            // 色族纯度:光照渐变把同一底色散成多支近似豆,豆级纯度掉进
+            // 中间带、简图门控误判"复杂"(用户火焰图实测:中间带 50%);
+            // 改按"像素集中在本格均值 Lab ΔE≤10 色族内的比例"度量——
+            // 渐变格整格一族 → 高;真跨界格两族(ΔE 30+)→ 低
+            if (opaque > 0) {
+                double mL = lSum / opaque, mA = aSum / opaque, mB = bSum / opaque;
+                int fam = 0;
+                for (int i = s; i < e; i++) {
+                    int p = g.cellPix[i];
+                    int a = (p >>> 24) & 0xFF;
+                    if (a < 128) continue;
+                    int rr = (p >> 16) & 0xFF, gg = (p >> 8) & 0xFF, bb2 = p & 0xFF;
+                    if (a < 255) {
+                        rr = Math.min(255, rr * 255 / a);
+                        gg = Math.min(255, gg * 255 / a);
+                        bb2 = Math.min(255, bb2 * 255 / a);
+                    }
+                    double[] pl = ColorMath.rgbToLab(
+                            0xFF000000 | (rr << 16) | (gg << 8) | bb2);
+                    double dl = pl[0] - mL, da = pl[1] - mA, db = pl[2] - mB;
+                    if (dl * dl + da * da + db * db <= FLAT_FAMILY_DE2) fam++;
+                }
+                famPurity[c] = (float) fam / opaque;
+            }
+            // 线条救援:平均色亮(L*>60)且低彩(C*<20) = 纸样底;深豆占
+            // 4%~45% = 有线(350 张基准实测定稿)。贴彩色块的黑描边由简图
+            // 清晰化(色族门控 + 深色离群统一,见 flatUnifyCells)处理。
             if (opaque >= 8) {
                 int mR = sumR / opaque, mG = sumG / opaque, mB = sumB / opaque;
                 double[] labMean = ColorMath.rgbToLab(
                         0xFF000000 | (mR << 16) | (mG << 8) | mB);
                 double chroma = Math.sqrt(labMean[1] * labMean[1]
                         + labMean[2] * labMean[2]);
-                int dk = darkCount * 100;
-                boolean ratio = dk >= opaque * 8 && dk <= opaque * 55;
-                boolean condA = labMean[0] > 60 && chroma < 20
-                        && dk >= opaque * 10 && dk <= opaque * 45;
-                boolean condB = false;
-                if (ratio && !condA) {
-                    int dBest = -1, darkN = 0;
-                    int dBestRgb = Integer.MAX_VALUE;
-                    for (int i = 0; i < n; i++) {
-                        if (darkHist[i] > darkN
-                                || (darkHist[i] == darkN && darkHist[i] > 0
-                                    && palette.get(i).rgb < dBestRgb)) {
-                            darkN = darkHist[i];
-                            dBestRgb = palette.get(i).rgb;
-                            dBest = i;
+                if (labMean[0] > 60 && chroma < 20) {
+                    int dk = darkCount * 100;
+                    if (dk >= opaque * 10 && dk <= opaque * 45) {
+                        // 深豆众数平票按色板 RGB 小者胜:顺序无关(同主投票规则)
+                        int dBest = -1;
+                        int darkN = 0;
+                        int dBestRgb = Integer.MAX_VALUE;
+                        for (int i = 0; i < n; i++) {
+                            if (darkHist[i] > darkN
+                                    || (darkHist[i] == darkN && darkHist[i] > 0
+                                        && palette.get(i).rgb < dBestRgb)) {
+                                darkN = darkHist[i];
+                                dBestRgb = palette.get(i).rgb;
+                                dBest = i;
+                            }
                         }
-                    }
-                    if (dBest >= 0) {
-                        double[] dl = labs[dBest];
-                        if (dl[0] <= 35) {
-                            double de = Math.sqrt(
-                                    (dl[0] - labs[best][0]) * (dl[0] - labs[best][0])
-                                  + (dl[1] - labs[best][1]) * (dl[1] - labs[best][1])
-                                  + (dl[2] - labs[best][2]) * (dl[2] - labs[best][2]));
-                            condB = de >= 20;
-                        }
+                        if (dBest >= 0) workCells[c] = dBest;
                     }
                 }
-                if (ratio && (condA || condB)) {
-                    int dBest = -1;
-                    int darkN = 0;
-                    int dBestRgb = Integer.MAX_VALUE;
-                    for (int i = 0; i < n; i++) {
-                        if (darkHist[i] > darkN
-                                || (darkHist[i] == darkN && darkHist[i] > 0
-                                    && palette.get(i).rgb < dBestRgb)) {
-                            darkN = darkHist[i];
-                            dBestRgb = palette.get(i).rgb;
-                            dBest = i;
-                        }
-                    }
-                    if (dBest >= 0) workCells[c] = dBest;
-                }
-            }
-        }
-        // 描边桥接(v2.63.1):细于一格的黑描边逐格判定后呈断点(黑像素
-        // 5%~10% 的格够不到救援占比下限)。二遍扫描:非深格黑像素≥5%、
-        // 且 ≥2 个四邻已投近黑豆(L*≤35)→ 翻转为邻格黑豆——把 0.5 格宽
-        // 的描边连成连续线;孤立黑像素(照片噪点)无黑邻不打折。
-        if (n > 0 && !gate) {
-            int[] flip = new int[cells];
-            for (int c = 0; c < cells; c++) {
-                if (workCells[c] < 0 || darkFrac[c] < 0.02f) continue;
-                if (workCells[c] < n && dark[workCells[c]]) continue;
-                int x = c % g.gw, y = c / g.gw;
-                int darkNb = 0, darkIdx = -1;
-                for (int dy = -1; dy <= 1; dy++) {
-                    for (int dx = -1; dx <= 1; dx++) {
-                        if (dx == 0 && dy == 0) continue;
-                        int nx = x + dx, ny = y + dy;
-                        if (nx < 0 || ny < 0 || nx >= g.gw || ny >= g.gh) continue;
-                        int nc = ny * g.gw + nx;
-                        int bc = workCells[nc];
-                        if (bc >= 0 && bc < n && dark[bc] && labs[bc][0] <= 35) {
-                            darkNb++;
-                            darkIdx = bc;
-                        }
-                    }
-                }
-                if (darkNb >= 1 && darkIdx >= 0) flip[c] = darkIdx + 1;
-            }
-            for (int c = 0; c < cells; c++) {
-                if (flip[c] > 0) workCells[c] = flip[c] - 1;
             }
         }
         // 简图清晰化(自动门控,v2.63):平坦图(卡通/赛璐璐)的边界格横跨两个
         // 色区,多数票会投出混色豆——边界发糊、线条变色的根源。检测到简图时
         // 按 4 连通笔画统一边界线条色;复杂照片过不了门控,完全走原路径。
         // 欠曝提亮门控激活时同样跳过(提亮中的照片不是线稿素材,保守跳过)。
-        if (n > 0 && !gate && isFlatSimple(purity)) {
+        if (PDEBUG) {
+            int clean = 0, boundary = 0, mid = 0, valid = 0;
+            for (int i = 0; i < purity.length; i++) {
+                if (purity[i] < 0) continue;
+                valid++;
+                if (famPurity[i] >= FLAT_PURITY_CLEAN) clean++;
+                else if (purity[i] < FLAT_PURITY_BOUNDARY) boundary++;
+                else mid++;
+            }
+            System.err.printf("[flat] valid=%d clean=%d boundary=%d mid=%d gate=%s%n",
+                    valid, clean, boundary, mid, isFlatSimple(famPurity, purity));
+        }
+        if (n > 0 && !gate && isFlatSimple(famPurity, purity)) {
+            // 描边叠加(v2.64.1):细于一格的描边逐格投票必断点(描边只有
+            // 0.2~0.5 格宽,一半以上的格黑像素 <8%,救援和多数票都够不到)。
+            // Sobel 线检测掩码能看到连续轮廓——线格强制最深豆,其余格保持
+            // 颜色投票。只在简图门控内生效,照片不描边。
+            int flips = 0;
+            if (g.lineMask != null) {
+                int darkest = darkestBeadIndex(palette);
+                int mc = 0;
+                for (boolean b2 : g.lineMask) if (b2) mc++;
+                for (int c = 0; c < cells; c++) {
+                    if (g.lineMask[c] && workCells[c] >= 0
+                            && !dark[workCells[c]]) {
+                        workCells[c] = darkest;
+                        flips++;
+                    }
+                }
+                if (PDEBUG) System.err.printf("[overlay] mask=%d flips=%d%n", mc, flips);
+            }
             int[] tie = new int[n];
             for (int i = 0; i < n; i++) tie[i] = palette.get(i).rgb;
-            flatUnifyCells(g, workCells, purity, palette, labs, lut, tie,
+            flatUnifyCells(g, workCells, purity, g.lineMask, palette, labs, lut, tie,
                     gate, g.gateGain, g.gateSat, adjust, o);
             if (o.flatCollapse) {
                 flatCollapsePalette(workCells, palette, labs);
@@ -637,6 +650,8 @@ public final class PatternEngine {
 
     // ---- 简图清晰化(v2.63):平坦图边界线条色统一 ----
 
+    /** 色族纯度的"同族"邻域:与本格均值 Lab 距离 ≤10(平方 100)算同族 */
+    private static final double FLAT_FAMILY_DE2 = 100.0;
     /** 纯度 ≥ 此值视为内部格(格内像素几乎都配到同一豆) */
     private static final float FLAT_PURITY_CLEAN = 0.85f;
     /** 纯度 < 此值视为边界格(横跨色区/含线条) */
@@ -650,12 +665,23 @@ public final class PatternEngine {
      * @param purity 每格纯度;负值 = 空格(不计)
      */
     public static boolean isFlatSimple(float[] purity) {
+        return isFlatSimple(purity, purity);
+    }
+
+    /**
+     * 简图门控(色族版,v2.64.1):内部格判定改用**色族纯度**——像素集中在
+     * 本格均值 Lab ΔE≤10 色族内的比例。光照渐变会把同一底色散成多支
+     * 近似豆,豆级纯度掉进中间带、简单图被误判复杂(用户火焰图实测:
+     * 中间带 50%);色族纯度下渐变格整格一族 → 判内部。边界格仍用
+     * 豆级纯度(真跨界/含深线的格,两族距离远,不会被误判成内部)。
+     */
+    public static boolean isFlatSimple(float[] famPurity, float[] purity) {
         int valid = 0, clean = 0, boundary = 0, mid = 0;
-        for (float p : purity) {
-            if (p < 0) continue;
+        for (int i = 0; i < purity.length; i++) {
+            if (purity[i] < 0) continue;
             valid++;
-            if (p >= FLAT_PURITY_CLEAN) clean++;
-            else if (p < FLAT_PURITY_BOUNDARY) boundary++;
+            if (famPurity[i] >= FLAT_PURITY_CLEAN) clean++;
+            else if (purity[i] < FLAT_PURITY_BOUNDARY) boundary++;
             else mid++;
         }
         return valid >= 16 && boundary >= 3 && clean * 2 >= valid
@@ -726,6 +752,7 @@ public final class PatternEngine {
      * 每笔画以线条色众数(4bit 桶均值)统一配豆——同一根线条不再变色。
      */
     private static void flatUnifyCells(WorkGrid g, int[] workCells, float[] purity,
+                                       boolean[] lineMask,
                                        List<BeadColor> palette, double[][] labs,
                                        int[] lut, int[] tie, boolean gate,
                                        float gateGain, float gateSat,
@@ -737,6 +764,12 @@ public final class PatternEngine {
         for (int c = 0; c < cells; c++) {
             if (workCells[c] < 0 || purity[c] < 0
                     || purity[c] >= FLAT_PURITY_BOUNDARY) continue;
+            // Sobel 叠加已定的线格是最终态:笔画重统一若把它们和普通
+            // 边界格混聚,多数桶会被底色占据,黑描边反被洗掉(火焰图实测)
+            if (lineMask != null && lineMask[c]) continue;
+            // Sobel 叠加已定的线格是最终态:笔画重统一若把它们和普通
+            // 边界格混聚,多数桶会被底色占据,黑描边反被洗掉(火焰图实测)
+            if (lineMask != null && lineMask[c]) continue;
             int s = g.cellStart[c], e = g.cellStart[c + 1];
             long pr = 0, pg = 0, pb = 0;
             int mN = 0;
@@ -749,18 +782,19 @@ public final class PatternEngine {
                 }
             }
             if (mN == 0) continue;   // 全是过渡像素,保持多数票结果
-            float mr = pr / (float) mN, mg = pg / (float) mN, mb = pb / (float) mN;
-            float bestD = -1f;
+            // 线色取格内**最暗像素**(v2.64.1):旧"离均值最远离群"在三色格
+            // (黑线+彩块+底)会取到底色而非线色——均值偏向深侧时,另一侧
+            // 底色比黑线更远(用户火焰图实测:描边色被取成米白/蓝,黑线
+            // 反被洗掉)。黑描边场景"最暗"即线色;浅线深底由救援条件 A 管。
             int br = -1, bgc = -1, bb = -1;
+            float bl = Float.MAX_VALUE;
             for (int i = s; i < e; i++) {
                 int p = g.cellPix[i];
                 if (((p >>> 24) & 0xFF) < 128) continue;
                 int[] rgb = voteRgb(p, gate, gateGain, gateSat, adjust, o);
-                float d = (rgb[0] - mr) * (rgb[0] - mr)
-                        + (rgb[1] - mg) * (rgb[1] - mg)
-                        + (rgb[2] - mb) * (rgb[2] - mb);
-                if (d > bestD) {
-                    bestD = d;
+                float lv = rgb[0] * 0.299f + rgb[1] * 0.587f + rgb[2] * 0.114f;
+                if (lv < bl) {
+                    bl = lv;
                     br = rgb[0]; bgc = rgb[1]; bb = rgb[2];
                 }
             }
