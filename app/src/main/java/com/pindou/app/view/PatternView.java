@@ -233,6 +233,13 @@ public class PatternView extends View {
             offX = 0f;
             offY = 0f;
         }
+        // 大网格(≥100×100)挂硬件层:效果图/图纸每帧重放数万格圆/矩形,
+        // 滚动设置区等无关帧也背着这笔 RenderThread 成本(systrace 实锤
+        // DrawFrame 16~23ms@200×200,切换后首段叠加显示列表重建,
+        // 用户感知"拖动下面的卡片卡一会自己好")。挂层后静态帧=一次
+        // 纹理合成 O(1);invalidate(手势/标记/动画)仍整层重绘,与原同价。
+        setLayerType(p != null && (long) p.cols * p.rows >= 10_000L
+                ? View.LAYER_TYPE_HARDWARE : View.LAYER_TYPE_NONE, null);
         invalidate();
     }
 
