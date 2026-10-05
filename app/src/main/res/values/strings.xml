@@ -491,6 +491,7 @@
     <string name="err_palette_empty">色板至少要有一种颜色</string>
     <string name="fmt_palette_saved">已保存:%1$s(%2$d色)</string>
     <string name="btn_add_color">➕ 添加颜色</string>
+    <string name="inv_code_filter">输入色号筛选</string>
     <string name="btn_sort_hue">🌈 按色相排序</string>
     <string name="del_color_title">删除颜色</string>
     <string name="fmt_del_color">从色板移除「%s」?</string>

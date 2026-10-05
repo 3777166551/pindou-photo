@@ -20,8 +20,13 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.AdapterView;
+import android.widget.ScrollView;
+import android.widget.Spinner;
+import java.util.Locale;
 import android.widget.Toast;
 
+import com.pindou.app.bead.BeadBrandCharts;
 import com.pindou.app.bead.BeadInventory;
 import com.pindou.app.bead.BeadColor;
 import com.pindou.app.bead.BeadPalettes;
@@ -112,11 +117,38 @@ public class InventoryActivity extends Activity {
         reload();
     }
 
+    /** 全部品牌色号表的 RGB → 官方色号(精确匹配);懒构建 */
+    private java.util.HashMap<Integer, String> codeLookup;
+
+    private java.util.HashMap<Integer, String> codeLookup() {
+        if (codeLookup == null) {
+            codeLookup = new java.util.HashMap<>();
+            for (BeadBrandCharts.Chart chart : BeadBrandCharts.ALL) {
+                for (BeadColor bc : chart.colors) {
+                    if (!codeLookup.containsKey(bc.rgb & 0xFFFFFF)) {
+                        codeLookup.put(bc.rgb & 0xFFFFFF, bc.tag);
+                    }
+                }
+            }
+            for (int t = 0; t < 4; t++) {
+                for (BeadColor bc : BeadPalettes.getPalette(t)) {
+                    if (!codeLookup.containsKey(bc.rgb & 0xFFFFFF)) {
+                        codeLookup.put(bc.rgb & 0xFFFFFF, bc.name);
+                    }
+                }
+            }
+        }
+        return codeLookup;
+    }
+
     private void reload() {
         List<Integer> all = BeadInventory.allColors(this);
         List<BeadColor> wrapped = new ArrayList<>(all.size());
+        java.util.HashMap<Integer, String> codes = codeLookup();
         for (int rgb : all) {
-            wrapped.add(new BeadColor(1, PaletteShare.toHex(rgb), rgb & 0xFFFFFF));
+            String code = codes.get(rgb & 0xFFFFFF);
+            wrapped.add(new BeadColor(1,
+                    code != null ? code : PaletteShare.toHex(rgb), rgb & 0xFFFFFF));
         }
         BeadPalettes.sortByHue(wrapped);
         colors.clear();
@@ -285,6 +317,116 @@ public class InventoryActivity extends Activity {
         int p = dp(20);
         box.setPadding(p, dp(8), p, 0);
 
+        // ---- 按色号添加(主入口):品牌色板 → 筛选色号 → 点选即填 RGB ----
+        final List<BeadColor> pickPal = new ArrayList<>();
+        final List<String> pickLabels = new ArrayList<>();
+        final Spinner brandPick = new Spinner(this);
+        brandPick.setAdapter(new android.widget.ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, BeadPalettes.selNames()));
+        brandPick.setDropDownVerticalOffset(dp(12));
+        // 默认选中漫德 2.6mm(与编辑器默认色板一致)
+        int defSel = 0;
+        String[] allNames = BeadPalettes.selNames();
+        for (int i = 0; i < allNames.length; i++) {
+            if (allNames[i].contains("漫德 Mard·2.6mm")) { defSel = i; break; }
+        }
+        brandPick.setSelection(defSel);
+        box.addView(brandPick, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        final EditText etFilter = new com.pindou.app.view.M3EditText(this);
+        etFilter.setInputType(InputType.TYPE_CLASS_TEXT);
+        etFilter.setMaxLines(1);
+        etFilter.setHint(getString(R.string.inv_code_filter));
+        etFilter.setTextSize(13);
+        box.addView(etFilter);
+
+        final LinearLayout codeList = new LinearLayout(this);
+        codeList.setOrientation(LinearLayout.VERTICAL);
+        final ScrollView codeScroll = new ScrollView(this);
+        codeScroll.addView(codeList, new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        box.addView(codeScroll, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(200)));
+
+        // 色号列表点选回调要引用后面才创建的控件:经数组中转(匿名类捕获)
+        final SeekBar[][] barsRef = new SeekBar[1][];
+        final TextView[][] valsRef = new TextView[1][];
+        final EditText[] etHexRef = new EditText[1];
+        final GradientDrawable[] previewBgRef = new GradientDrawable[1];
+        final Runnable[] rebuildList = new Runnable[1];
+        rebuildList[0] = new Runnable() {
+            @Override
+            public void run() {
+                codeList.removeAllViews();
+                String q = etFilter.getText().toString().trim().toLowerCase(Locale.CHINA);
+                int dpRow = dp(34);
+                for (int i = 0; i < pickPal.size(); i++) {
+                    BeadColor bc = pickPal.get(i);
+                    String code = pickLabels.get(i);
+                    if (!q.isEmpty() && !code.toLowerCase(Locale.CHINA).contains(q)) continue;
+                    LinearLayout row = new LinearLayout(InventoryActivity.this);
+                    row.setGravity(Gravity.CENTER_VERTICAL);
+                    row.setPadding(dp(6), 0, dp(6), 0);
+                    GradientDrawable sw = new GradientDrawable();
+                    sw.setColor(0xFF000000 | bc.rgb);
+                    sw.setCornerRadius(dp(5));
+                    View sv = new View(InventoryActivity.this);
+                    sv.setBackground(sw);
+                    row.addView(sv, new LinearLayout.LayoutParams(dp(22), dp(22)));
+                    TextView tv = new TextView(InventoryActivity.this);
+                    tv.setText(bc.tag.isEmpty() ? bc.name
+                            : bc.tag + (bc.tag.equals(bc.name) ? "" : " · " + bc.name));
+                    tv.setTextColor(0xFF1D1B20);
+                    tv.setTextSize(13);
+                    tv.setPadding(dp(10), 0, 0, 0);
+                    row.addView(tv, new LinearLayout.LayoutParams(
+                            0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+                    final int rgb = 0xFF000000 | bc.rgb;
+                    row.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            applyRgb(barsRef[0], valsRef[0], etHexRef[0],
+                                    previewBgRef[0], rgb & 0xFFFFFF, true);
+                        }
+                    });
+                    codeList.addView(row, new LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT, dpRow));
+                }
+            }
+        };
+        brandPick.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+                pickPal.clear();
+                pickLabels.clear();
+                pickPal.addAll(BeadPalettes.getPalette(pos));
+                for (BeadColor bc : pickPal) {
+                    pickLabels.add(bc.tag.isEmpty() ? bc.name : bc.tag);
+                }
+                rebuildList[0].run();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+        etFilter.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s2, int a, int b, int c) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s2, int a, int b, int c) {
+            }
+
+            @Override
+            public void afterTextChanged(android.text.Editable s2) {
+                rebuildList[0].run();
+            }
+        });
+
         final GradientDrawable previewBg = new GradientDrawable();
         previewBg.setCornerRadius(dp(8));
         previewBg.setColor(0xFFE3242B);
@@ -292,6 +434,8 @@ public class InventoryActivity extends Activity {
         preview.setBackground(previewBg);
         box.addView(preview, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(40)));
+        previewBgRef[0] = previewBg;
+        // 色号列表的点选回调要引用下面才声明的控件:经数组中转(匿名类捕获)
 
         final EditText etHex = new com.pindou.app.view.M3EditText(this);
         etHex.setInputType(InputType.TYPE_CLASS_TEXT);
@@ -387,6 +531,11 @@ public class InventoryActivity extends Activity {
         for (int i = 0; i < 3; i++) {
             bars[i].setOnSeekBarChangeListener(seek);
         }
+
+        barsRef[0] = bars;
+        valsRef[0] = vals;
+        etHexRef[0] = etHex;
+        rebuildList[0].run();   // 此时滑杆/hex 已就绪,点选才能同步 UI
 
         etHex.addTextChangedListener(new TextWatcher() {
             @Override

@@ -491,6 +491,7 @@
     <string name="err_palette_empty">パレットには最低1色必要です</string>
     <string name="fmt_palette_saved">保存:%1$s(%2$d色)</string>
     <string name="btn_add_color">➕ 色を追加</string>
+    <string name="inv_code_filter">色番号で絞り込み</string>
     <string name="btn_sort_hue">🌈 色相で並べ替え</string>
     <string name="del_color_title">色を削除</string>
     <string name="fmt_del_color">「%s」をパレットから外しますか?</string>

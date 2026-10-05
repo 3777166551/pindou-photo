@@ -491,6 +491,7 @@
     <string name="err_palette_empty">A palette needs at least one color</string>
     <string name="fmt_palette_saved">Saved: %1$s (%2$d colors)</string>
     <string name="btn_add_color">➕ Add color</string>
+    <string name="inv_code_filter">Filter by code</string>
     <string name="btn_sort_hue">🌈 Sort by hue</string>
     <string name="del_color_title">Remove color</string>
     <string name="fmt_del_color">Remove "%s" from the palette?</string>
