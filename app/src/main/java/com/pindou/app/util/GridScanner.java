@@ -586,6 +586,454 @@ public final class GridScanner {
         return trimBackground(cells, cols, rows, new int[2]);
     }
 
+    /**
+     * 透视校正(v2.71):成品照斜拍必然带梯形畸变+残余旋转,单一旋转角的
+     * 网格模型对不齐整幅(用户实测:解码图一侧白边呈"下宽上窄"楔形)。
+     * 流程:背景色=四周边框环中位色 → 非背景最大连通域=成品面板 → 凸包 →
+     * 最大面积内接四边形 → 单应变换拉正成矩形(双线性采样)。
+     * 无清晰面板(面板 <25% 图面、四角贴原图角、图太小)返回 null,调用方走原图。
+     * 拉正后尺寸写入 outWH[0]/[1]。
+     */
+    public static int[] deskew(int[] argb, int w, int h, int[] outWH) {
+        if (argb == null || w < 96 || h < 96) return null;
+        // ---- 分析降采样(长边 ≤420,box 平均) ----
+        int side = Math.max(w, h);
+        int dw = w, dh = h;
+        int[] sm = argb;
+        if (side > 420) {
+            dw = Math.max(48, Math.round(w * 420f / side));
+            dh = Math.max(48, Math.round(h * 420f / side));
+            sm = new int[dw * dh];
+            float sxf = w / (float) dw, syf = h / (float) dh;
+            for (int y = 0; y < dh; y++) {
+                int ys = (int) (y * syf), ye = Math.max(ys + 1, (int) ((y + 1) * syf));
+                for (int x = 0; x < dw; x++) {
+                    int xs = (int) (x * sxf), xe = Math.max(xs + 1, (int) ((x + 1) * sxf));
+                    long r = 0, g = 0, b = 0;
+                    int n = 0;
+                    for (int yy = ys; yy < ye && yy < h; yy++) {
+                        for (int xx = xs; xx < xe && xx < w; xx++) {
+                            int p = argb[yy * w + xx];
+                            r += (p >> 16) & 0xFF;
+                            g += (p >> 8) & 0xFF;
+                            b += p & 0xFF;
+                            n++;
+                        }
+                    }
+                    if (n == 0) n = 1;
+                    sm[y * dw + x] = 0xFF000000 | ((int) (r / n) << 16)
+                            | ((int) (g / n) << 8) | (int) (b / n);
+                }
+            }
+        }
+        // ---- 背景色 = 边框环中位色 ----
+        int[] rs = new int[6 * (dw + dh)], gs = new int[rs.length], bs = new int[rs.length];
+        int nn = 0;
+        for (int x = 0; x < dw; x++) {
+            for (int k = 0; k < 3; k++) {
+                int p1 = sm[x], p2 = sm[(dh - 1 - k) * dw + x];
+                rs[nn] = (p1 >> 16) & 0xFF; gs[nn] = (p1 >> 8) & 0xFF; bs[nn++] = p1 & 0xFF;
+                rs[nn] = (p2 >> 16) & 0xFF; gs[nn] = (p2 >> 8) & 0xFF; bs[nn++] = p2 & 0xFF;
+            }
+        }
+        for (int y = 0; y < dh; y++) {
+            for (int k = 0; k < 3; k++) {
+                int p1 = sm[y * dw], p2 = sm[y * dw + dw - 1 - k];
+                rs[nn] = (p1 >> 16) & 0xFF; gs[nn] = (p1 >> 8) & 0xFF; bs[nn++] = p1 & 0xFF;
+                rs[nn] = (p2 >> 16) & 0xFF; gs[nn] = (p2 >> 8) & 0xFF; bs[nn++] = p2 & 0xFF;
+            }
+        }
+        java.util.Arrays.sort(rs, 0, nn);
+        java.util.Arrays.sort(gs, 0, nn);
+        java.util.Arrays.sort(bs, 0, nn);
+        int br = rs[nn / 2], bg = gs[nn / 2], bb = bs[nn / 2];
+        // ---- 非背景掩码 + 最大连通域(4 邻接,迭代栈) ----
+        int n = dw * dh;
+        int[] comp = new int[n];          // 0=背景/未访问,1=当前域,2=最大域
+        int[] stack = new int[n];
+        int bestSize = 0, bestId = 1;
+        for (int seed = 0; seed < n; seed++) {
+            if (comp[seed] != 0) continue;
+            int p = sm[seed];
+            int sad = Math.abs((p >> 16 & 0xFF) - br) + Math.abs((p >> 8 & 0xFF) - bg)
+                    + Math.abs((p & 0xFF) - bb);
+            if (sad <= 100) { comp[seed] = 1; continue; }   // 背景,标记已访问
+            // 新的非背景域
+            int id = bestId + 1;
+            int sp = 0;
+            stack[sp++] = seed;
+            comp[seed] = id;
+            int size = 0;
+            while (sp > 0) {
+                int cur = stack[--sp];
+                size++;
+                int cx = cur % dw, cy = cur / dw;
+                if (cx > 0 && comp[cur - 1] == 0) {
+                    int q = sm[cur - 1];
+                    int d = Math.abs((q >> 16 & 0xFF) - br) + Math.abs((q >> 8 & 0xFF) - bg)
+                            + Math.abs((q & 0xFF) - bb);
+                    comp[cur - 1] = d <= 100 ? 1 : id;
+                    if (d > 100) stack[sp++] = cur - 1;
+                }
+                if (cx < dw - 1 && comp[cur + 1] == 0) {
+                    int q = sm[cur + 1];
+                    int d = Math.abs((q >> 16 & 0xFF) - br) + Math.abs((q >> 8 & 0xFF) - bg)
+                            + Math.abs((q & 0xFF) - bb);
+                    comp[cur + 1] = d <= 100 ? 1 : id;
+                    if (d > 100) stack[sp++] = cur + 1;
+                }
+                if (cy > 0 && comp[cur - dw] == 0) {
+                    int q = sm[cur - dw];
+                    int d = Math.abs((q >> 16 & 0xFF) - br) + Math.abs((q >> 8 & 0xFF) - bg)
+                            + Math.abs((q & 0xFF) - bb);
+                    comp[cur - dw] = d <= 100 ? 1 : id;
+                    if (d > 100) stack[sp++] = cur - dw;
+                }
+                if (cy < dh - 1 && comp[cur + dw] == 0) {
+                    int q = sm[cur + dw];
+                    int d = Math.abs((q >> 16 & 0xFF) - br) + Math.abs((q >> 8 & 0xFF) - bg)
+                            + Math.abs((q & 0xFF) - bb);
+                    comp[cur + dw] = d <= 100 ? 1 : id;
+                    if (d > 100) stack[sp++] = cur + dw;
+                }
+            }
+            if (size > bestSize) {
+                bestSize = size;
+                bestId = id;
+            }
+        }
+        if (DEBUG) System.out.printf("[deskew] bestComp=%d n=%d (%.1f%%)%n",
+                bestSize, n, bestSize * 100.0 / n);
+        if (bestSize < n * 0.25) {
+            if (DEBUG) System.out.println("[deskew] REJECT panel<25%");
+            return null;   // 面板不清晰
+        }
+        // ---- 组件膨胀(把面板外圈的底板环并进来)----
+        // 连通域=纯豆区,而透视下豆区外的底板环宽度沿边不均,豆区包络的
+        // 四角不共单应(实测拉正残角 4.5°、采样命中 5%)。chamfer 距离膨胀
+        // R(≈2.5% 短边)后取包络,角点回落到真实面板四角附近
+        int rad = Math.max(6, Math.min(dw, dh) / 40) * 3;   // chamfer 权重 3/4
+        int[] dd = new int[n];
+        for (int i = 0; i < n; i++) dd[i] = comp[i] == bestId ? 0 : 1 << 20;
+        for (int y = 0; y < dh; y++) {
+            for (int x = 0; x < dw; x++) {
+                int i = y * dw + x;
+                if (dd[i] == 0) continue;
+                int v = dd[i];
+                if (x > 0) v = Math.min(v, dd[i - 1] + 3);
+                if (y > 0) {
+                    v = Math.min(v, dd[i - dw] + 3);
+                    if (x > 0) v = Math.min(v, dd[i - dw - 1] + 4);
+                    if (x < dw - 1) v = Math.min(v, dd[i - dw + 1] + 4);
+                }
+                dd[i] = v;
+            }
+        }
+        for (int y = dh - 1; y >= 0; y--) {
+            for (int x = dw - 1; x >= 0; x--) {
+                int i = y * dw + x;
+                if (dd[i] == 0) continue;
+                int v = dd[i];
+                if (x < dw - 1) v = Math.min(v, dd[i + 1] + 3);
+                if (y < dh - 1) {
+                    v = Math.min(v, dd[i + dw] + 3);
+                    if (x < dw - 1) v = Math.min(v, dd[i + dw + 1] + 4);
+                    if (x > 0) v = Math.min(v, dd[i + dw - 1] + 4);
+                }
+                dd[i] = v;
+            }
+        }
+        // ---- 最大连通域的每行 [minX,maxX] → 顶点集 → 凸包 ----
+        int[] minX = new int[dh], maxX = new int[dh];
+        java.util.Arrays.fill(minX, Integer.MAX_VALUE);
+        java.util.Arrays.fill(maxX, -1);
+        for (int y = 0; y < dh; y++) {
+            for (int x = 0; x < dw; x++) {
+                if (dd[y * dw + x] <= rad) {
+                    if (x < minX[y]) minX[y] = x;
+                    if (x > maxX[y]) maxX[y] = x;
+                }
+            }
+        }
+        java.util.ArrayList<double[]> pts = new java.util.ArrayList<>();
+        for (int y = 0; y < dh; y++) {
+            if (maxX[y] < 0) continue;
+            pts.add(new double[]{minX[y], y});
+            pts.add(new double[]{maxX[y], y});
+        }
+        List<double[]> hull = convexHull(pts);
+        if (DEBUG) {
+            System.out.println("[deskew] hull=" + hull.size());
+            StringBuilder sb = new StringBuilder("[deskew] hull pts: ");
+            for (double[] q : hull) sb.append(String.format("(%.0f,%.0f) ", q[0], q[1]));
+            System.out.println(sb);
+        }
+        if (hull.size() < 4) return null;
+        // ---- 最大面积内接四边形:凸包降采样至 ≤60 点后穷举 C(60,4) ≈ 49 万
+        // 组合(周界有序四元组在凸多边形上必为合法凸四边形),一次性且精确;
+        // 双指针法的环绕不变量在 c 快速推进时易出简并解(实测三解退化) ----
+        int m = hull.size();
+        int step = 1;
+        while (m / step > 60) step++;
+        int q = (m + step - 1) / step;
+        double bestQuadArea = 0;
+        int bi = -1, bj = 0, bk = 0, bl = 0;
+        for (int va = 0; va < q; va++) {
+            for (int vb = va + 1; vb < q; vb++) {
+                for (int vc = vb + 1; vc < q; vc++) {
+                    for (int vd = vc + 1; vd < q; vd++) {
+                        int ia = (va * step) % m, ib = (vb * step) % m;
+                        int ic = (vc * step) % m, id = (vd * step) % m;
+                        double area = crossArea(hull, ia, ib, ic)
+                                + crossArea(hull, ia, ic, id);
+                        if (area > bestQuadArea) {
+                            bestQuadArea = area;
+                            bi = ia;
+                            bj = ib;
+                            bk = ic;
+                            bl = id;
+                        }
+                    }
+                }
+            }
+        }
+        if (DEBUG) System.out.printf("[deskew] quad idx %d,%d,%d,%d of m=%d step=%d%n",
+                bi, bj, bk, bl, m, step);
+        if (bi < 0) return null;
+        if (bestQuadArea <= 0) return null;
+        double[] TL = hull.get(bi), TR = hull.get(bj), BR = hull.get(bk), BL = hull.get(bl);
+        // 规范角序:四角按质心角排序后,旋转到"min(x+y) 的角"当 TL,
+        // 再用叉积统一手性——最大四边形的槽位起点/手性取决于凸包,
+        // 直接用会转 90°(实测 H=258 的根因)
+        double[] qx = {TL[0], TR[0], BR[0], BL[0]};
+        double[] qy = {TL[1], TR[1], BR[1], BL[1]};
+        double fcx = (qx[0] + qx[1] + qx[2] + qx[3]) / 4;
+        double fcy = (qy[0] + qy[1] + qy[2] + qy[3]) / 4;
+        Integer[] ord = {0, 1, 2, 3};
+        final double fx = fcx, fy = fcy;
+        java.util.Arrays.sort(ord, new java.util.Comparator<Integer>() {
+            @Override
+            public int compare(Integer p, Integer r) {
+                return Double.compare(
+                        Math.atan2(qy[p] - fy, qx[p] - fx),
+                        Math.atan2(qy[r] - fy, qx[r] - fx));
+            }
+        });
+        int start = 0;
+        double bestSum = Double.MAX_VALUE;
+        for (int i = 0; i < 4; i++) {
+            if (qx[i] + qy[i] < bestSum) {
+                bestSum = qx[i] + qy[i];
+                start = i;
+            }
+        }
+        int rankStart = 0;
+        for (int i = 0; i < 4; i++) {
+            if (ord[i] == start) {
+                rankStart = i;
+                break;
+            }
+        }
+        double[][] qq = new double[4][2];
+        for (int i = 0; i < 4; i++) {
+            qq[i][0] = qx[ord[(rankStart + i) % 4]];
+            qq[i][1] = qy[ord[(rankStart + i) % 4]];
+        }
+        double cross01_3 = (qq[1][0] - qq[0][0]) * (qq[3][1] - qq[0][1])
+                - (qq[1][1] - qq[0][1]) * (qq[3][0] - qq[0][0]);
+        if (cross01_3 < 0) {
+            double[] t = qq[1];
+            qq[1] = qq[3];
+            qq[3] = t;
+        }
+        TL = qq[0];
+        TR = qq[1];
+        BR = qq[2];
+        BL = qq[3];
+        // ---- 目标尺寸 ----
+        double wTop = dist(TL, TR), wBot = dist(BL, BR);
+        double hL = dist(TL, BL), hR = dist(TR, BR);
+        int W = (int) Math.round((wTop + wBot) / 2);
+        int H = (int) Math.round((hL + hR) / 2);
+        int maxSide = Math.max(w, h);
+        if (W > maxSide || H > maxSide) {
+            double f = maxSide / (double) Math.max(W, H);
+            W = Math.max(64, (int) Math.round(W * f));
+            H = Math.max(64, (int) Math.round(H * f));
+        }
+        if (DEBUG) System.out.println("[deskew] W=" + W + " H=" + H);
+        if (W < 64 || H < 64) return null;
+        // ---- 单应:矩形(0,0)-(W,0)-(W,H)-(0,H) → 四边形,求逆,反演采样 ----
+        if (DEBUG) System.out.printf("[deskew] quad TL=(%.0f,%.0f) TR=(%.0f,%.0f) BR=(%.0f,%.0f) BL=(%.0f,%.0f) dw=%d dh=%d%n",
+                TL[0], TL[1], TR[0], TR[1], BR[0], BR[1], BL[0], BL[1], dw, dh);
+        double[] hm = homography(0, 0, W, 0, W, H, 0, H,
+                TL[0], TL[1], TR[0], TR[1], BR[0], BR[1], BL[0], BL[1]);
+        if (DEBUG) System.out.println("[deskew] hm=" + (hm == null));
+        if (hm == null) return null;
+        double[] inv = invert3(hm);
+        if (DEBUG) System.out.println("[deskew] inv=" + (inv == null));
+        if (inv == null) return null;
+        // 四角全贴原图角 = 本来就正,不折腾
+        int marginOk = Math.max(dw, dh) / 50;
+        if (DEBUG) System.out.printf("[deskew] quad TL=(%.0f,%.0f) TR=(%.0f,%.0f) BR=(%.0f,%.0f) BL=(%.0f,%.0f) dw=%d dh=%d margin=%d%n",
+                TL[0], TL[1], TR[0], TR[1], BR[0], BR[1], BL[0], BL[1], dw, dh, marginOk);
+        if (near(TL[0], 0, marginOk) && near(TL[1], 0, marginOk)
+                && near(BR[0], dw - 1, marginOk) && near(BR[1], dh - 1, marginOk)) {
+            if (DEBUG) System.out.println("[deskew] REJECT already straight");
+            return null;
+        }
+        int[] out = new int[W * H];
+        for (int y = 0; y < H; y++) {
+            for (int x = 0; x < W; x++) {
+                double d = inv[6] * x + inv[7] * y + 1;
+                double sx = (inv[0] * x + inv[1] * y + inv[2]) / d;
+                double sy = (inv[3] * x + inv[4] * y + inv[5]) / d;
+                out[y * W + x] = bilinear(argb, w, h, sx * (w - 1d) / (dw - 1d),
+                        sy * (h - 1d) / (dh - 1d));
+            }
+        }
+        if (outWH != null) {
+            outWH[0] = W;
+            outWH[1] = H;
+        }
+        return out;
+    }
+
+    private static boolean near(double v, double t, double tol) {
+        return Math.abs(v - t) <= tol;
+    }
+
+    private static double dist(double[] a, double[] b) {
+        return Math.hypot(a[0] - b[0], a[1] - b[1]);
+    }
+
+    /** 三角形有向面积×2(凸包顶点索引,取模处理环绕) */
+    private static double crossArea(List<double[]> hull, int a, int b, int c) {
+        double[] pa = hull.get(a), pb = hull.get(b), pc = hull.get(c);
+        return Math.abs((pb[0] - pa[0]) * (pc[1] - pa[1])
+                - (pb[1] - pa[1]) * (pc[0] - pa[0]));
+    }
+
+    /** Andrew 单调链凸包(输入任意点集) */
+    private static List<double[]> convexHull(List<double[]> pts) {
+        int n = pts.size();
+        double[][] arr = pts.toArray(new double[0][]);
+        java.util.Arrays.sort(arr, new java.util.Comparator<double[]>() {
+            @Override
+            public int compare(double[] a, double[] b) {
+                return a[0] != b[0]
+                        ? Double.compare(a[0], b[0]) : Double.compare(a[1], b[1]);
+            }
+        });
+        double[][] half = new double[2 * n][];
+        int k = 0;
+        for (int i = 0; i < n; i++) {
+            while (k >= 2 && cross(half[k - 2], half[k - 1], arr[i]) <= 0) k--;
+            half[k++] = arr[i];
+        }
+        int lower = k + 1;
+        for (int i = n - 2; i >= 0; i--) {
+            while (k >= lower && cross(half[k - 2], half[k - 1], arr[i]) <= 0) k--;
+            half[k++] = arr[i];
+        }
+        List<double[]> out = new java.util.ArrayList<>(k - 1);
+        for (int i = 0; i < k - 1; i++) out.add(half[i]);
+        return out;
+    }
+
+    private static double cross(double[] o, double[] a, double[] b) {
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    }
+
+    /**
+     * 单应矩阵(列主序 3×3):4 对点 (x,y)→(u,v) 解 8 元线性方程组。
+     * 返回 [h0 h1 h2; h3 h4 h5; h6 h7 1],失败返回 null。
+     */
+    private static double[] homography(double x0, double y0, double x1, double y1,
+                                       double x2, double y2, double x3, double y3,
+                                       double u0, double v0, double u1, double v1,
+                                       double u2, double v2, double u3, double v3) {
+        double[][] A = {
+                {x0, y0, 1, 0, 0, 0, -u0 * x0, -u0 * y0},
+                {x1, y1, 1, 0, 0, 0, -u1 * x1, -u1 * y1},
+                {x2, y2, 1, 0, 0, 0, -u2 * x2, -u2 * y2},
+                {x3, y3, 1, 0, 0, 0, -u3 * x3, -u3 * y3},
+                {0, 0, 0, x0, y0, 1, -v0 * x0, -v0 * y0},
+                {0, 0, 0, x1, y1, 1, -v1 * x1, -v1 * y1},
+                {0, 0, 0, x2, y2, 1, -v2 * x2, -v2 * y2},
+                {0, 0, 0, x3, y3, 1, -v3 * x3, -v3 * y3},
+        };
+        double[] b = {u0, u1, u2, u3, v0, v1, v2, v3};
+        // Gauss 消元(部分主元)
+        for (int col = 0; col < 8; col++) {
+            int piv = col;
+            for (int r = col + 1; r < 8; r++) {
+                if (Math.abs(A[r][col]) > Math.abs(A[piv][col])) piv = r;
+            }
+            if (Math.abs(A[piv][col]) < 1e-9) return null;
+            double[] tmp = A[col];
+            A[col] = A[piv];
+            A[piv] = tmp;
+            double t = b[col];
+            b[col] = b[piv];
+            b[piv] = t;
+            for (int r = 0; r < 8; r++) {
+                if (r == col) continue;
+                double f = A[r][col] / A[col][col];
+                if (f == 0) continue;
+                for (int c = col; c < 8; c++) A[r][c] -= f * A[col][c];
+                b[r] -= f * b[col];
+            }
+        }
+        double[] hm = new double[9];
+        for (int i = 0; i < 8; i++) hm[i] = b[i] / A[i][i];
+        hm[8] = 1;
+        return hm;
+    }
+
+    /** 3×3 求逆(伴随),奇异返回 null */
+    private static double[] invert3(double[] m) {
+        double a = m[0], b = m[1], c = m[2];
+        double d = m[3], e = m[4], f = m[5];
+        double g = m[6], hh = m[7], i = m[8];
+        double A = e * i - f * hh, B = -(d * i - f * g), C = d * hh - e * g;
+        double det = a * A + b * B + c * C;
+        if (Math.abs(det) < 1e-12) return null;
+        double id = 1 / det;
+        return new double[]{
+                A * id, -(b * i - c * hh) * id, (b * f - c * e) * id,
+                B * id, (a * i - c * g) * id, -(a * f - c * d) * id,
+                C * id, -(a * hh - b * g) * id, (a * e - b * d) * id,
+        };
+    }
+
+    /** 双线性采样(坐标夹到图内) */
+    private static int bilinear(int[] argb, int w, int h, double x, double y) {
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
+        if (x > w - 1) x = w - 1;
+        if (y > h - 1) y = h - 1;
+        int x0 = (int) x, y0 = (int) y;
+        int x1 = Math.min(w - 1, x0 + 1), y1 = Math.min(h - 1, y0 + 1);
+        double fx = x - x0, fy = y - y0;
+        int p00 = argb[y0 * w + x0], p10 = argb[y0 * w + x1];
+        int p01 = argb[y1 * w + x0], p11 = argb[y1 * w + x1];
+        int r = (int) Math.round(((p00 >> 16 & 0xFF) * (1 - fx) + (p10 >> 16 & 0xFF) * fx) * (1 - fy)
+                + ((p01 >> 16 & 0xFF) * (1 - fx) + (p11 >> 16 & 0xFF) * fx) * fy);
+        int g = (int) Math.round(((p00 >> 8 & 0xFF) * (1 - fx) + (p10 >> 8 & 0xFF) * fx) * (1 - fy)
+                + ((p01 >> 8 & 0xFF) * (1 - fx) + (p11 >> 8 & 0xFF) * fx) * fy);
+        int b = (int) Math.round(((p00 & 0xFF) * (1 - fx) + (p10 & 0xFF) * fx) * (1 - fy)
+                + ((p01 & 0xFF) * (1 - fx) + (p11 & 0xFF) * fx) * fy);
+        return 0xFF000000 | (r << 16) | (g << 8) | b;
+    }
+
+    /**
+     * 边缘背景裁剪,返回裁剪后网格(行优先)。
+     * 框选常会把图纸外的空白/桌面底色框进来,形成"整行/列都是背景"的假格子。
+     * 背景色 = 采样结果最外圈出现最多的颜色;某条边 ≥90% 是它、且它占全图
+     * ≥30%(或四角近同色)时才裁该边;每边最多裁 35%。
+     */
+
     /** 边缘背景裁剪:实际裁剪后的 cols/rows 写入 outColsRows */
     public static int[] trimBackground(int[] cells, int cols, int rows, int[] outColsRows) {
         // 量化到 4bit/通道,抗噪

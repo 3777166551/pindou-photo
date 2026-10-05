@@ -1412,9 +1412,29 @@ showMergedBomResult(keys, agg, labels, rgbs, okCount);
                     int y0 = Math.max(0, Math.round(sel.top * h / (float) dh));
                     int x1 = Math.min(w - 1, Math.round(sel.right * w / (float) dw));
                     int y1 = Math.min(h - 1, Math.round(sel.bottom * h / (float) dh));
+                    // 先裁出选框(v2.71):透视校正以选框为工作区
+                    int cw = x1 - x0 + 1, chh = y1 - y0 + 1;
+                    int[] crop = new int[cw * chh];
+                    for (int yy = 0; yy < chh; yy++) {
+                        System.arraycopy(px, (y0 + yy) * w + x0, crop, yy * cw, cw);
+                    }
+                    // 透视校正(v2.71):斜拍成品带梯形畸变+残余旋转,单一旋转角
+                    // 网格对不齐整幅(解码白边呈楔形)。自动找面板四角拉正;
+                    // 无清晰面板(面板贴满选框)则用原图
+                    int[] wh = new int[2];
+                    int[] rect = com.pindou.app.util.GridScanner
+                            .deskew(crop, cw, chh, wh);
+                    if (rect != null) {
+                        crop = rect;
+                        cw = wh[0];
+                        chh = wh[1];
+                    }
+                    final int fw = cw, fh = chh;
+                    final int[] fpx = crop;
 
                     com.pindou.app.util.GridScanner.Grid g =
-                            com.pindou.app.util.GridScanner.detect(px, w, h, x0, y0, x1, y1);
+                            com.pindou.app.util.GridScanner.detect(fpx, fw, fh,
+                                    1, 1, fw - 2, fh - 2);
                     if (g == null) {
                         runOnUiThread(new Runnable() {
                             @Override
@@ -1429,7 +1449,7 @@ showMergedBomResult(keys, agg, labels, rgbs, okCount);
                     }
                     final int[] dims = new int[2];
                     int[] cells =
-                            com.pindou.app.util.GridScanner.sample(px, w, h, g, dims);
+                            com.pindou.app.util.GridScanner.sample(fpx, fw, fh, g, dims);
                     int cols = dims[0], rows = dims[1];
                     // 织物边框裁剪(v2.63 写好、v2.70 接线):选框常带进照片里的
                     // 白色织物/桌面背景,边缘同色行/列≥90% 判背景逐条裁掉,

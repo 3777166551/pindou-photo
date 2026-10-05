@@ -442,12 +442,30 @@ public class BeadPhotoActivity extends Activity {
                 int w = b.getWidth(), h = b.getHeight();
                 int[] px = new int[w * h];
                 b.getPixels(px, 0, w, 0, 0, w, h);
+                // 透视校正(v2.71):斜拍必然带梯形畸变+残余旋转,轴对齐网格
+                // 模型对不齐整幅(解码白边呈"下宽上窄"楔形)。先找面板四角
+                // 拉正,后续对格/生成都用校正后的图;无清晰面板则用原图
+                Bitmap work = b;
+                int[] wh = new int[2];
+                int[] rect = com.pindou.app.util.GridScanner.deskew(px, w, h, wh);
+                if (rect != null) {
+                    work = Bitmap.createBitmap(rect, wh[0], wh[1],
+                            Bitmap.Config.ARGB_8888);
+                    px = rect;
+                    w = wh[0];
+                    h = wh[1];
+                }
                 final PatternEngine.BeadGrid g =
                         PatternEngine.detectBeadGrid(px, w, h);
+                final Bitmap fb = work;
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         working = false;
+                        if (fb != b) {   // 拉正成功:工作图与叠加层都换成校正图
+                            bmp = fb;
+                            lattice.setImage(fb);
+                        }
                         if (g == null) {
                             Toast.makeText(BeadPhotoActivity.this,
                                     getString(R.string.bp_auto_fail),
