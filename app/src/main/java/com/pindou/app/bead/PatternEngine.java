@@ -460,6 +460,7 @@ public final class PatternEngine {
         int cells = g.gw * g.gh;
         int[] workCells = new int[cells];
         float[] purity = new float[cells];   // 简图门控:胜出色票占格内不透明像素比;-1=空格
+        float[] darkFrac = new float[cells]; // 描边桥接:格内深豆像素占比
         int[] hist = new int[Math.max(1, n)];
         int[] darkHist = new int[Math.max(1, n)];
         boolean adjust = o.brightness != 0 || o.contrast != 0 || o.saturation != 0;
@@ -529,32 +530,93 @@ public final class PatternEngine {
             }
             workCells[c] = best;
             purity[c] = (float) hist[best] / opaque;
-            // 线条救援:平均色亮(L*>60)且低彩(C*<20) = 纸样底;深豆占 4%~45% = 有线
+            darkFrac[c] = (float) darkCount / opaque;
+            // 线条救援:两种"底+深线"结构改投深豆众数,细线不被多数票抹掉。
+            //   A(v1):平均色亮(L*>60)且低彩(C*<20) = 纸样底——只覆盖白底黑线;
+            //   B(v2.63.1):黑描边贴在彩色块上时,格内平均色带彩度,A 漏掉
+            //     (实测火焰图 300+ 线格只救回 88)。改为结构判据:深豆众数
+            //     近黑(L*≤35)且与多数豆 Lab 距离 ≥30 且占比 10%~45% ——
+            //     高对比深色细线;照片暗部渐变(深豆与底色距离小)不误伤。
+            // 深豆众数平票按色板 RGB 小者胜:顺序无关(同主投票规则)。
             if (opaque >= 8) {
                 int mR = sumR / opaque, mG = sumG / opaque, mB = sumB / opaque;
                 double[] labMean = ColorMath.rgbToLab(
                         0xFF000000 | (mR << 16) | (mG << 8) | mB);
                 double chroma = Math.sqrt(labMean[1] * labMean[1]
                         + labMean[2] * labMean[2]);
-                if (labMean[0] > 60 && chroma < 20) {
-                    int dk = darkCount * 100;
-                    if (dk >= opaque * 10 && dk <= opaque * 45) {
-                        // 深豆众数平票按色板 RGB 小者胜:顺序无关(同主投票规则)
-                        int dBest = -1;
-                        int darkN = 0;
-                        int dBestRgb = Integer.MAX_VALUE;
-                        for (int i = 0; i < n; i++) {
-                            if (darkHist[i] > darkN
-                                    || (darkHist[i] == darkN && darkHist[i] > 0
-                                        && palette.get(i).rgb < dBestRgb)) {
-                                darkN = darkHist[i];
-                                dBestRgb = palette.get(i).rgb;
-                                dBest = i;
-                            }
+                int dk = darkCount * 100;
+                boolean ratio = dk >= opaque * 8 && dk <= opaque * 55;
+                boolean condA = labMean[0] > 60 && chroma < 20
+                        && dk >= opaque * 10 && dk <= opaque * 45;
+                boolean condB = false;
+                if (ratio && !condA) {
+                    int dBest = -1, darkN = 0;
+                    int dBestRgb = Integer.MAX_VALUE;
+                    for (int i = 0; i < n; i++) {
+                        if (darkHist[i] > darkN
+                                || (darkHist[i] == darkN && darkHist[i] > 0
+                                    && palette.get(i).rgb < dBestRgb)) {
+                            darkN = darkHist[i];
+                            dBestRgb = palette.get(i).rgb;
+                            dBest = i;
                         }
-                        if (dBest >= 0) workCells[c] = dBest;
+                    }
+                    if (dBest >= 0) {
+                        double[] dl = labs[dBest];
+                        if (dl[0] <= 35) {
+                            double de = Math.sqrt(
+                                    (dl[0] - labs[best][0]) * (dl[0] - labs[best][0])
+                                  + (dl[1] - labs[best][1]) * (dl[1] - labs[best][1])
+                                  + (dl[2] - labs[best][2]) * (dl[2] - labs[best][2]));
+                            condB = de >= 20;
+                        }
                     }
                 }
+                if (ratio && (condA || condB)) {
+                    int dBest = -1;
+                    int darkN = 0;
+                    int dBestRgb = Integer.MAX_VALUE;
+                    for (int i = 0; i < n; i++) {
+                        if (darkHist[i] > darkN
+                                || (darkHist[i] == darkN && darkHist[i] > 0
+                                    && palette.get(i).rgb < dBestRgb)) {
+                            darkN = darkHist[i];
+                            dBestRgb = palette.get(i).rgb;
+                            dBest = i;
+                        }
+                    }
+                    if (dBest >= 0) workCells[c] = dBest;
+                }
+            }
+        }
+        // 描边桥接(v2.63.1):细于一格的黑描边逐格判定后呈断点(黑像素
+        // 5%~10% 的格够不到救援占比下限)。二遍扫描:非深格黑像素≥5%、
+        // 且 ≥2 个四邻已投近黑豆(L*≤35)→ 翻转为邻格黑豆——把 0.5 格宽
+        // 的描边连成连续线;孤立黑像素(照片噪点)无黑邻不打折。
+        if (n > 0 && !gate) {
+            int[] flip = new int[cells];
+            for (int c = 0; c < cells; c++) {
+                if (workCells[c] < 0 || darkFrac[c] < 0.02f) continue;
+                if (workCells[c] < n && dark[workCells[c]]) continue;
+                int x = c % g.gw, y = c / g.gw;
+                int darkNb = 0, darkIdx = -1;
+                for (int dy = -1; dy <= 1; dy++) {
+                    for (int dx = -1; dx <= 1; dx++) {
+                        if (dx == 0 && dy == 0) continue;
+                        int nx = x + dx, ny = y + dy;
+                        if (nx < 0 || ny < 0 || nx >= g.gw || ny >= g.gh) continue;
+                        int nc = ny * g.gw + nx;
+                        int bc = workCells[nc];
+                        if (bc >= 0 && bc < n && dark[bc] && labs[bc][0] <= 35) {
+                            darkNb++;
+                            darkIdx = bc;
+                        }
+                    }
+                }
+                if (darkNb >= 1 && darkIdx >= 0) flip[c] = darkIdx + 1;
+            }
+            for (int c = 0; c < cells; c++) {
+                if (flip[c] > 0) workCells[c] = flip[c] - 1;
             }
         }
         // 简图清晰化(自动门控,v2.63):平坦图(卡通/赛璐璐)的边界格横跨两个
