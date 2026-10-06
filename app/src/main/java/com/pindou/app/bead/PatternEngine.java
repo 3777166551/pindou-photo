@@ -2253,6 +2253,9 @@ public final class PatternEngine {
     public static final class BeadGrid {
         public double pitchX, pitchY;
         public double lineX, lineY;
+        /** 网格旋转角(弧度,图像坐标系;0 = 横平竖直)。v2.73:
+         *  deskew 对齐的是织布外框,作品相对底布常有 1~2° 残余旋转 */
+        public double angle;
     }
 
     /**
@@ -2392,16 +2395,34 @@ public final class PatternEngine {
                                             List<BeadColor> beadPalette,
                                             boolean precise,
                                             boolean round, boolean hex) {
+        return fromBeadPhoto(px, pw, ph, lineX, lineY, pitchX, pitchY,
+                beadPalette, precise, round, hex, 0);
+    }
+
+    /** 带网格旋转角的重载(angle 弧度;非 0 时 lineX/lineY 为旋转网格原点,不折回) */
+    public static BeadPattern fromBeadPhoto(int[] px, int pw, int ph,
+                                            double lineX, double lineY,
+                                            double pitchX, double pitchY,
+                                            List<BeadColor> beadPalette,
+                                            boolean precise,
+                                            boolean round, boolean hex,
+                                            double angle) {
         if (px == null || pitchX < 4 || pitchY < 4 || beadPalette == null
                 || beadPalette.isEmpty()) {
             return null;
         }
-        // 网格线相位折回 [-豆距/2,豆距/2):检测报告的"最强线"是第 k 条,
-        // 折半宽区间后首列(可能半格越界)也能覆盖,格子索引与晶格对齐
-        lineX -= pitchX * Math.round(lineX / pitchX);
-        lineY -= pitchY * Math.round(lineY / pitchY);
-        int cols = (int) Math.round((pw - lineX) / pitchX);
-        int rows = (int) Math.round((ph - lineY) / pitchY);
+        boolean rotated = Math.abs(angle) > 1e-4;
+        double cos = Math.cos(angle), sin = Math.sin(angle);
+        if (!rotated) {
+            // 网格线相位折回 [-豆距/2,豆距/2):检测报告的"最强线"是第 k 条,
+            // 折半宽区间后首列(可能半格越界)也能覆盖,格子索引与晶格对齐。
+            // 旋转网格不折回:沿图像轴折叠 ≠ 沿网格轴平移,会错位
+            lineX -= pitchX * Math.round(lineX / pitchX);
+            lineY -= pitchY * Math.round(lineY / pitchY);
+        }
+        // 旋转网格的行列数 = 图像宽高在网格轴上的投影长度
+        int cols = (int) Math.round(((pw - lineX) * cos + (ph - lineY) * sin) / pitchX);
+        int rows = (int) Math.round(((ph - lineY) * cos + (pw - lineX) * sin) / pitchY);
         cols = Math.max(1, Math.min(400, cols));
         rows = Math.max(1, Math.min(400, rows));
         double[][] labs = new double[beadPalette.size()][];
@@ -2413,25 +2434,30 @@ public final class PatternEngine {
         int[] cells = new int[cols * rows];
         int[] ring = new int[Math.max(16,
                 (int) (Math.PI * pitchX * pitchY))];
+        double rLim = Math.max(pitchX, pitchY) * 0.45;
         for (int cy = 0; cy < rows; cy++) {
-            double centerY = lineY + (cy + 0.5) * pitchY;
             for (int cx = 0; cx < cols; cx++) {
-                double centerX = lineX + (cx + 0.5) * pitchX;
+                // 格心 = 网格原点 + 旋转矩阵·(格中心网格坐标)
+                double gu = (cx + 0.5) * pitchX, gv = (cy + 0.5) * pitchY;
+                double centerX = lineX + gu * cos - gv * sin;
+                double centerY = lineY + gu * sin + gv * cos;
                 cells[cy * cols + cx] = -1;
-                if (centerX < 0 || centerX >= pw
-                        || centerY < 0 || centerY >= ph) {
+                if (centerX < -rLim || centerX >= pw + rLim
+                        || centerY < -rLim || centerY >= ph + rLim) {
                     continue;
                 }
                 double rOutX = pitchX * 0.38, rOutY = pitchY * 0.38;
                 int n = 0, nKeep = 0;
-                int x0 = Math.max(0, (int) (centerX - rOutX));
-                int x1 = Math.min(pw - 1, (int) Math.ceil(centerX + rOutX));
-                int y0 = Math.max(0, (int) (centerY - rOutY));
-                int y1 = Math.min(ph - 1, (int) Math.ceil(centerY + rOutY));
+                int x0 = Math.max(0, (int) (centerX - rLim));
+                int x1 = Math.min(pw - 1, (int) Math.ceil(centerX + rLim));
+                int y0 = Math.max(0, (int) (centerY - rLim));
+                int y1 = Math.min(ph - 1, (int) Math.ceil(centerY + rLim));
                 for (int y = y0; y <= y1; y++) {
-                    double dy = (y + 0.5 - centerY) / pitchY;
                     for (int x = x0; x <= x1; x++) {
-                        double dx = (x + 0.5 - centerX) / pitchX;
+                        // 像素偏移反旋回网格坐标系再判环带
+                        double ex = x + 0.5 - centerX, ey = y + 0.5 - centerY;
+                        double dx = (ex * cos + ey * sin) / pitchX;
+                        double dy = (-ex * sin + ey * cos) / pitchY;
                         double d2 = dx * dx + dy * dy;
                         if (d2 > 0.38 * 0.38 || d2 < 0.16 * 0.16) continue;
                         int p = px[y * pw + x];
@@ -2451,7 +2477,7 @@ public final class PatternEngine {
                 if (nKeep == 0) {
                     if (n == 0) continue;
                     nKeep = collectRingAll(px, pw, x0, x1, y0, y1,
-                            centerX, centerY, pitchX, pitchY, ring);
+                            centerX, centerY, pitchX, pitchY, ring, angle);
                     if (nKeep == 0) continue;
                 }
                 int mr = medianAt(ring, nKeep, 0);
@@ -2477,11 +2503,22 @@ public final class PatternEngine {
                                       int y0, int y1, double centerX,
                                       double centerY, double pitchX,
                                       double pitchY, int[] ring) {
+        return collectRingAll(px, pw, x0, x1, y0, y1, centerX, centerY,
+                pitchX, pitchY, ring, 0);
+    }
+
+    /** 带角度重载:像素偏移反旋回网格坐标系再判环带 */
+    private static int collectRingAll(int[] px, int pw, int x0, int x1,
+                                      int y0, int y1, double centerX,
+                                      double centerY, double pitchX,
+                                      double pitchY, int[] ring, double angle) {
         int nKeep = 0;
+        double cos = Math.cos(angle), sin = Math.sin(angle);
         for (int y = y0; y <= y1; y++) {
-            double dy = (y + 0.5 - centerY) / pitchY;
             for (int x = x0; x <= x1; x++) {
-                double dx = (x + 0.5 - centerX) / pitchX;
+                double ex = x + 0.5 - centerX, ey = y + 0.5 - centerY;
+                double dx = (ex * cos + ey * sin) / pitchX;
+                double dy = (-ex * sin + ey * cos) / pitchY;
                 double d2 = dx * dx + dy * dy;
                 if (d2 > 0.38 * 0.38 || d2 < 0.16 * 0.16) continue;
                 int p = px[y * pw + x];

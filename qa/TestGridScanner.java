@@ -333,6 +333,113 @@ public class TestGridScanner {
             }
         }
 
+        // ---- rotate():转平 ±2.5°(v2.73,残余旋转两步校正的第二步)----
+        {
+            int cols = 24, rows = 26, pitch = 16;
+            int[][] truth = randomTruth(new Random(91), cols, rows);
+            int sw = cols * pitch + 40, sh = rows * pitch + 40;
+            int[] straight = renderBeadPhoto(sw, sh, cols, rows, pitch, 0, truth, 91);
+            int[] wh = new int[2];
+            int[] tilted = GridScanner.rotate(straight, sw, sh, Math.toRadians(2.5), wh);
+            check("rotate tilted non-null", tilted != null);
+            int[] wh2 = new int[2];
+            int[] flat = GridScanner.rotate(tilted, wh[0], wh[1],
+                    Math.toRadians(-2.5), wh2);
+            check("rotate flat non-null", flat != null);
+            if (flat != null) {
+                // 两次旋转画布各按包围盒扩 ~4.6%(±2.5° 斜矩形),累计 +12% 内
+                check("rotate dims " + wh2[0] + "x" + wh2[1],
+                        wh2[0] >= sw - 4 && wh2[0] <= sw * 1.12
+                                && wh2[1] >= sh - 4 && wh2[1] <= sh * 1.12);
+                GridScanner.Grid g = GridScanner.detect(flat, wh2[0], wh2[1],
+                        1, 1, wh2[0] - 2, wh2[1] - 2);
+                check("rotate detect", g != null);
+                if (g != null) {
+                    check("rotate angle " + Math.abs(Math.toDegrees(g.angle)),
+                            Math.abs(Math.toDegrees(g.angle)) <= 0.6);
+                    int[] dims = new int[2];
+                    int[] cells = GridScanner.sample(flat, wh2[0], wh2[1], g, dims);
+                    int best = 0, bestTot = 0;
+                    for (int oy = 0; oy <= Math.max(0, dims[1] - rows); oy++) {
+                        for (int ox = 0; ox <= Math.max(0, dims[0] - cols); ox++) {
+                            int hit = 0, tot = 0;
+                            for (int y = 0; y < rows; y++) {
+                                if (y + oy >= dims[1]) break;
+                                for (int x = 0; x < cols; x++) {
+                                    if (x + ox >= dims[0]) break;
+                                    tot++;
+                                    if (colorHit(cells[(y + oy) * dims[0] + x + ox],
+                                            truth[y][x])) hit++;
+                                }
+                            }
+                            if (tot > 0 && hit * 100 > best * bestTot) {
+                                best = hit;
+                                bestTot = tot;
+                            }
+                        }
+                    }
+                    check("rotate hit " + best * 100 / Math.max(1, bestTot) + "%",
+                            bestTot > 0 && best * 100 / bestTot >= 80);
+                }
+            }
+        }
+
+        // ---- fromBeadPhoto 角度重载:旋转成品照直接按角度采样,中心格必须命中 ----
+        {
+            int cols = 24, rows = 26, pitch = 16;
+            int[][] truth = randomTruth(new Random(92), cols, rows);
+            int sw = cols * pitch + 40, sh = rows * pitch + 40;
+            double ang = Math.toRadians(2.0);
+            int[] tilted = renderBeadPhoto(sw, sh, cols, rows, pitch, 2.0, truth, 92);
+            GridScanner.Grid g = GridScanner.detect(tilted, sw, sh, 1, 1, sw - 2, sh - 2);
+            check("fbp-angle detect", g != null);
+            if (g != null) {
+                java.util.List<com.pindou.app.bead.BeadColor> pal =
+                        new java.util.ArrayList<>();
+                int[] prgb = {0xFFD94A3D, 0xFF2F7FD1, 0xFF3FA45B, 0xFFF2B33D,
+                        0xFF2B2B2B, 0xFFF5F0E8, 0xFF9B59B6, 0xFF1F3A93};
+                for (int rgb : prgb) {
+                    pal.add(new com.pindou.app.bead.BeadColor(1,
+                            "c" + Integer.toHexString(rgb & 0xFFFFFF), rgb));
+                }
+                // lineX/lineY = 网格原点(首格左上角),由首格中心反推,不折回
+                double cs = Math.cos(g.angle), sn = Math.sin(g.angle);
+                double lineX = g.ox - 0.5 * g.pitchX * cs + 0.5 * g.pitchY * sn;
+                double lineY = g.oy - 0.5 * g.pitchX * sn - 0.5 * g.pitchY * cs;
+                com.pindou.app.bead.BeadPattern p = com.pindou.app.bead.PatternEngine
+                        .fromBeadPhoto(tilted, sw, sh, lineX, lineY,
+                                g.pitchX, g.pitchY, pal, true, false, false, g.angle);
+                check("fbp-angle non-null", p != null);
+                if (p != null) {
+                    // 全平移命中率(检测原点含边距格,位置有平移;旋转不变性
+                    // 由"中心附近命中"升级为整幅对位,更强的回归网)
+                    int best = 0, bestTot = 0;
+                    for (int oy = 0; oy <= Math.max(0, p.rows - rows); oy++) {
+                        for (int ox = 0; ox <= Math.max(0, p.cols - cols); ox++) {
+                            int hit = 0, tot = 0;
+                            for (int y = 0; y < rows; y++) {
+                                for (int x = 0; x < cols; x++) {
+                                    int got = p.cellAt(x + ox, y + oy);
+                                    tot++;
+                                    if (got >= 0 && colorHit(
+                                            0xFF000000 | pal.get(got).rgb,
+                                            truth[y][x])) {
+                                        hit++;
+                                    }
+                                }
+                            }
+                            if (tot > 0 && hit * 100 > best * bestTot) {
+                                best = hit;
+                                bestTot = tot;
+                            }
+                        }
+                    }
+                    check("fbp-angle hit " + best * 100 / Math.max(1, bestTot) + "%",
+                            bestTot > 0 && best * 100 / bestTot >= 75);
+                }
+            }
+        }
+
         // ---- 无网格:随机噪声必须拒检
         {
             Random rnd = new Random(99);

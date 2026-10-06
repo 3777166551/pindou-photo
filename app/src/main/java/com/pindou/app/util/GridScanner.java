@@ -587,6 +587,48 @@ public final class GridScanner {
     }
 
     /**
+     * 纯旋转校正(v2.73):把图像绕中心旋转 -angle(弧度),画布扩到包容
+     * 全部内容,双线性采样,越界取边缘(夹持)。deskew 对齐织布外框后,
+     * 作品相对底布的残余旋转用此法转平,下游对格/叠加层保持轴对齐。
+     * 拉正后尺寸写入 outWH[0]/[1]。
+     */
+    public static int[] rotate(int[] argb, int w, int h, double angle, int[] outWH) {
+        if (argb == null || w < 2 || h < 2) return null;
+        double cos = Math.cos(angle), sin = Math.sin(angle);
+        // 输出画布 = 输入四角旋转后的包围盒(绕各自中心对齐)
+        double[] cx = {0, w - 1d, w - 1d, 0}, cyy = {0, 0, h - 1d, h - 1d};
+        double mnx = Double.MAX_VALUE, mny = Double.MAX_VALUE;
+        double mxx = -Double.MAX_VALUE, mxy = -Double.MAX_VALUE;
+        for (int i = 0; i < 4; i++) {
+            // 输出坐标 = R(-angle)·(输入角 - 输入中心) + 输出中心(原点暂用 0)
+            double dx = cx[i] - w / 2.0, dy = cyy[i] - h / 2.0;
+            double ox = dx * cos + dy * sin;
+            double oy = -dx * sin + dy * cos;
+            mnx = Math.min(mnx, ox);
+            mxx = Math.max(mxx, ox);
+            mny = Math.min(mny, oy);
+            mxy = Math.max(mxy, oy);
+        }
+        int W = Math.max(2, (int) Math.round(mxx - mnx) + 1);
+        int H = Math.max(2, (int) Math.round(mxy - mny) + 1);
+        int[] out = new int[W * H];
+        for (int y = 0; y < H; y++) {
+            for (int x = 0; x < W; x++) {
+                double dx = x - W / 2.0, dy = y - H / 2.0;
+                // 逆映射:输出点旋回输入坐标系
+                double sx = w / 2.0 + dx * cos + dy * sin;
+                double sy = h / 2.0 - dx * sin + dy * cos;
+                out[y * W + x] = bilinear(argb, w, h, sx, sy);
+            }
+        }
+        if (outWH != null) {
+            outWH[0] = W;
+            outWH[1] = H;
+        }
+        return out;
+    }
+
+    /**
      * 透视校正(v2.71):成品照斜拍必然带梯形畸变+残余旋转,单一旋转角的
      * 网格模型对不齐整幅(用户实测:解码图一侧白边呈"下宽上窄"楔形)。
      * 流程:背景色=四周边框环中位色 → 非背景最大连通域=成品面板 → 凸包 →

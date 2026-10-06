@@ -455,8 +455,24 @@ public class BeadPhotoActivity extends Activity {
                     w = wh[0];
                     h = wh[1];
                 }
-                final PatternEngine.BeadGrid g =
-                        PatternEngine.detectBeadGrid(px, w, h);
+                // 残余旋转转平:deskew 对齐的是织布外框,作品相对底布常有
+                // 1~2° 残余旋转,轴对齐对格解码出的分带是斜的。先旋转感知
+                // 检出角度,把图像转平后再轴对齐对格(叠加层/拖动保持轴对齐)
+                com.pindou.app.util.GridScanner.Grid rot =
+                        com.pindou.app.util.GridScanner.detect(px, w, h, 1, 1, w - 2, h - 2);
+                if (rot != null && Math.abs(rot.angle) > Math.toRadians(0.2)) {
+                    int[] rwh = new int[2];
+                    int[] rotImg = com.pindou.app.util.GridScanner
+                            .rotate(px, w, h, rot.angle, rwh);
+                    if (rotImg != null && rwh[0] >= 64 && rwh[1] >= 64) {
+                        px = rotImg;
+                        w = rwh[0];
+                        h = rwh[1];
+                        work = Bitmap.createBitmap(px, w, h,
+                                Bitmap.Config.ARGB_8888);
+                    }
+                }
+                PatternEngine.BeadGrid g = PatternEngine.detectBeadGrid(px, w, h);
                 final Bitmap fb = work;
                 runOnUiThread(new Runnable() {
                     @Override
@@ -507,7 +523,7 @@ public class BeadPhotoActivity extends Activity {
                     final BeadPattern p = PatternEngine.fromBeadPhoto(px, w, h,
                             lattice.lineX, lattice.lineY,
                             lattice.pitchX, lattice.pitchY,
-                            pal, true, false, false);
+                            pal, true, false, false, lattice.angle);
                     if (p == null) throw new IllegalStateException("no cells");
                     String palName = BeadPalettes.selNames()[tier];
                     JSONObject share = PatternShare.build(p,
@@ -562,7 +578,7 @@ public class BeadPhotoActivity extends Activity {
     private static class LatticeView extends View {
 
         Bitmap bmp;
-        double lineX, lineY, pitchX, pitchY;
+        double lineX, lineY, pitchX, pitchY, angle;
         private final Paint pShadow = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Paint pLine = new Paint(Paint.ANTI_ALIAS_FLAG);
 
@@ -590,6 +606,7 @@ public class BeadPhotoActivity extends Activity {
             pitchY = g.pitchY;
             lineX = g.lineX;
             lineY = g.lineY;
+            angle = g.angle;
             invalidate();
         }
 
