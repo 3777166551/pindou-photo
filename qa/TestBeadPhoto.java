@@ -107,7 +107,55 @@ public class TestBeadPhoto {
         return total == 0 ? 0 : hit * 100.0 / total;
     }
 
+    /** whiteEnhance:中性浅灰 → 纯白,彩色不受影响(v2.78) */
+    static void testWhiteEnhance() {
+        int passed = 0, failed = 0;
+        List<BeadColor> pal = new java.util.ArrayList<>();
+        pal.add(new BeadColor(1, "WHITE", 0xFFFFFF));   // 0 纯白
+        pal.add(new BeadColor(2, "LGRAY", 0xEBEBEB));   // 1 浅灰(应映射)
+        pal.add(new BeadColor(3, "MGRAY", 0xCDCDCD));   // 2 中灰(应映射)
+        pal.add(new BeadColor(4, "PINK", 0xF6BBD1));    // 3 粉(饱和 59,不动)
+        pal.add(new BeadColor(5, "DGRAY", 0xB4B4B4));   // 4 深灰(lum<200,不动)
+        int[] cells = {1, 1, 2, 3, 4, 1, 2, 0, 3, 4};
+        BeadPattern p = new BeadPattern(5, 2, pal, cells,
+                new int[5], new java.util.ArrayList<>(), 10, 0);
+        BeadPattern q = PatternEngine.whiteEnhance(p);
+        boolean ok = q != null;
+        // 浅灰/中灰 → 纯白(0 号);粉/深灰不变
+        int[] expect = {0, 0, 0, 3, 4, 0, 0, 0, 3, 4};
+        for (int i = 0; i < cells.length && ok; i++) {
+            int got = q.cellAt(i % 5, i / 5);
+            if (got != expect[i]) ok = false;
+        }
+        System.out.println((ok ? "PASS" : "FAIL") + ": whiteEnhance remap");
+        if (ok) passed++; else failed++;
+        // 用量统计同步
+        int white = 0;
+        for (int y = 0; y < 2; y++)
+            for (int x = 0; x < 5; x++)
+                if (q.cellAt(x, y) == 0) white++;
+        boolean cntOk = false;
+        for (BeadPattern.UsedColor u : q.usedColors) {
+            if (u.index == 0 && u.count == white) cntOk = true;
+        }
+        System.out.println((cntOk ? "PASS" : "FAIL") + ": whiteEnhance used count");
+        if (cntOk) passed++; else failed++;
+        // 无白豆调色板:原样返回
+        List<BeadColor> dark = new java.util.ArrayList<>();
+        dark.add(new BeadColor(1, "D1", 0x223344));
+        dark.add(new BeadColor(2, "D2", 0x556677));
+        int[] c2 = {0, 1, 0, 1};
+        BeadPattern p2 = new BeadPattern(2, 2, dark, c2, new int[2],
+                new java.util.ArrayList<>(), 4, 0);
+        BeadPattern q2 = PatternEngine.whiteEnhance(p2);
+        System.out.println((q2 == p2 ? "PASS" : "FAIL") + ": whiteEnhance no-white passthrough");
+        if (q2 == p2) passed++; else failed++;
+        System.out.println("WhiteEnhance: " + passed + " passed, " + failed + " failed");
+        if (failed > 0) System.exit(1);
+    }
+
     public static void main(String[] args) {
+        testWhiteEnhance();
         int[] img = render();
 
         // ---- 检测:豆距 + 相位 ----

@@ -578,6 +578,7 @@ public class BeadPhotoActivity extends Activity {
                             lattice.pitchX, lattice.pitchY,
                             pal, true, false, false, lattice.angle);
                     p = PatternEngine.trimJunkBorders(p);   // 裁桌面/织物污染边
+                    p = PatternEngine.whiteEnhance(p);   // 白豆增强:阴影浅灰→纯白
                     if (p == null) throw new IllegalStateException("no cells");
                     String palName = BeadPalettes.selNames()[tier];
                     JSONObject share = PatternShare.build(p,

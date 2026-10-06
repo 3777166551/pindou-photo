@@ -2400,6 +2400,67 @@ public final class PatternEngine {
     }
 
     /**
+     * 白色增强(v2.78):成品照里的白豆(雪/白缝/白框)因阴影/白平衡
+     * 常被配成中性浅灰豆,拼出来"发灰不发白"。把中性浅灰系
+     * (饱和度 ≤15 且亮度 ≥200)整体重映射为调色板中最白的豆;
+     * 调色板无白豆(最白仍不达 235)或无浅灰可映射时原样返回。
+     * 彩色豆不受影响(暖白高光 sat>15 保留)。
+     */
+    public static BeadPattern whiteEnhance(BeadPattern p) {
+        if (p == null || p.palette == null || p.palette.isEmpty()) return p;
+        // 1) 找最白的豆:亮度最大(并列取饱和最小)
+        int whiteIdx = -1, bestLum = -1, bestSat = 255;
+        for (int i = 0; i < p.palette.size(); i++) {
+            int rgb = p.palette.get(i).rgb;
+            int r = (rgb >> 16) & 0xFF, g = (rgb >> 8) & 0xFF, b = rgb & 0xFF;
+            int lum = (r * 299 + g * 587 + b * 114) / 1000;
+            int sat = Math.max(r, Math.max(g, b)) - Math.min(r, Math.min(g, b));
+            if (lum > bestLum || (lum == bestLum && sat < bestSat)) {
+                bestLum = lum;
+                bestSat = sat;
+                whiteIdx = i;
+            }
+        }
+        if (whiteIdx < 0 || bestLum < 235 || bestSat > 18) return p;   // 无白豆
+        // 2) 找中性浅灰系
+        int[] remap = new int[p.palette.size()];
+        boolean any = false;
+        for (int i = 0; i < p.palette.size(); i++) {
+            int rgb = p.palette.get(i).rgb;
+            int r = (rgb >> 16) & 0xFF, g = (rgb >> 8) & 0xFF, b = rgb & 0xFF;
+            int lum = (r * 299 + g * 587 + b * 114) / 1000;
+            int sat = Math.max(r, Math.max(g, b)) - Math.min(r, Math.min(g, b));
+            remap[i] = i;
+            if (i != whiteIdx && sat <= 15 && lum >= 200) {
+                remap[i] = whiteIdx;
+                any = true;
+            }
+        }
+        if (!any) return p;
+        // 3) 重建 cells/counts/used
+        int[] cells = new int[p.cols * p.rows];
+        int[] cnts = new int[p.palette.size()];
+        for (int i = 0; i < cells.length; i++) {
+            int old = p.cells[i];
+            int nw = (old >= 0 && old < remap.length) ? remap[old] : old;
+            cells[i] = nw;
+            if (nw >= 0) cnts[nw]++;
+        }
+        java.util.List<BeadPattern.UsedColor> used = new java.util.ArrayList<>();
+        int tot = 0;
+        for (int i = 0; i < cnts.length; i++) {
+            if (cnts[i] > 0) {
+                tot += cnts[i];
+                used.add(new BeadPattern.UsedColor(i, p.palette.get(i),
+                        p.palette.get(i).displayCode(), cnts[i]));
+            }
+        }
+        BeadPattern.sortByCountDesc(used);
+        return new BeadPattern(p.cols, p.rows, p.palette, cells, cnts, used,
+                tot, p.emptyCount);
+    }
+
+    /**
      * 裁掉桌面/织物污染的边缘行列(v2.77):成品照拍摄时难免带进画框外的
      * 桌面色(棕/暖灰),行列杂色占比 >12% 判为污染裁掉,逐边收缩。
      */
