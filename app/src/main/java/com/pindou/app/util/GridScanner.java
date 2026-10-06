@@ -652,6 +652,7 @@ public final class GridScanner {
         int[] comp = new int[n];          // 0=背景/未访问,1=当前域,2=最大域
         int[] stack = new int[n];
         int bestSize = 0, bestId = 1;
+        int bb0 = 0, b0y = 0, bx1 = 0, by1 = 0;   // 最佳组件 bbox
         for (int seed = 0; seed < n; seed++) {
             if (comp[seed] != 0) continue;
             int p = sm[seed];
@@ -664,10 +665,15 @@ public final class GridScanner {
             stack[sp++] = seed;
             comp[seed] = id;
             int size = 0;
+            int bb0Cur = dw, by0Cur = dh, bx1Cur = 0, by1Cur = 0;
             while (sp > 0) {
                 int cur = stack[--sp];
                 size++;
                 int cx = cur % dw, cy = cur / dw;
+                if (cx < bb0Cur) bb0Cur = cx;
+                if (cx > bx1Cur) bx1Cur = cx;
+                if (cy < by0Cur) by0Cur = cy;
+                if (cy > by1Cur) by1Cur = cy;
                 if (cx > 0 && comp[cur - 1] == 0) {
                     int q = sm[cur - 1];
                     int d = Math.abs((q >> 16 & 0xFF) - br) + Math.abs((q >> 8 & 0xFF) - bg)
@@ -700,6 +706,7 @@ public final class GridScanner {
             if (size > bestSize) {
                 bestSize = size;
                 bestId = id;
+                bb0 = bb0Cur; b0y = by0Cur; bx1 = bx1Cur; by1 = by1Cur;
             }
         }
         if (DEBUG) System.out.printf("[deskew] bestComp=%d n=%d (%.1f%%)%n",
@@ -712,7 +719,11 @@ public final class GridScanner {
         // 连通域=纯豆区,而透视下豆区外的底板环宽度沿边不均,豆区包络的
         // 四角不共单应(实测拉正残角 4.5°、采样命中 5%)。chamfer 距离膨胀
         // R(≈2.5% 短边)后取包络,角点回落到真实面板四角附近
-        int rad = Math.max(6, Math.min(dw, dh) / 40) * 3;   // chamfer 权重 3/4
+        // 膨胀半径不超过组件到图像边缘的余量(用户裁剪紧时面板近贴边,
+        // 盲目膨胀把面板轮廓顶到图像边界,误触发"已摆正"防御)
+        int radWant = Math.max(6, Math.min(dw, dh) / 40) * 3;   // chamfer 权重 3/4
+        int rEdge = Math.min(Math.min(bb0, b0y), Math.min(dw - 1 - bx1, dh - 1 - by1));
+        int rad = Math.max(3, Math.min(radWant, rEdge - 1));
         int[] dd = new int[n];
         for (int i = 0; i < n; i++) dd[i] = comp[i] == bestId ? 0 : 1 << 20;
         for (int y = 0; y < dh; y++) {
@@ -853,8 +864,11 @@ public final class GridScanner {
         // ---- 目标尺寸 ----
         double wTop = dist(TL, TR), wBot = dist(BL, BR);
         double hL = dist(TL, BL), hR = dist(TR, BR);
-        int W = (int) Math.round((wTop + wBot) / 2);
-        int H = (int) Math.round((hL + hR) / 2);
+        // 四角在分析分辨率(dw/dh)空间,输出按全分辨率等比放大
+        // (否则拉正图只有 ~420px,豆距缩到几像素,后续对格必然失败)
+        double scale = w / (double) dw;
+        int W = (int) Math.round((wTop + wBot) / 2 * scale);
+        int H = (int) Math.round((hL + hR) / 2 * scale);
         int maxSide = Math.max(w, h);
         if (W > maxSide || H > maxSide) {
             double f = maxSide / (double) Math.max(W, H);
@@ -870,24 +884,27 @@ public final class GridScanner {
                 TL[0], TL[1], TR[0], TR[1], BR[0], BR[1], BL[0], BL[1]);
         if (DEBUG) System.out.println("[deskew] hm=" + (hm == null));
         if (hm == null) return null;
-        double[] inv = invert3(hm);
-        if (DEBUG) System.out.println("[deskew] inv=" + (inv == null));
-        if (inv == null) return null;
+        // 正向采样:hm 把拉正图坐标(rect)映射回原图四边形区域(quad),
+        // 对输出每像素施加 hm 即得源坐标。(旧版误用逆矩阵:分析分辨率下
+        // rect/quad 数值量级恰好接近,扭曲表现为小幅残角,极难察觉)
+        double[] fwd = hm;
         // 四角全贴原图角 = 本来就正,不折腾
         int marginOk = Math.max(dw, dh) / 50;
         if (DEBUG) System.out.printf("[deskew] quad TL=(%.0f,%.0f) TR=(%.0f,%.0f) BR=(%.0f,%.0f) BL=(%.0f,%.0f) dw=%d dh=%d margin=%d%n",
                 TL[0], TL[1], TR[0], TR[1], BR[0], BR[1], BL[0], BL[1], dw, dh, marginOk);
-        if (near(TL[0], 0, marginOk) && near(TL[1], 0, marginOk)
-                && near(BR[0], dw - 1, marginOk) && near(BR[1], dh - 1, marginOk)) {
-            if (DEBUG) System.out.println("[deskew] REJECT already straight");
+        // 组件 bbox 占满画框(双向 ≥98%)= 无背景可测,本就摆正不折腾。
+        // (旧"四角贴原图角"防御在用户紧裁剪+膨胀顶边时误拒,v2.71 改 bbox 判据)
+        if (bb0 <= dw * 0.01 && bx1 >= dw * 0.99 - 1
+                && b0y <= dh * 0.01 && by1 >= dh * 0.99 - 1) {
+            if (DEBUG) System.out.println("[deskew] REJECT bbox fills frame");
             return null;
         }
         int[] out = new int[W * H];
         for (int y = 0; y < H; y++) {
             for (int x = 0; x < W; x++) {
-                double d = inv[6] * x + inv[7] * y + 1;
-                double sx = (inv[0] * x + inv[1] * y + inv[2]) / d;
-                double sy = (inv[3] * x + inv[4] * y + inv[5]) / d;
+                double d = fwd[6] * x + fwd[7] * y + 1;
+                double sx = (fwd[0] * x + fwd[1] * y + fwd[2]) / d;
+                double sy = (fwd[3] * x + fwd[4] * y + fwd[5]) / d;
                 out[y * W + x] = bilinear(argb, w, h, sx * (w - 1d) / (dw - 1d),
                         sy * (h - 1d) / (dh - 1d));
             }
@@ -989,22 +1006,6 @@ public final class GridScanner {
         for (int i = 0; i < 8; i++) hm[i] = b[i] / A[i][i];
         hm[8] = 1;
         return hm;
-    }
-
-    /** 3×3 求逆(伴随),奇异返回 null */
-    private static double[] invert3(double[] m) {
-        double a = m[0], b = m[1], c = m[2];
-        double d = m[3], e = m[4], f = m[5];
-        double g = m[6], hh = m[7], i = m[8];
-        double A = e * i - f * hh, B = -(d * i - f * g), C = d * hh - e * g;
-        double det = a * A + b * B + c * C;
-        if (Math.abs(det) < 1e-12) return null;
-        double id = 1 / det;
-        return new double[]{
-                A * id, -(b * i - c * hh) * id, (b * f - c * e) * id,
-                B * id, (a * i - c * g) * id, -(a * f - c * d) * id,
-                C * id, -(a * hh - b * g) * id, (a * e - b * d) * id,
-        };
     }
 
     /** 双线性采样(坐标夹到图内) */

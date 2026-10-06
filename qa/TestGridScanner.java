@@ -303,6 +303,20 @@ public class TestGridScanner {
                 check("deskew dims sane " + wh[0] + "x" + wh[1],
                         wh[0] >= sw / 3 && wh[1] >= sh / 3
                                 && wh[0] <= sw && wh[1] <= sh);
+                // 内容正确性:拉正图 1/4 点应落在真值 (cols/4, rows/4) 格的
+                // 颜色上(旧版采样方向反了,该点会落到别处;3×3 邻域容差)
+                {
+                    int qx = wh[0] / 4, qy = wh[1] / 4;
+                    int got = rect[qy * wh[0] + qx] & 0xFFFFFF;
+                    boolean found = false;
+                    for (int dy = -1; dy <= 1 && !found; dy++) {
+                        for (int dx = -1; dx <= 1 && !found; dx++) {
+                            int tx = cols / 4 + dx, ty = rows / 4 + dy;
+                            if (colorHit(got, truth[ty][tx])) found = true;
+                        }
+                    }
+                    check("deskew content at quarter point", found);
+                }
                 GridScanner.Grid g = GridScanner.detect(rect, wh[0], wh[1],
                         1, 1, wh[0] - 2, wh[1] - 2);
                 check("deskew detect", g != null);
