@@ -722,56 +722,115 @@ public final class GridScanner {
         int cols = (int) Math.floor((w - gx) / pitchX);
         int rows = (int) Math.floor((h - gy) / pitchY);
         if (cols < 8 || rows < 8) return null;
-        // ---- 分块:每块约 8×8 格 ----
-        int K = Math.max(2, Math.min(6, Math.min(cols, rows) / 8));
+        // ---- 分块:渐进跟踪 + 形变场 mesh ----
+        // 织物悬挂/鼓包的形变不是单应(实测缝1/缝2 水平而缝3 斜 -80px,
+        // 全局线性变换原理上修不掉):每块的实测偏移直接构成形变场,
+        // 重采样时双线性插值逐像素施加——鼓包/剪切/透视一视同仁
+        int K = Math.max(3, Math.min(8, Math.min(cols, rows) / 9));
         int N = 8;   // 每块格数
         java.util.List<double[]> src = new java.util.ArrayList<>();
         java.util.List<double[]> dst = new java.util.ArrayList<>();
         double search = Math.min(pitchX, pitchY) * 0.35;
+        // 块处理顺序:按到图像中心的距离排序(中心块偏移最小,作跟踪起点)
+        java.util.List<int[]> order = new java.util.ArrayList<>();
         for (int ty = 0; ty < K; ty++) {
             for (int tx = 0; tx < K; tx++) {
-                int ci = (int) Math.round((tx + 0.5) * cols / K);
-                int cj = (int) Math.round((ty + 0.5) * rows / K);
-                int i0 = ci - N / 2, j0 = cj - N / 2;
-                if (i0 < 0 || j0 < 0 || i0 + N > cols || j0 + N > rows) continue;
-                double best = Double.MAX_VALUE, bdx = 0, bdy = 0;
-                for (double dy = -search; dy <= search; dy += 1) {
-                    for (double dx = -search; dx <= search; dx += 1) {
-                        double score = tileVariance(argb, w, h,
-                                gx + dx, gy + dy, i0, j0, N, pitchX, pitchY);
-                        if (score < best) {
-                            best = score;
-                            bdx = dx;
-                            bdy = dy;
-                        }
-                    }
-                }
-                // 平坦块(白框/织布)判别:最优与零偏移分数差不足 4% 则弃
-                double zero = tileVariance(argb, w, h,
-                        gx, gy, i0, j0, N, pitchX, pitchY);
-                if (zero - best < zero * 0.04) continue;
-                src.add(new double[]{ci + 0.5, cj + 0.5});
-                dst.add(new double[]{gx + (ci + 0.5) * pitchX + bdx,
-                        gy + (cj + 0.5) * pitchY + bdy});
+                order.add(new int[]{tx, ty});
             }
         }
-        if (src.size() < 6) return null;
-        double[] hm = homographyLS(src, dst);
-        if (hm == null) return null;
-        // ---- 按单应重采样:格 (i,j) 中心 → ((i+0.5)*outCell, (j+0.5)*outCell) ----
+        final double midU = cols / 2.0, midV = rows / 2.0;
+        java.util.Collections.sort(order, new java.util.Comparator<int[]>() {
+            @Override
+            public int compare(int[] a, int[] b) {
+                double da = Math.abs((a[0] + 0.5) * cols / K - midU)
+                        + Math.abs((a[1] + 0.5) * rows / K - midV);
+                double db = Math.abs((b[0] + 0.5) * cols / K - midU)
+                        + Math.abs((b[1] + 0.5) * rows / K - midV);
+                return Double.compare(da, db);
+            }
+        });
+        double[][] offX = new double[K][K], offY = new double[K][K];
+        boolean[][] has = new boolean[K][K];
+        int evaluated = 0, accepted = 0;
+        for (int[] t : order) {
+            int tx = t[0], ty = t[1];
+            int ci = (int) Math.round((tx + 0.5) * cols / K);
+            int cj = (int) Math.round((ty + 0.5) * rows / K);
+            int i0 = ci - N / 2, j0 = cj - N / 2;
+            if (i0 < 0 || j0 < 0 || i0 + N > cols || j0 + N > rows) continue;
+            // 预测偏移:已测邻块偏移的双线性插值(无邻块则 0)
+            double[] pred = meshAt(offX, offY, has, tx, ty, K);
+            double pdx = pred[0], pdy = pred[1];
+            double best = Double.MAX_VALUE, bdx = 0, bdy = 0;
+            for (double dy = pdy - search; dy <= pdy + search; dy += 1) {
+                for (double dx = pdx - search; dx <= pdx + search; dx += 1) {
+                    double score = tileVariance(argb, w, h,
+                            gx + dx, gy + dy, i0, j0, N, pitchX, pitchY);
+                    if (score < best) {
+                        best = score;
+                        bdx = dx;
+                        bdy = dy;
+                    }
+                }
+            }
+            // 平坦块(白框/织布/大面积纯色)判别:最优与预测位置分数差
+            // 不足 15% 则弃——纯色区的方差曲线近乎平坦,最小值是噪声,
+            // 混入观测会拟出发散单应(四季树天空区实测翻车)
+            evaluated++;
+            double atP = tileVariance(argb, w, h,
+                    gx + pdx, gy + pdy, i0, j0, N, pitchX, pitchY);
+            if (atP - best < atP * 0.15) continue;
+            accepted++;
+            offX[ty][tx] = bdx;
+            offY[ty][tx] = bdy;
+            has[ty][tx] = true;
+        }
+        if (accepted * 2 < evaluated || accepted < 3) return null;
+        // 未测块填充:已测邻居的平均(迭代扩散)
+        for (int pass = 0; pass < 6; pass++) {
+            for (int ty = 0; ty < K; ty++) {
+                for (int tx = 0; tx < K; tx++) {
+                    if (has[ty][tx]) continue;
+                    double sx2 = 0, sy2 = 0;
+                    int c2 = 0;
+                    for (int[] d2 : new int[][]{{1, 0}, {-1, 0}, {0, 1}, {0, -1}}) {
+                        int nx = tx + d2[0], ny = ty + d2[1];
+                        if (nx < 0 || ny < 0 || nx >= K || ny >= K) continue;
+                        if (!has[ny][nx]) continue;
+                        sx2 += offX[ny][nx];
+                        sy2 += offY[ny][nx];
+                        c2++;
+                    }
+                    if (c2 > 0) {
+                        offX[ty][tx] = sx2 / c2;
+                        offY[ty][tx] = sy2 / c2;
+                        has[ty][tx] = true;
+                    }
+                }
+            }
+        }
+        // 形变幅度检查:最大 |偏移| < 1.5px = 网格已直,无需细化
+        double maxOff = 0;
+        for (int ty = 0; ty < K; ty++) {
+            for (int tx = 0; tx < K; tx++) {
+                maxOff = Math.max(maxOff,
+                        Math.hypot(offX[ty][tx], offY[ty][tx]));
+            }
+        }
+        if (maxOff < 1.5) return null;
+        // ---- 按形变场重采样:格 (i,j) 中心 → ((i+0.5)*outCell,(j+0.5)*outCell) ----
         int W = cols * outCell, H = rows * outCell;
-        // 正向采样:hm 即"格坐标→图像坐标",对输出格坐标直接施加
-        // (v2.72 同款教训:反向施加会采到完全错误的区域)
-        double[] fwd = hm;
         int[] out = new int[W * H];
         for (int y = 0; y < H; y++) {
-            double v = (y + 0.5) / (double) outCell;
+            double v = (y + 0.5) / (double) outCell - 0.5;   // 格索引(0 基)
+            double fty = v * K / rows - 0.5;
             for (int x = 0; x < W; x++) {
-                double u = (x + 0.5) / (double) outCell;
-                double d = fwd[6] * u + fwd[7] * v + 1;
+                double u = (x + 0.5) / (double) outCell - 0.5;
+                double ftx = u * K / cols - 0.5;
+                double[] off = meshAt2(offX, offY, has, ftx, fty, K);
                 out[y * W + x] = bilinear(argb, w, h,
-                        (fwd[0] * u + fwd[1] * v + fwd[2]) / d,
-                        (fwd[3] * u + fwd[4] * v + fwd[5]) / d);
+                        gx + (u + 0.5) * pitchX + off[0],
+                        gy + (v + 0.5) * pitchY + off[1]);
             }
         }
         if (outWH != null) {
@@ -841,6 +900,68 @@ public final class GridScanner {
         return cnt > 0 ? total / cnt : Double.MAX_VALUE;
     }
 
+    /** 块级偏移的双线性插值(tx,ty 为块索引浮点;未测块权重 0) */
+    private static double[] meshAt(double[][] offX, double[][] offY,
+            boolean[][] has, int tx, int ty, int K) {
+        double sx = 0, sy = 0, wsum = 0;
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                int nx = tx + dx, ny = ty + dy;
+                if (nx < 0 || ny < 0 || nx >= K || ny >= K || !has[ny][nx]) {
+                    continue;
+                }
+                double wgt = 1.0 / (1 + Math.abs(dx) + Math.abs(dy));
+                sx += offX[ny][nx] * wgt;
+                sy += offY[ny][nx] * wgt;
+                wsum += wgt;
+            }
+        }
+        return wsum > 0 ? new double[]{sx / wsum, sy / wsum}
+                : new double[]{0, 0};
+    }
+
+    /** 输出像素级偏移:块网格上的双线性(未测/越界用最近块兜底) */
+    private static double[] meshAt2(double[][] offX, double[][] offY,
+            boolean[][] has, double ftx, double fty, int K) {
+        int x0 = Math.max(0, Math.min(K - 1, (int) Math.floor(ftx)));
+        int y0 = Math.max(0, Math.min(K - 1, (int) Math.floor(fty)));
+        int x1 = Math.min(K - 1, x0 + 1);
+        int y1 = Math.min(K - 1, y0 + 1);
+        double fx = Math.max(0, Math.min(K - 1.001, ftx)) - x0;
+        double fy = Math.max(0, Math.min(K - 1.001, fty)) - y0;
+        // 未测块用最近已测块兜底
+        double ox0 = has[y0][x0] ? offX[y0][x0] : nearest(offX, has, x0, y0, K);
+        double oy0 = has[y0][x0] ? offY[y0][x0] : nearest(offY, has, x0, y0, K);
+        double ox1 = has[y0][x1] ? offX[y0][x1] : nearest(offX, has, x1, y0, K);
+        double oy1 = has[y0][x1] ? offY[y0][x1] : nearest(offY, has, x1, y0, K);
+        double ox2 = has[y1][x0] ? offX[y1][x0] : nearest(offX, has, x0, y1, K);
+        double oy2 = has[y1][x0] ? offY[y1][x0] : nearest(offY, has, x0, y1, K);
+        double ox3 = has[y1][x1] ? offX[y1][x1] : nearest(offX, has, x1, y1, K);
+        double oy3 = has[y1][x1] ? offY[y1][x1] : nearest(offY, has, x1, y1, K);
+        return new double[]{
+                (ox0 * (1 - fx) + ox1 * fx) * (1 - fy)
+                        + (ox2 * (1 - fx) + ox3 * fx) * fy,
+                (oy0 * (1 - fx) + oy1 * fx) * (1 - fy)
+                        + (oy2 * (1 - fx) + oy3 * fx) * fy,
+        };
+    }
+
+    /** 最近的已测块偏移(BFS 一圈圈找) */
+    private static double nearest(double[][] off, boolean[][] has, int x, int y, int K) {
+        for (int r = 1; r < K; r++) {
+            for (int dy = -r; dy <= r; dy++) {
+                for (int dx = -r; dx <= r; dx++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dy)) != r) continue;
+                    int nx = x + dx, ny = y + dy;
+                    if (nx >= 0 && ny >= 0 && nx < K && ny < K && has[ny][nx]) {
+                        return off[ny][nx];
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
     /** 最小二乘单应:n≥4 对 (u,v)→(x,y),标准 DLT 正则方程 8×8 高斯消元 */
     private static double[] homographyLS(java.util.List<double[]> src,
                                          java.util.List<double[]> dst) {
@@ -896,6 +1017,288 @@ public final class GridScanner {
         for (int i = 0; i < 8; i++) hm[i] = B[i] / A[i][i];
         hm[8] = 1;
         return hm;
+    }
+
+    /**
+     * 竖直白带剪切角(v2.77,用户思路的竖直版):作品左缘(白框→彩色过渡)
+     * 是竖直方向的可靠参考。逐行从左起找第一个近白游程(≥6px)的右缘
+     * (= 彩色起点),最小二乘拟合 x = a + b·y,返回剪切系数 b(dx/dy)。
+     * 行覆盖不足或斜率不显著返回 0。
+     */
+    public static double verticalBandShear(int[] argb, int w, int h) {
+        if (argb == null || w < 96 || h < 96) return 0;
+        java.util.List<double[]> pts = new java.util.ArrayList<>();
+        for (int y = 4; y < h - 4; y += 2) {
+            int run = 0, start = -1, end = -1;
+            for (int x = 0; x < w / 2; x++) {
+                int q = argb[y * w + x];
+                int r = (q >> 16) & 0xFF, g = (q >> 8) & 0xFF, b = q & 0xFF;
+                int lum = r * 299 + g * 587 + b * 114;
+                int mx = Math.max(r, Math.max(g, b)), mn = Math.min(r, Math.min(g, b));
+                boolean white = lum > 185000 && (mx - mn) < 60;
+                if (white) {
+                    if (run == 0) start = x;
+                    run++;
+                    if (run >= 6) {
+                        end = x;
+                        break;
+                    }
+                } else {
+                    run = 0;
+                }
+            }
+            if (end > 0) {
+                pts.add(new double[]{y, end});
+            }
+        }
+        if (pts.size() < 20) return 0;
+        double sy = 0, sx = 0, syy = 0, sxy = 0;
+        for (double[] q : pts) {
+            sy += q[0];
+            sx += q[1];
+            syy += q[0] * q[0];
+            sxy += q[0] * q[1];
+        }
+        int n = pts.size();
+        double var = syy - sy * sy / n;
+        if (Math.abs(var) < 1e-6) return 0;
+        double b = (sxy - sy * sx / n) / var;
+        return Math.abs(b) > Math.tan(Math.toRadians(0.1)) ? b : 0;
+    }
+
+    /**
+     * 去剪切(v2.77):按剪切系数 b(dx/dy)水平重排,使竖直参考线竖直。
+     * 横线不受影响(y 不变)。画布两侧各扩 |b|·h/2,越界夹持(边缘为
+     * 桌面/织物,后续 trimBackground 清理)。
+     */
+    public static int[] deshear(int[] argb, int w, int h, double b, int[] outWH) {
+        if (argb == null || Math.abs(b) < 1e-6) return null;
+        int pad = (int) Math.ceil(Math.abs(b) * h / 2) + 1;
+        int W = w + 2 * pad;
+        int[] out = new int[W * h];
+        for (int y = 0; y < h; y++) {
+            double s = b * (y - h / 2.0);
+            for (int x = 0; x < W; x++) {
+                out[y * W + x] = bilinear(argb, w, h, x + s - pad, y);
+            }
+        }
+        if (outWH != null) {
+            outWH[0] = W;
+            outWH[1] = h;
+        }
+        return out;
+    }
+
+    /**
+     * 分带整平(v2.77,最终形态):织物悬挂/鼓包/条带拼接的形变不是单应
+     * (实测缝1/缝2 水平而缝3 斜 -6.5°,全局线性变换原理上修不掉,网格
+     * 单应/剪切亦然)。以作品自身基准线为锚:白色分界缝(逐列白质心)+
+     * 上下彩色边界,每条基准线逐列最小二乘拟合;输出行按所在条带的两条
+     * 边界线的线性插值重排——每一条带的行平行于它自己的边界线,
+     * 逐条带校平,重建设计意图(条带本应水平)。列方向由 deshear 先行校直。
+     * 基准线不足(≥2 条分界缝)返回 null,调用方保留原图。
+     */
+    public static int[] flattenBands(int[] argb, int w, int h, int[] outWH) {
+        if (argb == null || w < 96 || h < 96) return null;
+        int side = Math.max(w, h);
+        int dw = w, dh = h;
+        int[] sm = argb;
+        if (side > 1000) {
+            dw = Math.max(64, Math.round(w * 1000f / side));
+            dh = Math.max(64, Math.round(h * 1000f / side));
+            sm = new int[dw * dh];
+            float sxf = w / (float) dw, syf = h / (float) dh;
+            for (int y = 0; y < dh; y++) {
+                int ys = (int) (y * syf), ye = Math.max(ys + 1, (int) ((y + 1) * syf));
+                for (int x = 0; x < dw; x++) {
+                    int xs = (int) (x * sxf), xe = Math.max(xs + 1, (int) ((x + 1) * sxf));
+                    long r = 0, g = 0, b = 0;
+                    int n = 0;
+                    for (int yy = ys; yy < ye && yy < h; yy++) {
+                        for (int xx = xs; xx < xe && xx < w; xx++) {
+                            int q = argb[yy * w + xx];
+                            r += (q >> 16) & 0xFF;
+                            g += (q >> 8) & 0xFF;
+                            b += q & 0xFF;
+                            n++;
+                        }
+                    }
+                    if (n == 0) n = 1;
+                    sm[y * dw + x] = 0xFF000000 | ((int) (r / n) << 16)
+                            | ((int) (g / n) << 8) | (int) (b / n);
+                }
+            }
+        }
+        boolean[] white = new boolean[dw * dh];
+        for (int i = 0; i < dw * dh; i++) {
+            int q = sm[i];
+            int r = (q >> 16) & 0xFF, g = (q >> 8) & 0xFF, b = q & 0xFF;
+            int lum = r * 299 + g * 587 + b * 114;
+            int mx = Math.max(r, Math.max(g, b)), mn = Math.min(r, Math.min(g, b));
+            white[i] = lum > 185000 && (mx - mn) < 60;
+        }
+        float[] rowFrac = new float[dh];
+        for (int y = 0; y < dh; y++) {
+            int n = 0;
+            for (int x = 0; x < dw; x++) {
+                if (white[y * dw + x]) n++;
+            }
+            rowFrac[y] = n / (float) dw;
+        }
+        // 白色横带:frac>0.5 连续 ≥3 行;分界缝 = 上下 6 行偏彩(两侧都是作品)
+        java.util.List<int[]> gaps = new java.util.ArrayList<>();
+        int runStart = -1;
+        for (int y = 0; y <= dh; y++) {
+            boolean wr = y < dh && rowFrac[y] > 0.5f;
+            if (wr && runStart < 0) runStart = y;
+            if (!wr && runStart >= 0) {
+                int ya = runStart, yb = y - 1;
+                if (yb - ya + 1 >= 3 && ya >= 6 && yb <= dh - 7) {
+                    float top = rowFrac[ya - 6], bot = rowFrac[Math.min(dh - 1, yb + 6)];
+                    if (top < 0.35f && bot < 0.35f) {
+                        gaps.add(new int[]{ya, yb});
+                    }
+                }
+                runStart = -1;
+            }
+        }
+        if (gaps.size() < 2) return null;
+        // 基准线逐列 y:分界缝 = 带内白像素质心;上下边界 = 彩色起止行
+        java.util.List<double[]> lineA = new java.util.ArrayList<>();   // 截距(ds)
+        java.util.List<double[]> lineB = new java.util.ArrayList<>();   // 斜率(ds)
+        for (int[] gap : gaps) {
+            fitCentroidLine(white, dw, dh, gap[0], gap[1], lineA, lineB);
+        }
+        // 上下彩色边界:每列第一/最后一个彩色行(连续 3 行彩色算确认)
+        fitColorEdge(white, dw, dh, true, lineA, lineB);
+        fitColorEdge(white, dw, dh, false, lineA, lineB);
+        if (lineA.size() < 4) return null;
+        // 边界按平均 y 排序,相邻间距须 ≥5 行
+        int m = lineA.size();
+        for (int i = 0; i < m; i++) {
+            for (int j = i + 1; j < m; j++) {
+                if (lineA.get(j)[0] < lineA.get(i)[0]) {
+                    double[] t = lineA.get(i);
+                    lineA.set(i, lineA.get(j));
+                    lineA.set(j, t);
+                    t = lineB.get(i);
+                    lineB.set(i, lineB.get(j));
+                    lineB.set(j, t);
+                }
+            }
+        }
+        for (int i = 1; i < m; i++) {
+            if (lineA.get(i)[0] - lineA.get(i - 1)[0] < 5) return null;
+        }
+        // 输出行位置:各边界的平均 y(转全分辨率),累计间距 = 输出行
+        double[] meanY = new double[m];
+        double[] meanYFull = new double[m];
+        double scaleY = h / (double) dh;
+        for (int i = 0; i < m; i++) {
+            meanY[i] = lineA.get(i)[0] + lineB.get(i)[0] * dw / 2.0;
+            meanYFull[i] = meanY[i] * scaleY;
+        }
+        int H = (int) Math.round(meanYFull[m - 1] - meanYFull[0]);
+        if (H < 48) return null;
+        double scaleX = w / (double) dw;
+        int[] out = new int[w * H];
+        // 逐行:所在条带 k,t = 行在带内的相对位置
+        for (int Y = 0; Y < H; Y++) {
+            double yOut = Y + meanYFull[0];
+            int k = 0;
+            while (k < m - 2 && yOut > meanYFull[k + 1]) k++;
+            double t = (yOut - meanYFull[k])
+                    / Math.max(1e-6, meanYFull[k + 1] - meanYFull[k]);
+            t = Math.max(0, Math.min(1, t));
+            for (int X = 0; X < w; X++) {
+                double xds = X / scaleX;
+                double ySrcDs = (1 - t) * (lineA.get(k)[0] + lineB.get(k)[0] * xds)
+                        + t * (lineA.get(k + 1)[0] + lineB.get(k + 1)[0] * xds);
+                out[Y * w + X] = bilinear(argb, w, h, X, ySrcDs * scaleY);
+            }
+        }
+        if (outWH != null) {
+            outWH[0] = w;
+            outWH[1] = H;
+        }
+        return out;
+    }
+
+    /** 白带质心线:带 ±6 行内白像素逐列质心,最小二乘拟合 y = a + b·x */
+    private static void fitCentroidLine(boolean[] white, int dw, int dh,
+            int ya, int yb, java.util.List<double[]> lineA,
+            java.util.List<double[]> lineB) {
+        double sx = 0, sy = 0, sxx = 0, sxy = 0;
+        int n = 0;
+        for (int x = 4; x < dw - 4; x++) {
+            double acc = 0;
+            int cnt = 0;
+            for (int y = Math.max(0, ya - 6); y <= Math.min(dh - 1, yb + 6); y++) {
+                if (white[y * dw + x]) {
+                    acc += y;
+                    cnt++;
+                }
+            }
+            if (cnt < 3) continue;
+            double yv = acc / cnt;
+            sx += x;
+            sy += yv;
+            sxx += (double) x * x;
+            sxy += (double) x * yv;
+            n++;
+        }
+        if (n < dw / 8) {
+            lineA.add(new double[]{(ya + yb) / 2.0});
+            lineB.add(new double[]{0});
+            return;
+        }
+        double var = sxx - sx * sx / n;
+        double b = Math.abs(var) < 1e-6 ? 0 : (sxy - sx * sy / n) / var;
+        lineA.add(new double[]{sy / n - b * sx / n});
+        lineB.add(new double[]{b});
+    }
+
+    /** 彩色边界线:每列第一(或最后)个连续 3 行彩色的行,最小二乘拟合 */
+    private static void fitColorEdge(boolean[] white, int dw, int dh,
+            boolean fromTop, java.util.List<double[]> lineA,
+            java.util.List<double[]> lineB) {
+        double sx = 0, sy = 0, sxx = 0, sxy = 0;
+        int n = 0;
+        for (int x = 4; x < dw - 4; x++) {
+            int found = -1;
+            if (fromTop) {
+                for (int y = 0; y < dh - 3; y++) {
+                    if (!white[y * dw + x] && !white[(y + 1) * dw + x]
+                            && !white[(y + 2) * dw + x]) {
+                        found = y;
+                        break;
+                    }
+                }
+            } else {
+                for (int y = dh - 1; y > 2; y--) {
+                    if (!white[y * dw + x] && !white[(y - 1) * dw + x]
+                            && !white[(y - 2) * dw + x]) {
+                        found = y;
+                        break;
+                    }
+                }
+            }
+            if (found < 0) continue;
+            sx += x;
+            sy += found;
+            sxx += (double) x * x;
+            sxy += (double) x * found;
+            n++;
+        }
+        if (n < dw / 8) {
+            lineA.add(new double[]{fromTop ? 4 : dh - 5});
+            lineB.add(new double[]{0});
+            return;
+        }
+        double var = sxx - sx * sx / n;
+        double b = Math.abs(var) < 1e-6 ? 0 : (sxy - sx * sy / n) / var;
+        lineA.add(new double[]{sy / n - b * sx / n});
+        lineB.add(new double[]{b});
     }
 
     /**

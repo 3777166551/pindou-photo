@@ -2399,6 +2399,72 @@ public final class PatternEngine {
                 beadPalette, precise, round, hex, 0);
     }
 
+    /**
+     * 裁掉桌面/织物污染的边缘行列(v2.77):成品照拍摄时难免带进画框外的
+     * 桌面色(棕/暖灰),行列杂色占比 >12% 判为污染裁掉,逐边收缩。
+     */
+    public static BeadPattern trimJunkBorders(BeadPattern p) {
+        if (p == null || p.cols < 8 || p.rows < 8) return p;
+        boolean[] junk = new boolean[p.cols * p.rows];
+        int[][] refs = {{0x8B, 0x68, 0x4C}, {0xA6, 0x88, 0x62},
+                {0x87, 0x87, 0x87}, {0x46, 0x46, 0x48}};
+        for (int y = 0; y < p.rows; y++) {
+            for (int x = 0; x < p.cols; x++) {
+                int idx = p.cellAt(x, y);
+                if (idx < 0) {
+                    junk[y * p.cols + x] = true;
+                    continue;
+                }
+                int rgb = p.palette.get(idx).rgb;
+                int r = (rgb >> 16) & 0xFF, g = (rgb >> 8) & 0xFF, b = rgb & 0xFF;
+                for (int[] ref : refs) {
+                    if (Math.abs(r - ref[0]) + Math.abs(g - ref[1])
+                            + Math.abs(b - ref[2]) < 45) {
+                        junk[y * p.cols + x] = true;
+                        break;
+                    }
+                }
+            }
+        }
+        float[] rowJunk = new float[p.rows];
+        float[] colJunk = new float[p.cols];
+        for (int y = 0; y < p.rows; y++) {
+            for (int x = 0; x < p.cols; x++) {
+                if (junk[y * p.cols + x]) {
+                    rowJunk[y] += 1f / p.cols;
+                    colJunk[x] += 1f / p.rows;
+                }
+            }
+        }
+        int y0 = 0, y1 = p.rows - 1, x0 = 0, x1 = p.cols - 1;
+        while (y0 < y1 - 3 && rowJunk[y0] > 0.12f) y0++;
+        while (y1 > y0 + 3 && rowJunk[y1] > 0.12f) y1--;
+        while (x0 < x1 - 3 && colJunk[x0] > 0.12f) x0++;
+        while (x1 > x0 + 3 && colJunk[x1] > 0.12f) x1--;
+        if (x0 == 0 && y0 == 0 && x1 == p.cols - 1 && y1 == p.rows - 1) return p;
+        int nc = x1 - x0 + 1, nr = y1 - y0 + 1;
+        int[] cells = new int[nc * nr];
+        int[] cnts = new int[p.palette.size()];
+        java.util.List<BeadPattern.UsedColor> used = new java.util.ArrayList<>();
+        int tot = 0;
+        for (int y = 0; y < nr; y++) {
+            for (int x = 0; x < nc; x++) {
+                int idx = p.cellAt(x0 + x, y0 + y);
+                cells[y * nc + x] = idx;
+                if (idx >= 0) cnts[idx]++;
+            }
+        }
+        for (int i = 0; i < cnts.length; i++) {
+            if (cnts[i] > 0) {
+                tot += cnts[i];
+                used.add(new BeadPattern.UsedColor(i, p.palette.get(i),
+                        p.palette.get(i).displayCode(), cnts[i]));
+            }
+        }
+        BeadPattern.sortByCountDesc(used);
+        return new BeadPattern(nc, nr, p.palette, cells, cnts, used, tot, 0);
+    }
+
     /** 带网格旋转角的重载(angle 弧度;非 0 时 lineX/lineY 为旋转网格原点,不折回) */
     public static BeadPattern fromBeadPhoto(int[] px, int pw, int ph,
                                             double lineX, double lineY,

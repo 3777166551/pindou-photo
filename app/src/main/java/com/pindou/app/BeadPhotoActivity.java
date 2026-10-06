@@ -473,22 +473,56 @@ public class BeadPhotoActivity extends Activity {
                                 Bitmap.Config.ARGB_8888);
                     }
                 }
-                // 豆格单应细化(v2.76 重构):以豆子本身为参考分块估相位、
-                // 拟合单应转正——透视残差/镜头畸变一次修正,不再依赖外部参考
+                // 竖直去剪切(v2.77):左白带右缘=作品左边界,是最可靠的
+                // 竖直参考;其剪切(实测 -4.19°)是横缝转平后仍见"竖线不齐"
+                // 的主因,定向去剪切后细化只需处理小残差
+                double vshear = com.pindou.app.util.GridScanner
+                        .verticalBandShear(px, w, h);
+                if (vshear != 0) {
+                    int[] swh = new int[2];
+                    int[] shImg = com.pindou.app.util.GridScanner
+                            .deshear(px, w, h, vshear, swh);
+                    if (shImg != null && swh[0] >= 64 && swh[1] >= 64) {
+                        px = shImg;
+                        w = swh[0];
+                        h = swh[1];
+                        work = Bitmap.createBitmap(px, w, h,
+                                Bitmap.Config.ARGB_8888);
+                    }
+                }
+                // 分带整平(v2.77):以作品自身的白色分界缝+上下边界为锚,
+                // 每条带按它自己的边界线校平——织物鼓包/条带歪斜逐一修正,
+                // 重建设计意图(条带本应水平)。refineLattice 保留作微调
+                // (整平后残差小,其形变幅度守卫会自动跳过)
+                int[] fwh = new int[2];
+                int[] flat = com.pindou.app.util.GridScanner
+                        .flattenBands(px, w, h, fwh);
+                if (flat != null && fwh[0] >= 64 && fwh[1] >= 64) {
+                    px = flat;
+                    w = fwh[0];
+                    h = fwh[1];
+                    work = Bitmap.createBitmap(px, w, h,
+                            Bitmap.Config.ARGB_8888);
+                }
                 PatternEngine.BeadGrid g = PatternEngine.detectBeadGrid(px, w, h);
                 if (g != null) {
+                    int outCell = Math.max(8, (int) Math.round(
+                            Math.min(g.pitchX, g.pitchY)));
                     int[] lwh = new int[2];
                     int[] refined = com.pindou.app.util.GridScanner.refineLattice(
                             px, w, h, g.lineX, g.lineY, g.pitchX, g.pitchY,
-                            Math.max(8, (int) Math.round(Math.min(g.pitchX, g.pitchY))),
-                            lwh);
+                            outCell, lwh);
                     if (refined != null) {
                         px = refined;
                         w = lwh[0];
                         h = lwh[1];
                         work = Bitmap.createBitmap(px, w, h,
                                 Bitmap.Config.ARGB_8888);
-                        g = PatternEngine.detectBeadGrid(px, w, h);
+                        g = new PatternEngine.BeadGrid();
+                        g.lineX = 0;
+                        g.lineY = 0;
+                        g.pitchX = outCell;
+                        g.pitchY = outCell;
                     }
                 }
                 final Bitmap fb = work;
@@ -539,10 +573,11 @@ public class BeadPhotoActivity extends Activity {
                     bmp.getPixels(px, 0, w, 0, 0, w, h);
                     List<com.pindou.app.bead.BeadColor> pal =
                             BeadPalettes.getPalette(tier);
-                    final BeadPattern p = PatternEngine.fromBeadPhoto(px, w, h,
+                    BeadPattern p = PatternEngine.fromBeadPhoto(px, w, h,
                             lattice.lineX, lattice.lineY,
                             lattice.pitchX, lattice.pitchY,
                             pal, true, false, false, lattice.angle);
+                    p = PatternEngine.trimJunkBorders(p);   // 裁桌面/织物污染边
                     if (p == null) throw new IllegalStateException("no cells");
                     String palName = BeadPalettes.selNames()[tier];
                     JSONObject share = PatternShare.build(p,
