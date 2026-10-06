@@ -462,6 +462,144 @@ public class TestGridScanner {
                     Math.abs(Math.toDegrees(est2)) <= 0.1);
         }
 
+        // ---- refineLattice:梯形畸变照 → 粗对格 → 细化两轮 → 采样(v2.76)----
+        {
+            int cols = 24, rows = 30, pitch = 16;
+            int[][] truth = randomTruth(new Random(93), cols, rows);
+            int sw = cols * pitch + 40, sh = rows * pitch + 40;
+            int[] straight = renderBeadPhoto(sw, sh, cols, rows, pitch, 0, truth, 93);
+            // 梯形畸变:内嵌单应,quad→rect 求逆采样(图外露底板色)
+            double[][] quad = {
+                    {sw * 0.10, sh * 0.10}, {sw * 0.93, sh * 0.04},
+                    {sw * 0.89, sh * 0.93}, {sw * 0.06, sh * 0.89},
+            };
+            double[][] A = new double[8][8];
+            double[] bv = new double[8];
+            double[][] dst = {{0, 0}, {sw - 1.0, 0}, {sw - 1.0, sh - 1.0}, {0, sh - 1.0}};
+            for (int i = 0; i < 4; i++) {
+                double dx = dst[i][0], dy = dst[i][1];
+                double ux = quad[i][0], uy = quad[i][1];
+                A[i][0] = dx; A[i][1] = dy; A[i][2] = 1;
+                A[i][6] = -ux * dx; A[i][7] = -ux * dy; bv[i] = ux;
+                A[4 + i][3] = dx; A[4 + i][4] = dy; A[4 + i][5] = 1;
+                A[4 + i][6] = -uy * dx; A[4 + i][7] = -uy * dy; bv[4 + i] = uy;
+            }
+            for (int col = 0; col < 8; col++) {
+                int piv = col;
+                for (int r = col + 1; r < 8; r++) {
+                    if (Math.abs(A[r][col]) > Math.abs(A[piv][col])) piv = r;
+                }
+                double[] t = A[col]; A[col] = A[piv]; A[piv] = t;
+                double tv = bv[col]; bv[col] = bv[piv]; bv[piv] = tv;
+                for (int r = 0; r < 8; r++) {
+                    if (r == col) continue;
+                    double f = A[r][col] / A[col][col];
+                    for (int c = col; c < 8; c++) A[r][c] -= f * A[col][c];
+                    bv[r] -= f * bv[col];
+                }
+            }
+            double[] hh = new double[8];
+            for (int i = 0; i < 8; i++) hh[i] = bv[i] / A[i][i];
+            // 伴随(转置余子)
+            double m00 = hh[0], m01 = hh[1], m02 = hh[2];
+            double m10 = hh[3], m11 = hh[4], m12 = hh[5];
+            double m20 = hh[6], m21 = hh[7], m22 = 1.0;
+            double i00 = m11 * m22 - m12 * m21, i01 = m02 * m21 - m01 * m22,
+                    i02 = m01 * m12 - m02 * m11;
+            double i10 = m12 * m20 - m10 * m22, i11 = m00 * m22 - m02 * m20,
+                    i12 = m02 * m10 - m00 * m12;
+            double i20 = m10 * m21 - m11 * m20, i21 = m01 * m20 - m00 * m21,
+                    i22 = m00 * m11 - m01 * m10;
+            double det = m00 * i00 + m01 * i10 + m02 * i20;
+            i00 /= det; i01 /= det; i02 /= det;
+            i10 /= det; i11 /= det; i12 /= det;
+            i20 /= det; i21 /= det; i22 /= det;
+            int[] dist = new int[straight.length];
+            for (int y = 0; y < sh; y++) {
+                for (int x = 0; x < sw; x++) {
+                    double dd = i20 * x + i21 * y + i22;
+                    double sx = (i00 * x + i01 * y + i02) / dd;
+                    double sy = (i10 * x + i11 * y + i12) / dd;
+                    if (sx < 0 || sy < 0 || sx > sw - 1 || sy > sh - 1) {
+                        dist[y * sw + x] = 0xFFA89A8C;
+                    } else {
+                        dist[y * sw + x] = straight[(int) sy * sw + (int) sx];
+                    }
+                }
+            }
+            // app 同款流程:deskew(内容四角)→ 粗对格 → 细化两轮
+            int[] dwh = new int[2];
+            int[] desk = GridScanner.deskew(dist, sw, sh, dwh);
+            int cw0 = sw, ch0 = sh;
+            if (desk != null) {
+                dist = desk;
+                cw0 = dwh[0];
+                ch0 = dwh[1];
+            }
+            com.pindou.app.bead.PatternEngine.BeadGrid g0 =
+                    com.pindou.app.bead.PatternEngine.detectBeadGrid(dist, cw0, ch0);
+            check("refine rough detect", g0 != null);
+            if (g0 != null) {
+                int cw = cw0, chh = ch0;
+                int[] img = dist;
+                for (int it = 0; it < 2; it++) {
+                    int[] lwh = new int[2];
+                    int[] rf = GridScanner.refineLattice(img, cw, chh,
+                            g0.lineX, g0.lineY, g0.pitchX, g0.pitchY, 16, lwh);
+                    if (rf == null) break;
+                    img = rf;
+                    cw = lwh[0];
+                    chh = lwh[1];
+                    g0 = com.pindou.app.bead.PatternEngine.detectBeadGrid(
+                            img, cw, chh);
+                    if (g0 == null) break;
+                }
+                check("refine final detect", g0 != null);
+                if (g0 != null) {
+                    // app 同款:fromBeadPhoto 采样(轴对齐,图已转平)
+                    java.util.List<com.pindou.app.bead.BeadColor> pal2 =
+                            new java.util.ArrayList<>();
+                    int[] prgb = {0xFFD94A3D, 0xFF2F7FD1, 0xFF3FA45B, 0xFFF2B33D,
+                            0xFF2B2B2B, 0xFFF5F0E8, 0xFF9B59B6, 0xFF1F3A93};
+                    for (int rgb : prgb) {
+                        pal2.add(new com.pindou.app.bead.BeadColor(1,
+                                "c" + Integer.toHexString(rgb & 0xFFFFFF), rgb));
+                    }
+                    com.pindou.app.bead.BeadPattern p2 =
+                            com.pindou.app.bead.PatternEngine.fromBeadPhoto(img,
+                                    cw, chh, g0.lineX, g0.lineY,
+                                    g0.pitchX, g0.pitchY, pal2,
+                                    true, false, false);
+                    check("refine fromBeadPhoto", p2 != null);
+                    if (p2 != null) {
+                        int best = 0, bestTot = 0;
+                        for (int oy = 0; oy <= Math.max(0, p2.rows - rows); oy++) {
+                            for (int ox = 0; ox <= Math.max(0, p2.cols - cols); ox++) {
+                                int hit = 0, tot = 0;
+                                for (int y = 0; y < rows; y++) {
+                                    if (y + oy >= p2.rows) break;
+                                    for (int x = 0; x < cols; x++) {
+                                        if (x + ox >= p2.cols) break;
+                                        int got = p2.cellAt(x + ox, y + oy);
+                                        tot++;
+                                        if (got >= 0 && colorHit(
+                                                0xFF000000 | pal2.get(got).rgb,
+                                                truth[y][x])) hit++;
+                                    }
+                                }
+                                if (tot > 0 && hit * 100 > best * bestTot) {
+                                    best = hit;
+                                    bestTot = tot;
+                                }
+                            }
+                        }
+                        check("refine hit " + best * 100 / Math.max(1, bestTot) + "%",
+                                bestTot > 0 && best * 100 / bestTot >= 80);
+                    }
+                }
+            }
+        }
+
         // ---- 无网格:随机噪声必须拒检
         {
             Random rnd = new Random(99);

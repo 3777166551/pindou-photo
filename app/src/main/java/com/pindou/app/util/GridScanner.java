@@ -702,6 +702,203 @@ public final class GridScanner {
     }
 
     /**
+     * 豆格单应细化(v2.76 重构):此前各路参考(织布框/白缝/角点)只修单一
+     * 形变且各有污染源;本方法以豆子本身为参考——粗对格基础上,分块搜索
+     * 局部网格相位(类内方差最小),得到一批"格索引→图像位置"对应,
+     * 最小二乘拟合单应,按单应重采样使豆格精确对齐。可迭代。
+     * 一次修正透视残差、镜头畸变等一切平滑形变。
+     *
+     * @param gx gy 网格原点(首格左上角),pitchX/pitchY 全局豆距(粗值)
+     * @param outCell 输出每格像素(通常 = round(pitch))
+     * @return 拉平后图像,outWH 写出尺寸;高质量对应不足返回 null
+     */
+    public static int[] refineLattice(int[] argb, int w, int h,
+            double gx, double gy, double pitchX, double pitchY,
+            int outCell, int[] outWH) {
+        if (argb == null || pitchX < 6 || pitchY < 6
+                || pitchX > Math.min(w, h) * 0.5 || pitchY > Math.min(w, h) * 0.5) {
+            return null;   // 粗估豆距离谱(强畸变图上自相关失手)时拒绝
+        }
+        int cols = (int) Math.floor((w - gx) / pitchX);
+        int rows = (int) Math.floor((h - gy) / pitchY);
+        if (cols < 8 || rows < 8) return null;
+        // ---- 分块:每块约 8×8 格 ----
+        int K = Math.max(2, Math.min(6, Math.min(cols, rows) / 8));
+        int N = 8;   // 每块格数
+        java.util.List<double[]> src = new java.util.ArrayList<>();
+        java.util.List<double[]> dst = new java.util.ArrayList<>();
+        double search = Math.min(pitchX, pitchY) * 0.35;
+        for (int ty = 0; ty < K; ty++) {
+            for (int tx = 0; tx < K; tx++) {
+                int ci = (int) Math.round((tx + 0.5) * cols / K);
+                int cj = (int) Math.round((ty + 0.5) * rows / K);
+                int i0 = ci - N / 2, j0 = cj - N / 2;
+                if (i0 < 0 || j0 < 0 || i0 + N > cols || j0 + N > rows) continue;
+                double best = Double.MAX_VALUE, bdx = 0, bdy = 0;
+                for (double dy = -search; dy <= search; dy += 1) {
+                    for (double dx = -search; dx <= search; dx += 1) {
+                        double score = tileVariance(argb, w, h,
+                                gx + dx, gy + dy, i0, j0, N, pitchX, pitchY);
+                        if (score < best) {
+                            best = score;
+                            bdx = dx;
+                            bdy = dy;
+                        }
+                    }
+                }
+                // 平坦块(白框/织布)判别:最优与零偏移分数差不足 4% 则弃
+                double zero = tileVariance(argb, w, h,
+                        gx, gy, i0, j0, N, pitchX, pitchY);
+                if (zero - best < zero * 0.04) continue;
+                src.add(new double[]{ci + 0.5, cj + 0.5});
+                dst.add(new double[]{gx + (ci + 0.5) * pitchX + bdx,
+                        gy + (cj + 0.5) * pitchY + bdy});
+            }
+        }
+        if (src.size() < 6) return null;
+        double[] hm = homographyLS(src, dst);
+        if (hm == null) return null;
+        // ---- 按单应重采样:格 (i,j) 中心 → ((i+0.5)*outCell, (j+0.5)*outCell) ----
+        int W = cols * outCell, H = rows * outCell;
+        // 正向采样:hm 即"格坐标→图像坐标",对输出格坐标直接施加
+        // (v2.72 同款教训:反向施加会采到完全错误的区域)
+        double[] fwd = hm;
+        int[] out = new int[W * H];
+        for (int y = 0; y < H; y++) {
+            double v = (y + 0.5) / (double) outCell;
+            for (int x = 0; x < W; x++) {
+                double u = (x + 0.5) / (double) outCell;
+                double d = fwd[6] * u + fwd[7] * v + 1;
+                out[y * W + x] = bilinear(argb, w, h,
+                        (fwd[0] * u + fwd[1] * v + fwd[2]) / d,
+                        (fwd[3] * u + fwd[4] * v + fwd[5]) / d);
+            }
+        }
+        if (outWH != null) {
+            outWH[0] = W;
+            outWH[1] = H;
+        }
+        return out;
+    }
+
+    /**
+     * 块内类内方差和:格 (i0..i0+N, j0..j0+N) 以 (ox,oy) 为原点,
+     * 每格取中心圆盘(r=0.30 pitch)像素对方均色差的方差和——
+     * 网格对齐豆边界时最小,骑缝/错位时暴涨。
+     */
+    private static double tileVariance(int[] argb, int w, int h,
+            double ox, double oy, int i0, int j0, int n,
+            double pitchX, double pitchY) {
+        double total = 0;
+        int cnt = 0;
+        int rx = (int) Math.ceil(pitchX * 0.30);
+        int ry = (int) Math.ceil(pitchY * 0.30);
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < n; i++) {
+                double cx = ox + (i0 + i + 0.5) * pitchX;
+                double cy = oy + (j0 + j + 0.5) * pitchY;
+                int x0 = Math.max(0, (int) (cx - rx));
+                int x1 = Math.min(w - 1, (int) (cx + rx));
+                int y0 = Math.max(0, (int) (cy - ry));
+                int y1 = Math.min(h - 1, (int) (cy + ry));
+                int m = 0;
+                long sr = 0, sg = 0, sb = 0;
+                for (int y = y0; y <= y1; y++) {
+                    for (int x = x0; x <= x1; x++) {
+                        double ddx = x + 0.5 - cx, ddy = y + 0.5 - cy;
+                        if (ddx * ddx / (pitchX * pitchX)
+                                + ddy * ddy / (pitchY * pitchY) > 0.09) {
+                            continue;
+                        }
+                        int q = argb[y * w + x];
+                        sr += (q >> 16) & 0xFF;
+                        sg += (q >> 8) & 0xFF;
+                        sb += q & 0xFF;
+                        m++;
+                    }
+                }
+                if (m < 4) continue;
+                double mr = sr / (double) m, mg = sg / (double) m, mb = sb / (double) m;
+                double var = 0;
+                for (int y = y0; y <= y1; y++) {
+                    for (int x = x0; x <= x1; x++) {
+                        double ddx = x + 0.5 - cx, ddy = y + 0.5 - cy;
+                        if (ddx * ddx / (pitchX * pitchX)
+                                + ddy * ddy / (pitchY * pitchY) > 0.09) {
+                            continue;
+                        }
+                        int q = argb[y * w + x];
+                        double dr = (q >> 16 & 0xFF) - mr;
+                        double dg = (q >> 8 & 0xFF) - mg;
+                        double db = (q & 0xFF) - mb;
+                        var += dr * dr + dg * dg + db * db;
+                    }
+                }
+                total += var / m;
+                cnt++;
+            }
+        }
+        return cnt > 0 ? total / cnt : Double.MAX_VALUE;
+    }
+
+    /** 最小二乘单应:n≥4 对 (u,v)→(x,y),标准 DLT 正则方程 8×8 高斯消元 */
+    private static double[] homographyLS(java.util.List<double[]> src,
+                                         java.util.List<double[]> dst) {
+        int n = src.size();
+        double[][] A = new double[8][8];
+        double[] B = new double[8];
+        for (int k = 0; k < n; k++) {
+            double u = src.get(k)[0], v = src.get(k)[1];
+            double x = dst.get(k)[0], y = dst.get(k)[1];
+            // x*(h6u+h7v+1) = h0u+h1v+h2 → h0u+h1v+h2 - x*h6u - x*h7v = x
+            double[] r1 = {u, v, 1, 0, 0, 0, -u * x, -v * x};
+            double[] r2 = {0, 0, 0, u, v, 1, -u * y, -v * y};
+            for (int c = 0; c < 8; c++) {
+                A[c][0] += r1[0] * r1[c] + r2[0] * r2[c];
+                A[c][1] += r1[1] * r1[c] + r2[1] * r2[c];
+                A[c][2] += r1[2] * r1[c] + r2[2] * r2[c];
+                A[c][3] += r1[3] * r1[c] + r2[3] * r2[c];
+                A[c][4] += r1[4] * r1[c] + r2[4] * r2[c];
+                A[c][5] += r1[5] * r1[c] + r2[5] * r2[c];
+                A[c][6] += r1[6] * r1[c] + r2[6] * r2[c];
+                A[c][7] += r1[7] * r1[c] + r2[7] * r2[c];
+            }
+            B[0] += r1[0] * x + r2[0] * y;
+            B[1] += r1[1] * x + r2[1] * y;
+            B[2] += r1[2] * x + r2[2] * y;
+            B[3] += r1[3] * x + r2[3] * y;
+            B[4] += r1[4] * x + r2[4] * y;
+            B[5] += r1[5] * x + r2[5] * y;
+            B[6] += r1[6] * x + r2[6] * y;
+            B[7] += r1[7] * x + r2[7] * y;
+        }
+        for (int col = 0; col < 8; col++) {
+            int piv = col;
+            for (int r = col + 1; r < 8; r++) {
+                if (Math.abs(A[r][col]) > Math.abs(A[piv][col])) piv = r;
+            }
+            if (Math.abs(A[piv][col]) < 1e-9) return null;
+            double[] t = A[col];
+            A[col] = A[piv];
+            A[piv] = t;
+            double tb = B[col];
+            B[col] = B[piv];
+            B[piv] = tb;
+            for (int r = 0; r < 8; r++) {
+                if (r == col) continue;
+                double f = A[r][col] / A[col][col];
+                if (f == 0) continue;
+                for (int c = col; c < 8; c++) A[r][c] -= f * A[col][c];
+                B[r] -= f * B[col];
+            }
+        }
+        double[] hm = new double[9];
+        for (int i = 0; i < 8; i++) hm[i] = B[i] / A[i][i];
+        hm[8] = 1;
+        return hm;
+    }
+
+    /**
      * 纯旋转校正(v2.73):把图像绕中心旋转 -angle(弧度),画布扩到包容
      * 全部内容,双线性采样,越界取边缘(夹持)。deskew 对齐织布外框后,
      * 作品相对底布的残余旋转用此法转平,下游对格/叠加层保持轴对齐。
@@ -1179,6 +1376,22 @@ public final class GridScanner {
         for (int i = 0; i < 8; i++) hm[i] = b[i] / A[i][i];
         hm[8] = 1;
         return hm;
+    }
+
+    /** 3×3 求逆(伴随),奇异返回 null(numpy 逐项验证过,勿改) */
+    private static double[] invert3(double[] m) {
+        double a = m[0], b = m[1], c = m[2];
+        double d = m[3], e = m[4], f = m[5];
+        double g = m[6], hh = m[7], i = m[8];
+        double A = e * i - f * hh, B = -(d * i - f * g), C = d * hh - e * g;
+        double det = a * A + b * B + c * C;
+        if (Math.abs(det) < 1e-12) return null;
+        double id = 1 / det;
+        return new double[]{
+                A * id, -(b * i - c * hh) * id, (b * f - c * e) * id,
+                B * id, (a * i - c * g) * id, -(a * f - c * d) * id,
+                C * id, -(a * hh - b * g) * id, (a * e - b * d) * id,
+        };
     }
 
     /** 双线性采样(坐标夹到图内) */

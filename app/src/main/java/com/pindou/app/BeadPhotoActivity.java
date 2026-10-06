@@ -473,8 +473,26 @@ public class BeadPhotoActivity extends Activity {
                                 Bitmap.Config.ARGB_8888);
                     }
                 }
+                // 豆格单应细化(v2.76 重构):以豆子本身为参考分块估相位、
+                // 拟合单应转正——透视残差/镜头畸变一次修正,不再依赖外部参考
                 PatternEngine.BeadGrid g = PatternEngine.detectBeadGrid(px, w, h);
+                if (g != null) {
+                    int[] lwh = new int[2];
+                    int[] refined = com.pindou.app.util.GridScanner.refineLattice(
+                            px, w, h, g.lineX, g.lineY, g.pitchX, g.pitchY,
+                            Math.max(8, (int) Math.round(Math.min(g.pitchX, g.pitchY))),
+                            lwh);
+                    if (refined != null) {
+                        px = refined;
+                        w = lwh[0];
+                        h = lwh[1];
+                        work = Bitmap.createBitmap(px, w, h,
+                                Bitmap.Config.ARGB_8888);
+                        g = PatternEngine.detectBeadGrid(px, w, h);
+                    }
+                }
                 final Bitmap fb = work;
+                final PatternEngine.BeadGrid fg = g;
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -483,13 +501,13 @@ public class BeadPhotoActivity extends Activity {
                             bmp = fb;
                             lattice.setImage(fb);
                         }
-                        if (g == null) {
+                        if (fg == null) {
                             Toast.makeText(BeadPhotoActivity.this,
                                     getString(R.string.bp_auto_fail),
                                     Toast.LENGTH_LONG).show();
                             return;
                         }
-                        lattice.setGrid(g);
+                        lattice.setGrid(fg);
                         refreshPitchLabel();
                     }
                 });
