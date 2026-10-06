@@ -804,6 +804,18 @@ public final class GridScanner {
         java.util.Arrays.sort(gs, 0, nn);
         java.util.Arrays.sort(bs, 0, nn);
         int br = rs[nn / 2], bg = gs[nn / 2], bb = bs[nn / 2];
+        // 背景 = 边框中位色的近邻(桌面等) ∪ 白色织物/作品白框
+        // (v2.75:单应参考改用作品彩色区四角——白框与织布同色不可分,旧"非背景
+        //  含白框"让四角落在织布外缘,作品相对织布的歪斜修不掉;彩色区四角
+        //  (豆画与白框交界)对比强、角点清晰,单应一次修正全部透视)
+        boolean[] whiteish = new boolean[dw * dh];
+        for (int i = 0; i < dw * dh; i++) {
+            int q = sm[i];
+            int r = (q >> 16) & 0xFF, g = (q >> 8) & 0xFF, b = q & 0xFF;
+            int lum = r * 299 + g * 587 + b * 114;
+            int mx = Math.max(r, Math.max(g, b)), mn = Math.min(r, Math.min(g, b));
+            whiteish[i] = lum > 185000 && (mx - mn) < 60;
+        }
         // ---- 非背景掩码 + 最大连通域(4 邻接,迭代栈) ----
         int n = dw * dh;
         int[] comp = new int[n];          // 0=背景/未访问,1=当前域,2=最大域
@@ -815,7 +827,10 @@ public final class GridScanner {
             int p = sm[seed];
             int sad = Math.abs((p >> 16 & 0xFF) - br) + Math.abs((p >> 8 & 0xFF) - bg)
                     + Math.abs((p & 0xFF) - bb);
-            if (sad <= 100) { comp[seed] = 1; continue; }   // 背景,标记已访问
+            if (sad <= 100 || whiteish[seed]) {
+                comp[seed] = 1;
+                continue;   // 背景,标记已访问
+            }
             // 新的非背景域
             int id = bestId + 1;
             int sp = 0;
@@ -835,29 +850,33 @@ public final class GridScanner {
                     int q = sm[cur - 1];
                     int d = Math.abs((q >> 16 & 0xFF) - br) + Math.abs((q >> 8 & 0xFF) - bg)
                             + Math.abs((q & 0xFF) - bb);
-                    comp[cur - 1] = d <= 100 ? 1 : id;
-                    if (d > 100) stack[sp++] = cur - 1;
+                    boolean isBg = d <= 100 || whiteish[cur - 1];
+                    comp[cur - 1] = isBg ? 1 : id;
+                    if (!isBg) stack[sp++] = cur - 1;
                 }
                 if (cx < dw - 1 && comp[cur + 1] == 0) {
                     int q = sm[cur + 1];
                     int d = Math.abs((q >> 16 & 0xFF) - br) + Math.abs((q >> 8 & 0xFF) - bg)
                             + Math.abs((q & 0xFF) - bb);
-                    comp[cur + 1] = d <= 100 ? 1 : id;
-                    if (d > 100) stack[sp++] = cur + 1;
+                    boolean isBg = d <= 100 || whiteish[cur + 1];
+                    comp[cur + 1] = isBg ? 1 : id;
+                    if (!isBg) stack[sp++] = cur + 1;
                 }
                 if (cy > 0 && comp[cur - dw] == 0) {
                     int q = sm[cur - dw];
                     int d = Math.abs((q >> 16 & 0xFF) - br) + Math.abs((q >> 8 & 0xFF) - bg)
                             + Math.abs((q & 0xFF) - bb);
-                    comp[cur - dw] = d <= 100 ? 1 : id;
-                    if (d > 100) stack[sp++] = cur - dw;
+                    boolean isBg2 = d <= 100 || whiteish[cur - dw];
+                    comp[cur - dw] = isBg2 ? 1 : id;
+                    if (!isBg2) stack[sp++] = cur - dw;
                 }
                 if (cy < dh - 1 && comp[cur + dw] == 0) {
                     int q = sm[cur + dw];
                     int d = Math.abs((q >> 16 & 0xFF) - br) + Math.abs((q >> 8 & 0xFF) - bg)
                             + Math.abs((q & 0xFF) - bb);
-                    comp[cur + dw] = d <= 100 ? 1 : id;
-                    if (d > 100) stack[sp++] = cur + dw;
+                    boolean isBg3 = d <= 100 || whiteish[cur + dw];
+                    comp[cur + dw] = isBg3 ? 1 : id;
+                    if (!isBg3) stack[sp++] = cur + dw;
                 }
             }
             if (size > bestSize) {
@@ -876,11 +895,8 @@ public final class GridScanner {
         // 连通域=纯豆区,而透视下豆区外的底板环宽度沿边不均,豆区包络的
         // 四角不共单应(实测拉正残角 4.5°、采样命中 5%)。chamfer 距离膨胀
         // R(≈2.5% 短边)后取包络,角点回落到真实面板四角附近
-        // 膨胀半径不超过组件到图像边缘的余量(用户裁剪紧时面板近贴边,
-        // 盲目膨胀把面板轮廓顶到图像边界,误触发"已摆正"防御)
-        int radWant = Math.max(6, Math.min(dw, dh) / 40) * 3;   // chamfer 权重 3/4
-        int rEdge = Math.min(Math.min(bb0, b0y), Math.min(dw - 1 - bx1, dh - 1 - by1));
-        int rad = Math.max(3, Math.min(radWant, rEdge - 1));
+        // 膨胀:彩色区角点已清晰(v2.75 改作品参考),只留小膨胀稳边界
+        int rad = Math.max(2, Math.min(dw, dh) / 300);   // chamfer 权重 3/4
         int[] dd = new int[n];
         for (int i = 0; i < n; i++) dd[i] = comp[i] == bestId ? 0 : 1 << 20;
         for (int y = 0; y < dh; y++) {
