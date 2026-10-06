@@ -587,6 +587,121 @@ public final class GridScanner {
     }
 
     /**
+     * 白缝参考角(v2.74,用户思路:找图里水平的白线做参考):成品照里最可靠的
+     * 水平参考是作品自身的白色分界缝(条带拼接缝)。梯度/自相关类估计在含
+     * 织布/桌面的实拍图上会偏差 1°+(实测 -1.55° vs 白缝实测 -0.22°,过转)。
+     * 做法:逐行统计近白像素占比 → 聚出白色横带(上下相邻行必须偏彩色,
+     * 排除织布/外框整片白区)→ 每带逐列白像素质心最小二乘拟合 → 斜率取中位。
+     * 返回弧度;找不到清晰白带返回 0。
+     */
+    public static double horizontalGapAngle(int[] argb, int w, int h) {
+        if (argb == null || w < 96 || h < 96) return 0;
+        int side = Math.max(w, h);
+        int dw = w, dh = h;
+        int[] sm = argb;
+        if (side > 1000) {
+            // 1000 长边:白缝宽 ~13px@2155,降到 600 只剩 3 行会被高度过滤掉
+            dw = Math.max(64, Math.round(w * 1000f / side));
+            dh = Math.max(64, Math.round(h * 1000f / side));
+            sm = new int[dw * dh];
+            float sxf = w / (float) dw, syf = h / (float) dh;
+            for (int y = 0; y < dh; y++) {
+                int ys = (int) (y * syf), ye = Math.max(ys + 1, (int) ((y + 1) * syf));
+                for (int x = 0; x < dw; x++) {
+                    int xs = (int) (x * sxf), xe = Math.max(xs + 1, (int) ((x + 1) * sxf));
+                    long r = 0, g = 0, b = 0;
+                    int n = 0;
+                    for (int yy = ys; yy < ye && yy < h; yy++) {
+                        for (int xx = xs; xx < xe && xx < w; xx++) {
+                            int q = argb[yy * w + xx];
+                            r += (q >> 16) & 0xFF;
+                            g += (q >> 8) & 0xFF;
+                            b += q & 0xFF;
+                            n++;
+                        }
+                    }
+                    if (n == 0) n = 1;
+                    sm[y * dw + x] = 0xFF000000 | ((int) (r / n) << 16)
+                            | ((int) (g / n) << 8) | (int) (b / n);
+                }
+            }
+        }
+        // 近白判定:亮度高且低饱和
+        boolean[] white = new boolean[dw * dh];
+        for (int i = 0; i < dw * dh; i++) {
+            int q = sm[i];
+            int r = (q >> 16) & 0xFF, g = (q >> 8) & 0xFF, b = q & 0xFF;
+            int lum = r * 299 + g * 587 + b * 114;
+            int mx = Math.max(r, Math.max(g, b)), mn = Math.min(r, Math.min(g, b));
+            white[i] = lum > 185 * 1000 && (mx - mn) < 60;
+        }
+        // 逐行白占比
+        float[] rowFrac = new float[dh];
+        for (int y = 0; y < dh; y++) {
+            int n = 0;
+            for (int x = 0; x < dw; x++) {
+                if (white[y * dw + x]) n++;
+            }
+            rowFrac[y] = n / (float) dw;
+        }
+        // 白色横带:连续 frac>0.5 且高 ≥4 行;带须离图像上下边缘 ≥4%
+        // (贴边的白带是织布/桌面临界区,deskew 已对齐它们,混入会拉偏
+        // 中位数——实测底部织物边带 +0.03° 混入使估计从 -0.24° 偏到 -0.01°);
+        // 且带上下 6 行内 frac<0.35(上下都偏彩色 = 作品内部缝隙)
+        java.util.List<int[]> bands = new java.util.ArrayList<>();
+        int runStart = -1;
+        int edge = Math.max(6, dh / 25);
+        for (int y = 0; y <= dh; y++) {
+            boolean wrow = y < dh && rowFrac[y] > 0.5f;
+            if (wrow && runStart < 0) runStart = y;
+            if (!wrow && runStart >= 0) {
+                int ya = runStart, yb = y - 1;
+                if (yb - ya + 1 >= 4 && ya >= edge && yb <= dh - 1 - edge) {
+                    float top = rowFrac[ya - 6], bot = rowFrac[Math.min(dh - 1, yb + 6)];
+                    if (top < 0.35f && bot < 0.35f) {
+                        bands.add(new int[]{ya, yb});
+                    }
+                }
+                runStart = -1;
+            }
+        }
+        if (bands.isEmpty()) return 0;
+        // 每带逐列质心 → 最小二乘斜率
+        java.util.List<Double> slopes = new java.util.ArrayList<>();
+        for (int[] band : bands) {
+            int ya = band[0], yb = band[1];
+            double sx = 0, sy = 0, sxx = 0, sxy = 0;
+            int n = 0;
+            for (int x = 4; x < dw - 4; x++) {
+                double acc = 0;
+                int cnt = 0;
+                for (int y = Math.max(0, ya - 6); y <= Math.min(dh - 1, yb + 6); y++) {
+                    if (white[y * dw + x]) {
+                        acc += y;
+                        cnt++;
+                    }
+                }
+                if (cnt < 3) continue;
+                double yv = acc / cnt;
+                sx += x;
+                sy += yv;
+                sxx += (double) x * x;
+                sxy += (double) x * yv;
+                n++;
+            }
+            if (n < dw / 8) continue;   // 覆盖不足
+            double cov = sxy - sx * sy / n;
+            double var = sxx - sx * sx / n;
+            if (Math.abs(var) < 1e-6) continue;
+            slopes.add(cov / var);
+        }
+        if (slopes.isEmpty()) return 0;
+        java.util.Collections.sort(slopes);
+        double med = slopes.get(slopes.size() / 2);
+        return Math.atan(med);
+    }
+
+    /**
      * 纯旋转校正(v2.73):把图像绕中心旋转 -angle(弧度),画布扩到包容
      * 全部内容,双线性采样,越界取边缘(夹持)。deskew 对齐织布外框后,
      * 作品相对底布的残余旋转用此法转平,下游对格/叠加层保持轴对齐。

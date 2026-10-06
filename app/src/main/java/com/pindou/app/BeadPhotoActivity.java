@@ -455,15 +455,16 @@ public class BeadPhotoActivity extends Activity {
                     w = wh[0];
                     h = wh[1];
                 }
-                // 残余旋转转平:deskew 对齐的是织布外框,作品相对底布常有
-                // 1~2° 残余旋转,轴对齐对格解码出的分带是斜的。先旋转感知
-                // 检出角度,把图像转平后再轴对齐对格(叠加层/拖动保持轴对齐)
-                com.pindou.app.util.GridScanner.Grid rot =
-                        com.pindou.app.util.GridScanner.detect(px, w, h, 1, 1, w - 2, h - 2);
-                if (rot != null && Math.abs(rot.angle) > Math.toRadians(0.2)) {
+                // 残余旋转转平(v2.74,用户思路):用作品自身的白色分界缝做
+                // 水平参考——白缝是真实的豆行边界,比梯度/自相关估计准
+                // (v2.73 的梯度检测在实拍图上估出 -1.55°,白缝实测仅 -0.22°,
+                // 过转 1.3° 反而更歪)。deskew 对齐织布外框后,按白缝角转平
+                double gap = com.pindou.app.util.GridScanner
+                        .horizontalGapAngle(px, w, h);
+                if (Math.abs(gap) > Math.toRadians(0.1)) {
                     int[] rwh = new int[2];
                     int[] rotImg = com.pindou.app.util.GridScanner
-                            .rotate(px, w, h, rot.angle, rwh);
+                            .rotate(px, w, h, gap, rwh);
                     if (rotImg != null && rwh[0] >= 64 && rwh[1] >= 64) {
                         px = rotImg;
                         w = rwh[0];

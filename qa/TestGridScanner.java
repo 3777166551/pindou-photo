@@ -440,6 +440,28 @@ public class TestGridScanner {
             }
         }
 
+        // ---- horizontalGapAngle:白缝参考角估计 + 转平(v2.74)----
+        {
+            int w = 600, h = 800;
+            double slope = Math.tan(Math.toRadians(1.2));
+            int[] img = new int[w * h];
+            for (int i = 0; i < img.length; i++) img[i] = 0xFF3366AA;
+            for (int x = 20; x < w - 20; x++) {
+                int yc = 400 + (int) Math.round(slope * (x - w / 2.0));
+                for (int y = yc - 4; y <= yc + 4; y++) {
+                    if (y >= 0 && y < h) img[y * w + x] = 0xFFF8F8F8;
+                }
+            }
+            double est = GridScanner.horizontalGapAngle(img, w, h);
+            check("gapAngle est " + Math.toDegrees(est),
+                    Math.abs(Math.toDegrees(est) - 1.2) <= 0.2);
+            int[] wh = new int[2];
+            int[] flat = GridScanner.rotate(img, w, h, est, wh);
+            double est2 = GridScanner.horizontalGapAngle(flat, wh[0], wh[1]);
+            check("gapAngle flatten " + Math.toDegrees(est2),
+                    Math.abs(Math.toDegrees(est2)) <= 0.1);
+        }
+
         // ---- 无网格:随机噪声必须拒检
         {
             Random rnd = new Random(99);
